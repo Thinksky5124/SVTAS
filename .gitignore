@@ -136,3 +136,6 @@ log.txt
 
 # output
 output/
+
+# debug
+.vscode/

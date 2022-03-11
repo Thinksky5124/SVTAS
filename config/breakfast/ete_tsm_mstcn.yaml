@@ -103,6 +103,8 @@ PIPELINE: #PIPELINE field
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0001
+    step_size: 50
+    gamma: 0.1
 
 METRIC:
     name: 'SegmentationMetric'
