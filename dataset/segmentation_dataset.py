@@ -196,3 +196,50 @@ class SegmentationDataset(data.Dataset):
             return self.prepare_test(idx)
         else:
             return self.prepare_train(idx)
+
+class VideoSamplerDataset(data.Dataset):
+    def __init__(self,
+                 file_path,
+                 dataset_type):
+        super().__init__()
+        
+        self.file_path = file_path
+        self.dataset_type = dataset_type
+        self.info = self.load_file()
+
+    def parse_file_paths(self, input_path):
+        if self.dataset_type in ['gtea', '50salads']:
+            file_ptr = open(input_path, 'r')
+            info = file_ptr.read().split('\n')[:-1]
+            file_ptr.close()
+        elif self.dataset_type in ['breakfast']:
+            file_ptr = open(input_path, 'r')
+            info = file_ptr.read().split('\n')[:-1]
+            file_ptr.close()
+            refine_info = []
+            for info_name in info:
+                video_ptr = info_name.split('.')[0].split('_')
+                file_name = ''
+                for j in range(2):
+                    if video_ptr[j] == 'stereo01':
+                        video_ptr[j] = 'stereo'
+                    file_name = file_name + video_ptr[j] + '/'
+                file_name = file_name + video_ptr[2] + '_' + video_ptr[3]
+                if 'stereo' in file_name:
+                    file_name = file_name + '_ch0'
+                refine_info.append([info_name, file_name])
+            info = refine_info
+        return info
+
+    def load_file(self):
+        """Load index file to get video information."""
+        video_segment_lists = self.parse_file_paths(self.file_path)
+        return video_segment_lists
+    
+    def __len__(self):
+        """get the size of the dataset."""
+        return len(self.info)
+
+    def __getitem__(self, idx):
+        """ Get the sample for either training or testing given index"""
+        return idx

@@ -1,5 +1,5 @@
-# ETETemporalSegmentation
-End to End Video Temporal Segmention
+# ETETS
+End to End Temporal Segmention Model
 
 # Envirnment Preapre
 ```bash

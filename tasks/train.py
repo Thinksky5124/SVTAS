@@ -7,11 +7,12 @@ from utils.logger import get_logger, AverageMeter, log_batch
 from utils.save_load import mkdir
 
 from model.etets import ETETS
-from model.loss import ETELoss
+from model.loss import ETETSLoss
 from dataset.segmentation_dataset import SegmentationDataset
+from dataset.segmentation_dataset import VideoSamplerDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
-
+from dataset.pipline import BatchCompose
 
 def train(cfg,
           weights=None,
@@ -31,11 +32,11 @@ def train(cfg,
     mkdir(output_dir)
 
     # 1.construct model
-    model = ETETS(cfg.MODEL).cuda()
-    criterion = ETELoss()
+    model = ETETS(**cfg.MODEL).cuda()
+    criterion = ETETSLoss(**cfg.MODEL.loss)
 
     # 2. build metirc
-    Metric = SegmentationMetric(cfg.METRIC)
+    Metric = SegmentationMetric(**cfg.METRIC)
 
     # 3. Construct solver.
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
@@ -53,11 +54,20 @@ def train(cfg,
         optimizer.load_state_dict(checkpoint['optimizer'])  # 加载优化器参数
         start_epoch = checkpoint['epoch']
     # 4. construct Pipeline
-    data_Pipeline = Pipeline(cfg.PIPELINE.train)
-
+    data_Pipeline = Pipeline(**cfg.PIPELINE.train)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg.OPTIMIZER.step_size, gamma=cfg.OPTIMIZER.gamma)
 
-    # 5. Train Model
+    # 5. Construct Dataset
+    video_sampler_dataloader = torch.utils.data.DataLoader(
+                VideoSamplerDataset(file_path=cfg.DATASET.train.file_path,
+                                    dataset_type=cfg.DATASET.train.dataset_type),
+                batch_size=batch_size,
+                num_workers=1,
+                shuffle=True
+            )
+    sliding_concate_fn = BatchCompose(**cfg.COLLATE)
+
+    # 6. Train Model
     record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
@@ -78,17 +88,17 @@ def train(cfg,
         model.train()
 
         # batch videos sampler
-        for idx in range(0):
+        for vid_list in video_sampler_dataloader:
             tic = time.time()
 
-            # 6. Construct dataset and dataloader
-            train_dataset = torch.utils.data.DataLoader(
-                SegmentationDataset(
-
-                ),
+            # 7. Construct dataset and dataloader
+            train_dataset_config = cfg.DATASET.train
+            train_dataset_config['sample_idx_list'] = list(vid_list.numpy())
+            train_loader = torch.utils.data.DataLoader(
+                SegmentationDataset(**train_dataset_config),
                 batch_size=batch_size,
                 num_workers=num_workers,
-                collate_fn_cfg=cfg.get('MIX', None),
+                collate_fn=sliding_concate_fn,
                 shuffle=False
             )
 
