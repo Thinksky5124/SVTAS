@@ -1,48 +1,24 @@
 import torchvision.transforms as transforms
 import decord as de
 import numpy as np
+import torch
 import copy
 from PIL import Image
 
 class BatchCompose(object):
-    def __init__(self, clip_seg_num=15,sample_rate=4):
+    def __init__(self, clip_seg_num=15, sample_rate=4):
         self.clip_seg_num = clip_seg_num
         self.sample_rate = sample_rate
 
     def __call__(self, batch):
-        max_imgs_len = 0
-        max_labels_len = 0
+        sliding_idx_list = []
         for mini_batch in batch:
-            if max_imgs_len < mini_batch[0].shape[0]:
-                max_imgs_len = mini_batch[0].shape[0]
-            if max_labels_len < mini_batch[1].shape[0]:
-                max_labels_len = mini_batch[1].shape[0]
+            sliding_idx_list.append(mini_batch[-1])
+        sort_index = np.argsort(np.array(sliding_idx_list))
 
-        max_imgs_len = max_imgs_len + (self.clip_seg_num - max_imgs_len % self.clip_seg_num)
-        max_labels_len = max_labels_len + ((self.clip_seg_num * self.sample_rate) - max_labels_len % (self.clip_seg_num * self.sample_rate))
-
-        # shape imgs and labels len
-        for batch_id in range(len(batch)):
-            mini_batch_list = []
-            list(batch[batch_id])
-            # imgs
-            pad_imgs_len = max_imgs_len - batch[batch_id][0].shape[0]
-            pad_imgs = np.zeros([pad_imgs_len] + list(batch[batch_id][0].shape[1:]), dtype=batch[batch_id][0].dtype)
-            # pad_imgs = np.random.normal(size = [pad_imgs_len] + list(batch[batch_id][0].shape[1:])).astype(batch[batch_id][0].dtype)
-            mini_batch_list.append(np.concatenate([batch[batch_id][0], pad_imgs], axis=0))
-            # lables
-            pad_labels_len = max_labels_len - batch[batch_id][1].shape[0]
-            pad_labels = np.full([pad_labels_len] + list(batch[batch_id][1].shape[1:]), -100, dtype=batch[batch_id][1].dtype)
-            labels = np.concatenate([batch[batch_id][1], pad_labels], axis=0)
-            mini_batch_list.append(labels)
-            # masks
-            mask = labels != -100
-            mask = mask.astype(np.float32)
-            mini_batch_list.append(mask)
-            # vid
-            mini_batch_list.append(batch[batch_id][-1])
-            batch[batch_id] = tuple(mini_batch_list)
-        result_batch = copy.deepcopy(batch)
+        result_batch = []
+        for index in sort_index:
+            result_batch.append(batch[index])
         return result_batch
 
 class Pipeline(object):
@@ -108,12 +84,13 @@ class VideoStreamSampler(object):
                  seg_len,
                  sample_rate=4,
                  clip_seg_num=15,
-                 sliding_window=15,
+                 sliding_window=60,
                  frame_interval=None,
                  valid_mode=False,
                  select_left=False,
                  dense_sample=False,
-                 linspace_sample=False
+                 linspace_sample=False,
+                 ignore_index=-100,
                  ):
         self.sample_rate = sample_rate
         self.seg_len = seg_len
@@ -124,6 +101,7 @@ class VideoStreamSampler(object):
         self.linspace_sample = linspace_sample
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
+        self.ignore_index = ignore_index
 
     def __call__(self, results):
         """
@@ -136,42 +114,47 @@ class VideoStreamSampler(object):
         results['frames_len'] = frames_len
         container = results['frames']
         imgs = []
-        labels = results['labels']
+        labels = results['raw_labels']
 
         # generate sample index
-        start_frame = results['sample_idx'] * self.sliding_window
+        start_frame = results['sample_sliding_idx'] * self.sliding_window
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
         if start_frame < frames_len and end_frame < frames_len:
             frames_idx = list(range(start_frame, end_frame, self.sample_rate))
+            labels = labels[start_frame:end_frame]
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
             np_frames = frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i]
                 imgs.append(Image.fromarray(imgbuf, mode='RGB'))
-            mask = np.ones((np_frames.shape[0]))
+            mask = np.ones((labels.shape[0]))
         elif start_frame < frames_len and end_frame > frames_len:
             frames_idx = list(range(start_frame, frames_len, self.sample_rate))
+            labels = labels[start_frame:frames_len]
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
             np_frames = frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i]
                 imgs.append(Image.fromarray(imgbuf, mode='RGB'))
-            vaild_mask = np.ones((np_frames.shape[0]))
+            vaild_mask = np.ones((frames_len - start_frame))
             np_frames = np.zeros_like(np_frames[0])
             pad_len = self.clip_seg_num - len(imgs)
             for i in range(pad_len):
                 imgs.append(Image.fromarray(np_frames, mode='RGB'))
+            mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
             void_mask = np.zeros((pad_len))
             mask = np.concatenate([vaild_mask, void_mask], axis=0)
+            labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
         else:
             # ! find shape
-            np_frames = np.zeros_like(np_frames[0])
+            np_frames = np.zeros((240, 320, 3))
             pad_len = self.clip_seg_num
             for i in range(pad_len):
                 imgs.append(Image.fromarray(np_frames, mode='RGB'))
-            mask = np.zeros((pad_len))
+            mask = np.zeros((self.clip_seg_num * self.sample_rate))
+            labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 
         results['imgs'] = imgs
         results['labels'] = labels
@@ -191,6 +174,10 @@ class VideoStreamTransform(object):
         self.imgs_transforms_pipeline = transforms.Compose(transform_op_list)
 
     def __call__(self, results):
-        imgs = self.imgs_transforms_pipeline(results['imgs'])
+        imgs = []
+        for img in results['imgs']:
+            img = self.imgs_transforms_pipeline(img)
+            imgs.append(img.unsqueeze(0))
+        imgs = torch.cat(imgs, dim=0)
         results['imgs'] = copy.deepcopy(imgs)
         return results

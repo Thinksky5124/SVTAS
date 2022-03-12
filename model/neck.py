@@ -6,7 +6,7 @@ class ETETSNeck(nn.Module):
                  buffer_channels=512,
                  hidden_channels=64,
                  num_layers=5,
-                 num_segs=15,
+                 clip_seg_num=15,
                  clip_buffer_num=0,
                  sliding_strike=5):
         super().__init__()

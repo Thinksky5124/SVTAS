@@ -49,7 +49,7 @@ class SegmentationDataset(data.Dataset):
                  pipeline,
                  actions_map_file_path,
                  sample_idx_list,
-                 sliding_window=15,
+                 sliding_window=60,
                  clip_seg_num=15,
                  sample_rate=4,
                  suffix='',
@@ -72,8 +72,6 @@ class SegmentationDataset(data.Dataset):
             data_prefix is not None and osp.isdir(data_prefix) else data_prefix
         self.test_mode = test_mode
         self.pipeline = pipeline
-        self.info = self.load_file()
-        
 
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')
@@ -82,6 +80,8 @@ class SegmentationDataset(data.Dataset):
         self.actions_dict = dict()
         for a in actions:
             self.actions_dict[a.split()[1]] = int(a.split()[0])
+
+        self.info = self.load_file()
 
     def parse_file_paths(self, input_path):
         if self.dataset_type in ['gtea', '50salads']:
@@ -110,9 +110,14 @@ class SegmentationDataset(data.Dataset):
     def load_file(self):
         """Load index file to get video information."""
         video_segment_lists = self.parse_file_paths(self.file_path)
+        # sample
+        video_sample_segment_lists = []
+        for sample_idx in self.sample_idx_list:
+            video_sample_segment_lists.append(video_segment_lists[sample_idx])
+        # convert sample
         info = []
         max_len = 0
-        for video_segment in video_segment_lists:
+        for video_segment, sample_idx in zip(video_sample_segment_lists, self.sample_idx_list):
             if self.dataset_type in ['gtea', '50salads']:
                 video_name = video_segment.split('.')[0]
                 label_path = os.path.join(self.gt_path, video_name + '.txt')
@@ -139,52 +144,59 @@ class SegmentationDataset(data.Dataset):
                 classes[i] = self.actions_dict[content[i]]
             info.append(
                 dict(filename=video_path,
-                     labels=classes,
-                     video_name=video_name))
+                     raw_labels=classes,
+                     video_name=video_name,
+                     sample_idx=sample_idx))
             if max_len < len(content):
                 max_len = len(content)
 
         # construct sliding num
-        max_len = max_len + ((self.clip_seg_num * self.sample_rate) - max_len % (self.clip_seg_num * self.sample_rate))
         sliding_num = max_len // self.sliding_window
         if max_len % self.sliding_window != 0:
             sliding_num = sliding_num + 1
         self.sliding_num = sliding_num
 
-        results = []
-        for sample_idx in self.sample_idx_list:
-            results.append(info[sample_idx])
-        return results
+        return info
 
     def prepare_train(self, idx):
-        """TRAIN & VALID. Prepare the data for training/valid given the index."""
-        #Try to catch Exception caused by reading corrupted video file
         imgs_list = []
         labels_list = []
+        masks_list = []
+        sample_idx_list = []
         for single_info in self.info:
             sample_segment = single_info
-            sample_segment['sample_idx'] = idx
+            sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
             imgs_list.append(np.expand_dims(sample_segment['imgs'], axis=0))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0))
+            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
+            sample_idx_list.append(np.expand_dims(single_info['sample_idx'], axis=0))
 
         imgs = np.concatenate(imgs_list, axis=0)
         labels = np.concatenate(labels_list, axis=0)
-        return imgs, labels, idx
+        masks = np.concatenate(masks_list, axis=0)
+        sample_idx = np.concatenate(sample_idx_list, axis=0)
+        return imgs, labels, masks, sample_idx, idx
 
     def prepare_test(self, idx):
         imgs_list = []
         labels_list = []
+        masks_list = []
+        sample_idx_list = []
         for single_info in self.info:
             sample_segment = single_info
-            sample_segment['sample_idx'] = idx
+            sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
             imgs_list.append(np.expand_dims(sample_segment['imgs'], axis=0))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0))
+            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
+            sample_idx_list.append(np.expand_dims(single_info['sample_idx'], axis=0))
 
         imgs = np.concatenate(imgs_list, axis=0)
         labels = np.concatenate(labels_list, axis=0)
-        return imgs, labels, idx
+        masks = np.concatenate(masks_list, axis=0)
+        sample_idx = np.concatenate(sample_idx_list, axis=0)
+        return imgs, labels, masks, sample_idx, idx
     
     def __len__(self):
         """get the size of the dataset."""
@@ -200,10 +212,12 @@ class SegmentationDataset(data.Dataset):
 class VideoSamplerDataset(data.Dataset):
     def __init__(self,
                  file_path,
+                 gt_path,
                  dataset_type):
         super().__init__()
         
         self.file_path = file_path
+        self.gt_path = gt_path
         self.dataset_type = dataset_type
         self.info = self.load_file()
 
@@ -242,4 +256,16 @@ class VideoSamplerDataset(data.Dataset):
 
     def __getitem__(self, idx):
         """ Get the sample for either training or testing given index"""
-        return idx
+        video_segment = self.info[idx]
+        if self.dataset_type in ['gtea', '50salads']:
+            video_name = video_segment.split('.')[0]
+            label_path = os.path.join(self.gt_path, video_name + '.txt')
+
+        elif self.dataset_type in ['breakfast']:
+            video_segment_name, _ = video_segment
+            video_name = video_segment_name.split('.')[0]
+            label_path = os.path.join(self.gt_path, video_name + '.txt')
+
+        file_ptr = open(label_path, 'r')
+        content = file_ptr.read().split('\n')[:-1]
+        return idx, len(content)

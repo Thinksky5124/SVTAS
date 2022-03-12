@@ -13,6 +13,7 @@ from dataset.segmentation_dataset import VideoSamplerDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
+from model.post_processing import PostProcessing
 
 def train(cfg,
           weights=None,
@@ -51,20 +52,21 @@ def train(cfg,
 
         model.load_state_dict(checkpoint['net'])
 
-        optimizer.load_state_dict(checkpoint['optimizer'])  # 加载优化器参数
+        optimizer.load_state_dict(checkpoint['optimizer'])
         start_epoch = checkpoint['epoch']
     # 4. construct Pipeline
-    data_Pipeline = Pipeline(**cfg.PIPELINE.train)
+    train_Pipeline = Pipeline(**cfg.PIPELINE.train)
+    val_Pipeline = Pipeline(**cfg.PIPELINE.test)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg.OPTIMIZER.step_size, gamma=cfg.OPTIMIZER.gamma)
 
     # 5. Construct Dataset
-    video_sampler_dataloader = torch.utils.data.DataLoader(
+    train_video_sampler_dataloader = torch.utils.data.DataLoader(
                 VideoSamplerDataset(file_path=cfg.DATASET.train.file_path,
+                                    gt_path=cfg.DATASET.train.gt_path,
                                     dataset_type=cfg.DATASET.train.dataset_type),
-                batch_size=batch_size,
-                num_workers=1,
-                shuffle=True
-            )
+                                    batch_size=batch_size,
+                                    num_workers=1,
+                                    shuffle=True)
     sliding_concate_fn = BatchCompose(**cfg.COLLATE)
 
     # 6. Train Model
@@ -79,7 +81,7 @@ def train(cfg,
 
     best = 0.0
     for epoch in range(0, cfg.epochs):
-        if epoch < resume_epoch:
+        if epoch < start_epoch:
             logger.info(
                 f"| epoch: [{epoch+1}] <= resume_epoch: [{ resume_epoch}], continue... "
             )
@@ -88,12 +90,13 @@ def train(cfg,
         model.train()
 
         # batch videos sampler
-        for vid_list in video_sampler_dataloader:
+        for vid_list, temporal_len_list in train_video_sampler_dataloader:
             tic = time.time()
 
             # 7. Construct dataset and dataloader
             train_dataset_config = cfg.DATASET.train
             train_dataset_config['sample_idx_list'] = list(vid_list.numpy())
+            train_dataset_config['pipeline'] = train_Pipeline
             train_loader = torch.utils.data.DataLoader(
                 SegmentationDataset(**train_dataset_config),
                 batch_size=batch_size,
@@ -102,41 +105,56 @@ def train(cfg,
                 shuffle=False
             )
 
+            # prepare video score 
+            post_processing = PostProcessing(
+                batch_size=batch_size,
+                max_temporal_len=np.max(temporal_len_list.numpy()),
+                num_classes=cfg.MODEL.head.num_classes,
+                clip_seg_num=cfg.MODEL.neck.clip_seg_num,
+                sliding_window=cfg.DATASET.train.sliding_window,
+                sample_rate=cfg.DATASET.train.sample_rate,
+                clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
             # videos sliding stream train
             videos_loss = 0.
+            num_clip = train_loader.__len__()
             for i, data in enumerate(train_loader):
-                record_list['reader_time'].update(time.time() - tic)
+                record_dict['reader_time'].update(time.time() - tic)
+                for sliding_seg in data:
+                    imgs, labels, masks, _, idx = sliding_seg
+                    # train segment
+                    outputs = model(imgs, masks)
+                    cls_score, seg_score = outputs
+                    cls_loss, seg_loss = criterion(cls_score, seg_score, masks, labels)
 
-                # train segment
-                outputs = model(data)
+                    loss = (cls_loss + seg_loss) / num_clip
 
-                cls_loss = 0.
-                seg_loss = 0.
-                loss = outputs['loss'] / num_clip
-
-                avg_loss.backward()
-                post_precessing()
-                videos_loss += loss.item()
-                
+                    loss.backward()
+                    post_processing.update(seg_score, labels, idx)
+                    videos_loss += loss.item()
         
             optimizer.step()
             optimizer.zero_grad()
-            f1 = Metric.update(i, data, outputs)
+
+            # get pred result
+            pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
+            outputs = dict(predict=pred_cls_list,
+                           output_np=pred_score_list)
+            f1 = Metric.update(list(vid_list.numpy()), ground_truth_list, outputs)
             
             # logger
-            record_list['batch_time'].update(time.time() - tic)
-            record_list['loss'].update(videos_loss, batch_size)
-            record_list['lr'].update(optimizer.state_dict()['param_groups'][0]['lr'], batch_size)
-            record_list['F1@0.5'].update(f1, batch_size)
-            record_list['cls_loss'].update(cls_loss, batch_size)
-            record_list['seg_loss'].update(seg_loss, batch_size)
+            record_dict['batch_time'].update(time.time() - tic)
+            record_dict['loss'].update(videos_loss, batch_size)
+            record_dict['lr'].update(optimizer.state_dict()['param_groups'][0]['lr'], batch_size)
+            record_dict['F1@0.5'].update(f1, batch_size)
+            record_dict['cls_loss'].update(cls_loss, batch_size)
+            record_dict['seg_loss'].update(seg_loss, batch_size)
             tic = time.time()
 
 
             if i % cfg.get("log_interval", 10) == 0:
                 ips = "ips: {:.5f} instance/sec.".format(
-                    batch_size / record_list["batch_time"].val)
-                log_batch(record_list, i, epoch + 1, cfg.epochs, "train", ips)
+                    batch_size / record_dict["batch_time"].val)
+                log_batch(record_dict, i, epoch + 1, cfg.epochs, "train", ips)
 
         # metric output
         Metric.accumulate()
@@ -144,13 +162,12 @@ def train(cfg,
         # update lr
         scheduler.step()
         ips = "avg_ips: {:.5f} instance/sec.".format(
-            batch_size * record_list["batch_time"].count /
-            record_list["batch_time"].sum)
-        log_epoch(record_list, epoch + 1, "train", ips)
+            batch_size * record_dict["batch_time"].count /
+            record_dict["batch_time"].sum)
+        log_epoch(record_dict, epoch + 1, "train", ips)
 
         def evaluate(best):
             model.eval()
-            results = []
             record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
@@ -159,60 +176,83 @@ def train(cfg,
                    'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
             
+            val_video_sampler_dataloader = torch.utils.data.DataLoader(
+                    VideoSamplerDataset(file_path=cfg.DATASET.test.file_path,
+                                        gt_path=cfg.DATASET.test.gt_path,
+                                        dataset_type=cfg.DATASET.test.dataset_type),
+                                        batch_size=batch_size,
+                                        num_workers=1,
+                                        shuffle=False)
             tic = time.time()
             # batch videos sampler
-            for idx in range(0):
+            for vid_list, temporal_len_list in val_video_sampler_dataloader:
                 tic = time.time()
-                valid_dataset = torch.utils.data.DataLoader(
-                    SegmentationDataset(
-
-                    ),
+                val_dataset_config = cfg.DATASET.test
+                val_dataset_config['sample_idx_list'] = list(vid_list.numpy())
+                val_dataset_config['pipeline'] = val_Pipeline
+                val_loader = torch.utils.data.DataLoader(
+                    SegmentationDataset(**val_dataset_config),
                     batch_size=batch_size,
                     num_workers=num_workers,
-                    collate_fn_cfg=cfg.get('MIX', None),
+                    collate_fn=sliding_concate_fn,
                     shuffle=False
                 )
+
+                # prepare video score 
+                post_processing = PostProcessing(
+                    batch_size=batch_size,
+                    max_temporal_len=np.max(temporal_len_list.numpy()),
+                    num_classes=cfg.MODEL.head.num_classes,
+                    clip_seg_num=cfg.MODEL.neck.clip_seg_num,
+                    sliding_window=cfg.DATASET.test.sliding_window,
+                    sample_rate=cfg.DATASET.test.sample_rate,
+                    clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
+
                 # videos sliding stream train
                 videos_loss = 0.
-                for i, data in enumerate(valid_dataset):
-                    record_list['reader_time'].update(time.time() - tic)
+                num_clip = val_loader.__len__()
+                for i, data in enumerate(val_loader):
+                    record_dict['reader_time'].update(time.time() - tic)
+                    for sliding_seg in data:
+                        imgs, labels, masks, _, idx = sliding_seg
+                        # val segment
+                        outputs = model(imgs, masks)
+                        cls_score, seg_score = outputs
+                        cls_loss, seg_loss = criterion(cls_score, seg_score, masks, labels)
 
-                    # train segment
-                    outputs = model(data)
-                    cls_loss = 0.
-                    seg_loss = 0.
-                    loss = outputs['loss'] / num_clip
+                        loss = (cls_loss + seg_loss) / num_clip
 
-                    avg_loss.backward()
-                    post_precessing()
-                    videos_loss += loss.item()
+                        loss.backward()
+                        post_processing.update(seg_score, labels, idx)
+                        videos_loss += loss.item()
                     
-            
-                optimizer.step()
-                optimizer.zero_grad()
-                f1 = Metric.update(i, data, outputs)
+                # get pred result
+                pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
+                outputs = dict(predict=pred_cls_list,
+                            output_np=pred_score_list)
+                f1 = Metric.update(list(vid_list.numpy()), ground_truth_list, outputs)
                 
                 # logger
-                record_list['batch_time'].update(time.time() - tic)
-                record_list['loss'].update(videos_loss, batch_size)
-                record_list['F1@0.5'].update(f1, batch_size)
-                record_list['cls_loss'].update(cls_loss, batch_size)
-                record_list['seg_loss'].update(seg_loss, batch_size)
+                record_dict['batch_time'].update(time.time() - tic)
+                record_dict['loss'].update(videos_loss, batch_size)
+                record_dict['F1@0.5'].update(f1, batch_size)
+                record_dict['cls_loss'].update(cls_loss, batch_size)
+                record_dict['seg_loss'].update(seg_loss, batch_size)
                 tic = time.time()
 
 
                 if i % cfg.get("log_interval", 10) == 0:
                     ips = "ips: {:.5f} instance/sec.".format(
-                        batch_size / record_list["batch_time"].val)
-                    log_batch(record_list, i, epoch + 1, cfg.epochs, "train", ips)
+                        batch_size / record_dict["batch_time"].val)
+                    log_batch(record_dict, i, epoch + 1, cfg.epochs, "train", ips)
 
             # metric output
             Metric_dict = Metric.accumulate()
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
-                batch_size * record_list["batch_time"].count /
-                record_list["batch_time"].sum)
-            log_epoch(record_list, epoch + 1, "train", ips)
+                batch_size * record_dict["batch_time"].count /
+                record_dict["batch_time"].sum)
+            log_epoch(record_dict, epoch + 1, "train", ips)
 
             best_flag = False
             if Metric_dict["F1@0.50"] > best:

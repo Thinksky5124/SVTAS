@@ -176,7 +176,7 @@ class BaseSegmentationMetric(object):
 
         return [recog_content, gt_content, pred_detection, gt_detection]
 
-    def update(self, batch_id, data, outputs):
+    def update(self, outputs):
         """update metrics during each iter
         """
         raise NotImplementedError
@@ -301,12 +301,9 @@ class SegmentationMetric(BaseSegmentationMetric):
                          tolerance, boundary_threshold,
                          max_proposal, tiou_thresholds)
 
-    def update(self, batch_id, data, outputs):
+    def update(self, vid, ground_truth_batch, outputs):
         """update metrics during each iter
         """
-        groundTruth = data[1]
-        vid = data[-1].numpy()
-
         # list [N, T]
         predicted_batch = outputs['predict']
         # list [N, C, T]
@@ -316,17 +313,16 @@ class SegmentationMetric(BaseSegmentationMetric):
         for bs in range(len(predicted_batch)):
             predicted = predicted_batch[bs]
             output_np = output_np_batch[bs]
-            index = np.where(groundTruth[bs, :].numpy() == -100)
-            ignore_start = min(index[0])
+            groundTruth = ground_truth_batch[bs]
 
             if type(predicted) is not np.ndarray:
                 outputs_np = predicted.numpy()
                 outputs_arr = output_np.numpy()
-                gt_np = groundTruth[bs, :ignore_start].numpy()
+                gt_np = groundTruth.numpy()
             else:
                 outputs_np = predicted
                 outputs_arr = output_np
-                gt_np = groundTruth[bs, :ignore_start]
+                gt_np = groundTruth
 
             result = self._transform_model_result(outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result

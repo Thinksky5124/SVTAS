@@ -6,7 +6,7 @@ MODEL:
         buffer_channels: 512
         hidden_channels: 64
         num_layers: 5
-        num_segs: 15
+        clip_seg_num: 15
         clip_buffer_num: 0
         sliding_strike: 5
     head:
@@ -39,7 +39,7 @@ DATASET: #DATASET field
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
         dataset_type: "breakfast"
-        sliding_window: 15
+        sliding_window: 60
         clip_seg_num: 15
         sample_rate: 4
     test:
@@ -49,7 +49,7 @@ DATASET: #DATASET field
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
         dataset_type: "breakfast"
-        sliding_window: 15
+        sliding_window: 60
         clip_seg_num: 15
         sample_rate: 4
 
@@ -61,7 +61,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 15
-            sliding_window: 15
+            sliding_window: 60
             valid_mode: False
             select_left: True
         transform: #Mandotary, image transform operator.
