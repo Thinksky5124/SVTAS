@@ -23,11 +23,11 @@ def train(cfg,
 
     logger = get_logger("ETETS")
     batch_size = cfg.DATASET.get('batch_size', 8)
-    valid_batch_size = cfg.DATASET.get('valid_batch_size', batch_size)
+    valid_batch_size = cfg.DATASET.get('test_batch_size', batch_size)
 
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)
-    valid_num_workers = cfg.DATASET.get('valid_num_workers', num_workers)
+    valid_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output")
     mkdir(output_dir)
@@ -192,8 +192,8 @@ def train(cfg,
                 val_dataset_config['pipeline'] = val_Pipeline
                 val_loader = torch.utils.data.DataLoader(
                     SegmentationDataset(**val_dataset_config),
-                    batch_size=batch_size,
-                    num_workers=num_workers,
+                    batch_size=valid_batch_size,
+                    num_workers=valid_num_workers,
                     collate_fn=sliding_concate_fn,
                     shuffle=False
                 )

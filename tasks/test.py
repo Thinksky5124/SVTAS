@@ -26,7 +26,8 @@ def test(cfg, weights):
     criterion = ETETSLoss(**cfg.MODEL.loss)
 
     # 2. Construct dataset and dataloader.
-    batch_size = cfg.DATASET.get("test_batch_size", 8)
+    batch_size = cfg.DATASET.get('batch_size', 8)
+    batch_size = cfg.DATASET.get("test_batch_size", batch_size)
     test_Pipeline = Pipeline(**cfg.PIPELINE.test)
     test_video_sampler_dataloader = torch.utils.data.DataLoader(
                 VideoSamplerDataset(file_path=cfg.DATASET.test.file_path,
@@ -39,6 +40,7 @@ def test(cfg, weights):
 
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)
+    test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
 
     model.eval()
 
@@ -55,7 +57,7 @@ def test(cfg, weights):
         test_loader = torch.utils.data.DataLoader(
             SegmentationDataset(**test_dataset_config),
             batch_size=batch_size,
-            num_workers=num_workers,
+            num_workers=test_num_workers,
             collate_fn=sliding_concate_fn,
             shuffle=False
         )
