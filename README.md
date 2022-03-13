@@ -28,6 +28,17 @@ pip freeze > requirements.txt
 
 ## 50salads
 
+# dataset normalization
+GTEA:
+
+mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
+
+std RGB : [0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
+
+50salads:
+
+mean RGB ∶[0.5139909998345553, 0.5117725498677757，0.4798814301515671]
+std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
 
 # segmentation model train
 ```bash
@@ -58,9 +69,8 @@ python applications/LightWeight/prepare_ete_data_list.py \
 ```bash
 # gtea
 # single gpu
-export CUDA_VISIBLE_DEVICES=1
-python main.py  --validate -c applications/LightWeight/config/one_shot/gtea/ete_tsm_mstcn.yaml --seed 0
-python main.py  --validate -c applications/LightWeight/config/one_shot/gtea/tsm_gtea_crop_train.yaml --seed 0
+export CUDA_VISIBLE_DEVICES=2
+python main.py  --validate -c config/gtea/ete_tsm_mstcn.yaml --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3
 python -B -m paddle.distributed.launch --gpus="2,3"  --log_dir=./output main.py  --validate -c applications/LightWeight/config/one_shot/gtea/ete_tsm_mstcn.yaml --seed 0
@@ -68,7 +78,7 @@ python -B -m paddle.distributed.launch --gpus="2,3"  --log_dir=./output main.py 
 # 50salads
 
 # breakfast
-python main.py  --validate -c applications/LightWeight/config/one_shot/breakfast/ete_tsm_mstcn.yaml --seed 0
+python main.py  --validate -c config/breakfast/ete_tsm_mstcn.yaml  --seed 0
 ```
 ## test model
 ```bash

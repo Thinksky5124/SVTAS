@@ -22,8 +22,10 @@ logger = get_logger("ETETS")
 @torch.no_grad()
 def test(cfg, weights):
     # 1. Construct model.
-    model = ETETS(**cfg.MODEL).cuda()
-    criterion = ETETSLoss(**cfg.MODEL.loss)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # 1.construct model
+    model = ETETS(**cfg.MODEL).to(device)
+    criterion = ETETSLoss(**cfg.MODEL.loss).to(device)
 
     # 2. Construct dataset and dataloader.
     batch_size = cfg.DATASET.get('batch_size', 8)
@@ -50,7 +52,8 @@ def test(cfg, weights):
     # add params to metrics
     Metric = SegmentationMetric(cfg.METRIC)
     
-    for vid_list, temporal_len_list in test_video_sampler_dataloader:
+    for step, sample_videos in enumerate(test_video_sampler_dataloader):
+        vid_list, temporal_len_list = sample_videos
         test_dataset_config = cfg.DATASET.test
         test_dataset_config['sample_idx_list'] = list(vid_list.numpy())
         test_dataset_config['pipeline'] = test_Pipeline
@@ -64,7 +67,7 @@ def test(cfg, weights):
 
         # prepare video score 
         post_processing = PostProcessing(
-            batch_size=batch_size,
+            batch_size=len(vid_list),
             max_temporal_len=np.max(temporal_len_list.numpy()),
             num_classes=cfg.MODEL.head.num_classes,
             clip_seg_num=cfg.MODEL.neck.clip_seg_num,
@@ -73,21 +76,16 @@ def test(cfg, weights):
             clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
 
         # videos sliding stream train
-        videos_loss = 0.
-        num_clip = test_loader.__len__()
         for i, data in enumerate(test_loader):
             for sliding_seg in data:
                 imgs, labels, masks, _, idx = sliding_seg
-                # val segment
+                imgs = imgs.to(device)
+                masks = masks.to(device)
+                labels = labels.to(device)
+                # test segment
                 outputs = model(imgs, masks)
-                cls_score, seg_score = outputs
-                cls_loss, seg_loss = criterion(cls_score, seg_score, masks, labels)
-
-                loss = (cls_loss + seg_loss) / num_clip
-
-                loss.backward()
+                seg_score, cls_score = outputs
                 post_processing.update(seg_score, labels, idx)
-                videos_loss += loss.item()
             
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()

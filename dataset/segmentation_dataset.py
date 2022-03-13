@@ -172,9 +172,9 @@ class SegmentationDataset(data.Dataset):
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
             sample_idx_list.append(np.expand_dims(single_info['sample_idx'], axis=0))
 
-        imgs = np.concatenate(imgs_list, axis=0)
-        labels = np.concatenate(labels_list, axis=0)
-        masks = np.concatenate(masks_list, axis=0)
+        imgs = np.concatenate(imgs_list, axis=0).astype(np.float32)
+        labels = np.concatenate(labels_list, axis=0).astype(np.int64)
+        masks = np.concatenate(masks_list, axis=0).astype(np.float32)
         sample_idx = np.concatenate(sample_idx_list, axis=0)
         return imgs, labels, masks, sample_idx, idx
 
@@ -192,9 +192,9 @@ class SegmentationDataset(data.Dataset):
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
             sample_idx_list.append(np.expand_dims(single_info['sample_idx'], axis=0))
 
-        imgs = np.concatenate(imgs_list, axis=0)
-        labels = np.concatenate(labels_list, axis=0)
-        masks = np.concatenate(masks_list, axis=0)
+        imgs = np.concatenate(imgs_list, axis=0).astype(np.float32)
+        labels = np.concatenate(labels_list, axis=0).astype(np.int64)
+        masks = np.concatenate(masks_list, axis=0).astype(np.float32)
         sample_idx = np.concatenate(sample_idx_list, axis=0)
         return imgs, labels, masks, sample_idx, idx
     
@@ -268,4 +268,4 @@ class VideoSamplerDataset(data.Dataset):
 
         file_ptr = open(label_path, 'r')
         content = file_ptr.read().split('\n')[:-1]
-        return idx, len(content)
+        return idx, video_name, len(content)

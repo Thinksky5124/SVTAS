@@ -6,9 +6,10 @@ import copy
 from PIL import Image
 
 class BatchCompose(object):
-    def __init__(self, clip_seg_num=15, sample_rate=4):
+    def __init__(self, clip_seg_num=15, sample_rate=4, to_tensor_idx=3):
         self.clip_seg_num = clip_seg_num
         self.sample_rate = sample_rate
+        self.to_tensor_idx = to_tensor_idx
 
     def __call__(self, batch):
         sliding_idx_list = []
@@ -18,7 +19,13 @@ class BatchCompose(object):
 
         result_batch = []
         for index in sort_index:
-            result_batch.append(batch[index])
+            data = []
+            for i in range(len(batch[index])):
+                if i < self.to_tensor_idx:
+                    data.append(torch.tensor(batch[index][i]))
+                else:
+                    data.append(batch[index][i])
+            result_batch.append(data)
         return result_batch
 
 class Pipeline(object):
@@ -61,9 +68,10 @@ class VideoDecoder(object):
         results['backend'] = self.backend
 
         container = de.VideoReader(file_path)
-        frames_len = len(container)
+        video_len = len(container)
         results['frames'] = container
-        results['frames_len'] = frames_len
+        results['frames_len'] = results['raw_labels'].shape[0]
+        results['video_len'] = video_len
         
         return results
 
@@ -111,6 +119,7 @@ class VideoStreamSampler(object):
             sampling id.
         """
         frames_len = int(results['frames_len'])
+        video_len = int(results['video_len'])
         results['frames_len'] = frames_len
         container = results['frames']
         imgs = []
@@ -120,7 +129,10 @@ class VideoStreamSampler(object):
         start_frame = results['sample_sliding_idx'] * self.sliding_window
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
         if start_frame < frames_len and end_frame < frames_len:
-            frames_idx = list(range(start_frame, end_frame, self.sample_rate))
+            vid_end_frame = end_frame
+            if end_frame > video_len:
+                vid_end_frame = video_len
+            frames_idx = list(range(start_frame, vid_end_frame, self.sample_rate))
             labels = labels[start_frame:end_frame]
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
@@ -128,8 +140,15 @@ class VideoStreamSampler(object):
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i]
                 imgs.append(Image.fromarray(imgbuf, mode='RGB'))
+
+            if len(imgs) < self.clip_seg_num:
+                np_frames = np_frames[-1].asnumpy()
+                pad_len = self.clip_seg_num - len(imgs)
+                for i in range(pad_len):
+                    imgs.append(Image.fromarray(np_frames, mode='RGB'))
+                    
             mask = np.ones((labels.shape[0]))
-        elif start_frame < frames_len and end_frame > frames_len:
+        elif start_frame < frames_len and end_frame >= frames_len:
             frames_idx = list(range(start_frame, frames_len, self.sample_rate))
             labels = labels[start_frame:frames_len]
             frames_select = container.get_batch(frames_idx)
@@ -138,13 +157,13 @@ class VideoStreamSampler(object):
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i]
                 imgs.append(Image.fromarray(imgbuf, mode='RGB'))
-            vaild_mask = np.ones((frames_len - start_frame))
             np_frames = np.zeros_like(np_frames[0])
             pad_len = self.clip_seg_num - len(imgs)
             for i in range(pad_len):
                 imgs.append(Image.fromarray(np_frames, mode='RGB'))
+            vaild_mask = np.ones((labels.shape[0]))
             mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
-            void_mask = np.zeros((pad_len))
+            void_mask = np.zeros((mask_pad_len))
             mask = np.concatenate([vaild_mask, void_mask], axis=0)
             labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
         else:

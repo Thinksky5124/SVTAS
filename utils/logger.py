@@ -106,7 +106,7 @@ class AverageMeter(object):
     def update(self, val, n=1):
         """ update """
         if isinstance(val, torch.Tensor):
-            val = val.cpu().detach().numpy()[0]
+            val = val.cpu().detach().numpy()
         self.val = val
         self.sum += val * n
         self.count += n
@@ -131,7 +131,7 @@ class AverageMeter(object):
         return '{self.name}: {self.val:{self.fmt}}'.format(self=self)
 
 
-def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips):
+def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
     batch_cost = str(metric_list['batch_time'].value) + ' sec,'
     reader_cost = str(metric_list['reader_time'].value) + ' sec,'
 
@@ -149,7 +149,7 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips):
         coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
 
 
-def log_epoch(metric_list, epoch, mode, ips):
+def log_epoch(metric_list, epoch, mode, ips, logger):
     batch_cost = 'avg_' + str(metric_list['batch_time'].value) + ' sec,'
     reader_cost = 'avg_' + str(metric_list['reader_time'].value) + ' sec,'
     batch_sum = str(metric_list['batch_time'].total) + ' sec,'

@@ -21,12 +21,13 @@ class PostProcessing(object):
         self.video_gt = torch.zeros((batch_size, sample_videos_max_len))
     
     def update(self, seg_scores, gt, idx):
-        start_frame = idx * self.sliding_window - (self.clip_buffer_num * self.clip_seg_num) * self.sample_rate
-        if start_frame < 0:
-            start_frame = 0
-        end_frame = start_frame + (self.clip_seg_num * self.sample_rate)
-        self.pred_scores[:, :, start_frame:end_frame] = seg_scores
-        self.video_gt[:, :, start_frame:end_frame] = gt
+        with torch.no_grad():
+            start_frame = idx * self.sliding_window - (self.clip_buffer_num * self.clip_seg_num) * self.sample_rate
+            if start_frame < 0:
+                start_frame = 0
+            end_frame = start_frame + (self.clip_seg_num * self.sample_rate)
+            self.pred_scores[:, :, start_frame:end_frame] = seg_scores
+            self.video_gt[:, start_frame:end_frame] = gt
 
     def output(self):
         pred_score_list = []
@@ -37,7 +38,7 @@ class PostProcessing(object):
             index = np.where(self.video_gt[bs, :].cpu().numpy() == -100)
             ignore_start = min(index[0])
             predicted = torch.argmax(self.pred_scores[bs, :, :ignore_start], axis=0)
-            predicted = predicted.sequence().cpu().numpy()
+            predicted = predicted.squeeze().cpu().numpy()
             pred_cls_list.append(predicted)
             pred_score_list.append(self.pred_scores[bs, :, :ignore_start].cpu().numpy())
             ground_truth_list.append(self.video_gt[bs, :ignore_start].cpu().numpy())

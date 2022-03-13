@@ -187,10 +187,10 @@ class BaseSegmentationMetric(object):
         Edit = (1.0 * self.total_edit) / self.total_video
         Fscore = dict()
         for s in range(self.overlap_len):
-            precision = self.cls_tp[s] / float(self.cls_tp[s] + self.cls_fp[s])
-            recall = self.cls_tp[s] / float(self.cls_tp[s] + self.cls_fn[s])
+            precision = self.cls_tp[s] / float(self.cls_tp[s] + self.cls_fp[s] + self.elps)
+            recall = self.cls_tp[s] / float(self.cls_tp[s] + self.cls_fn[s] + self.elps)
 
-            f1 = 2.0 * (precision * recall) / (precision + recall)
+            f1 = 2.0 * (precision * recall) / (precision + recall + self.elps)
 
             f1 = np.nan_to_num(f1) * 100
             Fscore[self.overlap[s]] = f1
@@ -326,7 +326,7 @@ class SegmentationMetric(BaseSegmentationMetric):
 
             result = self._transform_model_result(outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result
-            single_f1 = self._update_score([int(vid[bs])], recog_content, gt_content, pred_detection,
+            single_f1 = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
                             gt_detection)
             single_batch_f1 += single_f1
         

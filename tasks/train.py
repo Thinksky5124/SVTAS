@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 import torch
-from utils.logger import get_logger, AverageMeter, log_batch
+from utils.logger import get_logger, AverageMeter, log_batch, log_epoch
 from utils.save_load import mkdir
 
 from model.etets import ETETS
@@ -32,9 +32,11 @@ def train(cfg,
     output_dir = cfg.get("output_dir", f"./output")
     mkdir(output_dir)
 
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # 1.construct model
-    model = ETETS(**cfg.MODEL).cuda()
-    criterion = ETETSLoss(**cfg.MODEL.loss)
+    model = ETETS(**cfg.MODEL).to(device)
+    criterion = ETETSLoss(**cfg.MODEL.loss).to(device)
 
     # 2. build metirc
     Metric = SegmentationMetric(**cfg.METRIC)
@@ -54,6 +56,7 @@ def train(cfg,
 
         optimizer.load_state_dict(checkpoint['optimizer'])
         start_epoch = checkpoint['epoch']
+        resume_epoch = start_epoch
     # 4. construct Pipeline
     train_Pipeline = Pipeline(**cfg.PIPELINE.train)
     val_Pipeline = Pipeline(**cfg.PIPELINE.test)
@@ -81,7 +84,7 @@ def train(cfg,
 
     best = 0.0
     for epoch in range(0, cfg.epochs):
-        if epoch < start_epoch:
+        if epoch < resume_epoch:
             logger.info(
                 f"| epoch: [{epoch+1}] <= resume_epoch: [{ resume_epoch}], continue... "
             )
@@ -90,7 +93,8 @@ def train(cfg,
         model.train()
 
         # batch videos sampler
-        for vid_list, temporal_len_list in train_video_sampler_dataloader:
+        for step, sample_videos in enumerate(train_video_sampler_dataloader):
+            vid_list, video_name_list, temporal_len_list = sample_videos
             tic = time.time()
 
             # 7. Construct dataset and dataloader
@@ -107,7 +111,7 @@ def train(cfg,
 
             # prepare video score 
             post_processing = PostProcessing(
-                batch_size=batch_size,
+                batch_size=len(vid_list),
                 max_temporal_len=np.max(temporal_len_list.numpy()),
                 num_classes=cfg.MODEL.head.num_classes,
                 clip_seg_num=cfg.MODEL.neck.clip_seg_num,
@@ -116,21 +120,28 @@ def train(cfg,
                 clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
             # videos sliding stream train
             videos_loss = 0.
+            video_seg_loss = 0.
+            video_cls_loss = 0.
             num_clip = train_loader.__len__()
             for i, data in enumerate(train_loader):
                 record_dict['reader_time'].update(time.time() - tic)
                 for sliding_seg in data:
                     imgs, labels, masks, _, idx = sliding_seg
+                    imgs = imgs.to(device)
+                    masks = masks.to(device)
+                    labels = labels.to(device)
                     # train segment
                     outputs = model(imgs, masks)
-                    cls_score, seg_score = outputs
-                    cls_loss, seg_loss = criterion(cls_score, seg_score, masks, labels)
+                    seg_score, cls_score = outputs
+                    cls_loss, seg_loss = criterion(seg_score, cls_score, masks, labels)
 
                     loss = (cls_loss + seg_loss) / num_clip
 
                     loss.backward()
                     post_processing.update(seg_score, labels, idx)
                     videos_loss += loss.item()
+                    video_seg_loss += seg_loss.item()
+                    video_cls_loss += cls_loss.item()
         
             optimizer.step()
             optimizer.zero_grad()
@@ -139,22 +150,22 @@ def train(cfg,
             pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
             outputs = dict(predict=pred_cls_list,
                            output_np=pred_score_list)
-            f1 = Metric.update(list(vid_list.numpy()), ground_truth_list, outputs)
+            f1 = Metric.update(video_name_list, ground_truth_list, outputs)
             
             # logger
             record_dict['batch_time'].update(time.time() - tic)
-            record_dict['loss'].update(videos_loss, batch_size)
+            record_dict['loss'].update(videos_loss * num_clip, batch_size)
             record_dict['lr'].update(optimizer.state_dict()['param_groups'][0]['lr'], batch_size)
             record_dict['F1@0.5'].update(f1, batch_size)
-            record_dict['cls_loss'].update(cls_loss, batch_size)
-            record_dict['seg_loss'].update(seg_loss, batch_size)
+            record_dict['cls_loss'].update(video_cls_loss, batch_size)
+            record_dict['seg_loss'].update(video_seg_loss, batch_size)
             tic = time.time()
 
 
             if i % cfg.get("log_interval", 10) == 0:
                 ips = "ips: {:.5f} instance/sec.".format(
                     batch_size / record_dict["batch_time"].val)
-                log_batch(record_dict, i, epoch + 1, cfg.epochs, "train", ips)
+                log_batch(record_dict, step, epoch + 1, cfg.epochs, "train", ips, logger)
 
         # metric output
         Metric.accumulate()
@@ -164,7 +175,7 @@ def train(cfg,
         ips = "avg_ips: {:.5f} instance/sec.".format(
             batch_size * record_dict["batch_time"].count /
             record_dict["batch_time"].sum)
-        log_epoch(record_dict, epoch + 1, "train", ips)
+        log_epoch(record_dict, epoch + 1, "train", ips, logger)
 
         def evaluate(best):
             model.eval()
@@ -185,7 +196,8 @@ def train(cfg,
                                         shuffle=False)
             tic = time.time()
             # batch videos sampler
-            for vid_list, temporal_len_list in val_video_sampler_dataloader:
+            for step, sample_videos in enumerate(val_video_sampler_dataloader):
+                vid_list, video_name_list, temporal_len_list = sample_videos
                 tic = time.time()
                 val_dataset_config = cfg.DATASET.test
                 val_dataset_config['sample_idx_list'] = list(vid_list.numpy())
@@ -200,7 +212,7 @@ def train(cfg,
 
                 # prepare video score 
                 post_processing = PostProcessing(
-                    batch_size=batch_size,
+                    batch_size=len(vid_list),
                     max_temporal_len=np.max(temporal_len_list.numpy()),
                     num_classes=cfg.MODEL.head.num_classes,
                     clip_seg_num=cfg.MODEL.neck.clip_seg_num,
@@ -210,41 +222,47 @@ def train(cfg,
 
                 # videos sliding stream train
                 videos_loss = 0.
+                video_seg_loss = 0.
+                video_cls_loss = 0.
                 num_clip = val_loader.__len__()
                 for i, data in enumerate(val_loader):
                     record_dict['reader_time'].update(time.time() - tic)
                     for sliding_seg in data:
                         imgs, labels, masks, _, idx = sliding_seg
+                        imgs = imgs.to(device)
+                        masks = masks.to(device)
+                        labels = labels.to(device)
                         # val segment
                         outputs = model(imgs, masks)
-                        cls_score, seg_score = outputs
-                        cls_loss, seg_loss = criterion(cls_score, seg_score, masks, labels)
+                        seg_score, cls_score = outputs
+                        cls_loss, seg_loss = criterion(seg_score, cls_score, masks, labels)
 
                         loss = (cls_loss + seg_loss) / num_clip
 
-                        loss.backward()
                         post_processing.update(seg_score, labels, idx)
                         videos_loss += loss.item()
+                        video_seg_loss += seg_loss.item()
+                        video_cls_loss += cls_loss.item()
                     
                 # get pred result
                 pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
                 outputs = dict(predict=pred_cls_list,
                             output_np=pred_score_list)
-                f1 = Metric.update(list(vid_list.numpy()), ground_truth_list, outputs)
+                f1 = Metric.update(video_name_list, ground_truth_list, outputs)
                 
                 # logger
                 record_dict['batch_time'].update(time.time() - tic)
-                record_dict['loss'].update(videos_loss, batch_size)
+                record_dict['loss'].update(videos_loss * num_clip, batch_size)
                 record_dict['F1@0.5'].update(f1, batch_size)
-                record_dict['cls_loss'].update(cls_loss, batch_size)
-                record_dict['seg_loss'].update(seg_loss, batch_size)
+                record_dict['cls_loss'].update(video_cls_loss, batch_size)
+                record_dict['seg_loss'].update(video_seg_loss, batch_size)
                 tic = time.time()
 
 
                 if i % cfg.get("log_interval", 10) == 0:
                     ips = "ips: {:.5f} instance/sec.".format(
                         batch_size / record_dict["batch_time"].val)
-                    log_batch(record_dict, i, epoch + 1, cfg.epochs, "train", ips)
+                    log_batch(record_dict, i, epoch + 1, cfg.epochs, "val", ips, logger)
 
             # metric output
             Metric_dict = Metric.accumulate()
@@ -252,7 +270,7 @@ def train(cfg,
             ips = "avg_ips: {:.5f} instance/sec.".format(
                 batch_size * record_dict["batch_time"].count /
                 record_dict["batch_time"].sum)
-            log_epoch(record_dict, epoch + 1, "train", ips)
+            log_epoch(record_dict, epoch + 1, "val", ips, logger)
 
             best_flag = False
             if Metric_dict["F1@0.50"] > best:
