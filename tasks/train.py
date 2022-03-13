@@ -162,7 +162,7 @@ def train(cfg,
             tic = time.time()
 
 
-            if i % cfg.get("log_interval", 10) == 0:
+            if step % cfg.get("log_interval", 10) == 0:
                 ips = "ips: {:.5f} instance/sec.".format(
                     batch_size / record_dict["batch_time"].val)
                 log_batch(record_dict, step, epoch + 1, cfg.epochs, "train", ips, logger)
@@ -259,10 +259,10 @@ def train(cfg,
                 tic = time.time()
 
 
-                if i % cfg.get("log_interval", 10) == 0:
+                if step % cfg.get("log_interval", 10) == 0:
                     ips = "ips: {:.5f} instance/sec.".format(
                         batch_size / record_dict["batch_time"].val)
-                    log_batch(record_dict, i, epoch + 1, cfg.epochs, "val", ips, logger)
+                    log_batch(record_dict, step, epoch + 1, cfg.epochs, "val", ips, logger)
 
             # metric output
             Metric_dict = Metric.accumulate()

@@ -67,11 +67,11 @@ class ETETSHead(nn.Module):
         else:
             x = torch.reshape(x, x.shape[::3])
         score = self.fc(x)  # [N * num_seg, num_class]
-        cls_score = torch.reshape(
+        score = torch.reshape(
             score, [-1, seg_feature.shape[2], score.shape[1]])  # [N, num_seg, num_class]
-        # score = torch.mean(score, axis=1)  # [N, num_class]
-        # cls_score = torch.reshape(score,
-        #                        shape=[-1, self.num_classes])  # [N, num_class]
+        score = torch.mean(score, axis=1)  # [N, num_class]
+        cls_score = torch.reshape(score,
+                               shape=[-1, self.num_classes])  # [N, num_class]
         return seg_score, cls_score
 
 class MultiStageModel(nn.Module):

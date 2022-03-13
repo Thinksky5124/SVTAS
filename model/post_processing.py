@@ -16,7 +16,7 @@ class PostProcessing(object):
         self.clip_buffer_num = clip_buffer_num
 
         sample_videos_max_len = max_temporal_len + ((self.clip_seg_num * self.sample_rate) - max_temporal_len % (self.clip_seg_num * self.sample_rate))
-
+        self.sample_videos_max_len = sample_videos_max_len
         self.pred_scores = torch.zeros((batch_size, num_classes, sample_videos_max_len))
         self.video_gt = torch.zeros((batch_size, sample_videos_max_len))
     
@@ -36,7 +36,7 @@ class PostProcessing(object):
 
         for bs in range(self.pred_scores.shape[0]):
             index = np.where(self.video_gt[bs, :].cpu().numpy() == -100)
-            ignore_start = min(index[0])
+            ignore_start = min(list(index[0]) + [self.sample_videos_max_len])
             predicted = torch.argmax(self.pred_scores[bs, :, :ignore_start], axis=0)
             predicted = predicted.squeeze().cpu().numpy()
             pred_cls_list.append(predicted)

@@ -71,9 +71,6 @@ python applications/LightWeight/prepare_ete_data_list.py \
 # single gpu
 export CUDA_VISIBLE_DEVICES=2
 python main.py  --validate -c config/gtea/ete_tsm_mstcn.yaml --seed 0
-# multi gpu
-export CUDA_VISIBLE_DEVICES=2,3
-python -B -m paddle.distributed.launch --gpus="2,3"  --log_dir=./output main.py  --validate -c applications/LightWeight/config/one_shot/gtea/ete_tsm_mstcn.yaml --seed 0
 
 # 50salads
 
