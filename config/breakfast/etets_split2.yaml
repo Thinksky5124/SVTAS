@@ -29,9 +29,9 @@ COLLATE:
     to_tensor_idx: 3
 
 DATASET: #DATASET field
-    batch_size: 8 #Mandatory, bacth size
-    num_workers: 6 #Mandatory, XXX the number of subprocess on each GPU.
-    test_batch_size: 8
+    temporal_clip_batch_size: 3
+    video_batch_size: 8
+    num_workers: 8
     train:
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/breakfast/splits/train.split2.bundle" #Mandatory, train data index file path
@@ -39,7 +39,7 @@ DATASET: #DATASET field
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
         dataset_type: "breakfast"
-        sliding_window: 60
+        sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4
     test:
@@ -49,7 +49,7 @@ DATASET: #DATASET field
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
         dataset_type: "breakfast"
-        sliding_window: 60
+        sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4
 
@@ -61,7 +61,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 15
-            sliding_window: 60
+            sliding_window: 30
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -80,7 +80,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 15
-            sliding_window: 60
+            sliding_window: 30
         transform:
             - Resize:
                 size: 256
@@ -103,7 +103,7 @@ METRIC:
     boundary_threshold: 0.7
 
 
-model_name: "ETETS_breakfast"
+model_name: "ETETS_breakfast_split1"
 log_interval: 10 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

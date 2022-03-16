@@ -73,17 +73,27 @@ python applications/LightWeight/prepare_ete_data_list.py \
 # gtea
 # single gpu
 export CUDA_VISIBLE_DEVICES=1
-python main.py  --validate -c config/gtea/ete_tsm_mstcn.yaml --seed 0
+python main.py  --validate -c config/gtea/etets_split1.yaml --seed 0
+python main.py  --validate -c config/gtea/etets_split2.yaml --seed 0
+python main.py  --validate -c config/gtea/etets_split3.yaml --seed 0
+python main.py  --validate -c config/gtea/etets_split4.yaml --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=1,2
 python -m torch.distributed.launch --nproc_pemain.pyr_node=2  --launcher pytorch --validate -c config/gtea/ete_tsm_mstcn.yaml --seed 0
 
 # 50salads
 export CUDA_VISIBLE_DEVICES=3
-python main.py  --validate -c config/50salads/ete_tsm_mstcn.yaml --seed 0
+python main.py  --validate -c config/50salads/etets_split1.yaml --seed 0
+python main.py  --validate -c config/50salads/etets_split2.yaml --seed 0
+python main.py  --validate -c config/50salads/etets_split3.yaml --seed 0
+python main.py  --validate -c config/50salads/etets_split4.yaml --seed 0
+python main.py  --validate -c config/50salads/etets_split5.yaml --seed 0
 
 # breakfast
-python main.py  --validate -c config/breakfast/ete_tsm_mstcn.yaml  --seed 0
+python main.py  --validate -c config/breakfast/etets_split1.yaml  --seed 0
+python main.py  --validate -c config/breakfast/etets_split2.yaml  --seed 0
+python main.py  --validate -c config/breakfast/etets_split3.yaml  --seed 0
+python main.py  --validate -c config/breakfast/etets_split4.yaml  --seed 0
 ```
 ## test model
 ```bash

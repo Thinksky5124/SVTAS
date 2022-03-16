@@ -75,6 +75,17 @@ def train(cfg,
         batch_size=temporal_clip_batch_size,
         num_workers=num_workers,
         collate_fn=sliding_concate_fn)
+    
+    if validate:
+        val_dataset_config = cfg.DATASET.test
+        val_dataset_config['pipeline'] = val_Pipeline
+        val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
+        val_dataset_config['video_batch_size'] = video_batch_size
+        val_dataloader = torch.utils.data.DataLoader(
+            SegmentationDataset(**val_dataset_config),
+            batch_size=temporal_clip_batch_size,
+            num_workers=num_workers,
+            collate_fn=sliding_concate_fn)
   
     # 6. Train Model
     record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
@@ -138,7 +149,7 @@ def train(cfg,
                     record_dict['batch_time'].update(time.time() - tic)
                     record_dict['loss'].update(video_seg_loss + video_cls_loss, video_batch_size)
                     record_dict['lr'].update(optimizer.state_dict()['param_groups'][0]['lr'], video_batch_size)
-                    record_dict['F1@0.5'].update(f1, video_batch_size)
+                    record_dict['F1@0.5'].update(f1)
                     record_dict['cls_loss'].update(video_cls_loss, video_batch_size)
                     record_dict['seg_loss'].update(video_seg_loss, video_batch_size)
 
@@ -194,17 +205,6 @@ def train(cfg,
                    'cls_loss': AverageMeter("cls_loss", '.5f'),
                    'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
-            
-            sliding_concate_fn = BatchCompose(**cfg.COLLATE)
-            val_dataset_config = cfg.DATASET.test
-            val_dataset_config['pipeline'] = val_Pipeline
-            val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-            val_dataset_config['video_batch_size'] = video_batch_size
-            val_dataloader = torch.utils.data.DataLoader(
-                SegmentationDataset(**val_dataset_config),
-                batch_size=temporal_clip_batch_size,
-                num_workers=num_workers,
-                collate_fn=sliding_concate_fn)
 
             tic = time.time()
             # model logger init
@@ -234,7 +234,7 @@ def train(cfg,
                         # logger
                         record_dict['batch_time'].update(time.time() - tic)
                         record_dict['loss'].update(video_seg_loss + video_cls_loss, video_batch_size)
-                        record_dict['F1@0.5'].update(f1, video_batch_size)
+                        record_dict['F1@0.5'].update(f1)
                         record_dict['cls_loss'].update(video_cls_loss, video_batch_size)
                         record_dict['seg_loss'].update(video_seg_loss, video_batch_size)
 
