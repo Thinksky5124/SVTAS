@@ -9,34 +9,36 @@ from utils.save_load import mkdir
 from model.etets import ETETS
 from model.loss import ETETSLoss
 from dataset.segmentation_dataset import SegmentationDataset
-from dataset.segmentation_dataset import VideoSamplerDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
 from model.post_processing import PostProcessing
 
 def train(cfg,
+          distributed,
           weights=None,
           validate=True):
     """Train model entry
     """
 
     logger = get_logger("ETETS")
-    batch_size = cfg.DATASET.get('batch_size', 8)
-    valid_batch_size = cfg.DATASET.get('test_batch_size', batch_size)
+    temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
+    video_batch_size = cfg.DATASET.get('video_batch_size', 8)
 
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)
-    valid_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output")
     mkdir(output_dir)
 
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if distributed == False:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        local_rank = torch.distributed.get_rank()
+        device = torch.device(f'cuda:{local_rank}')
     # 1.construct model
-    model = ETETS(**cfg.MODEL).to(device)
-    criterion = ETETSLoss(**cfg.MODEL.loss).to(device)
+    model = ETETS(**cfg.MODEL).cuda()
+    criterion = ETETSLoss(**cfg.MODEL.loss)
 
     # 2. build metirc
     Metric = SegmentationMetric(**cfg.METRIC)
@@ -63,15 +65,17 @@ def train(cfg,
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg.OPTIMIZER.step_size, gamma=cfg.OPTIMIZER.gamma)
 
     # 5. Construct Dataset
-    train_video_sampler_dataloader = torch.utils.data.DataLoader(
-                VideoSamplerDataset(file_path=cfg.DATASET.train.file_path,
-                                    gt_path=cfg.DATASET.train.gt_path,
-                                    dataset_type=cfg.DATASET.train.dataset_type),
-                                    batch_size=batch_size,
-                                    num_workers=1,
-                                    shuffle=True)
     sliding_concate_fn = BatchCompose(**cfg.COLLATE)
-
+    train_dataset_config = cfg.DATASET.train
+    train_dataset_config['pipeline'] = train_Pipeline
+    train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
+    train_dataset_config['video_batch_size'] = video_batch_size
+    train_dataloader = torch.utils.data.DataLoader(
+        SegmentationDataset(**train_dataset_config),
+        batch_size=temporal_clip_batch_size,
+        num_workers=num_workers,
+        collate_fn=sliding_concate_fn)
+  
     # 6. Train Model
     record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
@@ -81,6 +85,14 @@ def train(cfg,
                    'cls_loss': AverageMeter("cls_loss", '.5f'),
                    'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
+
+    # 7. Construct post precesing
+    post_processing = PostProcessing(
+        num_classes=cfg.MODEL.head.num_classes,
+        clip_seg_num=cfg.MODEL.neck.clip_seg_num,
+        sliding_window=cfg.DATASET.train.sliding_window,
+        sample_rate=cfg.DATASET.train.sample_rate,
+        clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
 
     best = 0.0
     for epoch in range(0, cfg.epochs):
@@ -93,79 +105,75 @@ def train(cfg,
         model.train()
 
         # batch videos sampler
-        for step, sample_videos in enumerate(train_video_sampler_dataloader):
-            vid_list, video_name_list, temporal_len_list = sample_videos
-            tic = time.time()
-
-            # 7. Construct dataset and dataloader
-            train_dataset_config = cfg.DATASET.train
-            train_dataset_config['sample_idx_list'] = list(vid_list.numpy())
-            train_dataset_config['pipeline'] = train_Pipeline
-            train_loader = torch.utils.data.DataLoader(
-                SegmentationDataset(**train_dataset_config),
-                batch_size=batch_size,
-                num_workers=num_workers,
-                collate_fn=sliding_concate_fn,
-                shuffle=False
-            )
-
-            # prepare video score 
-            post_processing = PostProcessing(
-                batch_size=len(vid_list),
-                max_temporal_len=np.max(temporal_len_list.numpy()),
-                num_classes=cfg.MODEL.head.num_classes,
-                clip_seg_num=cfg.MODEL.neck.clip_seg_num,
-                sliding_window=cfg.DATASET.train.sliding_window,
-                sample_rate=cfg.DATASET.train.sample_rate,
-                clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
+        tic = time.time()
+        videos_loss = 0.
+        video_seg_loss = 0.
+        video_cls_loss = 0.
+        post_processing.init_flag = False
+        current_step = 0
+        current_step_vid_list = None
+        # shuffle video data
+        train_dataloader.dataset._viodeo_sample_shuffle()
+        for i, data in enumerate(train_dataloader):
             # videos sliding stream train
-            videos_loss = 0.
-            video_seg_loss = 0.
-            video_cls_loss = 0.
-            num_clip = train_loader.__len__()
-            for i, data in enumerate(train_loader):
-                record_dict['reader_time'].update(time.time() - tic)
-                for sliding_seg in data:
-                    imgs, labels, masks, _, idx = sliding_seg
-                    imgs = imgs.to(device)
-                    masks = masks.to(device)
-                    labels = labels.to(device)
+            record_dict['reader_time'].update(time.time() - tic)
+            for sliding_seg in data:
+                imgs, labels, masks, vid_list, sliding_num, step, idx = sliding_seg
+                # wheather next step
+                if current_step != step:
+                    optimizer.step()
+                    optimizer.zero_grad()
+
+                    # get pred result
+                    pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
+                    outputs = dict(predict=pred_cls_list,
+                                    output_np=pred_score_list)
+                    f1 = Metric.update(current_step_vid_list, ground_truth_list, outputs)
+
+                    current_step_vid_list = vid_list
+                    if len(current_step_vid_list) > 0:
+                        post_processing.init_scores(sliding_num, len(vid_list))
+
+                    # logger
+                    record_dict['batch_time'].update(time.time() - tic)
+                    record_dict['loss'].update(video_seg_loss + video_cls_loss, video_batch_size)
+                    record_dict['lr'].update(optimizer.state_dict()['param_groups'][0]['lr'], video_batch_size)
+                    record_dict['F1@0.5'].update(f1, video_batch_size)
+                    record_dict['cls_loss'].update(video_cls_loss, video_batch_size)
+                    record_dict['seg_loss'].update(video_seg_loss, video_batch_size)
+
+                    videos_loss = 0.
+                    video_seg_loss = 0.
+                    video_cls_loss = 0.
+
+                    if current_step % cfg.get("log_interval", 10) == 0:
+                        ips = "ips: {:.5f} instance/sec.".format(
+                            video_batch_size / record_dict["batch_time"].val)
+                        log_batch(record_dict, current_step, epoch + 1, cfg.epochs, "train", ips, logger)
+                    current_step = step
+
+                if idx >= 0:
+                    # move data
+                    imgs = imgs.cuda()
+                    masks = masks.cuda()
+                    labels = labels.cuda()
                     # train segment
                     outputs = model(imgs, masks)
                     seg_score, cls_score = outputs
                     cls_loss, seg_loss = criterion(seg_score, cls_score, masks, labels)
-
-                    loss = (cls_loss + seg_loss) / num_clip
+                    
+                    loss = (cls_loss + seg_loss) / sliding_num
 
                     loss.backward()
+                    if post_processing.init_flag is not True:
+                        post_processing.init_scores(sliding_num, len(vid_list))
+                        current_step_vid_list = vid_list
                     post_processing.update(seg_score, labels, idx)
                     videos_loss += loss.item()
                     video_seg_loss += seg_loss.item()
                     video_cls_loss += cls_loss.item()
-        
-            optimizer.step()
-            optimizer.zero_grad()
 
-            # get pred result
-            pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
-            outputs = dict(predict=pred_cls_list,
-                           output_np=pred_score_list)
-            f1 = Metric.update(video_name_list, ground_truth_list, outputs)
-            
-            # logger
-            record_dict['batch_time'].update(time.time() - tic)
-            record_dict['loss'].update(videos_loss * num_clip, batch_size)
-            record_dict['lr'].update(optimizer.state_dict()['param_groups'][0]['lr'], batch_size)
-            record_dict['F1@0.5'].update(f1, batch_size)
-            record_dict['cls_loss'].update(video_cls_loss, batch_size)
-            record_dict['seg_loss'].update(video_seg_loss, batch_size)
-            tic = time.time()
-
-
-            if step % cfg.get("log_interval", 10) == 0:
-                ips = "ips: {:.5f} instance/sec.".format(
-                    batch_size / record_dict["batch_time"].val)
-                log_batch(record_dict, step, epoch + 1, cfg.epochs, "train", ips, logger)
+                    tic = time.time()
 
         # metric output
         Metric.accumulate()
@@ -173,7 +181,7 @@ def train(cfg,
         # update lr
         scheduler.step()
         ips = "avg_ips: {:.5f} instance/sec.".format(
-            batch_size * record_dict["batch_time"].count /
+            video_batch_size * record_dict["batch_time"].count /
             record_dict["batch_time"].sum)
         log_epoch(record_dict, epoch + 1, "train", ips, logger)
 
@@ -187,88 +195,86 @@ def train(cfg,
                    'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
             
-            val_video_sampler_dataloader = torch.utils.data.DataLoader(
-                    VideoSamplerDataset(file_path=cfg.DATASET.test.file_path,
-                                        gt_path=cfg.DATASET.test.gt_path,
-                                        dataset_type=cfg.DATASET.test.dataset_type),
-                                        batch_size=batch_size,
-                                        num_workers=1,
-                                        shuffle=False)
+            sliding_concate_fn = BatchCompose(**cfg.COLLATE)
+            val_dataset_config = cfg.DATASET.test
+            val_dataset_config['pipeline'] = val_Pipeline
+            val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
+            val_dataset_config['video_batch_size'] = video_batch_size
+            val_dataloader = torch.utils.data.DataLoader(
+                SegmentationDataset(**val_dataset_config),
+                batch_size=temporal_clip_batch_size,
+                num_workers=num_workers,
+                collate_fn=sliding_concate_fn)
+
             tic = time.time()
-            # batch videos sampler
-            for step, sample_videos in enumerate(val_video_sampler_dataloader):
-                vid_list, video_name_list, temporal_len_list = sample_videos
-                tic = time.time()
-                val_dataset_config = cfg.DATASET.test
-                val_dataset_config['sample_idx_list'] = list(vid_list.numpy())
-                val_dataset_config['pipeline'] = val_Pipeline
-                val_loader = torch.utils.data.DataLoader(
-                    SegmentationDataset(**val_dataset_config),
-                    batch_size=valid_batch_size,
-                    num_workers=valid_num_workers,
-                    collate_fn=sliding_concate_fn,
-                    shuffle=False
-                )
-
-                # prepare video score 
-                post_processing = PostProcessing(
-                    batch_size=len(vid_list),
-                    max_temporal_len=np.max(temporal_len_list.numpy()),
-                    num_classes=cfg.MODEL.head.num_classes,
-                    clip_seg_num=cfg.MODEL.neck.clip_seg_num,
-                    sliding_window=cfg.DATASET.test.sliding_window,
-                    sample_rate=cfg.DATASET.test.sample_rate,
-                    clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
-
+            # model logger init
+            post_processing.init_flag = False
+            videos_loss = 0.
+            video_seg_loss = 0.
+            video_cls_loss = 0.
+            current_step = 0
+            current_step_vid_list = None
+            for i, data in enumerate(val_dataloader):
                 # videos sliding stream train
-                videos_loss = 0.
-                video_seg_loss = 0.
-                video_cls_loss = 0.
-                num_clip = val_loader.__len__()
-                for i, data in enumerate(val_loader):
-                    record_dict['reader_time'].update(time.time() - tic)
-                    for sliding_seg in data:
-                        imgs, labels, masks, _, idx = sliding_seg
-                        imgs = imgs.to(device)
-                        masks = masks.to(device)
-                        labels = labels.to(device)
-                        # val segment
+                record_dict['reader_time'].update(time.time() - tic)
+                for sliding_seg in data:
+                    imgs, labels, masks, vid_list, sliding_num, step, idx = sliding_seg
+                    # wheather next step
+                    if current_step != step:
+                        # get pred result
+                        pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
+                        outputs = dict(predict=pred_cls_list,
+                                        output_np=pred_score_list)
+                        f1 = Metric.update(current_step_vid_list, ground_truth_list, outputs)
+
+                        current_step_vid_list = vid_list
+                        if len(current_step_vid_list) > 0:
+                            post_processing.init_scores(sliding_num, len(vid_list))
+
+                        # logger
+                        record_dict['batch_time'].update(time.time() - tic)
+                        record_dict['loss'].update(video_seg_loss + video_cls_loss, video_batch_size)
+                        record_dict['F1@0.5'].update(f1, video_batch_size)
+                        record_dict['cls_loss'].update(video_cls_loss, video_batch_size)
+                        record_dict['seg_loss'].update(video_seg_loss, video_batch_size)
+
+                        videos_loss = 0.
+                        video_seg_loss = 0.
+                        video_cls_loss = 0.
+
+                        if current_step % cfg.get("log_interval", 10) == 0:
+                            ips = "ips: {:.5f} instance/sec.".format(
+                                video_batch_size / record_dict["batch_time"].val)
+                            log_batch(record_dict, current_step, epoch + 1, cfg.epochs, "val", ips, logger)
+                        current_step = step
+
+                    if idx >= 0:
+                        # move data
+                        imgs = imgs.cuda()
+                        masks = masks.cuda()
+                        labels = labels.cuda()
+                        # train segment
                         outputs = model(imgs, masks)
                         seg_score, cls_score = outputs
                         cls_loss, seg_loss = criterion(seg_score, cls_score, masks, labels)
+                        
+                        loss = (cls_loss + seg_loss) / sliding_num
 
-                        loss = (cls_loss + seg_loss) / num_clip
-
+                        if post_processing.init_flag is not True:
+                            post_processing.init_scores(sliding_num, len(vid_list))
+                            current_step_vid_list = vid_list
                         post_processing.update(seg_score, labels, idx)
                         videos_loss += loss.item()
                         video_seg_loss += seg_loss.item()
                         video_cls_loss += cls_loss.item()
-                    
-                # get pred result
-                pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
-                outputs = dict(predict=pred_cls_list,
-                            output_np=pred_score_list)
-                f1 = Metric.update(video_name_list, ground_truth_list, outputs)
-                
-                # logger
-                record_dict['batch_time'].update(time.time() - tic)
-                record_dict['loss'].update(videos_loss * num_clip, batch_size)
-                record_dict['F1@0.5'].update(f1, batch_size)
-                record_dict['cls_loss'].update(video_cls_loss, batch_size)
-                record_dict['seg_loss'].update(video_seg_loss, batch_size)
-                tic = time.time()
 
-
-                if step % cfg.get("log_interval", 10) == 0:
-                    ips = "ips: {:.5f} instance/sec.".format(
-                        batch_size / record_dict["batch_time"].val)
-                    log_batch(record_dict, step, epoch + 1, cfg.epochs, "val", ips, logger)
+                        tic = time.time()
 
             # metric output
             Metric_dict = Metric.accumulate()
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
-                batch_size * record_dict["batch_time"].count /
+                video_batch_size * record_dict["batch_time"].count /
                 record_dict["batch_time"].sum)
             log_epoch(record_dict, epoch + 1, "val", ips, logger)
 

@@ -1,6 +1,9 @@
 # ETETS
 End to End Temporal Segmention Model
 
+# Todo list
+- [ ] distribution data parallel
+
 # Envirnment Preapre
 ```bash
 conda create --prefix=/mnt/wenwujun/torch python=3.8
@@ -69,10 +72,15 @@ python applications/LightWeight/prepare_ete_data_list.py \
 ```bash
 # gtea
 # single gpu
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=1
 python main.py  --validate -c config/gtea/ete_tsm_mstcn.yaml --seed 0
+# multi gpu
+export CUDA_VISIBLE_DEVICES=1,2
+python -m torch.distributed.launch --nproc_pemain.pyr_node=2  --launcher pytorch --validate -c config/gtea/ete_tsm_mstcn.yaml --seed 0
 
 # 50salads
+export CUDA_VISIBLE_DEVICES=3
+python main.py  --validate -c config/50salads/ete_tsm_mstcn.yaml --seed 0
 
 # breakfast
 python main.py  --validate -c config/breakfast/ete_tsm_mstcn.yaml  --seed 0

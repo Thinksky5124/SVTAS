@@ -51,12 +51,14 @@ def setup_logger(output=None, name="ETETS", level="INFO"):
         plain_formatter = logging.Formatter(
             "[%(asctime)s] %(message)s",
             datefmt="%m/%d %H:%M:%S")
-    # stdout logging: master only
-    ch = logging.StreamHandler(stream=sys.stdout)
-    ch.setLevel(logging.DEBUG)
-    formatter = plain_formatter
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    local_rank = 0
+    if local_rank == 0:
+        # stdout logging: master only
+        ch = logging.StreamHandler(stream=sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = plain_formatter
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
 
     # file logging: all workers
     if output is not None:
@@ -64,6 +66,8 @@ def setup_logger(output=None, name="ETETS", level="INFO"):
             filename = output
         else:
             filename = os.path.join(output, "log.txt")
+        if local_rank > 0:
+            filename = filename + ".rank{}".format(local_rank)
 
         # PathManager.mkdirs(os.path.dirname(filename))
         os.makedirs(os.path.dirname(filename), exist_ok=True)

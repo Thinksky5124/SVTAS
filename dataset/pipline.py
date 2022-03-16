@@ -6,19 +6,12 @@ import copy
 from PIL import Image
 
 class BatchCompose(object):
-    def __init__(self, clip_seg_num=15, sample_rate=4, to_tensor_idx=3):
-        self.clip_seg_num = clip_seg_num
-        self.sample_rate = sample_rate
+    def __init__(self, to_tensor_idx=3):
         self.to_tensor_idx = to_tensor_idx
 
     def __call__(self, batch):
-        sliding_idx_list = []
-        for mini_batch in batch:
-            sliding_idx_list.append(mini_batch[-1])
-        sort_index = np.argsort(np.array(sliding_idx_list))
-
         result_batch = []
-        for index in sort_index:
+        for index in range(len(batch)):
             data = []
             for i in range(len(batch[index])):
                 if i < self.to_tensor_idx:
@@ -78,12 +71,6 @@ class VideoDecoder(object):
 class VideoStreamSampler(object):
     """
     Sample frames id.
-    NOTE: Use PIL to read image here, has diff with CV2
-    Args:
-        num_seg(int): number of segments.
-        seg_len(int): number of sampled frames in each segment.
-        valid_mode(bool): True or False.
-        select_left: Whether to select the frame to the left in the middle when the sampling interval is even in the test mode.
     Returns:
         frames_idx: the index of sampled #frames.
     """
@@ -93,20 +80,10 @@ class VideoStreamSampler(object):
                  sample_rate=4,
                  clip_seg_num=15,
                  sliding_window=60,
-                 frame_interval=None,
-                 valid_mode=False,
-                 select_left=False,
-                 dense_sample=False,
-                 linspace_sample=False,
                  ignore_index=-100,
                  ):
         self.sample_rate = sample_rate
         self.seg_len = seg_len
-        self.frame_interval = frame_interval
-        self.valid_mode = valid_mode
-        self.select_left = select_left
-        self.dense_sample = dense_sample
-        self.linspace_sample = linspace_sample
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index

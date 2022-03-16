@@ -12,7 +12,7 @@ from utils.config import get_logger
 
 logger = get_logger("ETETS")
 
-class SegmentationDataset(data.Dataset):
+class SegmentationDataset(data.IterableDataset):
     """Video dataset for action recognition
        The dataset loads raw videos and apply specified transforms on them.
        The index file is a file with multiple lines, and each line indicates
@@ -41,28 +41,27 @@ class SegmentationDataset(data.Dataset):
            pipeline(XXX): A sequence of data transforms.
            **kwargs: Keyword arguments for ```BaseDataset```.
     """
-
     def __init__(self,
                  file_path,
                  videos_path,
                  gt_path,
                  pipeline,
                  actions_map_file_path,
-                 sample_idx_list,
+                 temporal_clip_batch_size,
+                 video_batch_size,
                  sliding_window=60,
                  clip_seg_num=15,
                  sample_rate=4,
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
-                 test_mode=False):
+                 train_mode=True):
         super().__init__()
         self.suffix = suffix
         self.videos_path = videos_path
         self.gt_path = gt_path
         self.actions_map_file_path = actions_map_file_path
         self.dataset_type = dataset_type
-        self.sample_idx_list = sample_idx_list
         self.sliding_window = sliding_window
         self.clip_seg_num = clip_seg_num
         self.sample_rate = sample_rate
@@ -70,7 +69,6 @@ class SegmentationDataset(data.Dataset):
         self.file_path = file_path
         self.data_prefix = osp.realpath(data_prefix) if \
             data_prefix is not None and osp.isdir(data_prefix) else data_prefix
-        self.test_mode = test_mode
         self.pipeline = pipeline
 
         # actions dict generate
@@ -81,7 +79,30 @@ class SegmentationDataset(data.Dataset):
         for a in actions:
             self.actions_dict[a.split()[1]] = int(a.split()[0])
 
-        self.info = self.load_file()
+        # construct sampler
+        self.video_sampler_dataloader = torch.utils.data.DataLoader(
+                VideoSamplerDataset(file_path=file_path),
+                                    batch_size=video_batch_size,
+                                    num_workers=0,
+                                    shuffle=train_mode)
+        if train_mode == False:
+            self._viodeo_sample_shuffle()
+        
+        #iterable
+        self.temporal_clip_batch_size = temporal_clip_batch_size
+
+    def _viodeo_sample_shuffle(self):
+        # sampler video order
+        self.info_list = self._stream_order_sample(self.video_sampler_dataloader)
+
+    def _stream_order_sample(self, video_sampler_dataloader):
+        sample_videos_list = []
+        self.step_num = len(video_sampler_dataloader)
+        for step, sample_videos in enumerate(video_sampler_dataloader):
+            sample_videos_list.append([step, list(sample_videos)])
+
+        info_list = self.load_file(sample_videos_list)
+        return info_list
 
     def parse_file_paths(self, input_path):
         if self.dataset_type in ['gtea', '50salads']:
@@ -107,142 +128,133 @@ class SegmentationDataset(data.Dataset):
             info = refine_info
         return info
 
-    def load_file(self):
+    def load_file(self, sample_videos_list):
         """Load index file to get video information."""
         video_segment_lists = self.parse_file_paths(self.file_path)
-        # sample
-        video_sample_segment_lists = []
-        for sample_idx in self.sample_idx_list:
-            video_sample_segment_lists.append(video_segment_lists[sample_idx])
-        # convert sample
-        info = []
-        max_len = 0
-        for video_segment, sample_idx in zip(video_sample_segment_lists, self.sample_idx_list):
-            if self.dataset_type in ['gtea', '50salads']:
-                video_name = video_segment.split('.')[0]
-                label_path = os.path.join(self.gt_path, video_name + '.txt')
+        info_list = []
+        # sample step
+        for step, sample_idx_list in sample_videos_list:
+            # sample step clip
+            video_sample_segment_lists = []
+            for sample_idx in sample_idx_list:
+                video_sample_segment_lists.append(video_segment_lists[sample_idx])
+            # convert sample
+            info = []
+            max_len = 0
+            for video_segment in video_sample_segment_lists:
+                if self.dataset_type in ['gtea', '50salads']:
+                    video_name = video_segment.split('.')[0]
+                    label_path = os.path.join(self.gt_path, video_name + '.txt')
 
-                video_path = os.path.join(self.videos_path, video_name + '.mp4')
-                if not osp.isfile(video_path):
-                    video_path = os.path.join(self.videos_path, video_name + '.avi')
+                    video_path = os.path.join(self.videos_path, video_name + '.mp4')
                     if not osp.isfile(video_path):
-                        raise NotImplementedError
-            elif self.dataset_type in ['breakfast']:
-                video_segment_name, video_segment_path = video_segment
-                video_name = video_segment_name.split('.')[0]
-                label_path = os.path.join(self.gt_path, video_name + '.txt')
+                        video_path = os.path.join(self.videos_path, video_name + '.avi')
+                        if not osp.isfile(video_path):
+                            raise NotImplementedError
+                elif self.dataset_type in ['breakfast']:
+                    video_segment_name, video_segment_path = video_segment
+                    video_name = video_segment_name.split('.')[0]
+                    label_path = os.path.join(self.gt_path, video_name + '.txt')
 
-                video_path = os.path.join(self.videos_path, video_segment_path + '.mp4')
-                if not osp.isfile(video_path):
-                    video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
+                    video_path = os.path.join(self.videos_path, video_segment_path + '.mp4')
                     if not osp.isfile(video_path):
-                        raise NotImplementedError
-            file_ptr = open(label_path, 'r')
-            content = file_ptr.read().split('\n')[:-1]
-            classes = np.zeros(len(content), dtype='int64')
-            for i in range(len(content)):
-                classes[i] = self.actions_dict[content[i]]
-            info.append(
-                dict(filename=video_path,
-                     raw_labels=classes,
-                     video_name=video_name,
-                     sample_idx=sample_idx))
-            if max_len < len(content):
-                max_len = len(content)
+                        video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
+                        if not osp.isfile(video_path):
+                            raise NotImplementedError
+                file_ptr = open(label_path, 'r')
+                content = file_ptr.read().split('\n')[:-1]
+                classes = np.zeros(len(content), dtype='int64')
+                for i in range(len(content)):
+                    classes[i] = self.actions_dict[content[i]]
+                info.append(
+                    dict(filename=video_path,
+                        raw_labels=classes,
+                        video_name=video_name))
+                if max_len < len(content):
+                    max_len = len(content)
 
-        # construct sliding num
-        sliding_num = max_len // self.sliding_window
-        if max_len % self.sliding_window != 0:
-            sliding_num = sliding_num + 1
-        self.sliding_num = sliding_num
+            # construct sliding num
+            sliding_num = (max_len - self.clip_seg_num * self.sample_rate) // self.sliding_window
+            if (max_len - self.clip_seg_num * self.sample_rate) % self.sliding_window != 0:
+                sliding_num = sliding_num + 1
+            info_list.append([step, sliding_num, info])
+        return info_list
 
-        return info
-
-    def prepare_train(self, idx):
+    def _get_one_videos_clip(self, idx, info):
         imgs_list = []
         labels_list = []
         masks_list = []
-        sample_idx_list = []
-        for single_info in self.info:
+        vid_list = []
+        for single_info in info:
             sample_segment = single_info
             sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
+
             imgs_list.append(np.expand_dims(sample_segment['imgs'], axis=0))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0))
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
-            sample_idx_list.append(np.expand_dims(single_info['sample_idx'], axis=0))
+            vid_list.append(sample_segment['video_name'])
 
         imgs = np.concatenate(imgs_list, axis=0).astype(np.float32)
         labels = np.concatenate(labels_list, axis=0).astype(np.int64)
         masks = np.concatenate(masks_list, axis=0).astype(np.float32)
-        sample_idx = np.concatenate(sample_idx_list, axis=0)
-        return imgs, labels, masks, sample_idx, idx
+        return imgs, labels, masks, vid_list
 
-    def prepare_test(self, idx):
-        imgs_list = []
-        labels_list = []
-        masks_list = []
-        sample_idx_list = []
-        for single_info in self.info:
-            sample_segment = single_info
-            sample_segment['sample_sliding_idx'] = idx
-            sample_segment = self.pipeline(sample_segment)
-            imgs_list.append(np.expand_dims(sample_segment['imgs'], axis=0))
-            labels_list.append(np.expand_dims(sample_segment['labels'], axis=0))
-            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
-            sample_idx_list.append(np.expand_dims(single_info['sample_idx'], axis=0))
+    def _step_sliding_sampler(self, woker_id, num_workers):
+        # dispatch function
+        current_sliding_cnt = woker_id * self.temporal_clip_batch_size
+        mini_sliding_cnt = 0
+        next_step_flag = False
+        for step, sliding_num, info in self.info_list:
+            while current_sliding_cnt < sliding_num:
+                while mini_sliding_cnt < self.temporal_clip_batch_size:
+                    if current_sliding_cnt < sliding_num:
+                        imgs, labels, masks, vid_list = self._get_one_videos_clip(current_sliding_cnt, info)
+                        yield imgs, labels, masks, vid_list, sliding_num, step, current_sliding_cnt
+                        current_sliding_cnt = current_sliding_cnt + 1
+                        mini_sliding_cnt = mini_sliding_cnt + 1
+                    else:
+                        next_step_flag = True
+                        break
+                if current_sliding_cnt <= sliding_num and next_step_flag == False:
+                    current_sliding_cnt = current_sliding_cnt + (num_workers - 1) * self.temporal_clip_batch_size
 
-        imgs = np.concatenate(imgs_list, axis=0).astype(np.float32)
-        labels = np.concatenate(labels_list, axis=0).astype(np.int64)
-        masks = np.concatenate(masks_list, axis=0).astype(np.float32)
-        sample_idx = np.concatenate(sample_idx_list, axis=0)
-        return imgs, labels, masks, sample_idx, idx
-    
+                if mini_sliding_cnt >= 3:
+                    mini_sliding_cnt = 0
+
+            # modify num_worker
+            current_sliding_cnt = current_sliding_cnt - sliding_num
+            next_step_flag = False
+        yield 0, 0, 0, [], 0, self.step_num, -1
+
     def __len__(self):
         """get the size of the dataset."""
-        return self.sliding_num
+        return self.step_num
 
-    def __getitem__(self, idx):
+    def __iter__(self):
         """ Get the sample for either training or testing given index"""
-        if self.test_mode:
-            return self.prepare_test(idx)
-        else:
-            return self.prepare_train(idx)
+        worker_info = torch.utils.data.get_worker_info()
+        # single worker
+        if worker_info is None:
+            sample_iterator = self._step_sliding_sampler(0, 1)
+        else: # multiple workers
+            woker_id = worker_info.id
+            num_workers = int(worker_info.num_workers)
+            sample_iterator = self._step_sliding_sampler(woker_id, num_workers)
+        return sample_iterator
 
 class VideoSamplerDataset(data.Dataset):
     def __init__(self,
-                 file_path,
-                 gt_path,
-                 dataset_type):
+                 file_path):
         super().__init__()
         
         self.file_path = file_path
-        self.gt_path = gt_path
-        self.dataset_type = dataset_type
         self.info = self.load_file()
 
     def parse_file_paths(self, input_path):
-        if self.dataset_type in ['gtea', '50salads']:
-            file_ptr = open(input_path, 'r')
-            info = file_ptr.read().split('\n')[:-1]
-            file_ptr.close()
-        elif self.dataset_type in ['breakfast']:
-            file_ptr = open(input_path, 'r')
-            info = file_ptr.read().split('\n')[:-1]
-            file_ptr.close()
-            refine_info = []
-            for info_name in info:
-                video_ptr = info_name.split('.')[0].split('_')
-                file_name = ''
-                for j in range(2):
-                    if video_ptr[j] == 'stereo01':
-                        video_ptr[j] = 'stereo'
-                    file_name = file_name + video_ptr[j] + '/'
-                file_name = file_name + video_ptr[2] + '_' + video_ptr[3]
-                if 'stereo' in file_name:
-                    file_name = file_name + '_ch0'
-                refine_info.append([info_name, file_name])
-            info = refine_info
+        file_ptr = open(input_path, 'r')
+        info = file_ptr.read().split('\n')[:-1]
+        file_ptr.close()
         return info
 
     def load_file(self):
@@ -256,16 +268,4 @@ class VideoSamplerDataset(data.Dataset):
 
     def __getitem__(self, idx):
         """ Get the sample for either training or testing given index"""
-        video_segment = self.info[idx]
-        if self.dataset_type in ['gtea', '50salads']:
-            video_name = video_segment.split('.')[0]
-            label_path = os.path.join(self.gt_path, video_name + '.txt')
-
-        elif self.dataset_type in ['breakfast']:
-            video_segment_name, _ = video_segment
-            video_name = video_segment_name.split('.')[0]
-            label_path = os.path.join(self.gt_path, video_name + '.txt')
-
-        file_ptr = open(label_path, 'r')
-        content = file_ptr.read().split('\n')[:-1]
-        return idx, video_name, len(content)
+        return idx

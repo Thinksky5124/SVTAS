@@ -8,7 +8,6 @@ import os
 from utils.config import get_config
 from tasks.test import test
 from tasks.train import train
-
 def parse_args():
     parser = argparse.ArgumentParser("PaddleVideo train script")
     parser.add_argument('-c',
@@ -28,6 +27,7 @@ def parse_args():
                         '--weights',
                         type=str,
                         help='weights for finetuning or testing')
+    parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument(
         '--validate',
         action='store_true',
@@ -42,14 +42,28 @@ def parse_args():
         type=int,
         default=None,
         help='max iterations when training(this argonly used in test_tipc)')
-
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch'],
+        default='none',
+        help='job launcher')
     args = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
 
 def main():
     args = parse_args()
     cfg = get_config(args.config, overrides=args.override)
+
+    # init distributed env first, since logger depends on the dist info.
+    if args.launcher == 'none':
+        distributed = False
+    else:
+        distributed = True
+        torch.cuda.set_device(args.local_rank)
+        torch.distributed.init_process_group(backend='nccl')
 
     # set seed if specified
     seed = args.seed
@@ -67,9 +81,10 @@ def main():
 
 
     if args.test:
-        test(cfg, weights=args.weights)
+        test(cfg, distributed=distributed, weights=args.weights)
     else:
         train(cfg,
+                distributed=distributed,
                 weights=args.weights,
                 validate=args.validate)
 

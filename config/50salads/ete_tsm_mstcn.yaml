@@ -10,7 +10,7 @@ MODEL:
         clip_buffer_num: 0
         sliding_window: 30
     head:
-        num_classes: 48
+        num_classes: 19
         num_stages: 1
         num_layers: 4
         num_f_maps: 64
@@ -19,14 +19,15 @@ MODEL:
         sample_rate: 4
         drop_ratio: 0.5
     loss:
-        num_classes: 48
+        num_classes: 19
         sample_rate: 4
         seg_weight: 1.0
         cls_weight: 1.0
         ignore_index: -100
 
 COLLATE:
-    to_tensor_idx: 3
+    clip_seg_num: 15
+    sample_rate: 4
 
 DATASET: #DATASET field
     batch_size: 8 #Mandatory, bacth size
@@ -34,22 +35,22 @@ DATASET: #DATASET field
     test_batch_size: 8
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/train.split2.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
-        sliding_window: 60
+        file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
+        sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/test.split2.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
-        sliding_window: 60
+        file_path: "./data/50salads/splits/test.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
+        sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4
 
@@ -61,7 +62,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 15
-            sliding_window: 60
+            sliding_window: 30
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -70,8 +71,8 @@ PIPELINE: #PIPELINE field
             - RandomHorizontalFlip:
             - ToTensor:
             - Normalize:
-                mean: [0.5, 0.5, 0.5]
-                std: [0.2, 0.2, 0.2]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
     test:
         decode:
@@ -80,7 +81,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 15
-            sliding_window: 60
+            sliding_window: 30
         transform:
             - Resize:
                 size: 256
@@ -88,8 +89,8 @@ PIPELINE: #PIPELINE field
                 size: 224
             - ToTensor:
             - Normalize:
-                mean: [0.5, 0.5, 0.5]
-                std: [0.2, 0.2, 0.2]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005
@@ -98,12 +99,12 @@ OPTIMIZER: #OPTIMIZER field
 
 METRIC:
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/breakfast/mapping.txt"
+    actions_map_file_path: "./data/50salads/mapping.txt"
     tolerance: 5
     boundary_threshold: 0.7
 
 
-model_name: "ETETS_breakfast"
-log_interval: 10 #Optional, the interal of logger, default:10
+model_name: "ETETS_50salads"
+log_interval: 2 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

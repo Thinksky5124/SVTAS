@@ -8,14 +8,14 @@ class ETETSNeck(nn.Module):
                  num_layers=5,
                  clip_seg_num=15,
                  clip_buffer_num=0,
-                 sliding_strike=5):
+                 sliding_window=5):
         super().__init__()
         self.buffer_channels = buffer_channels
         self.hidden_channels = hidden_channels
         self.num_layers = num_layers
         self.clip_seg_num = clip_seg_num
         self.clip_buffer_num = clip_buffer_num
-        self.sliding_strike = sliding_strike
+        self.sliding_window = sliding_window
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 

@@ -8,7 +8,7 @@ MODEL:
         num_layers: 5
         clip_seg_num: 15
         clip_buffer_num: 0
-        sliding_strike: 5
+        sliding_window: 30
     head:
         num_classes: 11
         num_stages: 1
@@ -26,13 +26,12 @@ MODEL:
         ignore_index: -100
 
 COLLATE:
-    clip_seg_num: 15
-    sample_rate: 4
+    to_tensor_idx: 3
 
 DATASET: #DATASET field
-    batch_size: 8 #Mandatory, bacth size
-    num_workers: 4 #Mandatory, XXX the number of subprocess on each GPU.
-    test_batch_size: 8
+    temporal_clip_batch_size: 3
+    video_batch_size: 8
+    num_workers: 8
     train:
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
@@ -40,17 +39,19 @@ DATASET: #DATASET field
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
-        sliding_window: 60
+        train_mode: True
+        sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
+        file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/Videos"
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
-        sliding_window: 60
+        train_mode: False
+        sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4
 
@@ -62,9 +63,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 15
-            sliding_window: 60
-            valid_mode: False
-            select_left: True
+            sliding_window: 30
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -83,8 +82,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 15
-            valid_mode: True
-            select_left: True
+            sliding_window: 30
         transform:
             - Resize:
                 size: 256
@@ -107,7 +105,7 @@ METRIC:
     boundary_threshold: 0.7
 
 
-model_name: "ETETS"
+model_name: "ETETS_gtea"
 log_interval: 1 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

@@ -3,8 +3,6 @@ import torch
 
 class PostProcessing(object):
     def __init__(self,
-                 batch_size,
-                 max_temporal_len,
                  num_classes,
                  clip_seg_num,
                  sliding_window,
@@ -14,11 +12,20 @@ class PostProcessing(object):
         self.sliding_window = sliding_window
         self.sample_rate = sample_rate
         self.clip_buffer_num = clip_buffer_num
+        self.num_classes = num_classes
+        self.init_flag = False
 
-        sample_videos_max_len = max_temporal_len + ((self.clip_seg_num * self.sample_rate) - max_temporal_len % (self.clip_seg_num * self.sample_rate))
+    def init_scores(self, sliding_num, batch_size):
+        max_temporal_len = sliding_num * self.sliding_window + self.sample_rate * self.clip_seg_num
+        sample_videos_max_len = max_temporal_len + \
+            ((self.clip_seg_num * self.sample_rate) - max_temporal_len % (self.clip_seg_num * self.sample_rate))
+        if sample_videos_max_len % self.sliding_window != 0:
+            sample_videos_max_len = sample_videos_max_len + \
+                (self.sliding_window - (sample_videos_max_len % self.sliding_window))
         self.sample_videos_max_len = sample_videos_max_len
-        self.pred_scores = torch.zeros((batch_size, num_classes, sample_videos_max_len))
+        self.pred_scores = torch.zeros((batch_size, self.num_classes, sample_videos_max_len))
         self.video_gt = torch.zeros((batch_size, sample_videos_max_len))
+        self.init_flag = True
     
     def update(self, seg_scores, gt, idx):
         with torch.no_grad():
@@ -26,7 +33,7 @@ class PostProcessing(object):
             if start_frame < 0:
                 start_frame = 0
             end_frame = start_frame + (self.clip_seg_num * self.sample_rate)
-            self.pred_scores[:, :, start_frame:end_frame] = seg_scores
+            self.pred_scores[:, :, start_frame:end_frame] = seg_scores[-1, :]
             self.video_gt[:, start_frame:end_frame] = gt
 
     def output(self):
