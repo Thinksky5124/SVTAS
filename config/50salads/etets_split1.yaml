@@ -30,8 +30,8 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 8
-    num_workers: 10
+    video_batch_size: 2
+    num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
@@ -104,6 +104,10 @@ METRIC:
 
 
 model_name: "ETETS_50salads_split1"
+<<<<<<< HEAD
 log_interval: 2 #Optional, the interal of logger, default:10
+=======
+log_interval: 3 #Optional, the interal of logger, default:10
+>>>>>>> data init
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

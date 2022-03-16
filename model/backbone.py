@@ -6,6 +6,7 @@ from torchvision.models.resnet import BasicBlock, Bottleneck
 import torch.utils.model_zoo as model_zoo
 
 # form neckwork
+<<<<<<< HEAD
 # model_urls = {
 #     "resnet18": "https://download.pytorch.org/models/resnet18-f37072fd.pth",
 #     "resnet34": "https://download.pytorch.org/models/resnet34-b627a593.pth",
@@ -21,6 +22,23 @@ model_urls = {
     "resnet101": "./dataresnet101-63fe2227.pth",
     "resnet152": "./data/resnet152-394f9c45.pth"
 }
+=======
+model_urls = {
+    "resnet18": "https://download.pytorch.org/models/resnet18-f37072fd.pth",
+    "resnet34": "https://download.pytorch.org/models/resnet34-b627a593.pth",
+    "resnet50": "https://download.pytorch.org/models/resnet50-0676ba61.pth",
+    "resnet101": "https://download.pytorch.org/models/resnet101-63fe2227.pth",
+    "resnet152": "https://download.pytorch.org/models/resnet152-394f9c45.pth"
+}
+# from local
+# model_urls = {
+#     "resnet18": "./data/resnet18-f37072fd.pth",
+#     "resnet34": "./data/resnet34-b627a593.pth",
+#     "resnet50": "./data/resnet50-0676ba61.pth",
+#     "resnet101": "./dataresnet101-63fe2227.pth",
+#     "resnet152": "./data/resnet152-394f9c45.pth"
+# }
+>>>>>>> data init
 
 class ResNet(torchvision.models.resnet.ResNet):
     def __init__(self, block, layers, num_classes=1000):
@@ -81,9 +99,9 @@ def resnet50(pretrained=False):
     model = ResNet(Bottleneck, [3, 4, 6, 3])
     if pretrained:
         # form neckwork
-        # model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
         # from local
-        model.load_state_dict(torch.load(model_urls['resnet50']))
+        # model.load_state_dict(torch.load(model_urls['resnet50']))
     return model
 
 
