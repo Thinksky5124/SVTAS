@@ -29,8 +29,8 @@ COLLATE:
     to_tensor_idx: 3
 
 DATASET: #DATASET field
-    temporal_clip_batch_size: 8
-    video_batch_size: 8
+    temporal_clip_batch_size: 3
+    video_batch_size: 2
     num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
@@ -104,6 +104,6 @@ METRIC:
 
 
 model_name: "ETETS_50salads_split1"
-log_interval: 2 #Optional, the interal of logger, default:10
+log_interval: 3 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

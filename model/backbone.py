@@ -13,7 +13,7 @@ model_urls = {
     "resnet101": "https://download.pytorch.org/models/resnet101-63fe2227.pth",
     "resnet152": "https://download.pytorch.org/models/resnet152-394f9c45.pth"
 }
-# # from local
+# from local
 # model_urls = {
 #     "resnet18": "./data/resnet18-f37072fd.pth",
 #     "resnet34": "./data/resnet34-b627a593.pth",

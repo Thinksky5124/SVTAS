@@ -1,6 +1,4 @@
 import os.path as osp
-import copy
-import random
 import numpy as np
 import os
 
