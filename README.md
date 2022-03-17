@@ -6,7 +6,7 @@ End to End Temporal Segmention Model
 
 # Envirnment Preapre
 ```bash
-conda create --prefix=/mnt/wenwujun/torch python=3.8
+conda create -n torch python=3.8
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 

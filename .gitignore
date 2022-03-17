@@ -129,7 +129,8 @@ dmypy.json
 .pyre/
 
 # data
-data/
+!data/
+data/*
 
 #logger
 log.txt
