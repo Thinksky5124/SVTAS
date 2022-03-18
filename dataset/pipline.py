@@ -153,8 +153,8 @@ class VideoStreamSampler(object):
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 
         results['imgs'] = imgs
-        results['labels'] = labels
-        results['mask'] = mask
+        results['labels'] = labels.copy()
+        results['mask'] = mask.copy()
         return results
 
 class VideoStreamTransform(object):

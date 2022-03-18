@@ -8,6 +8,7 @@ import os
 from utils.config import get_config
 from tasks.test import test
 from tasks.train import train
+
 def parse_args():
     parser = argparse.ArgumentParser("PaddleVideo train script")
     parser.add_argument('-c',

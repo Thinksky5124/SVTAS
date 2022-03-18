@@ -300,7 +300,7 @@ class SegmentationMetric(BaseSegmentationMetric):
         super().__init__(overlap, actions_map_file_path,
                          tolerance, boundary_threshold,
                          max_proposal, tiou_thresholds)
-
+    
     def update(self, vid, ground_truth_batch, outputs):
         """update metrics during each iter
         """

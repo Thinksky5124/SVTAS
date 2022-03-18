@@ -180,9 +180,9 @@ def train(cfg,
                         post_processing.init_scores(sliding_num, len(vid_list))
                         current_step_vid_list = vid_list
                     post_processing.update(seg_score, labels, idx)
-                    videos_loss += loss.item()
-                    video_seg_loss += seg_loss.item()
-                    video_cls_loss += cls_loss.item()
+                    videos_loss = videos_loss + loss.item()
+                    video_seg_loss = video_seg_loss + seg_loss.item()
+                    video_cls_loss = video_cls_loss + cls_loss.item()
 
                     tic = time.time()
 
@@ -264,9 +264,9 @@ def train(cfg,
                             post_processing.init_scores(sliding_num, len(vid_list))
                             current_step_vid_list = vid_list
                         post_processing.update(seg_score, labels, idx)
-                        videos_loss += loss.item()
-                        video_seg_loss += seg_loss.item()
-                        video_cls_loss += cls_loss.item()
+                        videos_loss = videos_loss + loss.item()
+                        video_seg_loss = video_seg_loss + seg_loss.item()
+                        video_cls_loss = video_cls_loss + cls_loss.item()
 
                         tic = time.time()
 

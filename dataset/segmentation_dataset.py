@@ -1,7 +1,7 @@
 import os.path as osp
 import numpy as np
 import os
-
+import copy
 import torch
 import random
 import torch.utils.data as data
@@ -99,7 +99,7 @@ class SegmentationDataset(data.IterableDataset):
         for step, sample_videos in enumerate(video_sampler_dataloader):
             sample_videos_list.append([step, list(sample_videos)])
 
-        info_list = self.load_file(sample_videos_list)
+        info_list = self.load_file(sample_videos_list).copy()
         return info_list
 
     def parse_file_paths(self, input_path):
@@ -177,7 +177,7 @@ class SegmentationDataset(data.IterableDataset):
                 sliding_num = sliding_num + 1
             info_list.append([step, sliding_num, info])
         return info_list
-
+    # @profile
     def _get_one_videos_clip(self, idx, info):
         imgs_list = []
         labels_list = []
@@ -193,11 +193,11 @@ class SegmentationDataset(data.IterableDataset):
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
             vid_list.append(sample_segment['video_name'])
 
-        imgs = np.concatenate(imgs_list, axis=0).astype(np.float32)
-        labels = np.concatenate(labels_list, axis=0).astype(np.int64)
-        masks = np.concatenate(masks_list, axis=0).astype(np.float32)
+        imgs = copy.deepcopy(np.concatenate(imgs_list, axis=0).astype(np.float32))
+        labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
+        masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
         return imgs, labels, masks, vid_list
-
+    
     def _step_sliding_sampler(self, woker_id, num_workers):
         # dispatch function
         current_sliding_cnt = woker_id * self.temporal_clip_batch_size

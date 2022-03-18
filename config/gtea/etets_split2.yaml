@@ -30,8 +30,8 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 8
-    num_workers: 8
+    video_batch_size: 4
+    num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split2.bundle" #Mandatory, train data index file path
