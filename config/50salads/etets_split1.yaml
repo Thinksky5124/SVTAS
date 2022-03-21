@@ -39,6 +39,7 @@ DATASET: #DATASET field
         gt_path: "./data/50salads/groundTruth"
         actions_map_file_path: "./data/50salads/mapping.txt"
         dataset_type: "50salads"
+        train_mode: True
         sliding_window: 60
         clip_seg_num: 15
         sample_rate: 8
@@ -49,6 +50,7 @@ DATASET: #DATASET field
         gt_path: "./data/50salads/groundTruth"
         actions_map_file_path: "./data/50salads/mapping.txt"
         dataset_type: "50salads"
+        train_mode: False
         sliding_window: 60
         clip_seg_num: 15
         sample_rate: 8

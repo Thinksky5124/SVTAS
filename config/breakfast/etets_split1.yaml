@@ -39,6 +39,7 @@ DATASET: #DATASET field
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
         dataset_type: "breakfast"
+        train_mode: True
         sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4
@@ -49,6 +50,7 @@ DATASET: #DATASET field
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
         dataset_type: "breakfast"
+        train_mode: False
         sliding_window: 30
         clip_seg_num: 15
         sample_rate: 4

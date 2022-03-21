@@ -15,7 +15,10 @@ class BatchCompose(object):
             data = []
             for i in range(len(batch[index])):
                 if i < self.to_tensor_idx:
-                    data.append(torch.tensor(batch[index][i]))
+                    if not torch.is_tensor(batch[index][i]):
+                        data.append(torch.tensor(batch[index][i]))
+                    else:
+                        data.append(batch[index][i])
                 else:
                     data.append(batch[index][i])
             result_batch.append(data)
@@ -126,7 +129,7 @@ class VideoStreamSampler(object):
                     
             mask = np.ones((labels.shape[0]))
         elif start_frame < frames_len and end_frame >= frames_len:
-            frames_idx = list(range(start_frame, frames_len, self.sample_rate))
+            frames_idx = list(range(start_frame, video_len, self.sample_rate))
             labels = labels[start_frame:frames_len]
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
@@ -144,7 +147,6 @@ class VideoStreamSampler(object):
             mask = np.concatenate([vaild_mask, void_mask], axis=0)
             labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
         else:
-            # ! find shape
             np_frames = np.zeros((240, 320, 3))
             pad_len = self.clip_seg_num
             for i in range(pad_len):
@@ -152,7 +154,7 @@ class VideoStreamSampler(object):
             mask = np.zeros((self.clip_seg_num * self.sample_rate))
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 
-        results['imgs'] = imgs
+        results['imgs'] = imgs[:self.clip_seg_num]
         results['labels'] = labels.copy()
         results['mask'] = mask.copy()
         return results

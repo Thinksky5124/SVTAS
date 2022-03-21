@@ -177,7 +177,7 @@ class SegmentationDataset(data.IterableDataset):
                 sliding_num = sliding_num + 1
             info_list.append([step, sliding_num, info])
         return info_list
-    # @profile
+
     def _get_one_videos_clip(self, idx, info):
         imgs_list = []
         labels_list = []
@@ -187,13 +187,13 @@ class SegmentationDataset(data.IterableDataset):
             sample_segment = single_info
             sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
-
-            imgs_list.append(np.expand_dims(sample_segment['imgs'], axis=0))
+            # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
+            imgs_list.append(sample_segment['imgs'].unsqueeze(0))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0))
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
             vid_list.append(sample_segment['video_name'])
 
-        imgs = copy.deepcopy(np.concatenate(imgs_list, axis=0).astype(np.float32))
+        imgs = copy.deepcopy(torch.concat(imgs_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
         return imgs, labels, masks, vid_list

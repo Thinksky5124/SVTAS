@@ -107,5 +107,5 @@ METRIC:
 
 model_name: "ETETS_gtea_split1"
 log_interval: 2 #Optional, the interal of logger, default:10
-epochs: 1 #Mandatory, total epoch
+epochs: 50 #Mandatory, total epoch
 save_interval: 10

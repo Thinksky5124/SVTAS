@@ -13,6 +13,7 @@ from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
 from model.post_processing import PostProcessing
+from .runner import TrainRunner, valRunner
 
 def train(cfg,
           distributed,
@@ -105,6 +106,17 @@ def train(cfg,
         sample_rate=cfg.DATASET.train.sample_rate,
         clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
 
+    # construct train runner
+    runner = TrainRunner(optimizer=optimizer,
+                logger=logger,
+                video_batch_size=video_batch_size,
+                Metric=Metric,
+                record_dict=record_dict,
+                cfg=cfg,
+                model=model,
+                criterion=criterion,
+                post_processing=post_processing)
+
     best = 0.0
     for epoch in range(0, cfg.epochs):
         if epoch < resume_epoch:
@@ -113,81 +125,17 @@ def train(cfg,
             )
             continue
 
-        model.train()
+        runner.epoch_init()
 
-        # batch videos sampler
-        tic = time.time()
-        videos_loss = 0.
-        video_seg_loss = 0.
-        video_cls_loss = 0.
-        post_processing.init_flag = False
-        current_step = 0
-        current_step_vid_list = None
         # shuffle video data
         train_dataloader.dataset._viodeo_sample_shuffle()
+        r_tic = time.time()
         for i, data in enumerate(train_dataloader):
-            # videos sliding stream train
-            record_dict['reader_time'].update(time.time() - tic)
-            for sliding_seg in data:
-                imgs, labels, masks, vid_list, sliding_num, step, idx = sliding_seg
-                # wheather next step
-                if current_step != step:
-                    optimizer.step()
-                    optimizer.zero_grad()
-
-                    # get pred result
-                    pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
-                    outputs = dict(predict=pred_cls_list,
-                                    output_np=pred_score_list)
-                    f1 = Metric.update(current_step_vid_list, ground_truth_list, outputs)
-
-                    current_step_vid_list = vid_list
-                    if len(current_step_vid_list) > 0:
-                        post_processing.init_scores(sliding_num, len(vid_list))
-
-                    # logger
-                    record_dict['batch_time'].update(time.time() - tic)
-                    record_dict['loss'].update(video_seg_loss + video_cls_loss, video_batch_size)
-                    record_dict['lr'].update(optimizer.state_dict()['param_groups'][0]['lr'], video_batch_size)
-                    record_dict['F1@0.5'].update(f1)
-                    record_dict['cls_loss'].update(video_cls_loss, video_batch_size)
-                    record_dict['seg_loss'].update(video_seg_loss, video_batch_size)
-
-                    videos_loss = 0.
-                    video_seg_loss = 0.
-                    video_cls_loss = 0.
-
-                    if current_step % cfg.get("log_interval", 10) == 0:
-                        ips = "ips: {:.5f} instance/sec.".format(
-                            video_batch_size / record_dict["batch_time"].val)
-                        log_batch(record_dict, current_step, epoch + 1, cfg.epochs, "train", ips, logger)
-                    current_step = step
-
-                if idx >= 0:
-                    # move data
-                    imgs = imgs.cuda()
-                    masks = masks.cuda()
-                    labels = labels.cuda()
-                    # train segment
-                    outputs = model(imgs, masks)
-                    seg_score, cls_score = outputs
-                    cls_loss, seg_loss = criterion(seg_score, cls_score, masks, labels)
-                    
-                    loss = (cls_loss + seg_loss) / sliding_num
-
-                    loss.backward()
-                    if post_processing.init_flag is not True:
-                        post_processing.init_scores(sliding_num, len(vid_list))
-                        current_step_vid_list = vid_list
-                    post_processing.update(seg_score, labels, idx)
-                    videos_loss = videos_loss + loss.item()
-                    video_seg_loss = video_seg_loss + seg_loss.item()
-                    video_cls_loss = video_cls_loss + cls_loss.item()
-
-                    tic = time.time()
+            runner.train_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+            r_tic = time.time()
 
         # metric output
-        Metric.accumulate()
+        runner.Metric.accumulate()
 
         # update lr
         scheduler.step()
@@ -197,7 +145,6 @@ def train(cfg,
         log_epoch(record_dict, epoch + 1, "train", ips, logger)
 
         def evaluate(best):
-            model.eval()
             record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
@@ -205,73 +152,25 @@ def train(cfg,
                    'cls_loss': AverageMeter("cls_loss", '.5f'),
                    'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
+            runner = valRunner(logger=logger,
+                video_batch_size=video_batch_size,
+                Metric=Metric,
+                record_dict=record_dict,
+                cfg=cfg,
+                model=model,
+                criterion=criterion,
+                post_processing=post_processing)
 
-            tic = time.time()
             # model logger init
-            post_processing.init_flag = False
-            videos_loss = 0.
-            video_seg_loss = 0.
-            video_cls_loss = 0.
-            current_step = 0
-            current_step_vid_list = None
+            runner.epoch_init()
+            r_tic = time.time()
             for i, data in enumerate(val_dataloader):
                 # videos sliding stream train
-                record_dict['reader_time'].update(time.time() - tic)
-                for sliding_seg in data:
-                    imgs, labels, masks, vid_list, sliding_num, step, idx = sliding_seg
-                    # wheather next step
-                    if current_step != step:
-                        # get pred result
-                        pred_score_list, pred_cls_list, ground_truth_list = post_processing.output()
-                        outputs = dict(predict=pred_cls_list,
-                                        output_np=pred_score_list)
-                        f1 = Metric.update(current_step_vid_list, ground_truth_list, outputs)
-
-                        current_step_vid_list = vid_list
-                        if len(current_step_vid_list) > 0:
-                            post_processing.init_scores(sliding_num, len(vid_list))
-
-                        # logger
-                        record_dict['batch_time'].update(time.time() - tic)
-                        record_dict['loss'].update(video_seg_loss + video_cls_loss, video_batch_size)
-                        record_dict['F1@0.5'].update(f1)
-                        record_dict['cls_loss'].update(video_cls_loss, video_batch_size)
-                        record_dict['seg_loss'].update(video_seg_loss, video_batch_size)
-
-                        videos_loss = 0.
-                        video_seg_loss = 0.
-                        video_cls_loss = 0.
-
-                        if current_step % cfg.get("log_interval", 10) == 0:
-                            ips = "ips: {:.5f} instance/sec.".format(
-                                video_batch_size / record_dict["batch_time"].val)
-                            log_batch(record_dict, current_step, epoch + 1, cfg.epochs, "val", ips, logger)
-                        current_step = step
-
-                    if idx >= 0:
-                        # move data
-                        imgs = imgs.cuda()
-                        masks = masks.cuda()
-                        labels = labels.cuda()
-                        # train segment
-                        outputs = model(imgs, masks)
-                        seg_score, cls_score = outputs
-                        cls_loss, seg_loss = criterion(seg_score, cls_score, masks, labels)
-                        
-                        loss = (cls_loss + seg_loss) / sliding_num
-
-                        if post_processing.init_flag is not True:
-                            post_processing.init_scores(sliding_num, len(vid_list))
-                            current_step_vid_list = vid_list
-                        post_processing.update(seg_score, labels, idx)
-                        videos_loss = videos_loss + loss.item()
-                        video_seg_loss = video_seg_loss + seg_loss.item()
-                        video_cls_loss = video_cls_loss + cls_loss.item()
-
-                        tic = time.time()
+                runner.val_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+                r_tic = time.time()
 
             # metric output
-            Metric_dict = Metric.accumulate()
+            Metric_dict = runner.Metric.accumulate()
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
                 video_batch_size * record_dict["batch_time"].count /
