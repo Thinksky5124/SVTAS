@@ -9,8 +9,6 @@ from .metric_utils import get_labels_scores_start_end_time, get_labels_start_end
 from .metric_utils import levenstein, edit_score, f_score, boundary_AR
 from .metric_utils import wrapper_compute_average_precision
 
-logger = get_logger("ETETS")
-
 class BaseSegmentationMetric(object):
     """
     Test for Video Segmentation based model.
@@ -26,6 +24,7 @@ class BaseSegmentationMetric(object):
                  **kwargs):
         """prepare for metrics
         """
+        self.logger = get_logger("ETETS")
         self.elps = 1e-10
         # actions dict generate
         file_ptr = open(actions_map_file_path, 'r')
@@ -249,7 +248,7 @@ class BaseSegmentationMetric(object):
         # localization metric
         log_mertic_info += "mAP@0.5: {:.4f}, ".format(metric_dict['mAP@0.5'])
         log_mertic_info += "avg_mAP: {:.4f}, ".format(metric_dict['avg_mAP'])
-        logger.info(log_mertic_info)
+        self.logger.info(log_mertic_info)
 
     def _clear_for_next_epoch(self):
         # clear for next epoch

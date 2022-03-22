@@ -83,12 +83,14 @@ python -m torch.distributed.launch --nproc_pemain.pyr_node=2  --launcher pytorch
 
 # 50salads
 export CUDA_VISIBLE_DEVICES=3
+export DECORD_EOF_RETRY_MAX=20480
 python main.py  --validate -c config/50salads/etets_split1.yaml --seed 0
 python main.py  --validate -c config/50salads/etets_split2.yaml --seed 0
 python main.py  --validate -c config/50salads/etets_split3.yaml --seed 0
 python main.py  --validate -c config/50salads/etets_split4.yaml --seed 0
 python main.py  --validate -c config/50salads/etets_split5.yaml --seed 0
 
+python main.py  --validate -c config/50salads/etets_split1.yaml --seed 0 -o resume_epoch=7
 # breakfast
 python main.py  --validate -c config/breakfast/etets_split1.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etets_split2.yaml  --seed 0

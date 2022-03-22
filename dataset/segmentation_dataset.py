@@ -6,10 +6,6 @@ import torch
 import random
 import torch.utils.data as data
 
-from utils.config import get_logger
-
-logger = get_logger("ETETS")
-
 class SegmentationDataset(data.IterableDataset):
     """Video dataset for action recognition
        The dataset loads raw videos and apply specified transforms on them.
@@ -217,7 +213,7 @@ class SegmentationDataset(data.IterableDataset):
                 if current_sliding_cnt <= sliding_num and next_step_flag == False:
                     current_sliding_cnt = current_sliding_cnt + (num_workers - 1) * self.temporal_clip_batch_size
 
-                if mini_sliding_cnt >= 3:
+                if mini_sliding_cnt >= self.temporal_clip_batch_size:
                     mini_sliding_cnt = 0
 
             # modify num_worker

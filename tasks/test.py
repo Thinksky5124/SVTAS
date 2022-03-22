@@ -17,10 +17,9 @@ from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
 from model.post_processing import PostProcessing
 
-logger = get_logger("ETETS")
-
 @torch.no_grad()
 def test(cfg, distributed, weights):
+    logger = get_logger("ETETS")
     # 1. Construct model.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # 1.construct model

@@ -25,12 +25,9 @@ class ETETS(nn.Module):
         self.neck = ETETSNeck(**neck)
         self.head = ETETSHead(**head)
 
-        self.memery_buffer = None
-        self.mask_buffer = None
-
         self.sample_rate = head.sample_rate
 
-    def forward(self, imgs, masks):
+    def forward(self, imgs, masks, idx):
         # imgs.shape=[N,T,C,H,W], for most commonly case
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
@@ -46,12 +43,9 @@ class ETETS(nn.Module):
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memery feature
         if self.neck is not None:
-            seg_feature, cls_feature, memery_buffer, mask_buffer = self.neck(
-                feature, masks[:, :, ::self.sample_rate], self.memery_buffer, self.mask_buffer)
+            seg_feature, cls_feature = self.neck(
+                feature, masks[:, :, ::self.sample_rate], idx)
             
-            # step 4 store memery buffer
-            self.memery_buffer = memery_buffer
-            self.mask_buffer = mask_buffer
         else:
             seg_feature = feature
             cls_feature = feature

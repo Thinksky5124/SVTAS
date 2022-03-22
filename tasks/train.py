@@ -29,7 +29,7 @@ def train(cfg,
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)
     model_name = cfg.model_name
-    output_dir = cfg.get("output_dir", f"./output")
+    output_dir = cfg.get("output_dir", f"./output/{model_name}")
     mkdir(output_dir)
 
     if distributed == False:
@@ -55,9 +55,9 @@ def train(cfg,
                             model_name + f"_epoch_{resume_epoch:05d}" + ".pkl")
         checkpoint = torch.load(path_checkpoint)
 
-        model.load_state_dict(checkpoint['net'])
+        model.load_state_dict(checkpoint['model_state_dict'])
 
-        optimizer.load_state_dict(checkpoint['optimizer'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
         resume_epoch = start_epoch
     # 4. construct Pipeline
@@ -190,7 +190,10 @@ def train(cfg,
                 best, save_best_flag = evaluate(best)
             # save best
             if save_best_flag:
-                torch.save(model.state_dict(),
+                checkpoint = {"model_state_dict": model.state_dict(),
+                          "optimizer_state_dict": optimizer.state_dict(),
+                          "epoch": epoch}
+                torch.save(checkpoint,
                      osp.join(output_dir, model_name + "_best.pkl"))
                 logger.info(
                         f"Already save the best model (F1@0.50){int(best * 10000) / 10000}"
@@ -198,8 +201,11 @@ def train(cfg,
 
         # 6. Save model and optimizer
         if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1:
+            checkpoint = {"model_state_dict": model.state_dict(),
+                          "optimizer_state_dict": optimizer.state_dict(),
+                          "epoch": epoch}
             torch.save(
-                model.state_dict(),
+                checkpoint,
                 osp.join(output_dir,
                          model_name + f"_epoch_{epoch + 1:05d}.pkl"))
 

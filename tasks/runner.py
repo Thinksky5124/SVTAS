@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-21 15:29:03
+LastEditTime: 2022-03-22 17:43:26
 Description: file content
 FilePath: /ETETS/tasks/runner.py
 '''
@@ -46,6 +46,9 @@ class TrainRunner(object):
         self.optimizer.step()
         self.optimizer.zero_grad()
 
+        # clear memery buffer
+        self.model.neck.memery._clear_memery_buffer()
+
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
         outputs = dict(predict=pred_cls_list,
@@ -81,7 +84,7 @@ class TrainRunner(object):
         masks = masks.cuda()
         labels = labels.cuda()
         # train segment
-        outputs = self.model(imgs, masks)
+        outputs = self.model(imgs, masks, idx)
         seg_score, cls_score = outputs
         cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
         
@@ -141,6 +144,9 @@ class valRunner(object):
         self.b_tic = time.time()
 
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
+        # clear memery buffer
+        self.model.neck.memery._clear_memery_buffer()
+
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
         outputs = dict(predict=pred_cls_list,
@@ -175,7 +181,7 @@ class valRunner(object):
         masks = masks.cuda()
         labels = labels.cuda()
         # train segment
-        outputs = self.model(imgs, masks)
+        outputs = self.model(imgs, masks, idx)
         seg_score, cls_score = outputs
         cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
         

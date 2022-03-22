@@ -4,7 +4,6 @@ from .logger import coloring, get_logger, setup_logger
 
 __all__ = ['get_config']
 
-logger = setup_logger("./", name="ETETS", level="INFO")
 
 class AttrDict(dict):
     def __getattr__(self, key):
@@ -38,6 +37,7 @@ def get_config(fname, overrides=None, show=True):
     """
     assert os.path.exists(fname), ('config file({}) is not exist'.format(fname))
     config = parse_config(fname)
+    logger = setup_logger(f"./output/{config.model_name}", name="ETETS", level="INFO")
     override_config(config, overrides)
     if show:
         print_config(config)
@@ -50,6 +50,42 @@ def parse_config(cfg_file):
     create_attr_dict(yaml_config)
     return yaml_config
 
+def override(dl, ks, v):
+    """
+    Recursively replace dict of list
+    Args:
+        dl(dict or list): dict or list to be replaced
+        ks(list): list of keys
+        v(str): value to be replaced
+    """
+    logger = get_logger("ETETS")
+    def str2num(v):
+        try:
+            return eval(v)
+        except Exception:
+            return v
+
+    assert isinstance(dl, (list, dict)), ("{} should be a list or a dict")
+    assert len(ks) > 0, ('lenght of keys should larger than 0')
+    if isinstance(dl, list):
+        k = str2num(ks[0])
+        if len(ks) == 1:
+            assert k < len(dl), ('index({}) out of range({})'.format(k, dl))
+            dl[k] = str2num(v)
+        else:
+            override(dl[k], ks[1:], v)
+    else:
+        if len(ks) == 1:
+            #assert ks[0] in dl, ('{} is not exist in {}'.format(ks[0], dl))
+            if not ks[0] in dl:
+                logger.warning('A new filed ({}) detected!'.format(ks[0], dl))
+            dl[ks[0]] = str2num(v)
+        else:
+            assert ks[0] in dl, (
+                '({}) doesn\'t exist in {}, a new dict field is invalid'.format(
+                    ks[0], dl))
+            override(dl[ks[0]], ks[1:], v)
+            
 def override_config(config, options=None):
     """
     Recursively override the config
@@ -91,6 +127,7 @@ def print_dict(d, delimiter=0):
     Recursively visualize a dict and
     indenting acrrording by the relationship of keys.
     """
+    logger = get_logger("ETETS")
     placeholder = "-" * 60
     for k, v in sorted(d.items()):
         if isinstance(v, dict):
