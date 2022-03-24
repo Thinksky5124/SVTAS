@@ -2,6 +2,7 @@ import json
 import numpy as np
 import argparse
 import os
+import decord as de
 
 from tqdm import tqdm
 
@@ -61,9 +62,9 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
                 label_action_dict["label_ids"] = action_id
                 actions_list.append(label_action_dict)
 
-        label_dict["actions"] = actions_list
+        label_dict["annotations"] = actions_list
         labels_list.append(label_dict)
-    labels_dict["gts"] = labels_list
+    labels_dict["database"] = labels_list
     output_path = os.path.join(out_path, "label.json")
     f = open(output_path, "w", encoding='utf-8')
     f.write(json.dumps(labels_dict, indent=4))
@@ -71,12 +72,16 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
 
 
 def generate_action_dict(label):
+    action_list = []
+    for vid, gt in label["database"].items():
+        for action in gt["annotations"]:
+            label_name = action["label"]
+            if label_name not in action_list:
+                action_list.append(label_name)
+    
     action_dict = {}
-    for gt in label["gts"]:
-        for action in gt["actions"]:
-            label_id = action["label_ids"][0]
-            label_name = action["label_names"][0]
-            action_dict[label_id] = label_name
+    for idx in range(len(action_list)):
+        action_dict[idx] = action_list[idx]
 
     return action_dict
 
@@ -93,7 +98,7 @@ def load_action_dict(data_path):
     return class2id_map
 
 
-def localization_convert_segmentation_label(label, prefix_data_path, out_path):
+def localization_convert_segmentation_label(label, prefix_data_path, out_path, fps):
     path = os.path.join(out_path, "groundTruth")
     isExists = os.path.exists(path)
     if not isExists:
@@ -102,21 +107,26 @@ def localization_convert_segmentation_label(label, prefix_data_path, out_path):
     else:
         print(path + ' 目录已存在')
 
-    fps = float(label["fps"])
-    video_list = []
-    for gt in tqdm(label["gts"], desc='label convert:'):
-        video_name = gt["url"].split(".")[0]
-        data_path = os.path.join(prefix_data_path, video_name + ".pkl")
-        video_list.append(video_name + ".txt")
-        feature = np.load(data_path, allow_pickle=True)["image_feature"]
+    # fps = float(label["fps"])
+    video_val_list = []
+    video_test_list = []
+    for vid, gt in tqdm(label["database"].items(), desc='label convert:'):
+        video_name = vid.split(".")[0]
+        data_path = os.path.join(prefix_data_path, video_name + ".mp4")
+        if gt["subset"] == "test":
+            video_test_list.append(video_name + ".txt")
+        elif gt["subset"] == "validation":
+            video_val_list.append(video_name + ".txt")
+        container = de.VideoReader(data_path)
+        video_len = len(container)
 
-        num_feture = feature.shape[0]
+        num_feture = video_len
         seg_label = ["None"] * (num_feture)
-        for action in gt["actions"]:
-            start_id = action["start_id"]
-            end_id = action["end_id"]
+        for action in gt["annotations"]:
+            start_id = action["segment"][0]
+            end_id = action["segment"][1]
 
-            label_name = action["label_names"]
+            label_name = action["label"]
 
             start_index = int(np.floor(start_id * fps))
             end_index = int(np.floor(end_id * fps)) + 1
@@ -138,10 +148,14 @@ def localization_convert_segmentation_label(label, prefix_data_path, out_path):
         f = open(out_txt_file_path, "w", encoding='utf-8')
         f.write(str.join(seg_label) + str)
         f.close()
-    out_txt_file_path = os.path.join(out_path, "train_list.txt")
+    out_val_txt_file_path = os.path.join(out_path, "val_list.txt")
+    out_test_txt_file_path = os.path.join(out_path, "test_list.txt")
     str = '\n'
-    f = open(out_txt_file_path, "w", encoding='utf-8')
-    f.write(str.join(video_list) + str)
+    f = open(out_val_txt_file_path, "w", encoding='utf-8')
+    f.write(str.join(video_val_list) + str)
+    f.close()
+    f = open(out_test_txt_file_path, "w", encoding='utf-8')
+    f.write(str.join(video_test_list) + str)
     f.close()
 
 
@@ -155,7 +169,7 @@ def main():
             action_dict = generate_action_dict(label)
             generate_mapping_list_txt(action_dict, args.out_path)
             localization_convert_segmentation_label(label, args.data_path,
-                                                    args.out_path)
+                                                    args.out_path, args.fps)
 
         elif args.mode == "localization":
             action_dict = load_action_dict(args.label_path)

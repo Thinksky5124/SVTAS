@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-22 17:43:26
+LastEditTime: 2022-03-23 10:24:01
 Description: file content
 FilePath: /ETETS/tasks/runner.py
 '''
@@ -47,7 +47,7 @@ class TrainRunner(object):
         self.optimizer.zero_grad()
 
         # clear memery buffer
-        self.model.neck.memery._clear_memery_buffer()
+        # self.model.neck.memery._clear_memery_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -145,7 +145,7 @@ class valRunner(object):
 
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
         # clear memery buffer
-        self.model.neck.memery._clear_memery_buffer()
+        # self.model.neck.memery._clear_memery_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -207,3 +207,67 @@ class valRunner(object):
 
             if idx >= 0:
                 self.val_one_step(imgs, labels, masks, vid_list, sliding_num, idx)
+
+class testRunner(object):
+    def __init__(self,
+                 logger,
+                 video_batch_size,
+                 Metric,
+                 cfg,
+                 model,
+                 post_processing):
+        self.logger = logger
+        self.video_batch_size = video_batch_size
+        self.Metric = Metric
+        self.cfg = cfg
+        self.model = model
+        self.post_processing = post_processing
+    
+    def epoch_init(self):
+        # batch videos sampler
+        self.post_processing.init_flag = False
+        self.current_step = 0
+        self.current_step_vid_list = None
+        self.model.eval()
+
+    def batch_end_step(self, sliding_num, vid_list, step):
+        # clear memery buffer
+        # self.model.neck.memery._clear_memery_buffer()
+
+        # get pred result
+        pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
+        outputs = dict(predict=pred_cls_list,
+                        output_np=pred_score_list)
+        f1 = self.Metric.update(self.current_step_vid_list, ground_truth_list, outputs)
+
+        self.current_step_vid_list = vid_list
+        if len(self.current_step_vid_list) > 0:
+            self.post_processing.init_scores(sliding_num, len(vid_list))
+
+        self.current_step = step
+
+    def test_one_step(self, imgs, labels, masks, vid_list, sliding_num, idx):
+        # move data
+        imgs = imgs.cuda()
+        masks = masks.cuda()
+        labels = labels.cuda()
+        # train segment
+        outputs = self.model(imgs, masks, idx)
+        seg_score, cls_score = outputs
+
+        with torch.no_grad():
+            if self.post_processing.init_flag is not True:
+                self.post_processing.init_scores(sliding_num, len(vid_list))
+                self.current_step_vid_list = vid_list
+            self.post_processing.update(seg_score, labels, idx)
+
+    def test_one_iter(self, data):
+        # videos sliding stream val
+        for sliding_seg in data:
+            imgs, labels, masks, vid_list, sliding_num, step, idx = sliding_seg
+            # wheather next step
+            if self.current_step != step:
+                self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step)
+
+            if idx >= 0:
+                self.test_one_step(imgs, labels, masks, vid_list, sliding_num, idx)

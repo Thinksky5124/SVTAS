@@ -158,7 +158,7 @@ class BaseSegmentationMetric(object):
             ]))
         recog_content = list(recognition)
 
-        # self._write_seg_file(recog_content, 'pred')
+        # self._write_seg_file(recog_content, '.\output\pred')
         gt_content = []
         for i in range(gt_np.shape[0]):
             gt_content = np.concatenate((gt_content, [
@@ -166,7 +166,7 @@ class BaseSegmentationMetric(object):
                     self.actions_dict.values()).index(gt_np[i])]
             ]))
         gt_content = list(gt_content)
-        # self._write_seg_file(gt_content, 'gt')
+        # self._write_seg_file(gt_content, '.\output\gt')
 
         pred_detection = get_labels_scores_start_end_time(
             outputs_arr, recog_content, self.actions_dict)

@@ -1,42 +1,40 @@
 from turtle import forward
-from numpy import c_
+from typing_extensions import Self
 import torch
 import torch.nn as nn
-from torch.nn.parameter import Parameter
 import math
-from torch.nn import init
 from .head import SingleStageModel
 
 class ETETSNeck(nn.Module):
     def __init__(self,
-                 pos_channels=512,
-                 hidden_channels=64,
+                 pos_channels=2048,
                  num_layers=5,
                  num_f_maps=2048,
-                 input_dim=2560,
-                 output_dim=2560,
+                 input_dim=2048,
+                 output_dim=2048,
+                 hidden_dim=4096,
+                 dropout=0.5,
                  sample_rate=4,
                  clip_seg_num=15,
                  clip_buffer_num=0,
-                 sliding_window=5):
+                 sliding_window=30):
         super().__init__()
         self.pos_channels = pos_channels
-        self.hidden_channels = hidden_channels
         self.num_layers = num_layers
         self.clip_seg_num = clip_seg_num
         self.clip_buffer_num = clip_buffer_num
         self.sliding_window = sliding_window
+        self.sample_rate = sample_rate
+
+        self.clip_windows = int(self.sliding_window // self.sample_rate)
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.pe = PositionalEncoding(pos_channels)
-        self.memery = MemeryLayer(num_layers,
-                 num_f_maps,
-                 input_dim,
-                 output_dim,
-                 clip_seg_num=clip_seg_num,
-                 sliding_window=sliding_window,
-                 sample_rate=sample_rate,
-                 clip_buffer_num=clip_buffer_num)
+
+        # self.pe = PositionalEncoding(pos_channels)
+        # self.ff = ForwardFedBlock(input_dim=input_dim,
+        #             hidden_dim=hidden_dim,
+        #             output_dim=output_dim,
+        #             dropout=dropout)
 
     def forward(self, x, seg_mask, idx):
         # x.shape = [N * num_segs, 2048, 7, 7]
@@ -52,16 +50,34 @@ class ETETSNeck(nn.Module):
 
         # position encoding
         # [N, num_segs, 2048]
-        p_idx = range(idx * self.clip_seg_num, (idx + 1) * self.clip_seg_num)
-        seg_feature  = self.pe(seg_feature, p_idx)
+        # p_idx = range(idx * self.clip_windows , idx * self.clip_windows + self.clip_seg_num)
+        # seg_feature  = self.pe(seg_feature, p_idx)
+
+        # seg_feature = self.ff(seg_feature, seg_mask)
+
+        # memery
+        # seg_feature = self.memery(seg_feature, seg_mask)
 
         # [N, 2048, num_segs]
         seg_feature = torch.permute(seg_feature, dims=[0, 2, 1])
 
-        # memery
-        seg_feature = self.memery(seg_feature, seg_mask)
-
         return seg_feature, cls_feature
+
+class ForwardFedBlock(nn.Module):
+    def __init__(self,
+                 input_dim=2048,
+                 hidden_dim=2048,
+                 output_dim=2048,
+                 dropout=0.5):
+        super().__init__()
+        self.forward_fed_1 = nn.Linear(input_dim, hidden_dim)
+        self.forward_fed_2 = nn.Linear(hidden_dim, output_dim)
+        self.dropout = nn.Dropout(p=dropout)
+        self.relu = nn.ReLU()
+    
+    def forward(self, x, mask):
+        x = x * torch.permute(mask, dims=[0, 2, 1])
+        return self.forward_fed_2(self.dropout(self.relu(self.forward_fed_1(x))))
 
 class PositionalEncoding(nn.Module):
     "Implement the PE function."
@@ -82,7 +98,8 @@ class PositionalEncoding(nn.Module):
     def forward(self, x, p_idx):
         p_idx = torch.LongTensor(list(p_idx)).to(x.device)
         pe = self.pe(p_idx).unsqueeze(0).repeat(x.shape[0], 1, 1)
-        x = torch.concat([x, pe], dim=2)
+        # x = torch.concat([x, pe], dim=2)
+        x = x + pe
         return self.dropout(x)
         
 class MemeryLayer(nn.Module):
@@ -96,42 +113,46 @@ class MemeryLayer(nn.Module):
                  sample_rate=4,
                  clip_buffer_num=0):
         super().__init__()
-        self.w_f = OverLapCausalConvBlock(num_layers,
-                 num_f_maps,
-                 input_dim,
-                 output_dim,
-                 clip_seg_num=clip_seg_num,
-                 sliding_window=sliding_window,
-                 sample_rate=sample_rate,
-                 activation='sigmoid')
+        # self.w_f = OverLapCausalConvBlock(num_layers,
+        #          num_f_maps,
+        #          input_dim,
+        #          output_dim,
+        #          clip_seg_num=clip_seg_num,
+        #          sliding_window=sliding_window,
+        #          sample_rate=sample_rate,
+        #          activation='sigmoid')
         
-        self.w_i = OverLapCausalConvBlock(num_layers,
-                 num_f_maps,
-                 input_dim,
-                 output_dim,
-                 clip_seg_num=clip_seg_num,
-                 sliding_window=sliding_window,
-                 sample_rate=sample_rate,
-                 activation='sigmoid')
+        # self.w_i = OverLapCausalConvBlock(num_layers,
+        #          num_f_maps,
+        #          input_dim,
+        #          output_dim,
+        #          clip_seg_num=clip_seg_num,
+        #          sliding_window=sliding_window,
+        #          sample_rate=sample_rate,
+        #          activation='sigmoid')
         
-        self.w = OverLapCausalConvBlock(num_layers,
-                 num_f_maps,
-                 input_dim,
-                 output_dim,
-                 clip_seg_num=clip_seg_num,
-                 sliding_window=sliding_window,
-                 sample_rate=sample_rate,
-                 activation='tanh')
+        # self.w = OverLapCausalConvBlock(num_layers,
+        #          num_f_maps,
+        #          input_dim,
+        #          output_dim,
+        #          clip_seg_num=clip_seg_num,
+        #          sliding_window=sliding_window,
+        #          sample_rate=sample_rate,
+        #          activation='tanh')
         
-        self.w_o = OverLapCausalConvBlock(num_layers,
-                 num_f_maps,
-                 input_dim,
-                 output_dim,
-                 clip_seg_num=clip_seg_num,
-                 sliding_window=sliding_window,
-                 sample_rate=sample_rate,
-                 activation='sigmoid')
-        self.tanh = nn.Tanh()
+        # self.w_o = OverLapCausalConvBlock(num_layers,
+        #          num_f_maps,
+        #          input_dim,
+        #          output_dim,
+        #          clip_seg_num=clip_seg_num,
+        #          sliding_window=sliding_window,
+        #          sample_rate=sample_rate,
+        #          activation='sigmoid')
+        # self.tanh = nn.Tanh()
+
+        self.lstm = nn.LSTM(input_size=input_dim, hidden_size=input_dim, num_layers=num_layers, bidirectional=False, batch_first=True)
+        self.num_layers = num_layers
+        self.input_dim = input_dim
 
         self.c_t = None
         self.h_t = None
@@ -144,25 +165,40 @@ class MemeryLayer(nn.Module):
 
     def forward(self, x, mask):
         if self.c_t is None or self.h_t is None:
-            self.c_t = torch.ones(x.shape, device=x.device)
-            self.h_t = torch.ones(x.shape, device=x.device)
+            self.c_t = torch.ones((self.num_layers, x.shape[0], self.input_dim), device=x.device)
+            self.h_t = torch.ones((self.num_layers, x.shape[0], self.input_dim), device=x.device)
             self.buffer_mask = torch.zeros(mask.shape, device=mask.device)
         
-        # embedding
-        z_f = self.w_f(x, self.h_t, mask, self.buffer_mask)
-        z_i = self.w_i(x, self.h_t, mask, self.buffer_mask)
-        z = self.w(x, self.h_t, mask, self.buffer_mask)
-        z_o = self.w_o(x, self.h_t, mask, self.buffer_mask)
+        # # embedding
+        # z_f = self.w_f(x, self.h_t, mask, self.buffer_mask)
+        # z_i = self.w_i(x, self.h_t, mask, self.buffer_mask)
+        # z = self.w(x, self.h_t, mask, self.buffer_mask)
+        # z_o = self.w_o(x, self.h_t, mask, self.buffer_mask)
 
-        # memery
-        c_t = z_f * self.c_t + z_i * z
-        h_t = self.tanh(c_t) * z_o
+        # # memery
+        # c_t = z_f * self.c_t + z_i * z
+        # h_t = self.tanh(c_t) * z_o
 
-        # memery
+        # # memery
+        # self.h_t = h_t.detach().clone()
+        # self.c_t = c_t.detach().clone()
+        # self.buffer_mask = mask.detach().clone()
+
+        # fusion_feature = torch.concat([
+        #     self.h_t[:, :, :self.mbf_start],
+        #     (self.h_t[:, :, self.mbf_start:] + x[:, :, :self.over_lap_len]) / 2.0,
+        #     x[:, :, self.over_lap_len:]],
+        #     dim=2)
+        # fusion_mask = torch.concat([
+        #     self.buffer_mask[:, :, :self.mbf_start],
+        #     (self.buffer_mask[:, :, self.mbf_start:] + mask[:, :, :self.over_lap_len]) / 2.0,
+        #     mask[:, :, self.over_lap_len:]],
+        #     dim=2)
+        mask = torch.permute(mask, dims=[0, 2, 1])
+        output, (h_t, c_t) = self.lstm(x * mask, (self.h_t, self.c_t))
         self.h_t = h_t.detach().clone()
         self.c_t = c_t.detach().clone()
-        self.buffer_mask = mask.detach().clone()
-        return h_t
+        return output
 
 class OverLapCausalConvBlock(nn.Module):
     def __init__(self,
