@@ -33,12 +33,69 @@ pip freeze > requirements.txt
 | Model |   Param(M) | Flops(G) |   RES   |   FRAMES |  FPS |   AUC |   F1@0.5  |   mAP@0.5 |   Top1 Acc    |   pre-train  |    fine-tune   |   split-train |
 | ----- |   -----   |   -----   |   -----   |   -----   |   -----   |   -----   |   ----- |   ----- |   ----- |   ----- |   ----- |   ----- |
 | tsm |   24.380752 | 4.087136256 |   224   |   1x15  |  -   |   -  |   -  |   - |   98.86%  |  是  |   gtea    |
+
 # Prepare Data
+
+## Download Dataset
+
+prepare data follow below instruction.
+- data tree
+```txt
+─── data
+    ├── 50salads
+    ├── breakfast
+    ├── gtea
+    └── ...
+```
+### gtea and 50salads and breakfast
+
+The video action segmentation model uses [breakfast](https://serre-lab.clps.brown.edu/resource/breakfast-actions-dataset/), [50salads](https://cvip.computing.dundee.ac.uk/datasets/foodpreparation/50salads/) and [gtea](https://cbs.ic.gatech.edu/fpv/) data sets.
+
+- Dataset tree example
+```txt
+─── gtea
+    ├── Videos
+    │   ├── S1_Cheese_C1.mp4
+    │   ├── S1_Coffee_C1.mp4
+    │   ├── S1_CofHoney_C1.mp4
+    │   └── ...
+    ├── groundTruth
+    │   ├── S1_Cheese_C1.txt
+    │   ├── S1_Coffee_C1.txt
+    │   ├── S1_CofHoney_C1.txt
+    │   └── ...
+    ├── splits
+    │   ├── test.split1.bundle
+    │   ├── test.split2.bundle
+    │   ├── test.split3.bundle
+    │   └── ...
+    └── mapping.txt
+```
+
+### thumos14
+[Thumos14](http://crcv.ucf.edu/THUMOS14/home.html) dataset is temporal action localization dataset.
+- Dataset tree
+```txt
+─── thumos14
+    ├── Videos
+    │   ├── video_test_0000896.mp4
+    │   ├── video_test_0000897.mp4
+    │   ├── video_validation_0000482.mp4
+    │   └── ...
+    ├── groundTruth
+    │   ├── video_test_0000897.txt
+    │   ├── video_test_0000897.txt
+    │   ├── video_validation_0000482.txt
+    │   └── ...
+    ├── val_list.txt
+    ├── test_list.txt
+    └── mapping.txt
+```
 
 ## Dataset Normalization
 ```bash
 # count mean and std from video
-python utils/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 400 --only_norm True --fps 30
+python utils/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 1000 --only_norm True --fps 30
 ```
 - gtea:
 ```txt
@@ -61,7 +118,7 @@ mean RGB ∶[0.5139909998345553, 0.5117725498677757，0.4798814301515671]
 std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
 ```
 
-## Convert localization label to segmentation label
+## Convert Localization Label to Segmentation Label
 ```bash
 # thumos14
 python utils/transform_segmentation_label.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --mode segmentation --fps 30

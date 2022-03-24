@@ -26,18 +26,18 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
     label_path = os.path.join(prefix_data_path)
     label_txt_name_list = os.listdir(label_path)
 
-    labels_dict = {}
-    labels_dict["fps"] = fps
-    labels_list = []
+    output_dict = {}
+    output_dict["fps"] = fps
+    labels_dict = []
     for label_name in tqdm(label_txt_name_list, desc='label convert:'):
         label_dict = {}
         # Todos: according video format change
-        label_dict["url"] = label_name.split(".")[0] + ".mp4"
+        vid = label_name.split(".")[0] + ".mp4"
         label_txt_path = os.path.join(prefix_data_path, label_name)
 
         with open(label_txt_path, "r", encoding='utf-8') as f:
             gt = f.read().split("\n")[:-1]
-        label_dict["total_frames"] = len(gt)
+        label_dict["frames"] = len(gt)
 
         boundary_index_list = [0]
         before_action_name = gt[0]
@@ -53,7 +53,7 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
                 end_sec = float(boundary_index_list[index + 1] - 1) / float(fps)
                 action_id = action_dict[action_name]
                 label_action_dict = {}
-                label_action_dict["label_names"] = action_name
+                label_action_dict["label"] = action_name
                 label_action_dict["start_id"] = start_sec
                 label_action_dict["start_frame"] = boundary_index_list[index]
                 label_action_dict["end_id"] = end_sec
@@ -63,11 +63,11 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
                 actions_list.append(label_action_dict)
 
         label_dict["annotations"] = actions_list
-        labels_list.append(label_dict)
-    labels_dict["database"] = labels_list
+        labels_dict[vid] = label_dict
+    output_dict["database"] = labels_dict
     output_path = os.path.join(out_path, "label.json")
     f = open(output_path, "w", encoding='utf-8')
-    f.write(json.dumps(labels_dict, indent=4))
+    f.write(json.dumps(output_dict, indent=4))
     f.close()
 
 
@@ -132,10 +132,10 @@ def localization_convert_segmentation_label(label, prefix_data_path, out_path, f
             end_index = int(np.floor(end_id * fps)) + 1
 
             if end_index < num_feture - 1:
-                seg_label[start_index:end_index] = label_name * (end_index -
+                seg_label[start_index:end_index] = [label_name] * (end_index -
                                                                  start_index)
             elif start_index < num_feture - 1:
-                seg_label[start_index:] = label_name * (num_feture -
+                seg_label[start_index:] = [label_name] * (num_feture -
                                                         start_index)
             else:
                 pass

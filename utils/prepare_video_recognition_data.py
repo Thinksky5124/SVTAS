@@ -11,7 +11,7 @@ from tqdm import tqdm
 ignore_action_list = ["background", "None"]
 
 
-def get_video_clip_list(label, background_id, neg_num, total_frames):
+def get_video_clip_list(label, background_id, fps, total_frames):
     clip_dict = {}
     video_ation_clip = []  # start_frame end_frame action_id
     video_background_clip = []  # start_frame end_frame action_id
@@ -19,13 +19,13 @@ def get_video_clip_list(label, background_id, neg_num, total_frames):
     frame_index = 0
     background_list_idx = 0
     for action in label:
-        start_frame = action["segment"][0]
-        end_frame = action["segment"][1]
+        start_frame = int(np.floor(action["segment"][0] * fps))
+        end_frame = int(np.floor(action["segment"][1] * fps)) + 1
         if frame_index < start_frame:
             clip_start_frame = frame_index
             clip_end_frame = start_frame
             video_background_clip.append(
-                [clip_start_frame, clip_end_frame, background_id])
+                [clip_start_frame, clip_end_frame, "None"])
             background_idx_list.append(background_list_idx)
             background_list_idx = background_list_idx + 1
         frame_index = start_frame
@@ -38,7 +38,7 @@ def get_video_clip_list(label, background_id, neg_num, total_frames):
         clip_start_frame = frame_index
         clip_end_frame = total_frames
         video_background_clip.append(
-            [clip_start_frame, clip_end_frame, background_id])
+            [clip_start_frame, clip_end_frame, "None"])
         background_idx_list.append(background_list_idx)
     clip_dict["action_list"] = video_ation_clip
     clip_dict["background_list"] = video_background_clip
@@ -62,12 +62,13 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
             os.makedirs(output_path_fix)
 
     # read video
-    video_capture = cv2.VideoCapture(video_path)
+    video_capture = cv2.VideoCapture(video_path + ".mp4")
 
     # FPS
-    fps = video_capture.get(5)
-    if label_fps != fps:
-        raise ImportError("label fps not match video fps!")
+    # fps = video_capture.get(5)
+    # if label_fps != fps:
+    #     raise ImportError("label fps not match video fps!")
+    fps = label_fps
 
     # get video height width
     size = (int(video_capture.get(3)), int(video_capture.get(4)))
@@ -86,20 +87,20 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
     video_mean = []
     video_std = []
     for clip_info in tqdm(video_clip_list, desc=video_name):
-        start_frame = clip_info[0]
-        end_frame = clip_info[1]
-        action_id = clip_info[2]
+        start_frame = int(np.floor(clip_info[0] * fps))
+        end_frame = int(np.floor(clip_info[1] * fps)) + 1
+        action_name = clip_info[2]
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        if action_id == background_id:
+        if action_name in ignore_action_list:
             label_action_name = "background"
         else:
-            label_action_name = action_dict[action_id]
+            label_action_name = action_name
         # prepare path fix
+        output_path = os.path.join(
+            output_path_fix,
+            str(start_frame) + "_" + str(end_frame) + "_" + label_action_name +
+            ".mp4")
         if only_norm_flag is False:
-            output_path = os.path.join(
-                output_path_fix,
-                str(start_frame) + "_" + str(end_frame) + "_" + label_action_name +
-                ".mp4")
             v = cv2.VideoWriter(output_path, fourcc, fps, size)
         for frame_index in range(start_frame, end_frame + 1):
             if frame_index < videolen:
@@ -114,7 +115,7 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
                     video_mean.append(action_mean)
                     video_std.append(action_std)
 
-        str_info = output_path + " " + str(action_id)
+        str_info = output_path + " " + str(action_dict[action_name])
         result_dict["rec_label_list"].append(str_info)
         if random.random() < val_prob:
             result_dict["rec_val_label_list"].append(str_info)
@@ -306,7 +307,7 @@ def main():
     for vid, video_label in tqdm(label["database"].items(), desc='label collect:'):
         video_name = vid.split(".")[0]
         temp_dict = get_video_clip_list(video_label["annotations"], background_id,
-                                        args.negative_sample_num,
+                                        args.fps,
                                         video_label["frames"])
         clips_dict[video_name] = temp_dict
 
@@ -319,7 +320,7 @@ def main():
         video_clip_list = clips_dict[video_name]["list"]
         result_dict = video_split_to_clip(video_path, output_path_fix,
                                           video_name, fps, args.sample_rate,
-                                          video_clip_list, id2class_map,
+                                          video_clip_list, class2id_map,
                                           background_id, args.validation_prob,
                                           only_norm_flag)
         label_list = result_dict["rec_label_list"]

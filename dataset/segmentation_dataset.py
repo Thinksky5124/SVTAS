@@ -13,7 +13,7 @@ class SegmentationDataset(data.IterableDataset):
        a sample video with the filepath and label, which are split with a whitesapce.
        Example of a inde file:
         file tree:
-        ─── GTEA
+        ─── gtea
             ├── Videos
             │   ├── S1_Cheese_C1.mp4
             │   ├── S1_Coffee_C1.mp4
