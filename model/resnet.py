@@ -507,7 +507,7 @@ class ResNet(nn.Module):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
         if isinstance(self.pretrained, str):
-            logger = get_logger()
+            logger = get_logger("ETETS")
             if self.torchvision_pretrain:
                 # torchvision's
                 self._load_torchvision_checkpoint(logger)
@@ -563,7 +563,7 @@ class ResNet(nn.Module):
                 param.requires_grad = False
 
     def _partial_bn(self):
-        logger = get_logger()
+        logger = get_logger("ETETS")
         logger.info('Freezing BatchNorm2D except the first one.')
         count_bn = 0
         for m in self.modules():

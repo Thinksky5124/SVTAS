@@ -36,6 +36,9 @@ class ETETSNeck(nn.Module):
         #             output_dim=output_dim,
         #             dropout=dropout)
 
+    def init_weights(self):
+        pass
+
     def forward(self, x, seg_mask, idx):
         # x.shape = [N * num_segs, 2048, 7, 7]
         x = self.avgpool(x)

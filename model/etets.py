@@ -15,8 +15,15 @@ class ETETS(nn.Module):
         self.backbone = ETETSBackBone(**backbone)
         self.neck = ETETSNeck(**neck)
         self.head = ETETSHead(**head)
+        
+        self.init_weights()
 
         self.sample_rate = head.sample_rate
+
+    def init_weights(self):
+        self.backbone.init_weights()
+        self.neck.init_weights()
+        self.head.init_weights()
 
     def forward(self, imgs, masks, idx):
         # imgs.shape=[N,T,C,H,W], for most commonly case
