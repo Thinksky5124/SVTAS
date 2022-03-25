@@ -17,15 +17,22 @@ class BaseSegmentationMetric(object):
     def __init__(self,
                  overlap,
                  actions_map_file_path,
-                 tolerance=5,
-                 boundary_threshold=0.7,
                  max_proposal=100,
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
-                 **kwargs):
+                 file_output=False,
+                 output_dir="output/results/pred_gt_list/"):
         """prepare for metrics
         """
         self.logger = get_logger("ETETS")
         self.elps = 1e-10
+        self.file_output = file_output
+        self.output_dir = output_dir
+
+        if self.file_output is True:
+            isExists = os.path.exists(self.output_dir)
+            if not isExists:
+                os.makedirs(self.output_dir)
+
         # actions dict generate
         file_ptr = open(actions_map_file_path, 'r')
         actions = file_ptr.read().split('\n')[:-1]
@@ -141,15 +148,15 @@ class BaseSegmentationMetric(object):
         f1 = np.nan_to_num(f1)
         return f1
 
-    def _write_seg_file(self, input_data, write_path):
+    def _write_seg_file(self, input_data, write_name, write_path):
         recog_content = [line + "\n" for line in input_data]
 
-        write_path = os.path.join(write_path + ".txt")
+        write_path = os.path.join(write_path, write_name + ".txt")
         f = open(write_path, "w")
         f.writelines(recog_content)
         f.close()
 
-    def _transform_model_result(self, outputs_np, gt_np, outputs_arr):
+    def _transform_model_result(self, vid, outputs_np, gt_np, outputs_arr):
         recognition = []
         for i in range(outputs_np.shape[0]):
             recognition = np.concatenate((recognition, [
@@ -157,8 +164,7 @@ class BaseSegmentationMetric(object):
                     self.actions_dict.values()).index(outputs_np[i])]
             ]))
         recog_content = list(recognition)
-
-        # self._write_seg_file(recog_content, '.\output\pred')
+       
         gt_content = []
         for i in range(gt_np.shape[0]):
             gt_content = np.concatenate((gt_content, [
@@ -166,7 +172,10 @@ class BaseSegmentationMetric(object):
                     self.actions_dict.values()).index(gt_np[i])]
             ]))
         gt_content = list(gt_content)
-        # self._write_seg_file(gt_content, '.\output\gt')
+
+        if self.file_output is True:
+            self._write_seg_file(gt_content, vid + '-gt', self.output_dir)
+            self._write_seg_file(recog_content, vid + '-pred', self.output_dir)
 
         pred_detection = get_labels_scores_start_end_time(
             outputs_arr, recog_content, self.actions_dict)
@@ -290,15 +299,15 @@ class SegmentationMetric(BaseSegmentationMetric):
     def __init__(self,
                  overlap,
                  actions_map_file_path,
-                 tolerance=5,
-                 boundary_threshold=0.7,
                  max_proposal=100,
-                 tiou_thresholds=np.linspace(0.5, 0.95, 10)):
+                 tiou_thresholds=np.linspace(0.5, 0.95, 10),
+                 file_output=False,
+                 output_dir="output/results/pred_gt_list/"):
         """prepare for metrics
         """
         super().__init__(overlap, actions_map_file_path,
-                         tolerance, boundary_threshold,
-                         max_proposal, tiou_thresholds)
+                         max_proposal, tiou_thresholds,
+                         file_output, output_dir)
     
     def update(self, vid, ground_truth_batch, outputs):
         """update metrics during each iter
@@ -323,7 +332,7 @@ class SegmentationMetric(BaseSegmentationMetric):
                 outputs_arr = output_np
                 gt_np = groundTruth
 
-            result = self._transform_model_result(outputs_np, gt_np, outputs_arr)
+            result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result
             single_f1 = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
                             gt_detection)

@@ -65,7 +65,7 @@ def setup_logger(output=None, name="ETETS", level="INFO"):
         if output.endswith(".txt") or output.endswith(".log"):
             filename = output
         else:
-            filename = os.path.join(output, "log.txt")
+            filename = os.path.join(output, "log.log")
         if local_rank > 0:
             filename = filename + ".rank{}".format(local_rank)
 

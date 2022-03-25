@@ -155,5 +155,12 @@ python main.py  --validate -c config/breakfast/etets_split4.yaml  --seed 0
 ```
 # Test Model
 ```bash
+# gtea
 python main.py  --test -c config/gtea/etets_split1.yaml --weights=output/ETETS_gtea_split1/ETETS_gtea_split1_best.pkl
+```
+
+# Visualization
+```bash
+# gtea
+python utils/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs
 ```

@@ -1,7 +1,10 @@
 MODEL:
     backbone:
+        name: "ResNetTSM"
         pretrained: True
         depth: 50
+        clip_seg_num: 30
+        shift_div: 30
     neck:
         pos_channels: 2048
         num_layers: 2
@@ -103,8 +106,7 @@ OPTIMIZER: #OPTIMIZER field
 METRIC:
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
-    tolerance: 5
-    boundary_threshold: 0.7
+    file_output: True
 
 
 model_name: "ETETS_gtea_split1"

@@ -101,8 +101,7 @@ OPTIMIZER: #OPTIMIZER field
 METRIC:
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
-    tolerance: 5
-    boundary_threshold: 0.7
+
 
 
 model_name: "ETETS_gtea_split2"
