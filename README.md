@@ -124,6 +124,12 @@ std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
 python utils/transform_segmentation_label.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --mode segmentation --fps 30
 ```
 
+# Prepare Pretrain Weight
+
+- step 1 Down resnet pretrain weight checkpoint file from `./model/backbone.py`'s `model_urls`
+
+- step 2 Move this checkpoint file in `./data` directory
+
 # Train Model
 ```bash
 # gtea
