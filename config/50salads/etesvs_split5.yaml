@@ -34,7 +34,7 @@ DATASET: #DATASET field
     num_workers: 8
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/train.split2.bundle" #Mandatory, train data index file path
+        file_path: "./data/50salads/splits/train.split5.bundle" #Mandatory, train data index file path
         videos_path: "./data/50salads/Videos"
         gt_path: "./data/50salads/groundTruth"
         actions_map_file_path: "./data/50salads/mapping.txt"
@@ -45,7 +45,7 @@ DATASET: #DATASET field
         sample_rate: 4
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/test.split2.bundle" #Mandatory, train data index file path
+        file_path: "./data/50salads/splits/test.split5.bundle" #Mandatory, train data index file path
         videos_path: "./data/50salads/Videos"
         gt_path: "./data/50salads/groundTruth"
         actions_map_file_path: "./data/50salads/mapping.txt"
@@ -104,7 +104,7 @@ METRIC:
 
 
 
-model_name: "ETETS_50salads_split1"
+model_name: "ETESVS_50salads_split1"
 log_interval: 2 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

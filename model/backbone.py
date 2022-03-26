@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:22
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:30:38
+LastEditTime: 2022-03-26 15:03:27
 Description: model backbone script
-FilePath: /ETETS/model/backbone.py
+FilePath: /ETESVS/model/backbone.py
 '''
 import torch
 import torch.nn as nn
@@ -29,7 +29,7 @@ model_urls = {
     152: "./data/resnet152-394f9c45.pth"
 }
 
-class ETETSBackBone(nn.Module):
+class ETESVSBackBone(nn.Module):
     def __init__(self,
                  clip_seg_num=30,
                  shift_div=30,

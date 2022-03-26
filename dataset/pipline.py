@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:33:45
+LastEditTime: 2022-03-26 15:03:12
 Description: data prepare pipline function
-FilePath: /ETETS/dataset/pipline.py
+FilePath: /ETESVS/dataset/pipline.py
 '''
 import torchvision.transforms as transforms
 import decord as de

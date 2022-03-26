@@ -2,27 +2,27 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:30:58
+LastEditTime: 2022-03-26 15:06:40
 Description: model framework
-FilePath: /ETETS/model/etets.py
+FilePath: /ETESVS/model/etesvs.py
 '''
 import torch
 import torch.nn as nn
 
-from .backbone import ETETSBackBone
-from .neck import ETETSNeck
-from .head import ETETSHead
+from .backbone import ETESVSBackBone
+from .neck import ETESVSNeck
+from .head import ETESVSHead
 
-class ETETS(nn.Module):
+class ETESVS(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
                  head=None,
                  loss=None):
         super().__init__()
-        self.backbone = ETETSBackBone(**backbone)
-        self.neck = ETETSNeck(**neck)
-        self.head = ETETSHead(**head)
+        self.backbone = ETESVSBackBone(**backbone)
+        self.neck = ETESVSNeck(**neck)
+        self.head = ETESVSHead(**head)
         
         self.init_weights()
 

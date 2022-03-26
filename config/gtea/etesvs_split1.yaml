@@ -1,16 +1,21 @@
 MODEL:
     backbone:
+        name: "ResNetTSM"
         pretrained: True
         depth: 50
+        clip_seg_num: 30
+        shift_div: 30
     neck:
-        buffer_channels: 512
-        hidden_channels: 64
-        num_layers: 5
-        clip_seg_num: 15
+        pos_channels: 2048
+        num_layers: 2
+        num_f_maps: 2048
+        input_dim: 2048
+        output_dim: 2048
+        clip_seg_num: 30
         clip_buffer_num: 0
-        sliding_window: 30
+        sliding_window: 60
     head:
-        num_classes: 19
+        num_classes: 11
         num_stages: 1
         num_layers: 4
         num_f_maps: 64
@@ -19,7 +24,7 @@ MODEL:
         sample_rate: 4
         drop_ratio: 0.5
     loss:
-        num_classes: 19
+        num_classes: 11
         sample_rate: 4
         seg_weight: 1.0
         cls_weight: 1.0
@@ -30,29 +35,29 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 8
-    num_workers: 8
+    video_batch_size: 2
+    num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/train.split4.bundle" #Mandatory, train data index file path
-        videos_path: "./data/50salads/Videos"
-        gt_path: "./data/50salads/groundTruth"
-        actions_map_file_path: "./data/50salads/mapping.txt"
-        dataset_type: "50salads"
+        file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/gtea/Videos"
+        gt_path: "./data/gtea/groundTruth"
+        actions_map_file_path: "./data/gtea/mapping.txt"
+        dataset_type: "gtea"
         train_mode: True
-        sliding_window: 30
-        clip_seg_num: 15
+        sliding_window: 60
+        clip_seg_num: 30
         sample_rate: 4
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/test.split4.bundle" #Mandatory, train data index file path
-        videos_path: "./data/50salads/Videos"
-        gt_path: "./data/50salads/groundTruth"
-        actions_map_file_path: "./data/50salads/mapping.txt"
-        dataset_type: "50salads"
+        file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/gtea/Videos"
+        gt_path: "./data/gtea/groundTruth"
+        actions_map_file_path: "./data/gtea/mapping.txt"
+        dataset_type: "gtea"
         train_mode: False
-        sliding_window: 30
-        clip_seg_num: 15
+        sliding_window: 60
+        clip_seg_num: 45
         sample_rate: 4
 
 PIPELINE: #PIPELINE field
@@ -62,8 +67,8 @@ PIPELINE: #PIPELINE field
         sample:
             seg_len: 1
             sample_rate: 4
-            clip_seg_num: 15
-            sliding_window: 30
+            clip_seg_num: 30
+            sliding_window: 60
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -72,8 +77,8 @@ PIPELINE: #PIPELINE field
             - RandomHorizontalFlip:
             - ToTensor:
             - Normalize:
-                mean: [0.513, 0.511, 0.479]
-                std: [0.236, 0.233, 0.237]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
     test:
         decode:
@@ -81,8 +86,8 @@ PIPELINE: #PIPELINE field
         sample:
             seg_len: 1
             sample_rate: 4
-            clip_seg_num: 15
-            sliding_window: 30
+            clip_seg_num: 30
+            sliding_window: 60
         transform:
             - Resize:
                 size: 256
@@ -90,8 +95,8 @@ PIPELINE: #PIPELINE field
                 size: 224
             - ToTensor:
             - Normalize:
-                mean: [0.513, 0.511, 0.479]
-                std: [0.236, 0.233, 0.237]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005
@@ -100,11 +105,11 @@ OPTIMIZER: #OPTIMIZER field
 
 METRIC:
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/50salads/mapping.txt"
+    actions_map_file_path: "./data/gtea/mapping.txt"
+    file_output: True
 
 
-
-model_name: "ETETS_50salads_split1"
+model_name: "ETESVS_gtea_split1"
 log_interval: 2 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

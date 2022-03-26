@@ -30,11 +30,11 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 8
-    num_workers: 8
+    video_batch_size: 2
+    num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/train.split2.bundle" #Mandatory, train data index file path
+        file_path: "./data/breakfast/splits/train.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/breakfast/Videos"
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
@@ -45,7 +45,7 @@ DATASET: #DATASET field
         sample_rate: 4
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/test.split2.bundle" #Mandatory, train data index file path
+        file_path: "./data/breakfast/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/breakfast/Videos"
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"
@@ -104,7 +104,7 @@ METRIC:
 
 
 
-model_name: "ETETS_breakfast_split1"
+model_name: "ETESVS_breakfast_split1"
 log_interval: 10 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

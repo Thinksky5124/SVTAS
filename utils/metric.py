@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:36:21
+LastEditTime: 2022-03-26 15:03:44
 Description: metric class
-FilePath: /ETETS/utils/metric.py
+FilePath: /ETESVS/utils/metric.py
 '''
 import numpy as np
 import argparse
@@ -32,7 +32,7 @@ class BaseSegmentationMetric(object):
                  output_dir="output/results/pred_gt_list/"):
         """prepare for metrics
         """
-        self.logger = get_logger("ETETS")
+        self.logger = get_logger("ETESVS")
         self.elps = 1e-10
         self.file_output = file_output
         self.output_dir = output_dir

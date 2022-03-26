@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:40:18
+LastEditTime: 2022-03-26 15:00:57
 Description: main script
-FilePath: /ETETS/main.py
+FilePath: /ETESVS/main.py
 '''
 import argparse
 import random

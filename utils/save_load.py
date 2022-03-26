@@ -4,7 +4,7 @@ Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
 LastEditTime: 2022-03-26 14:37:17
 Description: mkidr function
-FilePath: /ETETS/utils/save_load.py
+FilePath: /ETESVS/utils/save_load.py
 '''
 import os
 

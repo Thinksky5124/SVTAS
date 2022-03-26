@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:34:04
+LastEditTime: 2022-03-26 15:06:59
 Description: dataset class
-FilePath: /ETETS/dataset/segmentation_dataset.py
+FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''
 import os.path as osp
 import numpy as np

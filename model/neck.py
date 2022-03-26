@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:32:36
+LastEditTime: 2022-03-26 15:06:09
 Description: model neck
-FilePath: /ETETS/model/neck.py
+FilePath: /ETESVS/model/neck.py
 '''
 from turtle import forward
 from typing_extensions import Self
@@ -13,7 +13,7 @@ import torch.nn as nn
 import math
 from .head import SingleStageModel
 
-class ETETSNeck(nn.Module):
+class ETESVSNeck(nn.Module):
     def __init__(self,
                  pos_channels=2048,
                  num_layers=5,

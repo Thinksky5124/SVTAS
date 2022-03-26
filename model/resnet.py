@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:33:29
+LastEditTime: 2022-03-26 15:05:52
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
-FilePath: /ETETS/model/resnet.py
+FilePath: /ETESVS/model/resnet.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
@@ -515,7 +515,7 @@ class ResNet(nn.Module):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
         if isinstance(self.pretrained, str):
-            logger = get_logger("ETETS")
+            logger = get_logger("ETESVS")
             if self.torchvision_pretrain:
                 # torchvision's
                 self._load_torchvision_checkpoint(logger)
@@ -571,7 +571,7 @@ class ResNet(nn.Module):
                 param.requires_grad = False
 
     def _partial_bn(self):
-        logger = get_logger("ETETS")
+        logger = get_logger("ETESVS")
         logger.info('Freezing BatchNorm2D except the first one.')
         count_bn = 0
         for m in self.modules():

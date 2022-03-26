@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:34:49
+LastEditTime: 2022-03-26 15:05:29
 Description: test script api
-FilePath: /ETETS/tasks/test.py
+FilePath: /ETESVS/tasks/test.py
 '''
 def test(cfg, weights):
     pass
@@ -16,8 +16,8 @@ import torch
 from utils.logger import get_logger, AverageMeter, log_batch
 from .runner import testRunner
 
-from model.etets import ETETS
-from model.loss import ETETSLoss
+from model.etesvs import ETESVS
+from model.loss import ETESVSLoss
 from dataset.segmentation_dataset import SegmentationDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
@@ -26,12 +26,12 @@ from model.post_processing import PostProcessing
 
 @torch.no_grad()
 def test(cfg, distributed, weights):
-    logger = get_logger("ETETS")
+    logger = get_logger("ETESVS")
     # 1. Construct model.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # 1.construct model
-    model = ETETS(**cfg.MODEL).to(device)
-    criterion = ETETSLoss(**cfg.MODEL.loss).to(device)
+    model = ETESVS(**cfg.MODEL).to(device)
+    criterion = ETESVSLoss(**cfg.MODEL.loss).to(device)
 
     # 2. Construct dataset and dataloader.
     # default num worker: 0, which means no subprocess will be created

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:31:49
+LastEditTime: 2022-03-26 15:06:19
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
-FilePath: /ETETS/model/mstcn.py
+FilePath: /ETESVS/model/mstcn.py
 '''
 import torch
 import copy

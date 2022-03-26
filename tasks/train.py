@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:34:33
+LastEditTime: 2022-03-26 15:05:04
 Description: train script api
-FilePath: /ETETS/tasks/train.py
+FilePath: /ETESVS/tasks/train.py
 '''
 import os.path as osp
 import time
@@ -14,8 +14,8 @@ import torch
 from utils.logger import get_logger, AverageMeter, log_batch, log_epoch
 from utils.save_load import mkdir
 
-from model.etets import ETETS
-from model.loss import ETETSLoss
+from model.etesvs import ETESVS
+from model.loss import ETESVSLoss
 from dataset.segmentation_dataset import SegmentationDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
@@ -30,7 +30,7 @@ def train(cfg,
     """Train model entry
     """
 
-    logger = get_logger("ETETS")
+    logger = get_logger("ETESVS")
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
 
@@ -46,8 +46,8 @@ def train(cfg,
         local_rank = torch.distributed.get_rank()
         device = torch.device(f'cuda:{local_rank}')
     # 1.construct model
-    model = ETETS(**cfg.MODEL).cuda()
-    criterion = ETETSLoss(**cfg.MODEL.loss)
+    model = ETESVS(**cfg.MODEL).cuda()
+    criterion = ETESVSLoss(**cfg.MODEL.loss)
 
     # 2. build metirc
     metric_cfg = cfg.METRIC

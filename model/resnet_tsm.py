@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:33:01
+LastEditTime: 2022-03-26 15:05:58
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
-FilePath: /ETETS/model/resnet_tsm.py
+FilePath: /ETESVS/model/resnet_tsm.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch

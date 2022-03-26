@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:32:46
+LastEditTime: 2022-03-26 15:06:04
 Description: model postprecessing
-FilePath: /ETETS/model/post_processing.py
+FilePath: /ETESVS/model/post_processing.py
 '''
 import numpy as np
 import torch

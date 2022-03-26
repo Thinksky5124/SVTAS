@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 16:44:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:35:23
+LastEditTime: 2022-03-26 15:04:44
 Description: convert img function script
-FilePath: /ETETS/utils/convert_pred2img.py
+FilePath: /ETESVS/utils/convert_pred2img.py
 '''
 import argparse
 import os

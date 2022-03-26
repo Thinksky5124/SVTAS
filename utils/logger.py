@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:35:36
+LastEditTime: 2022-03-26 15:03:38
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
-FilePath: /ETETS/utils/logger.py
+FilePath: /ETESVS/utils/logger.py
 '''
 import logging
 import os
@@ -35,9 +35,9 @@ def coloring(message, color="OKGREEN"):
 logger_initialized = []
 
 
-def setup_logger(output=None, name="ETETS", level="INFO"):
+def setup_logger(output=None, name="ETESVS", level="INFO"):
     """
-    Initialize the ETETS logger and set its verbosity level to "INFO".
+    Initialize the ETESVS logger and set its verbosity level to "INFO".
     """
     def time_zone(sec, fmt):
         real_time = datetime.datetime.now()

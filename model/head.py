@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:31:19
+LastEditTime: 2022-03-26 15:06:31
 Description: model head
-FilePath: /ETETS/model/head.py
+FilePath: /ETESVS/model/head.py
 '''
 import torch
 import torch.nn as nn
@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import copy
 from .mstcn import SingleStageModel
 
-class ETETSHead(nn.Module):
+class ETESVSHead(nn.Module):
     def __init__(self,
                  num_classes=48,
                  num_stages=1,

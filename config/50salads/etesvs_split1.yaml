@@ -3,12 +3,14 @@ MODEL:
         pretrained: True
         depth: 50
     neck:
-        buffer_channels: 512
-        hidden_channels: 64
-        num_layers: 5
-        clip_seg_num: 15
+        pos_channels: 2048
+        num_layers: 2
+        num_f_maps: 2048
+        input_dim: 2048
+        output_dim: 2048
+        clip_seg_num: 30
         clip_buffer_num: 0
-        sliding_window: 30
+        sliding_window: 300
     head:
         num_classes: 19
         num_stages: 1
@@ -16,11 +18,11 @@ MODEL:
         num_f_maps: 64
         cls_in_channels: 2048
         seg_in_channels: 2048
-        sample_rate: 4
+        sample_rate: 20
         drop_ratio: 0.5
     loss:
         num_classes: 19
-        sample_rate: 4
+        sample_rate: 20
         seg_weight: 1.0
         cls_weight: 1.0
         ignore_index: -100
@@ -30,30 +32,30 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 8
-    num_workers: 8
+    video_batch_size: 2
+    num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/train.split3.bundle" #Mandatory, train data index file path
+        file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/50salads/Videos"
         gt_path: "./data/50salads/groundTruth"
         actions_map_file_path: "./data/50salads/mapping.txt"
         dataset_type: "50salads"
         train_mode: True
-        sliding_window: 30
-        clip_seg_num: 15
-        sample_rate: 4
+        sliding_window: 300
+        clip_seg_num: 30
+        sample_rate: 20
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/test.split3.bundle" #Mandatory, train data index file path
+        file_path: "./data/50salads/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/50salads/Videos"
         gt_path: "./data/50salads/groundTruth"
         actions_map_file_path: "./data/50salads/mapping.txt"
         dataset_type: "50salads"
         train_mode: False
-        sliding_window: 30
-        clip_seg_num: 15
-        sample_rate: 4
+        sliding_window: 300
+        clip_seg_num: 30
+        sample_rate: 20
 
 PIPELINE: #PIPELINE field
     train: #Mandotary, indicate the pipeline to deal with the training data, associate to the 'paddlevideo/loader/pipelines/'
@@ -61,9 +63,9 @@ PIPELINE: #PIPELINE field
             backend: "decord"
         sample:
             seg_len: 1
-            sample_rate: 4
-            clip_seg_num: 15
-            sliding_window: 30
+            sample_rate: 20
+            clip_seg_num: 30
+            sliding_window: 300
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -80,9 +82,9 @@ PIPELINE: #PIPELINE field
             backend: "decord"
         sample:
             seg_len: 1
-            sample_rate: 4
-            clip_seg_num: 15
-            sliding_window: 30
+            sample_rate: 20
+            clip_seg_num: 30
+            sliding_window: 300
         transform:
             - Resize:
                 size: 256
@@ -104,7 +106,7 @@ METRIC:
 
 
 
-model_name: "ETETS_50salads_split1"
-log_interval: 2 #Optional, the interal of logger, default:10
+model_name: "ETESVS_50salads_split1"
+log_interval: 3 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
-save_interval: 10
+save_interval: 3
