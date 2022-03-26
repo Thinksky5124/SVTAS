@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:11:00
+LastEditTime: 2022-03-26 16:16:38
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
@@ -59,7 +59,10 @@ def setup_logger(output=None, name="ETESVS", level="INFO"):
         plain_formatter = logging.Formatter(
             "[%(asctime)s] %(message)s",
             datefmt="%m/%d %H:%M:%S")
-    local_rank = 0
+    local_rank = int(os.environ['LOCAL_RANK'])
+    if local_rank < 0:
+        local_rank = 0
+        
     if local_rank == 0:
         # stdout logging: master only
         ch = logging.StreamHandler(stream=sys.stdout)

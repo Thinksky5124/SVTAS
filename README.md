@@ -7,8 +7,9 @@ Temporal action segmentation and localization is a challenge task which attracts
 
 # Todo list
 - [ ] distribution data parallel
+- [ ] distribution change to torchrun
 
-# Envirnment Preapre
+# Envirnment Prepare
 ```bash
 conda create -n torch python=3.8
 python -m pip install --upgrade pip

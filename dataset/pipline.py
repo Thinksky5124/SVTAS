@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:03:12
+LastEditTime: 2022-03-26 19:46:51
 Description: data prepare pipline function
 FilePath: /ETESVS/dataset/pipline.py
 '''

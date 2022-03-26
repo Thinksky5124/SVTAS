@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:00:57
+LastEditTime: 2022-03-26 20:06:44
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -36,7 +36,10 @@ def parse_args():
                         '--weights',
                         type=str,
                         help='weights for finetuning or testing')
-    parser.add_argument("--local_rank", type=int, default=0)
+    parser.add_argument('--local_rank',
+        default=-1,
+        type=int,
+        help='node rank for distributed training')
     parser.add_argument(
         '--validate',
         action='store_true',
@@ -68,11 +71,12 @@ def main():
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
-        distributed = False
+        nprocs = 1
+        torch.backends.cudnn.benchmark = False
     else:
-        distributed = True
-        torch.cuda.set_device(args.local_rank)
-        torch.distributed.init_process_group(backend='nccl')
+        nprocs = torch.cuda.device_count()
+        # weather accelerate conv op
+        torch.backends.cudnn.benchmark = True
 
     # set seed if specified
     seed = args.seed
@@ -85,17 +89,20 @@ def main():
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
-        torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
 
     if args.test:
-        test(cfg, distributed=distributed, weights=args.weights)
+        test(cfg,
+             args.local_rank,
+             nprocs,
+             weights=args.weights)
     else:
         train(cfg,
-                distributed=distributed,
-                weights=args.weights,
-                validate=args.validate)
+              args.local_rank,
+              nprocs,
+              weights=args.weights,
+              validate=args.validate)
 
 
 if __name__ == '__main__':

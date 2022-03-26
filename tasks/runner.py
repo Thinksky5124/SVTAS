@@ -2,13 +2,20 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:05:49
+LastEditTime: 2022-03-26 19:48:29
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
 import torch
 import time
 from utils.logger import log_batch
+import torch.distributed as dist
+
+def reduce_mean(tensor, nprocs):
+    rt = tensor.clone()
+    dist.all_reduce(rt, op=dist.ReduceOp.SUM) # sum-up as the all-reduce operation
+    rt /= nprocs # NOTE this is necessary, since all_reduce here do not perform average 
+    return rt
 
 class TrainRunner(object):
     def __init__(self,
@@ -20,7 +27,8 @@ class TrainRunner(object):
                  cfg,
                  model,
                  criterion,
-                 post_processing):
+                 post_processing,
+                 nprocs=1):
         self.optimizer = optimizer
         self.logger = logger
         self.video_batch_size = video_batch_size
@@ -30,6 +38,7 @@ class TrainRunner(object):
         self.model = model
         self.criterion = criterion
         self.post_processing = post_processing
+        self.nprocs = nprocs
     
     def epoch_init(self):
         # batch videos sampler
@@ -90,6 +99,11 @@ class TrainRunner(object):
         
         loss = (cls_loss + seg_loss) / sliding_num
 
+        if self.nprocs > 1:
+            loss = reduce_mean(loss, self.nprocs)
+            cls_loss = reduce_mean(cls_loss, self.nprocs)
+            seg_loss = reduce_mean(seg_loss, self.nprocs)
+
         loss.backward()
 
         with torch.no_grad():
@@ -122,7 +136,8 @@ class valRunner(object):
                  cfg,
                  model,
                  criterion,
-                 post_processing):
+                 post_processing,
+                 nprocs=1):
         self.logger = logger
         self.video_batch_size = video_batch_size
         self.Metric = Metric
@@ -131,6 +146,7 @@ class valRunner(object):
         self.model = model
         self.criterion = criterion
         self.post_processing = post_processing
+        self.nprocs = nprocs
     
     def epoch_init(self):
         # batch videos sampler
@@ -187,6 +203,11 @@ class valRunner(object):
         
         loss = (cls_loss + seg_loss) / sliding_num
 
+        if self.nprocs > 1:
+            loss = reduce_mean(loss, self.nprocs)
+            cls_loss = reduce_mean(cls_loss, self.nprocs)
+            seg_loss = reduce_mean(seg_loss, self.nprocs)
+
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
                 self.post_processing.init_scores(sliding_num, len(vid_list))
@@ -215,13 +236,15 @@ class testRunner(object):
                  Metric,
                  cfg,
                  model,
-                 post_processing):
+                 post_processing,
+                 nprocs=1):
         self.logger = logger
         self.video_batch_size = video_batch_size
         self.Metric = Metric
         self.cfg = cfg
         self.model = model
         self.post_processing = post_processing
+        self.nprocs = nprocs
     
     def epoch_init(self):
         # batch videos sampler

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:06:59
+LastEditTime: 2022-03-26 20:42:15
 Description: dataset class
 FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''
@@ -57,7 +57,9 @@ class SegmentationDataset(data.IterableDataset):
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
-                 train_mode=True):
+                 train_mode=True,
+                 local_rank=-1,
+                 nprocs=1):
         super().__init__()
         self.suffix = suffix
         self.videos_path = videos_path
@@ -72,6 +74,10 @@ class SegmentationDataset(data.IterableDataset):
         self.data_prefix = osp.realpath(data_prefix) if \
             data_prefix is not None and osp.isdir(data_prefix) else data_prefix
         self.pipeline = pipeline
+
+        # distribute
+        self.local_rank = local_rank
+        self.nprocs = nprocs
 
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')
@@ -90,7 +96,7 @@ class SegmentationDataset(data.IterableDataset):
         if train_mode == False:
             self._viodeo_sample_shuffle()
         
-        #iterable
+        # iterable
         self.temporal_clip_batch_size = temporal_clip_batch_size
 
     def _viodeo_sample_shuffle(self):
@@ -133,53 +139,57 @@ class SegmentationDataset(data.IterableDataset):
     def load_file(self, sample_videos_list):
         """Load index file to get video information."""
         video_segment_lists = self.parse_file_paths(self.file_path)
-        info_list = []
+        info_list = [[] for i in range(self.nprocs)]
         # sample step
         for step, sample_idx_list in sample_videos_list:
             # sample step clip
-            video_sample_segment_lists = []
-            for sample_idx in sample_idx_list:
-                video_sample_segment_lists.append(video_segment_lists[sample_idx])
-            # convert sample
-            info = []
-            max_len = 0
-            for video_segment in video_sample_segment_lists:
-                if self.dataset_type in ['gtea', '50salads']:
-                    video_name = video_segment.split('.')[0]
-                    label_path = os.path.join(self.gt_path, video_name + '.txt')
+            video_sample_segment_lists = [[] for i in range(self.nprocs)]
+            for sample_idx_list_idx in range(len(sample_idx_list)):
+                nproces_idx = sample_idx_list_idx % self.nprocs
+                sample_idx = sample_idx_list[sample_idx_list_idx]
+                video_sample_segment_lists[nproces_idx].append(video_segment_lists[sample_idx])
+            
+            for proces_idx in range(len(video_sample_segment_lists)):
+                # convert sample
+                info = []
+                max_len = 0
+                for video_segment in video_sample_segment_lists[proces_idx]:
+                    if self.dataset_type in ['gtea', '50salads']:
+                        video_name = video_segment.split('.')[0]
+                        label_path = os.path.join(self.gt_path, video_name + '.txt')
 
-                    video_path = os.path.join(self.videos_path, video_name + '.mp4')
-                    if not osp.isfile(video_path):
-                        video_path = os.path.join(self.videos_path, video_name + '.avi')
+                        video_path = os.path.join(self.videos_path, video_name + '.mp4')
                         if not osp.isfile(video_path):
-                            raise NotImplementedError
-                elif self.dataset_type in ['breakfast']:
-                    video_segment_name, video_segment_path = video_segment
-                    video_name = video_segment_name.split('.')[0]
-                    label_path = os.path.join(self.gt_path, video_name + '.txt')
+                            video_path = os.path.join(self.videos_path, video_name + '.avi')
+                            if not osp.isfile(video_path):
+                                raise NotImplementedError
+                    elif self.dataset_type in ['breakfast']:
+                        video_segment_name, video_segment_path = video_segment
+                        video_name = video_segment_name.split('.')[0]
+                        label_path = os.path.join(self.gt_path, video_name + '.txt')
 
-                    video_path = os.path.join(self.videos_path, video_segment_path + '.mp4')
-                    if not osp.isfile(video_path):
-                        video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
+                        video_path = os.path.join(self.videos_path, video_segment_path + '.mp4')
                         if not osp.isfile(video_path):
-                            raise NotImplementedError
-                file_ptr = open(label_path, 'r')
-                content = file_ptr.read().split('\n')[:-1]
-                classes = np.zeros(len(content), dtype='int64')
-                for i in range(len(content)):
-                    classes[i] = self.actions_dict[content[i]]
-                info.append(
-                    dict(filename=video_path,
-                        raw_labels=classes,
-                        video_name=video_name))
-                if max_len < len(content):
-                    max_len = len(content)
+                            video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
+                            if not osp.isfile(video_path):
+                                raise NotImplementedError
+                    file_ptr = open(label_path, 'r')
+                    content = file_ptr.read().split('\n')[:-1]
+                    classes = np.zeros(len(content), dtype='int64')
+                    for i in range(len(content)):
+                        classes[i] = self.actions_dict[content[i]]
+                    info.append(
+                        dict(filename=video_path,
+                            raw_labels=classes,
+                            video_name=video_name))
+                    if max_len < len(content):
+                        max_len = len(content)
 
-            # construct sliding num
-            sliding_num = (max_len - self.clip_seg_num * self.sample_rate) // self.sliding_window
-            if (max_len - self.clip_seg_num * self.sample_rate) % self.sliding_window != 0:
-                sliding_num = sliding_num + 1
-            info_list.append([step, sliding_num, info])
+                # construct sliding num
+                sliding_num = (max_len - self.clip_seg_num * self.sample_rate) // self.sliding_window
+                if (max_len - self.clip_seg_num * self.sample_rate) % self.sliding_window != 0:
+                    sliding_num = sliding_num + 1
+                info_list[proces_idx].append([step, sliding_num, info])
         return info_list
 
     def _get_one_videos_clip(self, idx, info):
@@ -202,13 +212,22 @@ class SegmentationDataset(data.IterableDataset):
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
         return imgs, labels, masks, vid_list
     
-    def _step_sliding_sampler(self, woker_id, num_workers):
+    def _genrate_sampler(self, woker_id, num_workers):
+        if self.local_rank < 0:
+            # single gpu train
+            return self._step_sliding_sampler(woker_id=woker_id, num_workers=num_workers, info_list=self.info_list[0])
+        else:
+            # multi gpu train
+            sample_info_list = self.info_list[self.local_rank]
+            return self._step_sliding_sampler(woker_id=woker_id, num_workers=num_workers, info_list=sample_info_list)
+
+    def _step_sliding_sampler(self, woker_id, num_workers, info_list):
         # dispatch function
         current_sliding_cnt = woker_id * self.temporal_clip_batch_size
         mini_sliding_cnt = 0
         next_step_flag = False
-        for step, sliding_num, info in self.info_list:
-            while current_sliding_cnt < sliding_num:
+        for step, sliding_num, info in info_list:
+            while current_sliding_cnt < sliding_num and len(info) > 0:
                 while mini_sliding_cnt < self.temporal_clip_batch_size:
                     if current_sliding_cnt < sliding_num:
                         imgs, labels, masks, vid_list = self._get_one_videos_clip(current_sliding_cnt, info)
@@ -238,11 +257,11 @@ class SegmentationDataset(data.IterableDataset):
         worker_info = torch.utils.data.get_worker_info()
         # single worker
         if worker_info is None:
-            sample_iterator = self._step_sliding_sampler(0, 1)
+            sample_iterator = self._genrate_sampler(0, 1)
         else: # multiple workers
             woker_id = worker_info.id
             num_workers = int(worker_info.num_workers)
-            sample_iterator = self._step_sliding_sampler(woker_id, num_workers)
+            sample_iterator = self._genrate_sampler(woker_id, num_workers)
         return sample_iterator
 
 class VideoSamplerDataset(data.Dataset):

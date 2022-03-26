@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:05:04
+LastEditTime: 2022-03-26 20:07:22
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -24,7 +24,8 @@ from model.post_processing import PostProcessing
 from .runner import TrainRunner, valRunner
 
 def train(cfg,
-          distributed,
+          local_rank,
+          nprocs,
           weights=None,
           validate=True):
     """Train model entry
@@ -40,14 +41,19 @@ def train(cfg,
     output_dir = cfg.get("output_dir", f"./output/{model_name}")
     mkdir(output_dir)
 
-    if distributed == False:
+    if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # 1.construct model
+        model = ETESVS(**cfg.MODEL).cuda()
+        criterion = ETESVSLoss(**cfg.MODEL.loss)
     else:
-        local_rank = torch.distributed.get_rank()
-        device = torch.device(f'cuda:{local_rank}')
-    # 1.construct model
-    model = ETESVS(**cfg.MODEL).cuda()
-    criterion = ETESVSLoss(**cfg.MODEL.loss)
+        torch.cuda.set_device(local_rank)
+        torch.distributed.init_process_group(backend='nccl')
+        # 1.construct model
+        model = ETESVS(**cfg.MODEL).cuda(local_rank)
+        criterion = ETESVSLoss(**cfg.MODEL.loss).cuda(local_rank)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
+
 
     # 2. build metirc
     metric_cfg = cfg.METRIC
@@ -80,7 +86,9 @@ def train(cfg,
     train_dataset_config = cfg.DATASET.train
     train_dataset_config['pipeline'] = train_Pipeline
     train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    train_dataset_config['video_batch_size'] = video_batch_size
+    train_dataset_config['video_batch_size'] = video_batch_size * nprocs
+    train_dataset_config['local_rank'] = local_rank
+    train_dataset_config['nprocs'] = nprocs
     train_dataloader = torch.utils.data.DataLoader(
         SegmentationDataset(**train_dataset_config),
         batch_size=temporal_clip_batch_size,
@@ -91,13 +99,15 @@ def train(cfg,
         val_dataset_config = cfg.DATASET.test
         val_dataset_config['pipeline'] = val_Pipeline
         val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-        val_dataset_config['video_batch_size'] = video_batch_size
+        val_dataset_config['video_batch_size'] = video_batch_size * nprocs
+        val_dataset_config['local_rank'] = local_rank
+        val_dataset_config['nprocs'] = nprocs
         val_dataloader = torch.utils.data.DataLoader(
             SegmentationDataset(**val_dataset_config),
             batch_size=temporal_clip_batch_size,
             num_workers=num_workers,
             collate_fn=sliding_concate_fn)
-  
+
     # 6. Train Model
     record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
@@ -125,7 +135,8 @@ def train(cfg,
                 cfg=cfg,
                 model=model,
                 criterion=criterion,
-                post_processing=post_processing)
+                post_processing=post_processing,
+                nprocs=nprocs)
 
     best = 0.0
     for epoch in range(0, cfg.epochs):
@@ -143,6 +154,9 @@ def train(cfg,
         for i, data in enumerate(train_dataloader):
             runner.train_one_iter(data=data, r_tic=r_tic, epoch=epoch)
             r_tic = time.time()
+
+            if local_rank >= 0:
+                torch.distributed.barrier()
 
         # metric output
         runner.Metric.accumulate()
