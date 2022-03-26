@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-21 11:12:50
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:36:21
+Description: metric class
+FilePath: /ETETS/utils/metric.py
+'''
 import numpy as np
 import argparse
 import pandas as pd
@@ -17,6 +25,7 @@ class BaseSegmentationMetric(object):
     def __init__(self,
                  overlap,
                  actions_map_file_path,
+                 train_mode=False,
                  max_proposal=100,
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
@@ -27,8 +36,9 @@ class BaseSegmentationMetric(object):
         self.elps = 1e-10
         self.file_output = file_output
         self.output_dir = output_dir
+        self.train_mode = train_mode
 
-        if self.file_output is True:
+        if self.file_output is True and self.train_mode is False:
             isExists = os.path.exists(self.output_dir)
             if not isExists:
                 os.makedirs(self.output_dir)
@@ -173,7 +183,7 @@ class BaseSegmentationMetric(object):
             ]))
         gt_content = list(gt_content)
 
-        if self.file_output is True:
+        if self.file_output is True and self.train_mode is False:
             self._write_seg_file(gt_content, vid + '-gt', self.output_dir)
             self._write_seg_file(recog_content, vid + '-pred', self.output_dir)
 
@@ -299,13 +309,14 @@ class SegmentationMetric(BaseSegmentationMetric):
     def __init__(self,
                  overlap,
                  actions_map_file_path,
+                 train_mode=False,
                  max_proposal=100,
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
                  output_dir="output/results/pred_gt_list/"):
         """prepare for metrics
         """
-        super().__init__(overlap, actions_map_file_path,
+        super().__init__(overlap, actions_map_file_path, train_mode,
                          max_proposal, tiou_thresholds,
                          file_output, output_dir)
     

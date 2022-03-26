@@ -2,8 +2,8 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-25 20:31:27
-Description: file content
+LastEditTime: 2022-03-26 14:31:49
+Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETETS/model/mstcn.py
 '''
 import torch

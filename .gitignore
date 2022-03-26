@@ -140,3 +140,4 @@ output/
 
 # debug
 .vscode/
+.idea/

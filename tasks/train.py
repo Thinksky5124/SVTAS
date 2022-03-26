@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-21 11:12:50
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:34:33
+Description: train script api
+FilePath: /ETETS/tasks/train.py
+'''
 import os.path as osp
 import time
 
@@ -42,7 +50,9 @@ def train(cfg,
     criterion = ETETSLoss(**cfg.MODEL.loss)
 
     # 2. build metirc
-    Metric = SegmentationMetric(**cfg.METRIC)
+    metric_cfg = cfg.METRIC
+    metric_cfg['train_mode'] = True
+    Metric = SegmentationMetric(**metric_cfg)
 
     # 3. Construct solver.
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,

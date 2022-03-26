@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-16 20:52:46
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:35:36
+Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
+FilePath: /ETETS/utils/logger.py
+'''
 import logging
 import os
 import sys

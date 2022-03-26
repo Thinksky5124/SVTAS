@@ -2,8 +2,8 @@
 Author: Thyssen Wen
 Date: 2022-03-25 16:44:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-25 19:08:56
-Description: file content
+LastEditTime: 2022-03-26 14:35:23
+Description: convert img function script
 FilePath: /ETETS/utils/convert_pred2img.py
 '''
 import argparse
@@ -116,7 +116,7 @@ def main() -> None:
         img = img.convert("P")
         img.putpalette(palette)
 
-        plt.figure('Compare groundtruth and prediction')
+        plt.figure(vid)
         plt.title('GroundTruth')
         plt.imshow(img)
         plt.xlabel('Prediction')

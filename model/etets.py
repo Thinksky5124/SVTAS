@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-25 10:29:10
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:30:58
+Description: model framework
+FilePath: /ETETS/model/etets.py
+'''
 import torch
 import torch.nn as nn
 
@@ -52,7 +60,7 @@ class ETETS(nn.Module):
         # seg_feature [N, H_dim, T]
         # cls_feature [N, F_dim, T]
         if self.head is not None:
-            seg_score, cls_score = self.head(seg_feature, cls_feature, masks)
+            seg_score, cls_score = self.head(seg_feature, cls_feature, masks[:, :, ::self.sample_rate])
         else:
             seg_score = None
             cls_score = None

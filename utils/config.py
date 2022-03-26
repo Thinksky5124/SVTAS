@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-16 20:52:46
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:35:02
+Description: config load function
+FilePath: /ETETS/utils/config.py
+'''
 import os
 import yaml
 from .logger import coloring, get_logger, setup_logger

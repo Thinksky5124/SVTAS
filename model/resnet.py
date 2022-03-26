@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-25 21:27:52
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:33:29
+Description: ResNet ref: https://github.com/open-mmlab/mmaction2
+FilePath: /ETETS/model/resnet.py
+'''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import ConvModule, constant_init, kaiming_init

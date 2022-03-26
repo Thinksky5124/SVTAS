@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-16 20:52:46
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:37:38
+Description: transform segmentation label script
+FilePath: /ETETS/utils/transform_segmentation_label.py
+'''
 import json
 import numpy as np
 import argparse

@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-16 20:52:46
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:36:44
+Description: prepare video recognition data and compute image std and mean script
+FilePath: /ETETS/utils/prepare_video_recognition_data.py
+'''
 import json
 import argparse
 import os

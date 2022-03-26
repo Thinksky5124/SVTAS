@@ -2,8 +2,8 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-23 10:24:01
-Description: file content
+LastEditTime: 2022-03-26 14:34:27
+Description: runner script
 FilePath: /ETETS/tasks/runner.py
 '''
 import torch

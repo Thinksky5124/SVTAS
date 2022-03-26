@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-17 12:12:57
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:34:49
+Description: test script api
+FilePath: /ETETS/tasks/test.py
+'''
 def test(cfg, weights):
     pass
 

@@ -1,3 +1,11 @@
+'''
+Author: Thyssen Wen
+Date: 2022-03-25 21:27:22
+LastEditors: Thyssen Wen
+LastEditTime: 2022-03-26 14:30:38
+Description: model backbone script
+FilePath: /ETETS/model/backbone.py
+'''
 import torch
 import torch.nn as nn
 
