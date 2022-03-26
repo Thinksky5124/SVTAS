@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:03:38
+LastEditTime: 2022-03-26 15:11:00
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
@@ -73,7 +73,7 @@ def setup_logger(output=None, name="ETESVS", level="INFO"):
         if output.endswith(".txt") or output.endswith(".log"):
             filename = output
         else:
-            filename = os.path.join(output, "log.log")
+            filename = os.path.join(output, name + ".log")
         if local_rank > 0:
             filename = filename + ".rank{}".format(local_rank)
 

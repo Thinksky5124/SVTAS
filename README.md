@@ -166,7 +166,7 @@ python main.py  --validate -c config/breakfast/etesvs_split4.yaml  --seed 0
 # Test Model
 ```bash
 # gtea
-python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/etesvs_gtea_split1/etesvs_gtea_split1_best.pkl
+python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS_gtea_split1/ETESVS_gtea_split1_best.pkl
 ```
 
 # Visualization
