@@ -145,8 +145,8 @@ python main.py  --validate -c config/gtea/etesvs_split2.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_split4.yaml --seed 0
 # multi gpu
-export CUDA_VISIBLE_DEVICES=1,2
-python -m torch.distributed.launch --nproc_pemain.pyr_node=2  --launcher pytorch --validate -c config/gtea/ete_tsm_mstcn.yaml --seed 0
+export CUDA_VISIBLE_DEVICES=2,3
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/gtea/etesvs_split1.yaml --seed 0
 
 # 50salads
 export CUDA_VISIBLE_DEVICES=3
@@ -157,12 +157,19 @@ python main.py  --validate -c config/50salads/etesvs_split3.yaml --seed 0
 python main.py  --validate -c config/50salads/etesvs_split4.yaml --seed 0
 python main.py  --validate -c config/50salads/etesvs_split5.yaml --seed 0
 
-python main.py  --validate -c config/50salads/etesvs_split1.yaml --seed 0 -o resume_epoch=7
+# multi gpu
+export CUDA_VISIBLE_DEVICES=2,3
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_split1.yaml --seed 0
+
 # breakfast
 python main.py  --validate -c config/breakfast/etesvs_split1.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split2.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split3.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split4.yaml  --seed 0
+
+# multi gpu
+export CUDA_VISIBLE_DEVICES=2,3
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_split1.yaml --seed 0
 ```
 # Test Model
 ```bash

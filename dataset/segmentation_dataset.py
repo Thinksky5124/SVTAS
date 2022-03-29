@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 20:42:15
+LastEditTime: 2022-03-29 18:40:19
 Description: dataset class
 FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''
@@ -58,6 +58,7 @@ class SegmentationDataset(data.IterableDataset):
                  dataset_type='gtea',
                  data_prefix=None,
                  train_mode=True,
+                 drap_last=False,
                  local_rank=-1,
                  nprocs=1):
         super().__init__()
@@ -78,6 +79,10 @@ class SegmentationDataset(data.IterableDataset):
         # distribute
         self.local_rank = local_rank
         self.nprocs = nprocs
+        self.drap_last = drap_last
+        if self.nprocs > 1 and train_mode is True:
+            self.drap_last = True
+        self.video_batch_size = video_batch_size
 
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')
@@ -107,6 +112,8 @@ class SegmentationDataset(data.IterableDataset):
         sample_videos_list = []
         self.step_num = len(video_sampler_dataloader)
         for step, sample_videos in enumerate(video_sampler_dataloader):
+            if self.drap_last is True and len(list(sample_videos)) < self.video_batch_size:
+                break
             sample_videos_list.append([step, list(sample_videos)])
 
         info_list = self.load_file(sample_videos_list).copy()

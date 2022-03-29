@@ -2,12 +2,10 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:06:09
+LastEditTime: 2022-03-28 21:02:05
 Description: model neck
 FilePath: /ETESVS/model/neck.py
 '''
-from turtle import forward
-from typing_extensions import Self
 import torch
 import torch.nn as nn
 import math
@@ -38,7 +36,7 @@ class ETESVSNeck(nn.Module):
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        self.pe = PositionalEncoding(pos_channels)
+        # self.pe = PositionalEncoding(pos_channels)
         # self.ff = ForwardFedBlock(input_dim=input_dim,
         #             hidden_dim=hidden_dim,
         #             output_dim=output_dim,
@@ -61,8 +59,8 @@ class ETESVSNeck(nn.Module):
 
         # position encoding
         # [N, num_segs, 2048]
-        p_idx = range(idx * self.clip_windows , idx * self.clip_windows + self.clip_seg_num)
-        seg_feature  = self.pe(seg_feature, p_idx)
+        # p_idx = range(idx * self.clip_windows , idx * self.clip_windows + self.clip_seg_num)
+        # seg_feature  = self.pe(seg_feature, p_idx)
 
         # seg_feature = self.ff(seg_feature, seg_mask)
 

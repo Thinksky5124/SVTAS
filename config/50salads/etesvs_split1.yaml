@@ -2,6 +2,8 @@ MODEL:
     backbone:
         pretrained: True
         depth: 50
+        clip_seg_num: 30
+        shift_div: 30
     neck:
         pos_channels: 2048
         num_layers: 2

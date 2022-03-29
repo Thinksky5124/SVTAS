@@ -2,16 +2,16 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 20:07:22
+LastEditTime: 2022-03-29 11:23:20
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
 import os.path as osp
 import time
 
-import numpy as np
 import torch
-from utils.logger import get_logger, AverageMeter, log_batch, log_epoch
+import torch.distributed as dist
+from utils.logger import get_logger, AverageMeter, log_epoch
 from utils.save_load import mkdir
 
 from model.etesvs import ETESVS
@@ -63,13 +63,21 @@ def train(cfg,
     # 3. Construct solver.
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
         betas=(0.9, 0.999), weight_decay=0.0005)
+    # grad to zeros
+    optimizer.zero_grad()
 
     # Resume
     resume_epoch = cfg.get("resume_epoch", 0)
     if resume_epoch:
         path_checkpoint = osp.join(output_dir,
                             model_name + f"_epoch_{resume_epoch:05d}" + ".pkl")
-        checkpoint = torch.load(path_checkpoint)
+        
+        if local_rank < 0:
+            checkpoint = torch.load(path_checkpoint)
+        else:
+            # configure map_location properly
+            map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
+            checkpoint = torch.load(path_checkpoint, map_location=map_location)
 
         model.load_state_dict(checkpoint['model_state_dict'])
 
@@ -136,7 +144,8 @@ def train(cfg,
                 model=model,
                 criterion=criterion,
                 post_processing=post_processing,
-                nprocs=nprocs)
+                nprocs=nprocs,
+                local_rank=local_rank)
 
     best = 0.0
     for epoch in range(0, cfg.epochs):
@@ -155,11 +164,12 @@ def train(cfg,
             runner.train_one_iter(data=data, r_tic=r_tic, epoch=epoch)
             r_tic = time.time()
 
-            if local_rank >= 0:
-                torch.distributed.barrier()
-
-        # metric output
-        runner.Metric.accumulate()
+        if local_rank <= 0:
+            # metric output
+            runner.Metric.accumulate()
+        
+        if local_rank >= 0:
+            torch.distributed.barrier()
 
         # update lr
         scheduler.step()
@@ -183,7 +193,9 @@ def train(cfg,
                 cfg=cfg,
                 model=model,
                 criterion=criterion,
-                post_processing=post_processing)
+                post_processing=post_processing,
+                nprocs=nprocs,
+                local_rank=local_rank)
 
             # model logger init
             runner.epoch_init()
@@ -193,18 +205,20 @@ def train(cfg,
                 runner.val_one_iter(data=data, r_tic=r_tic, epoch=epoch)
                 r_tic = time.time()
 
-            # metric output
-            Metric_dict = runner.Metric.accumulate()
+            best_flag = False
+            if local_rank <= 0:
+                # metric output
+                Metric_dict = runner.Metric.accumulate()
+                
+                if Metric_dict["F1@0.50"] > best:
+                    best = Metric_dict["F1@0.50"]
+                    best_flag = True
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
                 video_batch_size * record_dict["batch_time"].count /
                 record_dict["batch_time"].sum)
             log_epoch(record_dict, epoch + 1, "val", ips, logger)
 
-            best_flag = False
-            if Metric_dict["F1@0.50"] > best:
-                best = Metric_dict["F1@0.50"]
-                best_flag = True
             return best, best_flag
 
         # 5. Validation
@@ -222,9 +236,12 @@ def train(cfg,
                 logger.info(
                         f"Already save the best model (F1@0.50){int(best * 10000) / 10000}"
                     )
+            
+            if local_rank >= 0:
+                torch.distributed.barrier()
 
         # 6. Save model and optimizer
-        if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1:
+        if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1 and local_rank <= 0:
             checkpoint = {"model_state_dict": model.state_dict(),
                           "optimizer_state_dict": optimizer.state_dict(),
                           "epoch": epoch}
@@ -232,5 +249,11 @@ def train(cfg,
                 checkpoint,
                 osp.join(output_dir,
                          model_name + f"_epoch_{epoch + 1:05d}.pkl"))
+        
+        if local_rank >= 0:
+            torch.distributed.barrier()
+
+    if local_rank >= 0:
+        dist.destroy_process_group()
 
     logger.info(f'training {model_name} finished')

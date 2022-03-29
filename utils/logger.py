@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 16:16:38
+LastEditTime: 2022-03-29 14:12:56
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
@@ -78,7 +78,7 @@ def setup_logger(output=None, name="ETESVS", level="INFO"):
         else:
             filename = os.path.join(output, name + ".log")
         if local_rank > 0:
-            filename = filename + ".rank{}".format(local_rank)
+            filename = filename + ".rank{}".format(local_rank) + ".log"
 
         # PathManager.mkdirs(os.path.dirname(filename))
         os.makedirs(os.path.dirname(filename), exist_ok=True)
