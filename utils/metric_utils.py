@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:04:24
+LastEditTime: 2022-03-29 19:13:17
 Description: metric evaluate utils function
 FilePath: /ETESVS/utils/metric_utils.py
 '''
@@ -370,7 +370,7 @@ def wrapper_compute_average_precision(prediction, ground_truth, tiou_thresholds,
     ground_truth_by_label = ground_truth.groupby('label')
     prediction_by_label = prediction.groupby('label')
 
-    results = Parallel(n_jobs=len(activity_dict))(
+    results = Parallel(n_jobs=4)(
         delayed(compute_average_precision_detection)(
             ground_truth=get_predictions_with_label(ground_truth_by_label,
                                                     label_name, cidx),

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 16:54:39
+LastEditTime: 2022-03-29 19:28:25
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -315,11 +315,36 @@ class testRunner(object):
         # self.model.neck.memery._clear_memery_buffer()
 
         # get pred result
-        if self.local_rank <= 0:
-            pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
-            outputs = dict(predict=pred_cls_list,
-                            output_np=pred_score_list)
-            f1 = self.Metric.update(self.current_step_vid_list, ground_truth_list, outputs)
+        pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
+        outputs = dict(predict=pred_cls_list,
+                        output_np=pred_score_list)
+        vid = self.current_step_vid_list
+         # distribution                
+        if self.nprocs > 1:
+            collect_dict = dict(
+                predict=pred_cls_list,
+                output_np=pred_score_list,
+                ground_truth=ground_truth_list,
+                vid=self.current_step_vid_list
+            )
+            gather_objects = [collect_dict for _ in range(self.nprocs)] # any picklable object
+            output_list = [None for _ in range(self.nprocs)]
+            dist.all_gather_object(output_list, gather_objects[dist.get_rank()])
+            # collect
+            pred_cls_list_i = []
+            pred_score_list_i = []
+            ground_truth_list_i = []
+            vid_i = []
+            for output_dict in output_list:
+                pred_cls_list_i = pred_cls_list_i + output_dict["predict"]
+                pred_score_list_i = pred_score_list_i + output_dict["output_np"]
+                ground_truth_list_i = ground_truth_list_i + output_dict["ground_truth"]
+                vid_i = vid_i + output_dict["vid"]
+            outputs = dict(predict=pred_cls_list_i,
+                            output_np=pred_score_list_i)
+            ground_truth_list = ground_truth_list_i
+            vid = vid_i
+        f1 = self.Metric.update(vid, ground_truth_list, outputs)
 
         self.current_step_vid_list = vid_list
         if len(self.current_step_vid_list) > 0:
@@ -332,9 +357,16 @@ class testRunner(object):
         imgs = imgs.cuda()
         masks = masks.cuda()
         labels = labels.cuda()
-        # train segment
-        outputs = self.model(imgs, masks, idx)
-        seg_score, cls_score = outputs
+        # test segment
+        if self.nprocs > 1 and idx < sliding_num - 1:
+            with self.model.no_sync():
+                # multi-gpus
+                outputs = self.model(imgs, masks, idx)
+                seg_score, cls_score = outputs
+        else:
+            # single gpu
+            outputs = self.model(imgs, masks, idx)
+            seg_score, cls_score = outputs
 
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
