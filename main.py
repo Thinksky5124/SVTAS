@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 20:51:25
+LastEditTime: 2022-03-30 14:24:11
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -99,10 +99,10 @@ def main():
              weights=args.weights)
     else:
         train(cfg,
-              args.local_rank,
-              nprocs,
-              weights=args.weights,
-              validate=args.validate)
+            args.local_rank,
+            nprocs,
+            weights=args.weights,
+            validate=args.validate)
 
 
 if __name__ == '__main__':

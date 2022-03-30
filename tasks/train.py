@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 10:07:04
+LastEditTime: 2022-03-30 15:30:13
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -163,7 +163,7 @@ def train(cfg,
         for i, data in enumerate(train_dataloader):
             runner.train_one_iter(data=data, r_tic=r_tic, epoch=epoch)
             r_tic = time.time()
-
+            
         if local_rank <= 0:
             # metric output
             runner.Metric.accumulate()

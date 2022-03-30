@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 21:54:04
+LastEditTime: 2022-03-30 14:57:32
 Description: data prepare pipline function
 FilePath: /ETESVS/dataset/pipline.py
 '''
@@ -121,16 +121,16 @@ class VideoStreamSampler():
             if end_frame > video_len:
                 vid_end_frame = video_len
             frames_idx = list(range(start_frame, vid_end_frame, self.sample_rate))
-            labels = labels[start_frame:end_frame]
+            labels = labels[start_frame:end_frame].copy()
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
             np_frames = frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i]
+                imgbuf = np_frames[i].copy()
                 imgs.append(Image.fromarray(imgbuf, mode='RGB'))
 
             if len(imgs) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy()
+                np_frames = np_frames[-1].asnumpy().copy()
                 pad_len = self.clip_seg_num - len(imgs)
                 for i in range(pad_len):
                     imgs.append(Image.fromarray(np_frames, mode='RGB'))
@@ -138,12 +138,12 @@ class VideoStreamSampler():
             mask = np.ones((labels.shape[0]))
         elif start_frame < frames_len and end_frame >= frames_len:
             frames_idx = list(range(start_frame, video_len, self.sample_rate))
-            labels = labels[start_frame:frames_len]
+            labels = labels[start_frame:frames_len].copy()
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
             np_frames = frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i]
+                imgbuf = np_frames[i].copy()
                 imgs.append(Image.fromarray(imgbuf, mode='RGB'))
             np_frames = np.zeros_like(np_frames[0])
             pad_len = self.clip_seg_num - len(imgs)
@@ -162,7 +162,7 @@ class VideoStreamSampler():
             mask = np.zeros((self.clip_seg_num * self.sample_rate))
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 
-        results['imgs'] = imgs[:self.clip_seg_num]
+        results['imgs'] = imgs[:self.clip_seg_num].copy()
         results['labels'] = labels.copy()
         results['mask'] = mask.copy()
         return results
