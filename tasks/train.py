@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 11:23:20
+LastEditTime: 2022-03-30 10:07:04
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''

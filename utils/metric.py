@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:03:44
+LastEditTime: 2022-03-29 21:54:29
 Description: metric class
 FilePath: /ETESVS/utils/metric.py
 '''
@@ -17,7 +17,7 @@ from .metric_utils import get_labels_scores_start_end_time, get_labels_start_end
 from .metric_utils import levenstein, edit_score, f_score, boundary_AR
 from .metric_utils import wrapper_compute_average_precision
 
-class BaseSegmentationMetric(object):
+class BaseSegmentationMetric():
     """
     Test for Video Segmentation based model.
     """
@@ -191,7 +191,6 @@ class BaseSegmentationMetric(object):
             outputs_arr, recog_content, self.actions_dict)
         gt_detection = get_labels_scores_start_end_time(
             np.ones(outputs_arr.shape), gt_content, self.actions_dict)
-
         return [recog_content, gt_content, pred_detection, gt_detection]
 
     def update(self, outputs):
@@ -348,7 +347,6 @@ class SegmentationMetric(BaseSegmentationMetric):
             single_f1 = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
                             gt_detection)
             single_batch_f1 += single_f1
-        
         return single_batch_f1 / len(predicted_batch)
 
     def accumulate(self):

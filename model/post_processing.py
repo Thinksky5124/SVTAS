@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:06:04
+LastEditTime: 2022-03-29 21:54:37
 Description: model postprecessing
 FilePath: /ETESVS/model/post_processing.py
 '''
@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import copy
 
-class PostProcessing(object):
+class PostProcessing():
     def __init__(self,
                  num_classes,
                  clip_seg_num,

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 19:46:51
+LastEditTime: 2022-03-29 21:54:04
 Description: data prepare pipline function
 FilePath: /ETESVS/dataset/pipline.py
 '''
@@ -13,7 +13,7 @@ import torch
 import copy
 from PIL import Image
 
-class BatchCompose(object):
+class BatchCompose():
     def __init__(self, to_tensor_idx=3):
         self.to_tensor_idx = to_tensor_idx
 
@@ -32,7 +32,7 @@ class BatchCompose(object):
             result_batch.append(data)
         return result_batch
 
-class Pipeline(object):
+class Pipeline():
     def __init__(self,
                  decode=None,
                  sample=None,
@@ -50,7 +50,7 @@ class Pipeline(object):
         results = self.transform(results)
         return results
 
-class VideoDecoder(object):
+class VideoDecoder():
     """
     Decode mp4 file to frames.
     Args:
@@ -79,7 +79,7 @@ class VideoDecoder(object):
         
         return results
 
-class VideoStreamSampler(object):
+class VideoStreamSampler():
     """
     Sample frames id.
     Returns:
@@ -167,7 +167,7 @@ class VideoStreamSampler(object):
         results['mask'] = mask.copy()
         return results
 
-class VideoStreamTransform(object):
+class VideoStreamTransform():
     def __init__(self, transform_list):
         transform_op_list = []
         for transforms_op in transform_list:

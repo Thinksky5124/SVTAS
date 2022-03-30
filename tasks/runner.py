@@ -2,11 +2,10 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 19:28:25
+LastEditTime: 2022-03-30 10:07:09
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
-from abc import abstractmethod
 import torch
 import time
 from utils.logger import log_batch
@@ -18,7 +17,7 @@ def reduce_mean(tensor, nprocs):
     rt /= nprocs # NOTE this is necessary, since all_reduce here do not perform average 
     return rt
 
-class TrainRunner(object):
+class TrainRunner():
     def __init__(self,
                  optimizer,
                  logger,
@@ -141,7 +140,7 @@ class TrainRunner(object):
             if idx >= 0: 
                 self.train_one_clip(imgs, labels, masks, vid_list, sliding_num, idx)
 
-class valRunner(object):
+class valRunner():
     def __init__(self,
                  logger,
                  video_batch_size,
@@ -284,7 +283,7 @@ class valRunner(object):
             if idx >= 0:
                 self.val_one_clip(imgs, labels, masks, vid_list, sliding_num, idx)
 
-class testRunner(object):
+class testRunner():
     def __init__(self,
                  logger,
                  video_batch_size,
