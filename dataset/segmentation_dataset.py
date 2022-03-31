@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 15:30:21
+LastEditTime: 2022-03-31 10:47:41
 Description: dataset class
 FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''
@@ -120,7 +120,7 @@ class SegmentationDataset(data.IterableDataset):
         return info_list
 
     def parse_file_paths(self, input_path):
-        if self.dataset_type in ['gtea', '50salads']:
+        if self.dataset_type in ['gtea', '50salads', 'thumos14']:
             file_ptr = open(input_path, 'r')
             info = file_ptr.read().split('\n')[:-1]
             file_ptr.close()
@@ -161,7 +161,7 @@ class SegmentationDataset(data.IterableDataset):
                 info = []
                 max_len = 0
                 for video_segment in video_sample_segment_lists[proces_idx]:
-                    if self.dataset_type in ['gtea', '50salads']:
+                    if self.dataset_type in ['gtea', '50salads', 'thumos14']:
                         video_name = video_segment.split('.')[0]
                         label_path = os.path.join(self.gt_path, video_name + '.txt')
 

@@ -57,7 +57,7 @@ DATASET: #DATASET field
         dataset_type: "gtea"
         train_mode: False
         sliding_window: 60
-        clip_seg_num: 45
+        clip_seg_num: 30
         sample_rate: 4
 
 PIPELINE: #PIPELINE field
@@ -99,7 +99,7 @@ PIPELINE: #PIPELINE field
                 std: [0.133, 0.141, 0.124]
 
 OPTIMIZER: #OPTIMIZER field
-    learning_rate: 0.0005
+    learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
     step_size: 50
     gamma: 0.1
 

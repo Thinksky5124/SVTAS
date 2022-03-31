@@ -13,19 +13,19 @@ MODEL:
         output_dim: 2048
         clip_seg_num: 30
         clip_buffer_num: 0
-        sliding_window: 60
+        sliding_window: 120
     head:
-        num_classes: 48
+        num_classes: 21
         num_stages: 1
         num_layers: 4
         num_f_maps: 64
         cls_in_channels: 2048
         seg_in_channels: 2048
-        sample_rate: 4
+        sample_rate: 8
         drop_ratio: 0.5
     loss:
-        num_classes: 48
-        sample_rate: 4
+        num_classes: 21
+        sample_rate: 8
         seg_weight: 1.0
         cls_weight: 1.0
         ignore_index: -100
@@ -34,31 +34,31 @@ COLLATE:
     to_tensor_idx: 3
 
 DATASET: #DATASET field
-    temporal_clip_batch_size: 1
-    video_batch_size: 4
+    temporal_clip_batch_size: 3
+    video_batch_size: 2
     num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/thumos14/val_list.txt" #Mandatory, train data index file path
+        videos_path: "./data/thumos14/Videos"
+        gt_path: "./data/thumos14/groundTruth"
+        actions_map_file_path: "./data/thumos14/mapping.txt"
+        dataset_type: "thumos14"
         train_mode: True
-        sliding_window: 60
+        sliding_window: 120
         clip_seg_num: 30
-        sample_rate: 4
+        sample_rate: 8
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/thumos14/test_list.txt" #Mandatory, train data index file path
+        videos_path: "./data/thumos14/Videos"
+        gt_path: "./data/thumos14/groundTruth"
+        actions_map_file_path: "./data/thumos14/mapping.txt"
+        dataset_type: "thumos14"
         train_mode: False
-        sliding_window: 60
+        sliding_window: 120
         clip_seg_num: 30
-        sample_rate: 4
+        sample_rate: 8
 
 PIPELINE: #PIPELINE field
     train: #Mandotary, indicate the pipeline to deal with the training data, associate to the 'paddlevideo/loader/pipelines/'
@@ -66,9 +66,9 @@ PIPELINE: #PIPELINE field
             backend: "decord"
         sample:
             seg_len: 1
-            sample_rate: 4
+            sample_rate: 8
             clip_seg_num: 30
-            sliding_window: 60
+            sliding_window: 120
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -77,17 +77,17 @@ PIPELINE: #PIPELINE field
             - RandomHorizontalFlip:
             - ToTensor:
             - Normalize:
-                mean: [0.5, 0.5, 0.5]
-                std: [0.2, 0.2, 0.2]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
     test:
         decode:
             backend: "decord"
         sample:
             seg_len: 1
-            sample_rate: 4
+            sample_rate: 8
             clip_seg_num: 30
-            sliding_window: 60
+            sliding_window: 120
         transform:
             - Resize:
                 size: 256
@@ -95,21 +95,21 @@ PIPELINE: #PIPELINE field
                 size: 224
             - ToTensor:
             - Normalize:
-                mean: [0.5, 0.5, 0.5]
-                std: [0.2, 0.2, 0.2]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
 OPTIMIZER: #OPTIMIZER field
-    learning_rate: 0.0005
+    learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
     step_size: 50
     gamma: 0.1
 
 METRIC:
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/breakfast/mapping.txt"
+    actions_map_file_path: "./data/thumos14/mapping.txt"
+    file_output: True
 
 
-
-model_name: "ETESVS_breakfast_split1"
-log_interval: 10 #Optional, the interal of logger, default:10
+model_name: "ETESVS_thumos14"
+log_interval: 5 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

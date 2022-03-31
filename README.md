@@ -6,8 +6,11 @@ End to End Stream Video Segmentation Network for Action Segmentation and Action 
 Temporal action segmentation and localization is a challenge task which attracts many researchers’ attention recently. As a downstream tasks of action recognition, most studies focus on how to classify frames or regression boundary base on the video feature extracted by action recognition model. However, we claim that above approaches are two stage or three stage, which must train split two or three models, and hard to segment or localize video on real time, because previous model must work on the whole video feature extracted by action recognition model. In this paper, we introduce an end-to-end approach, which uses sliding windows method to classify every frame and end to end segment videos that means need to use action recognition model to extract feature. Our approach can deal with stream video and reduce the number of parameters by 10% and the number of calculation by 20% compared I3D with MS-TCN.
 
 # Todo list
+- [ ] random sample picture
 - [ ] distribution change to torchrun
-- [ ] apex accelerate
+- [x] apex accelerate
+- [ ] fix memery leak bug
+- [ ] apex ditributedd accelerate
 
 # Envirnment Prepare
 ```bash
@@ -162,6 +165,8 @@ export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_split1.yaml --seed 0
 
 # breakfast
+export CUDA_VISIBLE_DEVICES=3
+export DECORD_EOF_RETRY_MAX=20480
 python main.py  --validate -c config/breakfast/etesvs_split1.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split2.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split3.yaml  --seed 0
@@ -170,6 +175,10 @@ python main.py  --validate -c config/breakfast/etesvs_split4.yaml  --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_split1.yaml --seed 0
+
+# thumos14
+export CUDA_VISIBLE_DEVICES=3
+python main.py  --validate -c config/thumos14/etesvs.yaml  --seed 0
 ```
 # Test Model
 ```bash

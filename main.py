@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 14:24:11
+LastEditTime: 2022-03-30 19:41:27
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -44,6 +44,11 @@ def parse_args():
         '--validate',
         action='store_true',
         help='whether to evaluate the checkpoint during training')
+    parser.add_argument(
+        '--use_amp',
+        type=bool,
+        default=True,
+        help='whether to use amp to accelerate')
     parser.add_argument(
         '--seed',
         type=int,
@@ -96,11 +101,13 @@ def main():
         test(cfg,
              args.local_rank,
              nprocs,
+             args.use_amp,
              weights=args.weights)
     else:
         train(cfg,
             args.local_rank,
             nprocs,
+            use_amp=args.use_amp,
             weights=args.weights,
             validate=args.validate)
 

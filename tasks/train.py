@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 15:30:13
+LastEditTime: 2022-03-30 21:24:18
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -23,9 +23,18 @@ from dataset.pipline import BatchCompose
 from model.post_processing import PostProcessing
 from .runner import TrainRunner, valRunner
 
+try:
+    from apex import amp
+    from apex.parallel import convert_syncbn_model
+    from apex.parallel import DistributedDataParallel as DDP
+    print('Use amp')
+except:
+    print('No use amp')
+
 def train(cfg,
           local_rank,
           nprocs,
+          use_amp=False,
           weights=None,
           validate=True):
     """Train model entry
@@ -46,25 +55,42 @@ def train(cfg,
         # 1.construct model
         model = ETESVS(**cfg.MODEL).cuda()
         criterion = ETESVSLoss(**cfg.MODEL.loss)
+
+        # 2. Construct solver.
+        optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
+            betas=(0.9, 0.999), weight_decay=0.0005)
+        # grad to zeros
+        optimizer.zero_grad()
+
+        # wheather to use amp
+        if use_amp is True:
+            model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
     else:
         torch.cuda.set_device(local_rank)
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
         model = ETESVS(**cfg.MODEL).cuda(local_rank)
         criterion = ETESVSLoss(**cfg.MODEL.loss).cuda(local_rank)
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
+        # 2. Construct solver.
+        optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
+            betas=(0.9, 0.999), weight_decay=0.0005)
+        # grad to zeros
+        optimizer.zero_grad()
+    
+        # wheather to use amp
+        if use_amp is True:
+            device = torch.device('cuda:{}'.format(local_rank))
+            model = convert_syncbn_model(model).to(device)
+            model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+            model = DDP(model, delay_allreduce=True)
+        else:
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
-    # 2. build metirc
+    # 3. build metirc
     metric_cfg = cfg.METRIC
     metric_cfg['train_mode'] = True
     Metric = SegmentationMetric(**metric_cfg)
-
-    # 3. Construct solver.
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
-        betas=(0.9, 0.999), weight_decay=0.0005)
-    # grad to zeros
-    optimizer.zero_grad()
 
     # Resume
     resume_epoch = cfg.get("resume_epoch", 0)
@@ -83,6 +109,8 @@ def train(cfg,
 
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
+        if use_amp is True:
+            amp.load_state_dict(checkpoint['amp'])
         resume_epoch = start_epoch
     # 4. construct Pipeline
     train_Pipeline = Pipeline(**cfg.PIPELINE.train)
@@ -144,6 +172,7 @@ def train(cfg,
                 model=model,
                 criterion=criterion,
                 post_processing=post_processing,
+                use_amp=use_amp,
                 nprocs=nprocs,
                 local_rank=local_rank)
 
@@ -194,6 +223,7 @@ def train(cfg,
                 model=model,
                 criterion=criterion,
                 post_processing=post_processing,
+                use_amp=use_amp,
                 nprocs=nprocs,
                 local_rank=local_rank)
 
@@ -228,11 +258,17 @@ def train(cfg,
                 best, save_best_flag = evaluate(best)
             # save best
             if save_best_flag:
-                checkpoint = {"model_state_dict": model.state_dict(),
-                          "optimizer_state_dict": optimizer.state_dict(),
-                          "epoch": epoch}
+                if use_amp is False:
+                    checkpoint = {"model_state_dict": model.state_dict(),
+                            "optimizer_state_dict": optimizer.state_dict(),
+                            "epoch": epoch}
+                else:
+                    checkpoint = {"model_state_dict": model.state_dict(),
+                            "optimizer_state_dict": optimizer.state_dict(),
+                            "amp": amp.state_dict(),
+                            "epoch": epoch}
                 torch.save(checkpoint,
-                     osp.join(output_dir, model_name + "_best.pkl"))
+                    osp.join(output_dir, model_name + "_best.pkl"))
                 logger.info(
                         f"Already save the best model (F1@0.50){int(best * 10000) / 10000}"
                     )
@@ -242,9 +278,15 @@ def train(cfg,
 
         # 6. Save model and optimizer
         if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1 and local_rank <= 0:
-            checkpoint = {"model_state_dict": model.state_dict(),
-                          "optimizer_state_dict": optimizer.state_dict(),
-                          "epoch": epoch}
+            if use_amp is False:
+                checkpoint = {"model_state_dict": model.state_dict(),
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "epoch": epoch}
+            else:
+                checkpoint = {"model_state_dict": model.state_dict(),
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "amp": amp.state_dict(),
+                        "epoch": epoch}
             torch.save(
                 checkpoint,
                 osp.join(output_dir,

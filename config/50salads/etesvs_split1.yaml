@@ -33,7 +33,7 @@ COLLATE:
     to_tensor_idx: 3
 
 DATASET: #DATASET field
-    temporal_clip_batch_size: 1
+    temporal_clip_batch_size: 3
     video_batch_size: 2
     num_workers: 2
     train:

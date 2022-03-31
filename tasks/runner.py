@@ -2,14 +2,16 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 10:07:09
+LastEditTime: 2022-03-30 20:58:05
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
+from matplotlib import use
 import torch
 import time
 from utils.logger import log_batch
 import torch.distributed as dist
+from apex import amp
 
 def reduce_mean(tensor, nprocs):
     rt = tensor.clone()
@@ -28,6 +30,7 @@ class TrainRunner():
                  model,
                  criterion,
                  post_processing,
+                 use_amp=False,
                  nprocs=1,
                  local_rank=-1):
         self.optimizer = optimizer
@@ -41,6 +44,7 @@ class TrainRunner():
         self.post_processing = post_processing
         self.nprocs = nprocs
         self.local_rank = local_rank
+        self.use_amp = use_amp
     
     def epoch_init(self):
         # batch videos sampler
@@ -109,7 +113,11 @@ class TrainRunner():
                 cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
             
                 loss = (cls_loss + seg_loss) / sliding_num
-                loss.backward()
+                if self.use_amp is True:
+                    with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
         else:
             # single gpu
             outputs = self.model(imgs, masks, idx)
@@ -117,7 +125,11 @@ class TrainRunner():
             cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
             
             loss = (cls_loss + seg_loss) / sliding_num
-            loss.backward()
+            if self.use_amp is True:
+                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
 
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
@@ -150,6 +162,7 @@ class valRunner():
                  model,
                  criterion,
                  post_processing,
+                 use_amp=False,
                  nprocs=1,
                  local_rank=-1):
         self.logger = logger
@@ -162,6 +175,7 @@ class valRunner():
         self.post_processing = post_processing
         self.nprocs = nprocs
         self.local_rank = local_rank
+        self.use_amp = use_amp
     
     def epoch_init(self):
         # batch videos sampler
