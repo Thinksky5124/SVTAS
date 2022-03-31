@@ -7,7 +7,6 @@ cycler==0.11.0
 decord==0.6.0
 fonttools==4.31.2
 graphviz==0.19.1
-guppy3==3.1.2
 idna==3.3
 isort==5.10.1
 joblib==1.1.0
@@ -15,14 +14,12 @@ kiwisolver==1.4.0
 lazy-object-proxy==1.7.1
 matplotlib==3.5.1
 mccabe==0.6.1
-memory-profiler==0.60.0
 mmcv==1.4.7
 numpy==1.22.3
-objgraph==3.5.0
 opencv-python==4.5.5.64
 packaging==21.3
 pandas==1.4.1
-Pillow==9.0.1
+Pillow-SIMD==9.0.0.post1
 platformdirs==2.5.1
 psutil==5.9.0
 pylint==2.12.2
@@ -33,6 +30,7 @@ pytz==2021.3
 PyYAML==6.0
 requests==2.27.1
 six==1.16.0
+threadpoolctl==3.1.0
 toml==0.10.2
 torch==1.11.0+cu113
 torchaudio==0.11.0+cu113

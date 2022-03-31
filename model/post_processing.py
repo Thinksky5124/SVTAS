@@ -2,13 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 21:54:37
+LastEditTime: 2022-03-31 18:45:47
 Description: model postprecessing
 FilePath: /ETESVS/model/post_processing.py
 '''
 import numpy as np
 import torch
-import copy
 
 class PostProcessing():
     def __init__(self,
@@ -23,7 +22,7 @@ class PostProcessing():
         self.clip_buffer_num = clip_buffer_num
         self.num_classes = num_classes
         self.init_flag = False
-
+    
     def init_scores(self, sliding_num, batch_size):
         max_temporal_len = sliding_num * self.sliding_window + self.sample_rate * self.clip_seg_num
         sample_videos_max_len = max_temporal_len + \
@@ -35,7 +34,7 @@ class PostProcessing():
         self.pred_scores = np.zeros((batch_size, self.num_classes, sample_videos_max_len))
         self.video_gt = np.zeros((batch_size, sample_videos_max_len))
         self.init_flag = True
-    
+
     def update(self, seg_scores, gt, idx):
         with torch.no_grad():
             start_frame = idx * self.sliding_window - (self.clip_buffer_num * self.clip_seg_num) * self.sample_rate

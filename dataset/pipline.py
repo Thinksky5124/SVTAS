@@ -2,13 +2,14 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 14:57:32
+LastEditTime: 2022-03-31 22:48:55
 Description: data prepare pipline function
 FilePath: /ETESVS/dataset/pipline.py
 '''
 import torchvision.transforms as transforms
 import decord as de
 import numpy as np
+import random
 import torch
 import copy
 from PIL import Image
@@ -79,6 +80,29 @@ class VideoDecoder():
         
         return results
 
+class VideoFrameSample():
+    def __init__(self, mode='random'):
+        assert mode in ['random', 'uniform'], 'not support mode'
+        self.mode = mode
+    
+    def random_sample(self, start_idx, end_idx, sample_rate):
+        sample_idx = list(
+                random.sample(list(range(start_idx, end_idx)),
+                    len(list(range(start_idx, end_idx, sample_rate)))))
+        sample_idx.sort()
+        return sample_idx
+
+    def uniform_sample(self, start_idx, end_idx, sample_rate):
+        return list(range(start_idx, end_idx, sample_rate))
+        
+    def __call__(self, start_idx, end_idx, sample_rate):
+        if self.mode == 'random':
+            return self.random_sample(start_idx, end_idx, sample_rate)
+        elif self.mode == 'uniform':
+            return self.uniform_sample(start_idx, end_idx, sample_rate)
+        else:
+            raise NotImplementedError
+
 class VideoStreamSampler():
     """
     Sample frames id.
@@ -92,12 +116,14 @@ class VideoStreamSampler():
                  clip_seg_num=15,
                  sliding_window=60,
                  ignore_index=-100,
+                 sample_mode='random'
                  ):
         self.sample_rate = sample_rate
         self.seg_len = seg_len
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
+        self.sample = VideoFrameSample(mode = sample_mode)
 
     def __call__(self, results):
         """
@@ -120,7 +146,7 @@ class VideoStreamSampler():
             vid_end_frame = end_frame
             if end_frame > video_len:
                 vid_end_frame = video_len
-            frames_idx = list(range(start_frame, vid_end_frame, self.sample_rate))
+            frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
             labels = labels[start_frame:end_frame].copy()
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
@@ -137,7 +163,7 @@ class VideoStreamSampler():
                     
             mask = np.ones((labels.shape[0]))
         elif start_frame < frames_len and end_frame >= frames_len:
-            frames_idx = list(range(start_frame, video_len, self.sample_rate))
+            frames_idx = self.sample(start_frame, video_len, self.sample_rate)
             labels = labels[start_frame:frames_len].copy()
             frames_select = container.get_batch(frames_idx)
             # dearray_to_img
@@ -155,7 +181,7 @@ class VideoStreamSampler():
             mask = np.concatenate([vaild_mask, void_mask], axis=0)
             labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
         else:
-            np_frames = np.zeros((240, 320, 3))
+            np_frames = np.random.random((240, 320, 3))
             pad_len = self.clip_seg_num
             for i in range(pad_len):
                 imgs.append(Image.fromarray(np_frames, mode='RGB'))

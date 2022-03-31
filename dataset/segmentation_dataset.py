@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-31 10:47:41
+LastEditTime: 2022-03-31 20:59:08
 Description: dataset class
 FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''
@@ -11,7 +11,6 @@ import numpy as np
 import os
 import copy
 import torch
-import random
 import torch.utils.data as data
 
 class SegmentationDataset(data.IterableDataset):
@@ -155,11 +154,12 @@ class SegmentationDataset(data.IterableDataset):
                 nproces_idx = sample_idx_list_idx % self.nprocs
                 sample_idx = sample_idx_list[sample_idx_list_idx]
                 video_sample_segment_lists[nproces_idx].append(video_segment_lists[sample_idx])
-            
-            for proces_idx in range(len(video_sample_segment_lists)):
+
+            max_len = 0
+            info_proc = [[] for i in range(self.nprocs)]
+            for proces_idx in range(self.nprocs):
                 # convert sample
                 info = []
-                max_len = 0
                 for video_segment in video_sample_segment_lists[proces_idx]:
                     if self.dataset_type in ['gtea', '50salads', 'thumos14']:
                         video_name = video_segment.split('.')[0]
@@ -191,12 +191,16 @@ class SegmentationDataset(data.IterableDataset):
                             video_name=video_name))
                     if max_len < len(content):
                         max_len = len(content)
+                info_proc[proces_idx] = info
 
-                # construct sliding num
-                sliding_num = (max_len - self.clip_seg_num * self.sample_rate) // self.sliding_window
-                if (max_len - self.clip_seg_num * self.sample_rate) % self.sliding_window != 0:
-                    sliding_num = sliding_num + 1
-                info_list[proces_idx].append([step, sliding_num, info])
+            # construct sliding num
+            sliding_num = (max_len - self.clip_seg_num * self.sample_rate) // self.sliding_window
+            if (max_len - self.clip_seg_num * self.sample_rate) % self.sliding_window != 0:
+                sliding_num = sliding_num + 1
+
+            # nprocs sync
+            for proces_idx in range(self.nprocs):
+                info_list[proces_idx].append([step, sliding_num, info_proc[proces_idx]])
         return info_list
 
     def _get_one_videos_clip(self, idx, info):
@@ -205,14 +209,14 @@ class SegmentationDataset(data.IterableDataset):
         masks_list = []
         vid_list = []
         for single_info in info:
-            sample_segment = single_info
+            sample_segment = single_info.copy()
             sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
             # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
-            imgs_list.append(sample_segment['imgs'].unsqueeze(0))
-            labels_list.append(np.expand_dims(sample_segment['labels'], axis=0))
-            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0))
-            vid_list.append(sample_segment['video_name'])
+            imgs_list.append(copy.deepcopy(sample_segment['imgs'].unsqueeze(0)))
+            labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
+            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
+            vid_list.append(copy.deepcopy(sample_segment['video_name']))
 
         imgs = copy.deepcopy(torch.concat(imgs_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
@@ -227,7 +231,7 @@ class SegmentationDataset(data.IterableDataset):
             # multi gpu train
             sample_info_list = self.info_list[self.local_rank]
             return self._step_sliding_sampler(woker_id=woker_id, num_workers=num_workers, info_list=sample_info_list)
-
+    
     def _step_sliding_sampler(self, woker_id, num_workers, info_list):
         # dispatch function
         current_sliding_cnt = woker_id * self.temporal_clip_batch_size
@@ -258,7 +262,7 @@ class SegmentationDataset(data.IterableDataset):
     def __len__(self):
         """get the size of the dataset."""
         return self.step_num
-
+    
     def __iter__(self):
         """ Get the sample for either training or testing given index"""
         worker_info = torch.utils.data.get_worker_info()

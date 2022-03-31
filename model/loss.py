@@ -2,11 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:06:22
+LastEditTime: 2022-03-31 22:56:28
 Description: loss function
 FilePath: /ETESVS/model/loss.py
 '''
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -23,8 +24,9 @@ class ETESVSLoss(nn.Module):
         self.ignore_index = ignore_index
         self.num_classes = num_classes
         self.sample_rate = sample_rate
+        self.elps = 1e-10
 
-        self.seg_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index)
+        self.seg_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.cls_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index)
         self.ce_soft = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.mse = nn.MSELoss(reduction='none')
@@ -37,7 +39,8 @@ class ETESVSLoss(nn.Module):
         # segmentation branch loss
         seg_loss = 0.
         for p in seg_score:
-            seg_loss += self.seg_ce(p.transpose(2, 1).contiguous().view(-1, self.num_classes), labels.view(-1))
+            seg_cls_loss = self.seg_ce(p.transpose(2, 1).contiguous().view(-1, self.num_classes), labels.view(-1))
+            seg_loss += torch.sum(seg_cls_loss / (torch.sum(labels != -100) + self.elps))
             seg_loss += 0.15 * torch.mean(torch.clamp(
                 self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1)
                 ), min=0, max=16) * masks[:, 1:].unsqueeze(1))
@@ -71,7 +74,6 @@ class ETESVSLoss(nn.Module):
             mask = torch.where(torch.sum(smooth_label, dim=1)!=0, x, y)
 
         cls_loss = torch.mean(self.ce_soft(cls_score, smooth_label) * mask)
-
 
         cls_loss = self.cls_weight * cls_loss
         seg_loss = self.seg_weight * seg_loss

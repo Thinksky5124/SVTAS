@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 20:58:05
+LastEditTime: 2022-03-31 20:09:08
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -105,7 +105,7 @@ class TrainRunner():
         masks = masks.cuda()
         labels = labels.cuda()
         # train segment
-        if self.nprocs > 1 and idx < sliding_num - 1:
+        if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
                 outputs = self.model(imgs, masks, idx)
@@ -259,7 +259,7 @@ class valRunner():
         labels = labels.cuda()
 
         # val segment
-        if self.nprocs > 1 and idx < sliding_num - 1:
+        if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
                 outputs = self.model(imgs, masks, idx)

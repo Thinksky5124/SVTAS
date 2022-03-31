@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-30 21:24:18
+LastEditTime: 2022-03-31 19:47:42
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -27,9 +27,8 @@ try:
     from apex import amp
     from apex.parallel import convert_syncbn_model
     from apex.parallel import DistributedDataParallel as DDP
-    print('Use amp')
 except:
-    print('No use amp')
+    pass
 
 def train(cfg,
           local_rank,
@@ -39,7 +38,7 @@ def train(cfg,
           validate=True):
     """Train model entry
     """
-
+    
     logger = get_logger("ETESVS")
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
@@ -50,6 +49,10 @@ def train(cfg,
     output_dir = cfg.get("output_dir", f"./output/{model_name}")
     mkdir(output_dir)
 
+    # wheather use amp
+    if use_amp is True:
+        logger.info("use amp")
+        
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
@@ -293,7 +296,7 @@ def train(cfg,
                          model_name + f"_epoch_{epoch + 1:05d}.pkl"))
         
         if local_rank >= 0:
-            torch.distributed.barrier()
+            torch.distributed.barrier()      
 
     if local_rank >= 0:
         dist.destroy_process_group()

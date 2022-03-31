@@ -6,13 +6,31 @@ End to End Stream Video Segmentation Network for Action Segmentation and Action 
 Temporal action segmentation and localization is a challenge task which attracts many researchers’ attention recently. As a downstream tasks of action recognition, most studies focus on how to classify frames or regression boundary base on the video feature extracted by action recognition model. However, we claim that above approaches are two stage or three stage, which must train split two or three models, and hard to segment or localize video on real time, because previous model must work on the whole video feature extracted by action recognition model. In this paper, we introduce an end-to-end approach, which uses sliding windows method to classify every frame and end to end segment videos that means need to use action recognition model to extract feature. Our approach can deal with stream video and reduce the number of parameters by 10% and the number of calculation by 20% compared I3D with MS-TCN.
 
 # Todo list
-- [ ] random sample picture
-- [ ] distribution change to torchrun
+- [x] random sample picture
+- [x] distribution change to torchrun
 - [x] apex accelerate
-- [ ] fix memery leak bug
-- [ ] apex ditributedd accelerate
+- [x] fix memery leak bug
+- [x] apex ditributedd accelerate
 
 # Envirnment Prepare
+
+- Linux
+- Python 3.8+
+- PyTorch 1.11+
+- CUDA 11.3+
+- Cudnn 8.2+
+- Pillow-SIMD (optional): Install it by the following scripts.
+
+```bash
+conda uninstall -y --force pillow pil jpeg libtiff libjpeg-turbo
+pip   uninstall -y         pillow pil jpeg libtiff libjpeg-turbo
+conda install -yc conda-forge libjpeg-turbo
+CFLAGS="${CFLAGS} -mavx2" pip install --upgrade --no-cache-dir --force-reinstall --no-binary :all: --compile pillow-simd
+conda install -y jpeg libtiff
+```
+
+- use pip to install
+
 ```bash
 conda create -n torch python=3.8
 python -m pip install --upgrade pip

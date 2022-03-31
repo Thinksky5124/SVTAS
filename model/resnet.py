@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:05:52
+LastEditTime: 2022-03-31 14:27:11
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/resnet.py
 '''
