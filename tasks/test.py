@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 14:39:42
+LastEditTime: 2022-04-01 20:04:31
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -101,8 +101,7 @@ def test(cfg,
         num_classes=cfg.MODEL.head.num_classes,
         clip_seg_num=cfg.MODEL.neck.clip_seg_num,
         sliding_window=cfg.DATASET.test.sliding_window,
-        sample_rate=cfg.DATASET.test.sample_rate,
-        clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
+        sample_rate=cfg.DATASET.test.sample_rate)
 
     runner = testRunner(logger=logger,
                 video_batch_size=video_batch_size,

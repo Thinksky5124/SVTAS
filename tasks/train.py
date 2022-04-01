@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-31 19:47:42
+LastEditTime: 2022-04-01 20:04:37
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -162,8 +162,7 @@ def train(cfg,
         num_classes=cfg.MODEL.head.num_classes,
         clip_seg_num=cfg.MODEL.neck.clip_seg_num,
         sliding_window=cfg.DATASET.train.sliding_window,
-        sample_rate=cfg.DATASET.train.sample_rate,
-        clip_buffer_num=cfg.MODEL.neck.clip_buffer_num)
+        sample_rate=cfg.DATASET.train.sample_rate)
 
     # construct train runner
     runner = TrainRunner(optimizer=optimizer,

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-31 23:07:11
+LastEditTime: 2022-04-01 20:57:03
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -47,7 +47,7 @@ def parse_args():
     parser.add_argument(
         '--use_amp',
         type=bool,
-        default=True,
+        default=False,
         help='whether to use amp to accelerate')
     parser.add_argument(
         '--seed',

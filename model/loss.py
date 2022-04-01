@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 09:55:27
+LastEditTime: 2022-04-01 20:29:54
 Description: loss function
 FilePath: /ETESVS/model/loss.py
 '''

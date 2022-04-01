@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 14:24:40
+LastEditTime: 2022-04-01 19:57:19
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -63,10 +63,10 @@ class TrainRunner():
         self.optimizer.zero_grad()
 
         # clear memery buffer
-        if self.nprocs > 1:
-            self.model.module.neck.memery._clear_memery_buffer()
-        else:
-            self.model.neck.memery._clear_memery_buffer()
+        # if self.nprocs > 1:
+        #     self.model.module.head.memery._clear_memery_buffer()
+        # else:
+        #     self.model.head.memery._clear_memery_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -193,10 +193,10 @@ class valRunner():
 
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
         # clear memery buffer
-        if self.nprocs > 1:
-            self.model.module.neck.memery._clear_memery_buffer()
-        else:
-            self.model.neck.memery._clear_memery_buffer()
+        # if self.nprocs > 1:
+        #     self.model.module.head.memery._clear_memery_buffer()
+        # else:
+        #     self.model.head.memery._clear_memery_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()

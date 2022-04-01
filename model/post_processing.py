@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-31 18:45:47
+LastEditTime: 2022-04-01 20:04:12
 Description: model postprecessing
 FilePath: /ETESVS/model/post_processing.py
 '''
@@ -14,12 +14,10 @@ class PostProcessing():
                  num_classes,
                  clip_seg_num,
                  sliding_window,
-                 sample_rate,
-                 clip_buffer_num):
+                 sample_rate):
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.sample_rate = sample_rate
-        self.clip_buffer_num = clip_buffer_num
         self.num_classes = num_classes
         self.init_flag = False
     
@@ -37,7 +35,7 @@ class PostProcessing():
 
     def update(self, seg_scores, gt, idx):
         with torch.no_grad():
-            start_frame = idx * self.sliding_window - (self.clip_buffer_num * self.clip_seg_num) * self.sample_rate
+            start_frame = idx * self.sliding_window
             if start_frame < 0:
                 start_frame = 0
             end_frame = start_frame + (self.clip_seg_num * self.sample_rate)

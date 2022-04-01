@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:06:19
+LastEditTime: 2022-04-01 19:39:13
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/mstcn.py
 '''
