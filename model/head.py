@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:06:31
+LastEditTime: 2022-04-01 14:12:52
 Description: model head
 FilePath: /ETESVS/model/head.py
 '''
@@ -52,38 +52,6 @@ class ETESVSHead(nn.Module):
 
     def init_weights(self):
         pass
-
-    # def forward(self, seg_feature, cls_feature, masks):
-    #     # segmentation branch
-    #     # seg_feature [N, in_channels, temporal_len]
-    #     # Interploate upsample
-    #     seg_x_upsample = F.interpolate(
-    #         input=seg_feature,
-    #         scale_factor=[self.sample_rate],
-    #         mode="nearest")
-
-    #     out = self.seg_conv(seg_x_upsample, masks)
-    #     outputs = out.unsqueeze(0)
-    #     # seg_feature [stage_num, N, num_class, temporal_len]
-    #     for s in self.stages:
-    #         out = s(F.softmax(out, dim=1), masks)
-    #         outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
-    #     seg_score = outputs
-
-    #     if self.dropout is not None:
-    #         x = self.dropout(cls_feature)  # [N * num_seg, in_channels, 1, 1]
-
-    #     if self.data_format == 'NCHW':
-    #         x = torch.reshape(x, x.shape[:2])
-    #     else:
-    #         x = torch.reshape(x, x.shape[::3])
-    #     score = self.fc(x)  # [N * num_seg, num_class]
-    #     score = torch.reshape(
-    #         score, [-1, seg_feature.shape[2], score.shape[1]])  # [N, num_seg, num_class]
-    #     score = torch.mean(score, axis=1)  # [N, num_class]
-    #     cls_score = torch.reshape(score,
-    #                            shape=[-1, self.num_classes])  # [N, num_class]
-    #     return seg_score, cls_score
     
     def forward(self, seg_feature, cls_feature, masks):
         # segmentation branch

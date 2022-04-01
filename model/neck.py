@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-28 21:02:05
+LastEditTime: 2022-04-01 14:55:32
 Description: model neck
 FilePath: /ETESVS/model/neck.py
 '''
@@ -41,6 +41,14 @@ class ETESVSNeck(nn.Module):
         #             hidden_dim=hidden_dim,
         #             output_dim=output_dim,
         #             dropout=dropout)
+        self.memery = MemeryLayer(num_layers=num_layers,
+                                  num_f_maps=num_f_maps,
+                                  input_dim=input_dim,
+                                  output_dim=output_dim,
+                                  clip_seg_num=clip_seg_num,
+                                  sliding_window=sliding_window,
+                                  sample_rate=sample_rate,
+                                  clip_buffer_num=clip_buffer_num)
 
     def init_weights(self):
         pass
@@ -65,9 +73,14 @@ class ETESVSNeck(nn.Module):
         # seg_feature = self.ff(seg_feature, seg_mask)
 
         # memery
-        # seg_feature = self.memery(seg_feature, seg_mask)
+        # [num_layer, N, 2048]
+        seg_memery_feature = self.memery(seg_feature, seg_mask)
+        # [N, num_segs, 2048]
+        seg_memery_feature = torch.tile(torch.permute(seg_memery_feature, dims=[1, 0, 2]), dims=[1, seg_feature.shape[1], 1])
+        # [N, num_segs, 4096]
+        seg_feature = torch.concat([seg_feature, seg_memery_feature], dim=2)
 
-        # [N, 2048, num_segs]
+        # [N, 4096, num_segs]
         seg_feature = torch.permute(seg_feature, dims=[0, 2, 1])
 
         return seg_feature, cls_feature
@@ -204,10 +217,10 @@ class MemeryLayer(nn.Module):
         #     mask[:, :, self.over_lap_len:]],
         #     dim=2)
         mask = torch.permute(mask, dims=[0, 2, 1])
-        output, (h_t, c_t) = self.lstm(x * mask, (self.h_t, self.c_t))
+        _, (h_t, c_t) = self.lstm(x * mask, (self.h_t, self.c_t))
         self.h_t = h_t.detach().clone()
         self.c_t = c_t.detach().clone()
-        return output
+        return h_t
 
 class OverLapCausalConvBlock(nn.Module):
     def __init__(self,

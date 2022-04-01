@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-31 20:09:08
+LastEditTime: 2022-04-01 14:24:40
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -63,7 +63,10 @@ class TrainRunner():
         self.optimizer.zero_grad()
 
         # clear memery buffer
-        # self.model.neck.memery._clear_memery_buffer()
+        if self.nprocs > 1:
+            self.model.module.neck.memery._clear_memery_buffer()
+        else:
+            self.model.neck.memery._clear_memery_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -190,7 +193,10 @@ class valRunner():
 
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
         # clear memery buffer
-        # self.model.neck.memery._clear_memery_buffer()
+        if self.nprocs > 1:
+            self.model.module.neck.memery._clear_memery_buffer()
+        else:
+            self.model.neck.memery._clear_memery_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -305,6 +311,7 @@ class testRunner():
                  cfg,
                  model,
                  post_processing,
+                 use_amp=False,
                  nprocs=1,
                  local_rank=-1):
         self.logger = logger
@@ -315,6 +322,7 @@ class testRunner():
         self.post_processing = post_processing
         self.nprocs = nprocs
         self.local_rank = local_rank
+        self.use_amp = use_amp
     
     def epoch_init(self):
         # batch videos sampler
@@ -325,7 +333,10 @@ class testRunner():
 
     def batch_end_step(self, sliding_num, vid_list, step):
         # clear memery buffer
-        # self.model.neck.memery._clear_memery_buffer()
+        if self.nprocs > 1:
+            self.model.module.neck.memery._clear_memery_buffer()
+        else:
+            self.model.neck.memery._clear_memery_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -371,7 +382,7 @@ class testRunner():
         masks = masks.cuda()
         labels = labels.cuda()
         # test segment
-        if self.nprocs > 1 and idx < sliding_num - 1:
+        if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
                 outputs = self.model(imgs, masks, idx)
@@ -385,15 +396,8 @@ class testRunner():
             if self.post_processing.init_flag is not True:
                 self.post_processing.init_scores(sliding_num, len(vid_list))
                 self.current_step_vid_list = vid_list
-            
-            if self.local_rank == 0:
-                # gather other output when test and val
-                targets_gather_list = [torch.zeros_like(seg_score) for _ in range(self.nprocs)]
-                torch.distributed.all_gather(targets_gather_list, seg_score)
-                seg_score = torch.cat(targets_gather_list, dim=0)
 
-            if self.local_rank <= 0:
-                self.post_processing.update(seg_score, labels, idx)
+            self.post_processing.update(seg_score, labels, idx)
 
     def test_one_iter(self, data):
         # videos sliding stream val
