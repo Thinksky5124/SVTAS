@@ -69,6 +69,7 @@ PIPELINE: #PIPELINE field
             sample_rate: 8
             clip_seg_num: 30
             sliding_window: 120
+            sample_mode: "random"
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -88,6 +89,7 @@ PIPELINE: #PIPELINE field
             sample_rate: 8
             clip_seg_num: 30
             sliding_window: 120
+            sample_mode: "uniform"
         transform:
             - Resize:
                 size: 256

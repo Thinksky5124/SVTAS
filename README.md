@@ -5,16 +5,16 @@ End to End Stream Video Segmentation Network for Action Segmentation and Action 
 
 Temporal action segmentation and localization is a challenge task which attracts many researchers’ attention recently. As a downstream tasks of action recognition, most studies focus on how to classify frames or regression boundary base on the video feature extracted by action recognition model. However, we claim that above approaches are two stage or three stage, which must train split two or three models, and hard to segment or localize video on real time, because previous model must work on the whole video feature extracted by action recognition model. In this paper, we introduce an end-to-end approach, which uses sliding windows method to classify every frame and end to end segment videos that means need to use action recognition model to extract feature. Our approach can deal with stream video and reduce the number of parameters by 10% and the number of calculation by 20% compared I3D with MS-TCN.
 
-# Todo list
+# Framework Feature
 - [x] random sample picture
-- [x] distribution change to torchrun
+- [x] distribution train
 - [x] apex accelerate
-- [x] fix memery leak bug
 - [x] apex ditributedd accelerate
+- [x] Pillow-SMID accelerate sample
 
 # Envirnment Prepare
 
-- Linux
+- Linux Ubuntu 20.04+
 - Python 3.8+
 - PyTorch 1.11+
 - CUDA 11.3+
@@ -29,7 +29,7 @@ CFLAGS="${CFLAGS} -mavx2" pip install --upgrade --no-cache-dir --force-reinstall
 conda install -y jpeg libtiff
 ```
 
-- use pip to install
+- use pip to install environment
 
 ```bash
 conda create -n torch python=3.8
@@ -65,7 +65,7 @@ pip freeze > requirements.txt
 ## Download Dataset
 
 prepare data follow below instruction.
-- data tree
+- data directory file tree
 ```txt
 ─── data
     ├── 50salads
@@ -73,6 +73,7 @@ prepare data follow below instruction.
     ├── gtea
     └── ...
 ```
+
 ### gtea and 50salads and breakfast
 
 The video action segmentation model uses [breakfast](https://serre-lab.clps.brown.edu/resource/breakfast-actions-dataset/), [50salads](https://cvip.computing.dundee.ac.uk/datasets/foodpreparation/50salads/) and [gtea](https://cbs.ic.gatech.edu/fpv/) data sets.
@@ -123,6 +124,9 @@ The video action segmentation model uses [breakfast](https://serre-lab.clps.brow
 # count mean and std from video
 python utils/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 1000 --only_norm True --fps 30
 ```
+
+Here realses dataset mean and std config
+
 - gtea:
 ```txt
 mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
