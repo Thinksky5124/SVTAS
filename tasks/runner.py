@@ -2,11 +2,10 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 19:57:19
+LastEditTime: 2022-04-06 10:14:07
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
-from matplotlib import use
 import torch
 import time
 from utils.logger import log_batch
@@ -62,11 +61,11 @@ class TrainRunner():
         self.optimizer.step()
         self.optimizer.zero_grad()
 
-        # clear memery buffer
-        # if self.nprocs > 1:
-        #     self.model.module.head.memery._clear_memery_buffer()
-        # else:
-        #     self.model.head.memery._clear_memery_buffer()
+        # clear memory buffer
+        if self.nprocs > 1:
+            self.model.module.head._clear_memory_buffer()
+        else:
+            self.model.head._clear_memory_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -192,11 +191,11 @@ class valRunner():
         self.b_tic = time.time()
 
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
-        # clear memery buffer
-        # if self.nprocs > 1:
-        #     self.model.module.head.memery._clear_memery_buffer()
-        # else:
-        #     self.model.head.memery._clear_memery_buffer()
+        # clear memory buffer
+        if self.nprocs > 1:
+            self.model.module.head._clear_memory_buffer()
+        else:
+            self.model.head._clear_memory_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -332,11 +331,11 @@ class testRunner():
         self.model.eval()
 
     def batch_end_step(self, sliding_num, vid_list, step):
-        # clear memery buffer
-        if self.nprocs > 1:
-            self.model.module.neck.memery._clear_memery_buffer()
-        else:
-            self.model.neck.memery._clear_memery_buffer()
+        # clear memory buffer
+        # if self.nprocs > 1:
+        #     self.model.module.head._clear_memory_buffer()
+        # else:
+        #     self.model.head._clear_memory_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()

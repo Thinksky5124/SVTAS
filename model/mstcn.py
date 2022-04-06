@@ -2,10 +2,11 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 19:39:13
+LastEditTime: 2022-04-06 13:50:55
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/mstcn.py
 '''
+from turtle import forward
 import torch
 import copy
 import torch.nn as nn
@@ -53,3 +54,94 @@ class DilatedResidualLayer(nn.Module):
         out = self.conv_1x1(out)
         out = self.dropout(out)
         return (x + out) * mask[:, 0:1, :]
+
+class SlidingDilationResidualLyaer(nn.Module):
+    def __init__(self, dilation, in_channels, out_channels, sliding_window, sample_rate):
+        super(SlidingDilationResidualLyaer, self).__init__()
+        self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=0, dilation=dilation)
+        self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
+        self.dropout = nn.Dropout()
+        self.dilation = dilation
+        self.sliding = sliding_window // sample_rate
+        self.memory = None
+    
+    def _resert_memory(self):
+        self.memory = None
+    
+    def _memory(self, x):
+        over_x = x[:, :, :(self.sliding + self.dilation * 2)]
+        self.memory = over_x[:, :, -(self.dilation * 2):].detach().clone()
+
+    def overlap_same_padding(self, x):
+        if self.memory is None:
+            self.memory = torch.zeros([x.shape[0], x.shape[1], self.dilation * 2]).to(x.device)
+        
+        # overlap
+        x = torch.cat([self.memory, x], dim=2)
+        self._memory(x)
+        return x
+    
+    def forward(self, x, mask):
+        # padding
+        pad_x = self.overlap_same_padding(x)
+
+        out = F.relu(self.conv_dilated(pad_x))
+        out = self.conv_1x1(out)
+        out = self.dropout(out)
+        return (x + out) * mask[:, 0:1, :]
+
+class MemoryStage(nn.Module):
+    def __init__(self, num_layers, num_f_maps, dim, num_classes, sliding_window, sample_rate):
+        super(MemoryStage, self).__init__()
+        self.conv_1x1 = nn.Conv1d(dim, num_f_maps, 1)
+        self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2 ** i, num_f_maps, num_f_maps, sliding_window, sample_rate)) for i in range(num_layers)])
+        self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
+    
+    def forward(self, x, mask):
+        out = self.conv_1x1(x)
+        for layer in self.layers:
+            out = layer(out, mask)
+        out = self.conv_out(out) * mask[:, 0:1, :]
+        return out
+    
+    def _clear_memory_buffer(self):
+        self.apply(self._clean_buffers)
+
+    @staticmethod
+    def _clean_buffers(m):
+        if issubclass(type(m), SlidingDilationResidualLyaer):
+            m._resert_memory()
+
+# class TransposeDilationResidualLyaer(nn.Module):
+#     def __init__(self, dilation, padding, stride, in_channels, out_channels):
+#         super(TransposeDilationResidualLyaer, self).__init__()
+#         self.conv_dilated = nn.ConvTranspose1d(in_channels, out_channels, 3, padding=padding, dilation=dilation, stride=stride)
+#         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
+#         self.dropout = nn.Dropout()
+    
+#     def forward(self, x, mask):
+#         out = F.relu(self.conv_dilated(x))
+#         out = self.conv_1x1(out)
+#         out = self.dropout(out)
+
+#         x_upsample = F.interpolate(
+#             input=x.unsqueeze(0),
+#             scale_factor=[1, 2],
+#             mode="nearest").squeeze()
+#         return (x_upsample + out) * mask[:, 0:1, :]
+
+# class TransposeSingleStage(nn.Module):
+#     def __init__(self, sample_rate, num_f_maps, dim, num_classes):
+#         super(TransposeSingleStage, self).__init__()
+#         self.sample_rate = sample_rate
+#         self.conv_1x1 = nn.Conv1d(dim, num_f_maps, 1)
+#         self.transpose_conv_1 = TransposeDilationResidualLyaer(16, 1, 1, num_f_maps, num_f_maps)
+#         self.transpose_conv_2 = TransposeDilationResidualLyaer(30, 0, 1, num_f_maps, num_f_maps)
+#         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
+    
+#     def forward(self, x, mask):
+#         out = self.conv_1x1(x)
+#         out = self.transpose_conv_1(out, mask[:, 0:1, ::2])
+#         out = self.transpose_conv_2(out, mask[:, 0:1, :])
+#         out = self.conv_out(out) * mask[:, 0:1, :]
+#         return out

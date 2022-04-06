@@ -2,16 +2,13 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 21:44:06
+LastEditTime: 2022-04-05 20:03:32
 Description: model neck
 FilePath: /ETESVS/model/neck.py
 '''
-import imp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import copy
-from .mstcn import SingleStageModel
 
 class ETESVSNeck(nn.Module):
     def __init__(self,
@@ -41,13 +38,6 @@ class ETESVSNeck(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
         self.dropout = nn.Dropout(p=self.drop_ratio)
-        self.seg_conv = SingleStageModel(num_layers, out_channel, in_channel,
-                                       num_classes)
-        self.stages = nn.ModuleList([
-            copy.deepcopy(
-                SingleStageModel(num_layers, out_channel, num_classes,
-                                 num_classes)) for s in range(num_stages - 1)
-        ])
         
         self.fc = nn.Linear(self.in_channel, num_classes)
 
@@ -69,22 +59,6 @@ class ETESVSNeck(nn.Module):
         # [N, 2048, num_segs]
         seg_feature = torch.permute(seg_feature, dims=[0, 2, 1])
 
-        # segmentation branch
-        # seg_feature [N, in_channels, temporal_len]
-        # Interploate upsample
-
-        out = self.seg_conv(seg_feature, masks)
-        outputs = out.unsqueeze(0)
-        # seg_feature [stage_num, N, num_class, temporal_len]
-        for s in self.stages:
-            out = s(F.softmax(out, dim=1), masks)
-            outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
-        outputs = F.interpolate(
-            input=outputs,
-            scale_factor=[1, self.sample_rate],
-            mode="nearest")
-        seg_neck_score = outputs
-
         # recognition branch
         if self.dropout is not None:
             x = self.dropout(cls_feature)  # [N * num_seg, in_channels, 1, 1]
@@ -95,8 +69,8 @@ class ETESVSNeck(nn.Module):
             x = torch.reshape(x, x.shape[::3])
         score = self.fc(x)  # [N * num_seg, num_class]
         score = torch.reshape(
-            score, [-1, seg_feature.shape[2], score.shape[1]])  # [N, num_seg, num_class]
+            score, [-1, self.clip_seg_num, score.shape[1]])  # [N, num_seg, num_class]
         score = torch.mean(score, axis=1)  # [N, num_class]
         cls_score = torch.reshape(score,
                                shape=[-1, self.num_classes])  # [N, num_class]
-        return seg_feature, seg_neck_score, cls_score
+        return seg_feature, cls_score
