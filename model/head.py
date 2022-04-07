@@ -2,10 +2,11 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-06 13:50:41
+LastEditTime: 2022-04-07 16:04:28
 Description: model head
 FilePath: /ETESVS/model/head.py
 '''
+from turtle import forward
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,7 +18,6 @@ class ETESVSHead(nn.Module):
                  num_classes,
                  num_layers=4,
                  num_stages=1,
-                 clip_seg_num=30,
                  sample_rate=4,
                  sliding_window=60,
                  seg_in_channels=2048,
@@ -27,10 +27,16 @@ class ETESVSHead(nn.Module):
         self.num_f_maps = num_f_maps
         self.num_stages = num_stages
         self.num_classes = num_classes
-        self.clip_seg_num = clip_seg_num
         self.sample_rate = sample_rate
         self.num_layers = num_layers
 
+        # self.seg_conv = SingleStageModel(num_layers, num_f_maps, seg_in_channels,
+        #                                num_classes)
+        # self.stages = nn.ModuleList([
+        #     copy.deepcopy(
+        #         SingleStageModel(num_layers, num_f_maps, num_classes,
+        #                          num_classes)) for s in range(num_stages - 1)
+        # ])
         self.seg_conv = MemoryStage(num_layers, num_f_maps, seg_in_channels,
                                        num_classes, sliding_window, sample_rate)
         self.stages = nn.ModuleList([

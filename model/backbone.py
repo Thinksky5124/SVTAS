@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:22
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:03:27
+LastEditTime: 2022-04-07 16:20:40
 Description: model backbone script
 FilePath: /ETESVS/model/backbone.py
 '''
@@ -11,7 +11,7 @@ import torch.nn as nn
 
 from .resnet import ResNet
 from .resnet_tsm import ResNetTSM
-
+from .resnet_tsm import TemporalShift
 # form neckwork
 # model_urls = {
 #     "resnet18": "https://download.pytorch.org/models/resnet18-f37072fd.pth",
@@ -64,9 +64,24 @@ class ETESVSBackBone(nn.Module):
                 clip_seg_num=clip_seg_num,
                 shift_div=shift_div
             )
+
+        self.name = name
     
     def init_weights(self):
         self.backbone.init_weights()
+
+    def _clear_memory_buffer(self):
+        self.apply(self._clean_activation_buffers)
     
+    @staticmethod
+    def _clean_activation_buffers(m):
+        if issubclass(type(m), TemporalShift):
+            m._reset_memory()
+        
     def forward(self, x):
+        if self.name in ['ResNet', 'ResNetTSM']:
+            # x.shape=[N,T,C,H,W], for most commonly case
+            # x [N, 1, T]
+            x = torch.reshape(x, [-1] + list(x.shape[2:]))
+            # x [N * T, C, H, W]
         return self.backbone(x)

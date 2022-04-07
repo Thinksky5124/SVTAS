@@ -6,28 +6,19 @@ MODEL:
         clip_seg_num: 30
         shift_div: 30
     neck:
-        num_classes: 11
-        num_stages: 1
-        num_layers: 4
-        in_channel: 2048
-        out_channel: 64
         clip_seg_num: 30
-        drop_ratio: 0.5
-        sample_rate: 4
     head:
         num_classes: 11
         num_layers: 4
         num_stages: 1
-        clip_seg_num: 30
         sample_rate: 4
-        sliding_window: 60
+        sliding_window: 120
         seg_in_channels: 2048
         num_f_maps: 64
     loss:
         num_classes: 11
         sample_rate: 4
         seg_weight: 1.0
-        cls_weight: 1.0
         ignore_index: -100
 
 COLLATE:
@@ -45,7 +36,7 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: True
-        sliding_window: 60
+        sliding_window: 120
         clip_seg_num: 30
         sample_rate: 4
     test:
@@ -56,7 +47,7 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: False
-        sliding_window: 60
+        sliding_window: 120
         clip_seg_num: 30
         sample_rate: 4
 
@@ -68,7 +59,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 30
-            sliding_window: 60
+            sliding_window: 120
             sample_mode: "random"
         transform: #Mandotary, image transform operator.
             - Resize:
@@ -88,7 +79,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 4
             clip_seg_num: 30
-            sliding_window: 60
+            sliding_window: 120
             sample_mode: "uniform"
         transform:
             - Resize:

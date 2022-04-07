@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-06 10:14:07
+LastEditTime: 2022-04-07 19:37:08
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -48,8 +48,6 @@ class TrainRunner():
     def epoch_init(self):
         # batch videos sampler
         self.videos_loss = 0.
-        self.video_seg_loss = 0.
-        self.video_cls_loss = 0.
         self.post_processing.init_flag = False
         self.current_step = 0
         self.current_step_vid_list = None
@@ -63,9 +61,9 @@ class TrainRunner():
 
         # clear memory buffer
         if self.nprocs > 1:
-            self.model.module.head._clear_memory_buffer()
+            self.model.module._clear_memory_buffer()
         else:
-            self.model.head._clear_memory_buffer()
+            self.model._clear_memory_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -84,15 +82,11 @@ class TrainRunner():
 
         # logger
         self.record_dict['batch_time'].update(time.time() - self.b_tic)
-        self.record_dict['loss'].update(self.video_seg_loss.item() + self.video_cls_loss.item(), self.video_batch_size)
+        self.record_dict['loss'].update(self.videos_loss.item(), self.video_batch_size)
         self.record_dict['lr'].update(self.optimizer.state_dict()['param_groups'][0]['lr'], self.video_batch_size)
         self.record_dict['F1@0.5'].update(f1)
-        self.record_dict['cls_loss'].update(self.video_cls_loss.item(), self.video_batch_size)
-        self.record_dict['seg_loss'].update(self.video_seg_loss.item(), self.video_batch_size)
 
         self.videos_loss = 0.
-        self.video_seg_loss = 0.
-        self.video_cls_loss = 0.
 
         if self.current_step % self.cfg.get("log_interval", 10) == 0:
             ips = "ips: {:.5f} instance/sec.".format(
@@ -110,11 +104,11 @@ class TrainRunner():
         if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
-                outputs = self.model(imgs, masks, idx)
-                seg_score, cls_score = outputs
-                cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
+                seg_score = self.model(imgs, masks, idx)
+                seg_loss = self.criterion(seg_score, masks, labels)
             
-                loss = (cls_loss + seg_loss) / sliding_num
+                # loss = (cls_loss + seg_loss) / sliding_num
+                loss = (seg_loss) / sliding_num
                 if self.use_amp is True:
                     with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                         scaled_loss.backward()
@@ -122,11 +116,11 @@ class TrainRunner():
                     loss.backward()
         else:
             # single gpu
-            outputs = self.model(imgs, masks, idx)
-            seg_score, cls_score = outputs
-            cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
+            seg_score = self.model(imgs, masks, idx)
+            seg_loss = self.criterion(seg_score, masks, labels)
             
-            loss = (cls_loss + seg_loss) / sliding_num
+            # loss = (cls_loss + seg_loss) / sliding_num
+            loss = (seg_loss) / sliding_num
             if self.use_amp is True:
                 with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                     scaled_loss.backward()
@@ -138,9 +132,7 @@ class TrainRunner():
                 self.post_processing.init_scores(sliding_num, len(vid_list))
                 self.current_step_vid_list = vid_list
             self.post_processing.update(seg_score, labels, idx)
-            self.videos_loss = self.videos_loss + loss.detach().clone()
-            self.video_seg_loss = self.video_seg_loss + seg_loss.detach().clone()
-            self.video_cls_loss = self.video_cls_loss + cls_loss.detach().clone()
+            self.videos_loss = self.videos_loss + seg_loss.detach().clone() / sliding_num
 
     def train_one_iter(self, data, r_tic, epoch):
         # videos sliding stream train
@@ -182,8 +174,6 @@ class valRunner():
     def epoch_init(self):
         # batch videos sampler
         self.videos_loss = 0.
-        self.video_seg_loss = 0.
-        self.video_cls_loss = 0.
         self.post_processing.init_flag = False
         self.current_step = 0
         self.current_step_vid_list = None
@@ -193,9 +183,9 @@ class valRunner():
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
         # clear memory buffer
         if self.nprocs > 1:
-            self.model.module.head._clear_memory_buffer()
+            self.model.module._clear_memory_buffer()
         else:
-            self.model.head._clear_memory_buffer()
+            self.model._clear_memory_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -242,13 +232,9 @@ class valRunner():
         # logger
         self.record_dict['F1@0.5'].update(f1)
         self.record_dict['batch_time'].update(time.time() - self.b_tic)
-        self.record_dict['loss'].update(self.video_seg_loss.item() + self.video_cls_loss.item(), self.video_batch_size)
-        self.record_dict['cls_loss'].update(self.video_cls_loss.item(), self.video_batch_size)
-        self.record_dict['seg_loss'].update(self.video_seg_loss.item(), self.video_batch_size)
+        self.record_dict['loss'].update(self.videos_loss.item(), self.video_batch_size)
 
         self.videos_loss = 0.
-        self.video_seg_loss = 0.
-        self.video_cls_loss = 0.
 
         if self.current_step % self.cfg.get("log_interval", 10) == 0:
             ips = "ips: {:.5f} instance/sec.".format(
@@ -267,18 +253,16 @@ class valRunner():
         if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
-                outputs = self.model(imgs, masks, idx)
-                seg_score, cls_score = outputs
-                cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
+                seg_score = self.model(imgs, masks, idx)
+                seg_loss = self.criterion(seg_score, masks, labels)
             
-                loss = (cls_loss + seg_loss) / sliding_num
+                loss = (seg_loss) / sliding_num
         else:
             # single gpu
-            outputs = self.model(imgs, masks, idx)
-            seg_score, cls_score = outputs
-            cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
+            seg_score = self.model(imgs, masks, idx)
+            seg_loss = self.criterion(seg_score, masks, labels)
             
-            loss = (cls_loss + seg_loss) / sliding_num
+            loss = (seg_loss) / sliding_num
 
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
@@ -286,9 +270,7 @@ class valRunner():
                 self.current_step_vid_list = vid_list
 
             self.post_processing.update(seg_score, labels, idx)
-            self.videos_loss = self.videos_loss + loss.detach().clone()
-            self.video_seg_loss = self.video_seg_loss + seg_loss.detach().clone()
-            self.video_cls_loss = self.video_cls_loss + cls_loss.detach().clone()
+            self.videos_loss = self.videos_loss + seg_loss.detach().clone() / sliding_num
 
     def val_one_iter(self, data, r_tic, epoch):
         # videos sliding stream val
@@ -332,10 +314,10 @@ class testRunner():
 
     def batch_end_step(self, sliding_num, vid_list, step):
         # clear memory buffer
-        # if self.nprocs > 1:
-        #     self.model.module.head._clear_memory_buffer()
-        # else:
-        #     self.model.head._clear_memory_buffer()
+        if self.nprocs > 1:
+            self.model.module._clear_memory_buffer()
+        else:
+            self.model._clear_memory_buffer()
 
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -384,12 +366,10 @@ class testRunner():
         if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
-                outputs = self.model(imgs, masks, idx)
-                seg_score, cls_score = outputs
+                seg_score = self.model(imgs, masks, idx)
         else:
             # single gpu
-            outputs = self.model(imgs, masks, idx)
-            seg_score, cls_score = outputs
+            seg_score = self.model(imgs, masks, idx)
 
         with torch.no_grad():
             if self.post_processing.init_flag is not True:

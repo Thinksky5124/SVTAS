@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 20:04:37
+LastEditTime: 2022-04-07 19:29:34
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -152,9 +152,7 @@ def train(cfg,
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
                    'lr': AverageMeter('lr', 'f', need_avg=False),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
-                   'cls_loss': AverageMeter("cls_loss", '.5f'),
-                   'seg_loss': AverageMeter("seg_loss", '.5f')
+                   'F1@0.5': AverageMeter("F1@0.50", '.5f')
                   }
 
     # 7. Construct post precesing
@@ -213,9 +211,7 @@ def train(cfg,
             record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
-                   'cls_loss': AverageMeter("cls_loss", '.5f'),
-                   'seg_loss': AverageMeter("seg_loss", '.5f')
+                   'F1@0.5': AverageMeter("F1@0.50", '.5f')
                   }
             runner = valRunner(logger=logger,
                 video_batch_size=video_batch_size,

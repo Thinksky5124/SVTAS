@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-06 10:52:43
+LastEditTime: 2022-04-07 19:26:13
 Description: model framework
 FilePath: /ETESVS/model/etesvs.py
 '''
@@ -32,15 +32,15 @@ class ETESVS(nn.Module):
         self.backbone.init_weights()
         self.neck.init_weights()
         self.head.init_weights()
+    
+    def _clear_memory_buffer(self):
+        self.head._clear_memory_buffer()
+        self.backbone._clear_memory_buffer()
 
     def forward(self, imgs, masks, idx):
-        # imgs.shape=[N,T,C,H,W], for most commonly case
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
-        # masks [N, 1, T]
-        imgs = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
-        # imgs [N * T, C, H, W]
-        
+
         if self.backbone is not None:
             feature = self.backbone(imgs)
         else:
@@ -49,12 +49,11 @@ class ETESVS(nn.Module):
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, cls_score = self.neck(
+            seg_feature = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
-            cls_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
@@ -65,4 +64,4 @@ class ETESVS(nn.Module):
             seg_score = None
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return seg_score, cls_score
+        return seg_score

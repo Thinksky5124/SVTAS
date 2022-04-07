@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-05 20:03:32
+LastEditTime: 2022-04-07 19:25:43
 Description: model neck
 FilePath: /ETESVS/model/neck.py
 '''
@@ -13,7 +13,6 @@ import torch.nn.functional as F
 class ETESVSNeck(nn.Module):
     def __init__(self,
                  num_classes=11,
-                 num_stages=1,
                  num_layers=4,
                  out_channel=64,
                  in_channel=2048,
@@ -37,10 +36,6 @@ class ETESVSNeck(nn.Module):
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        self.dropout = nn.Dropout(p=self.drop_ratio)
-        
-        self.fc = nn.Linear(self.in_channel, num_classes)
-
     def init_weights(self):
         pass
 
@@ -59,18 +54,4 @@ class ETESVSNeck(nn.Module):
         # [N, 2048, num_segs]
         seg_feature = torch.permute(seg_feature, dims=[0, 2, 1])
 
-        # recognition branch
-        if self.dropout is not None:
-            x = self.dropout(cls_feature)  # [N * num_seg, in_channels, 1, 1]
-
-        if self.data_format == 'NCHW':
-            x = torch.reshape(x, x.shape[:2])
-        else:
-            x = torch.reshape(x, x.shape[::3])
-        score = self.fc(x)  # [N * num_seg, num_class]
-        score = torch.reshape(
-            score, [-1, self.clip_seg_num, score.shape[1]])  # [N, num_seg, num_class]
-        score = torch.mean(score, axis=1)  # [N, num_class]
-        cls_score = torch.reshape(score,
-                               shape=[-1, self.num_classes])  # [N, num_class]
-        return seg_feature, cls_score
+        return seg_feature

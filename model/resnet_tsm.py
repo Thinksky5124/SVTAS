@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:05:58
+LastEditTime: 2022-04-07 16:24:30
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/resnet_tsm.py
 '''
@@ -63,6 +63,7 @@ class TemporalShift(nn.Module):
         self.net = net
         self.num_segments = num_segments
         self.shift_div = shift_div
+        self.memory = None
 
     def forward(self, x):
         """Defines the computation performed at every call.
@@ -73,11 +74,18 @@ class TemporalShift(nn.Module):
         Returns:
             torch.Tensor: The output of the module.
         """
-        x = self.shift(x, self.num_segments, shift_div=self.shift_div)
+        x, memory = self.shift(x, self.num_segments, self.memory, shift_div=self.shift_div)
+        self._memory_cache(memory)
         return self.net(x)
+    
+    def _memory_cache(self, memory):
+        self.memory = memory.detach().clone()
+
+    def _reset_memory(self):
+        self.memory = None
 
     @staticmethod
-    def shift(x, num_segments, shift_div=3):
+    def shift(x, num_segments, memory, shift_div=3):
         """Perform temporal shift operation on the feature.
 
         Args:
@@ -100,33 +108,32 @@ class TemporalShift(nn.Module):
 
         # split c channel into three parts:
         # left_split, mid_split, right_split
-        left_split = x[:, :, :fold, :]
-        mid_split = x[:, :, fold:2 * fold, :]
-        right_split = x[:, :, 2 * fold:, :]
+        shift_split = x[:, :, :fold, :]
+        hold_split = x[:, :, fold:, :]
 
         # can't use torch.zeros(*A.shape) or torch.zeros_like(A)
         # because array on caffe inference must be got by computing
 
-        # shift left on num_segments channel in `left_split`
-        zeros = left_split - left_split
-        blank = zeros[:, :1, :, :]
-        left_split = left_split[:, 1:, :, :]
-        left_split = torch.cat((left_split, blank), 1)
-
         # shift right on num_segments channel in `mid_split`
-        zeros = mid_split - mid_split
-        blank = zeros[:, :1, :, :]
-        mid_split = mid_split[:, :-1, :, :]
-        mid_split = torch.cat((blank, mid_split), 1)
+        if memory is None:
+            zeros = shift_split - shift_split
+            blank = zeros[:, :1, :, :]
+            shift_split = shift_split[:, :-1, :, :]
+            shift_split = torch.cat((blank, shift_split), 1)
+            memory = shift_split[:, -1, :, :].unsqueeze(1)
+        else:
+            shift_split_clip = shift_split[:, :-1, :, :]
+            shift_split = torch.cat((memory, shift_split_clip), 1)
+            memory = shift_split[:, -1, :, :].unsqueeze(1)
 
         # right_split: no shift
 
         # concatenate
-        out = torch.cat((left_split, mid_split, right_split), 2)
+        out = torch.cat((shift_split, hold_split), 2)
 
         # [N, C, H, W]
         # restore the original dimension
-        return out.view(n, c, h, w)
+        return out.view(n, c, h, w), memory
 
 
 class ResNetTSM(ResNet):

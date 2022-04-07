@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-06 13:50:55
+LastEditTime: 2022-04-07 10:56:10
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/mstcn.py
 '''
@@ -94,7 +94,8 @@ class MemoryStage(nn.Module):
     def __init__(self, num_layers, num_f_maps, dim, num_classes, sliding_window, sample_rate):
         super(MemoryStage, self).__init__()
         self.conv_1x1 = nn.Conv1d(dim, num_f_maps, 1)
-        self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2 ** i, num_f_maps, num_f_maps, sliding_window, sample_rate)) for i in range(num_layers)])
+        self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2**(num_layers-1-i), num_f_maps, num_f_maps, sliding_window, sample_rate)) for i in range(num_layers)])
+        # self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2 ** i, num_f_maps, num_f_maps, sliding_window, sample_rate)) for i in range(num_layers)])
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
     
     def forward(self, x, mask):
@@ -111,37 +112,3 @@ class MemoryStage(nn.Module):
     def _clean_buffers(m):
         if issubclass(type(m), SlidingDilationResidualLyaer):
             m._resert_memory()
-
-# class TransposeDilationResidualLyaer(nn.Module):
-#     def __init__(self, dilation, padding, stride, in_channels, out_channels):
-#         super(TransposeDilationResidualLyaer, self).__init__()
-#         self.conv_dilated = nn.ConvTranspose1d(in_channels, out_channels, 3, padding=padding, dilation=dilation, stride=stride)
-#         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
-#         self.dropout = nn.Dropout()
-    
-#     def forward(self, x, mask):
-#         out = F.relu(self.conv_dilated(x))
-#         out = self.conv_1x1(out)
-#         out = self.dropout(out)
-
-#         x_upsample = F.interpolate(
-#             input=x.unsqueeze(0),
-#             scale_factor=[1, 2],
-#             mode="nearest").squeeze()
-#         return (x_upsample + out) * mask[:, 0:1, :]
-
-# class TransposeSingleStage(nn.Module):
-#     def __init__(self, sample_rate, num_f_maps, dim, num_classes):
-#         super(TransposeSingleStage, self).__init__()
-#         self.sample_rate = sample_rate
-#         self.conv_1x1 = nn.Conv1d(dim, num_f_maps, 1)
-#         self.transpose_conv_1 = TransposeDilationResidualLyaer(16, 1, 1, num_f_maps, num_f_maps)
-#         self.transpose_conv_2 = TransposeDilationResidualLyaer(30, 0, 1, num_f_maps, num_f_maps)
-#         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
-    
-#     def forward(self, x, mask):
-#         out = self.conv_1x1(x)
-#         out = self.transpose_conv_1(out, mask[:, 0:1, ::2])
-#         out = self.transpose_conv_2(out, mask[:, 0:1, :])
-#         out = self.conv_out(out) * mask[:, 0:1, :]
-#         return out

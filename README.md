@@ -163,7 +163,7 @@ python utils/transform_segmentation_label.py data/thumos14/gt.json data/thumos14
 ```bash
 # gtea
 # single gpu
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=2
 python main.py  --validate -c config/gtea/etesvs_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_split2.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
