@@ -2,10 +2,11 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 20:04:12
+LastEditTime: 2022-04-08 18:48:34
 Description: model postprecessing
 FilePath: /ETESVS/model/post_processing.py
 '''
+from cProfile import label
 import numpy as np
 import torch
 
@@ -14,12 +15,15 @@ class PostProcessing():
                  num_classes,
                  clip_seg_num,
                  sliding_window,
-                 sample_rate):
+                 sample_rate,
+                 ignore_index=-100):
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.sample_rate = sample_rate
         self.num_classes = num_classes
+        self.ignore_index = ignore_index
         self.init_flag = False
+        self.epls = 1e-10
     
     def init_scores(self, sliding_num, batch_size):
         max_temporal_len = sliding_num * self.sliding_window + self.sample_rate * self.clip_seg_num
@@ -41,6 +45,10 @@ class PostProcessing():
             end_frame = start_frame + (self.clip_seg_num * self.sample_rate)
             self.pred_scores[:, :, start_frame:end_frame] = seg_scores[-1, :].detach().cpu().numpy().copy()
             self.video_gt[:, start_frame:end_frame] = gt.detach().cpu().numpy().copy()
+            pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
+            acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+            # print('Seg_Acc', acc)
+        return acc
 
     def output(self):
         pred_score_list = []

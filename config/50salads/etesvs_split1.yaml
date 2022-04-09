@@ -5,23 +5,20 @@ MODEL:
         clip_seg_num: 30
         shift_div: 30
     neck:
-        pos_channels: 2048
-        num_layers: 2
-        num_f_maps: 2048
-        input_dim: 2048
-        output_dim: 2048
+        num_classes: 19
+        num_layers: 4
+        out_channel: 64
+        in_channel: 2048
         clip_seg_num: 30
-        clip_buffer_num: 0
-        sliding_window: 300
+        drop_ratio: 0.5
+        sample_rate: 20
     head:
         num_classes: 19
-        num_stages: 1
         num_layers: 4
-        num_f_maps: 64
-        cls_in_channels: 2048
+        sliding_window: 600
         seg_in_channels: 2048
         sample_rate: 20
-        drop_ratio: 0.5
+        num_f_maps: 64
     loss:
         num_classes: 19
         sample_rate: 20
@@ -35,7 +32,7 @@ COLLATE:
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
     video_batch_size: 2
-    num_workers: 2
+    num_workers: 4
     train:
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
@@ -44,7 +41,7 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/50salads/mapping.txt"
         dataset_type: "50salads"
         train_mode: True
-        sliding_window: 300
+        sliding_window: 600
         clip_seg_num: 30
         sample_rate: 20
     test:
@@ -55,7 +52,7 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/50salads/mapping.txt"
         dataset_type: "50salads"
         train_mode: False
-        sliding_window: 300
+        sliding_window: 600
         clip_seg_num: 30
         sample_rate: 20
 
@@ -67,8 +64,8 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 20
             clip_seg_num: 30
-            sliding_window: 300
-            sample_mode: "random"
+            sliding_window: 600
+            sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -87,7 +84,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 20
             clip_seg_num: 30
-            sliding_window: 300
+            sliding_window: 600
             sample_mode: "uniform"
         transform:
             - Resize:
@@ -107,7 +104,7 @@ OPTIMIZER: #OPTIMIZER field
 METRIC:
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/50salads/mapping.txt"
-
+    file_output: True
 
 
 model_name: "ETESVS_50salads_split1"

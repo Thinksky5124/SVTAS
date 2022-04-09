@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:04:49
+LastEditTime: 2022-04-09 16:05:07
 Description: config load function
 FilePath: /ETESVS/utils/config.py
 '''
@@ -39,13 +39,13 @@ def create_attr_dict(yaml_config):
         else:
             yaml_config[key] = value
 
-def get_config(fname, overrides=None, show=True):
+def get_config(fname, overrides=None, show=True, tensorboard=False):
     """
     Read config from file
     """
     assert os.path.exists(fname), ('config file({}) is not exist'.format(fname))
     config = parse_config(fname)
-    logger = setup_logger(f"./output/{config.model_name}", name="ETESVS", level="INFO")
+    logger = setup_logger(f"./output/{config.model_name}", name="ETESVS", level="INFO", tensorboard=tensorboard)
     override_config(config, overrides)
     if show:
         print_config(config)

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 21:54:29
+LastEditTime: 2022-04-08 18:48:41
 Description: metric class
 FilePath: /ETESVS/utils/metric.py
 '''
@@ -156,7 +156,8 @@ class BaseSegmentationMetric():
         f1 = 2.0 * (precision * recall) / (precision + recall + self.elps)
 
         f1 = np.nan_to_num(f1)
-        return f1
+        acc = correct / total
+        return f1, acc
 
     def _write_seg_file(self, input_data, write_name, write_path):
         recog_content = [line + "\n" for line in input_data]
@@ -328,6 +329,7 @@ class SegmentationMetric(BaseSegmentationMetric):
         output_np_batch = outputs['output_np']
 
         single_batch_f1 = 0.
+        single_batch_acc = 0.
         for bs in range(len(predicted_batch)):
             predicted = predicted_batch[bs]
             output_np = output_np_batch[bs]
@@ -344,10 +346,12 @@ class SegmentationMetric(BaseSegmentationMetric):
 
             result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result
-            single_f1 = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
+            # print(vid[bs])
+            single_f1, acc = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
                             gt_detection)
             single_batch_f1 += single_f1
-        return single_batch_f1 / len(predicted_batch)
+            single_batch_acc += acc
+        return single_batch_f1 / len(predicted_batch), single_batch_acc / len(predicted_batch)
 
     def accumulate(self):
         """accumulate metrics when finished all iters.

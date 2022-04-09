@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 14:12:56
+LastEditTime: 2022-04-09 16:35:49
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
@@ -11,6 +11,7 @@ import os
 import sys
 import datetime
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 Color = {
     'RED': '\033[31m',
@@ -32,10 +33,10 @@ def coloring(message, color="OKGREEN"):
         return message
 
 
-logger_initialized = []
+logger_initialized = {}
 
 
-def setup_logger(output=None, name="ETESVS", level="INFO"):
+def setup_logger(output=None, name="ETESVS", level="INFO", tensorboard=False):
     """
     Initialize the ETESVS logger and set its verbosity level to "INFO".
     """
@@ -70,6 +71,8 @@ def setup_logger(output=None, name="ETESVS", level="INFO"):
         formatter = plain_formatter
         ch.setFormatter(formatter)
         logger.addHandler(ch)
+        if tensorboard is True:
+            writer = SummaryWriter("output/tensorboard", comment=name)
 
     # file logging: all workers
     if output is not None:
@@ -88,13 +91,17 @@ def setup_logger(output=None, name="ETESVS", level="INFO"):
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(plain_formatter)
         logger.addHandler(fh)
-    logger_initialized.append(name)
+    logger_initialized[name] = dict(logging=name)
+    if tensorboard is True and local_rank == 0:
+        logger_initialized[name]['tensorboard'] = writer
     return logger
 
 
-def get_logger(name, output=None):
+def get_logger(name, output=None, tensorboard=False):
     logger = logging.getLogger(name)
-    if name in logger_initialized:
+    if name in list(logger_initialized.keys()):
+        if tensorboard is True:
+            return logger_initialized[name]['tensorboard']
         return logger
 
     return setup_logger(name=name, output=name)
@@ -137,6 +144,10 @@ class AverageMeter(object):
                                                             self=self)
 
     @property
+    def get_mean(self):
+        return self.avg if self.need_avg else self.val
+
+    @property
     def mean(self):
         return '{self.name}_avg: {self.avg:{self.fmt}}'.format(
             self=self) if self.need_avg else ''
@@ -163,7 +174,6 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
         coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
         coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
 
-
 def log_epoch(metric_list, epoch, mode, ips, logger):
     batch_cost = 'avg_' + str(metric_list['batch_time'].value) + ' sec,'
     reader_cost = 'avg_' + str(metric_list['reader_time'].value) + ' sec,'
@@ -181,3 +191,9 @@ def log_epoch(metric_list, epoch, mode, ips, logger):
         coloring(end_epoch_str, "RED"), coloring(mode, "PURPLE"),
         coloring(metric_str, "OKGREEN"), coloring(batch_cost, "OKGREEN"),
         coloring(reader_cost, "OKGREEN"), coloring(batch_sum, "OKGREEN"), ips))
+
+def tenorboard_log_epoch(metric_list, epoch, mode, writer):
+    if isinstance(writer, SummaryWriter):
+        for m in metric_list:
+            if not (m == 'batch_time' or m == 'reader_time'):
+                writer.add_scalar(mode + "/" + m, metric_list[m].get_mean, epoch)

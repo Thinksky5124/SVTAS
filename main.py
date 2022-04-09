@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 20:57:03
+LastEditTime: 2022-04-09 16:05:47
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -50,6 +50,11 @@ def parse_args():
         default=False,
         help='whether to use amp to accelerate')
     parser.add_argument(
+        '--use_tensorboard',
+        type=bool,
+        default=True,
+        help='whether to use tensorboard to visualize train')
+    parser.add_argument(
         '--seed',
         type=int,
         default=0,
@@ -72,7 +77,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cfg = get_config(args.config, overrides=args.override)
+    cfg = get_config(args.config, overrides=args.override, tensorboard=args.use_tensorboard)
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
@@ -99,14 +104,16 @@ def main():
 
     if args.test:
         test(cfg,
-             args.local_rank,
-             nprocs,
-             args.use_amp,
+             args=args,
+             local_rank=args.local_rank,
+             nprocs=nprocs,
+             use_amp=args.use_amp,
              weights=args.weights)
     else:
         train(cfg,
-            args.local_rank,
-            nprocs,
+            args=args,
+            local_rank=args.local_rank,
+            nprocs=nprocs,
             use_amp=args.use_amp,
             weights=args.weights,
             validate=args.validate)

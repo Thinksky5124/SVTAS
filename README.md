@@ -163,7 +163,7 @@ python utils/transform_segmentation_label.py data/thumos14/gt.json data/thumos14
 ```bash
 # gtea
 # single gpu
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=1
 python main.py  --validate -c config/gtea/etesvs_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_split2.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
@@ -173,7 +173,7 @@ export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/gtea/etesvs_split1.yaml --seed 0
 
 # 50salads
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=1
 export DECORD_EOF_RETRY_MAX=20480
 python main.py  --validate -c config/50salads/etesvs_split1.yaml --seed 0
 python main.py  --validate -c config/50salads/etesvs_split2.yaml --seed 0
@@ -205,10 +205,15 @@ python main.py  --validate -c config/thumos14/etesvs.yaml  --seed 0
 ```bash
 # gtea
 python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS_gtea_split1/ETESVS_gtea_split1_best.pkl
+
+# 50salads
+python main.py  --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
 ```
 
 # Visualization
 ```bash
 # gtea
-python utils/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs
+python utils/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 120
+# 50salads
+python utils/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
 ```

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:22
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-07 16:20:40
+LastEditTime: 2022-04-08 10:39:49
 Description: model backbone script
 FilePath: /ETESVS/model/backbone.py
 '''
@@ -71,7 +71,8 @@ class ETESVSBackBone(nn.Module):
         self.backbone.init_weights()
 
     def _clear_memory_buffer(self):
-        self.apply(self._clean_activation_buffers)
+        # self.apply(self._clean_activation_buffers)
+        pass
     
     @staticmethod
     def _clean_activation_buffers(m):

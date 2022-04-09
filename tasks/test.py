@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-01 20:04:31
+LastEditTime: 2022-04-09 16:09:11
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -27,6 +27,7 @@ except:
 
 @torch.no_grad()
 def test(cfg,
+         args,
          local_rank,
          nprocs,
          use_amp=False,

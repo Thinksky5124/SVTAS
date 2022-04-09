@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 16:44:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:04:44
+LastEditTime: 2022-04-08 17:36:08
 Description: convert img function script
 FilePath: /ETESVS/utils/convert_pred2img.py
 '''
@@ -13,6 +13,7 @@ from tqdm import tqdm
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import MultipleLocator
 
 
 def get_arguments() -> argparse.Namespace:
@@ -37,6 +38,12 @@ def get_arguments() -> argparse.Namespace:
         type=str,
         help="path to output img",
         default="output"
+    )
+    parser.add_argument(
+        "--sliding_windows",
+        type=int,
+        help="sliding windows szie",
+        default=120
     )
 
     return parser.parse_args()
@@ -103,7 +110,7 @@ def main() -> None:
 
     filenames = os.listdir(args.input_dir)
 
-    vid_list = [vid.split('-')[0] for vid in filenames if vid.endswith('pred.txt')]
+    vid_list = ["-".join(vid.split('-')[:-1]) for vid in filenames if vid.endswith('pred.txt')]
 
     for vid in tqdm(vid_list, desc='label convert:'):
         gt_file_path = os.path.join(args.input_dir, vid + '-gt.txt')
@@ -120,8 +127,9 @@ def main() -> None:
         plt.title('GroundTruth')
         plt.imshow(img)
         plt.xlabel('Prediction')
+        plt.gca().xaxis.set_major_locator(MultipleLocator(args.sliding_windows))
         
-        plt.savefig(os.path.join(args.output_dir, vid + ".png"))
+        plt.savefig(os.path.join(args.output_dir, vid + ".png"), bbox_inches='tight', dpi=500)
 
 if __name__ == "__main__":
     main()

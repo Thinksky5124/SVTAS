@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-07 19:29:34
+LastEditTime: 2022-04-09 16:24:40
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -11,7 +11,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from utils.logger import get_logger, AverageMeter, log_epoch
+from utils.logger import get_logger, AverageMeter, log_epoch, tenorboard_log_epoch
 from utils.save_load import mkdir
 
 from model.etesvs import ETESVS
@@ -31,15 +31,18 @@ except:
     pass
 
 def train(cfg,
+          args,
           local_rank,
           nprocs,
           use_amp=False,
           weights=None,
-          validate=True):
+          validate=True,):
     """Train model entry
     """
     
     logger = get_logger("ETESVS")
+    if args.use_tensorboard:
+        tensorboard_writer = get_logger("ETESVS", tensorboard=args.use_tensorboard)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
 
@@ -152,7 +155,11 @@ def train(cfg,
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
                    'lr': AverageMeter('lr', 'f', need_avg=False),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f')
+                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
+                   'Acc': AverageMeter("Acc", '.5f'),
+                   'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
+                   'cls_loss': AverageMeter("cls_loss", '.5f'),
+                   'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
 
     # 7. Construct post precesing
@@ -206,12 +213,18 @@ def train(cfg,
             video_batch_size * record_dict["batch_time"].count /
             record_dict["batch_time"].sum)
         log_epoch(record_dict, epoch + 1, "train", ips, logger)
+        if args.use_tensorboard:
+            tenorboard_log_epoch(record_dict, epoch + 1, "train", writer=tensorboard_writer)
 
         def evaluate(best):
             record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f')
+                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
+                   'Acc': AverageMeter("Acc", '.5f'),
+                   'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
+                   'cls_loss': AverageMeter("cls_loss", '.5f'),
+                   'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
             runner = valRunner(logger=logger,
                 video_batch_size=video_batch_size,
@@ -246,7 +259,8 @@ def train(cfg,
                 video_batch_size * record_dict["batch_time"].count /
                 record_dict["batch_time"].sum)
             log_epoch(record_dict, epoch + 1, "val", ips, logger)
-
+            if args.use_tensorboard:
+                tenorboard_log_epoch(record_dict, epoch + 1, "val", writer=tensorboard_writer)
             return best, best_flag
 
         # 5. Validation

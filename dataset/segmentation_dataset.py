@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-07 14:26:42
+LastEditTime: 2022-04-08 15:47:41
 Description: dataset class
 FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''
@@ -194,8 +194,8 @@ class SegmentationDataset(data.IterableDataset):
                 info_proc[proces_idx] = info
 
             # construct sliding num
-            sliding_num = (max_len - self.clip_seg_num * self.sample_rate) // self.sliding_window
-            if (max_len - self.clip_seg_num * self.sample_rate) % self.sliding_window != 0:
+            sliding_num = max_len // self.sliding_window
+            if max_len % self.sliding_window != 0:
                 sliding_num = sliding_num + 1
 
             # nprocs sync
