@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 16:44:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-08 17:36:08
+LastEditTime: 2022-04-10 18:25:47
 Description: convert img function script
 FilePath: /ETESVS/utils/convert_pred2img.py
 '''
@@ -130,6 +130,7 @@ def main() -> None:
         plt.gca().xaxis.set_major_locator(MultipleLocator(args.sliding_windows))
         
         plt.savefig(os.path.join(args.output_dir, vid + ".png"), bbox_inches='tight', dpi=500)
+        plt.close()
 
 if __name__ == "__main__":
     main()

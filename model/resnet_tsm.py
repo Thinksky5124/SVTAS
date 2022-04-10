@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-08 10:51:36
+LastEditTime: 2022-04-10 16:05:21
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/resnet_tsm.py
 '''
@@ -100,29 +100,31 @@ class TemporalShift(nn.Module):
 
         # split c channel into three parts:
         # left_split, mid_split, right_split
-        left_split = x[:, :, :fold, :]
-        mid_split = x[:, :, fold:2 * fold, :]
-        right_split = x[:, :, 2 * fold:, :]
+        # left_split = x[:, :, :fold, :]
+        # mid_split = x[:, :, fold:2 * fold, :]
+        # right_split = x[:, :, 2 * fold:, :]
+        shift_split = x[:, :, :fold, :]
+        hold_split = x[:, :, fold:, :]
 
         # can't use torch.zeros(*A.shape) or torch.zeros_like(A)
         # because array on caffe inference must be got by computing
 
         # shift left on num_segments channel in `left_split`
-        zeros = left_split - left_split
+        zeros = shift_split - shift_split
         blank = zeros[:, :1, :, :]
-        left_split = left_split[:, 1:, :, :]
-        left_split = torch.cat((left_split, blank), 1)
+        shift_split = shift_split[:, 1:, :, :]
+        shift_split = torch.cat((shift_split, blank), 1)
 
         # shift right on num_segments channel in `mid_split`
-        zeros = mid_split - mid_split
-        blank = zeros[:, :1, :, :]
-        mid_split = mid_split[:, :-1, :, :]
-        mid_split = torch.cat((blank, mid_split), 1)
+        # zeros = mid_split - mid_split
+        # blank = zeros[:, :1, :, :]
+        # mid_split = mid_split[:, :-1, :, :]
+        # mid_split = torch.cat((blank, mid_split), 1)
 
         # right_split: no shift
 
         # concatenate
-        out = torch.cat((left_split, mid_split, right_split), 2)
+        out = torch.cat((shift_split, hold_split), 2)
 
         # [N, C, H, W]
         # restore the original dimension

@@ -2,11 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-09 16:09:11
+LastEditTime: 2022-04-10 20:27:38
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
 
+from select import select
 import torch
 from utils.logger import get_logger
 from .runner import testRunner
@@ -17,6 +18,8 @@ from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
 from model.post_processing import PostProcessing
+from torchinfo import summary
+import thop
 
 try:
     from apex import amp
@@ -33,7 +36,8 @@ def test(cfg,
          use_amp=False,
          weights=None):
     logger = get_logger("ETESVS")
-
+    if args.use_tensorboard:
+        tensorboard_writer = get_logger("ETESVS", tensorboard=args.use_tensorboard)
     # wheather use amp
     if use_amp is True:
         logger.info("use amp")
@@ -122,3 +126,8 @@ def test(cfg,
     if local_rank <= 0:
         # metric output
         runner.Metric.accumulate()
+        x = torch.randn(1, cfg.MODEL.neck.clip_seg_num, 3, 244, 244).cuda()
+        mask = torch.randn(1, cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate).cuda()
+        summary(model, input_size=[x.shape, mask.shape, [1]], col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
+        flops, params = thop.profile(model, inputs=(x, mask, 1))
+        print("Mult-Adds: ", flops, "Total params", params)

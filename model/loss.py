@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-08 11:22:31
+LastEditTime: 2022-04-09 19:26:26
 Description: loss function
 FilePath: /ETESVS/model/loss.py
 '''
@@ -17,10 +17,12 @@ class ETESVSLoss(nn.Module):
                  sample_rate=4,
                  seg_weight=1.0,
                  cls_weight=1.0,
+                 smooth_weight=1.0,
                  ignore_index=-100):
         super().__init__()
         self.seg_weight = seg_weight
         self.cls_weight = cls_weight
+        self.smooth_weight = smooth_weight
         self.ignore_index = ignore_index
         self.num_classes = num_classes
         self.sample_rate = sample_rate
@@ -40,7 +42,7 @@ class ETESVSLoss(nn.Module):
         for p in seg_score:
             seg_cls_loss = self.seg_ce(p.transpose(2, 1).contiguous().view(-1, self.num_classes), labels.view(-1))
             seg_loss += torch.sum(seg_cls_loss / (torch.sum(labels != -100) + self.elps))
-            seg_loss += 0.15 * torch.mean(torch.clamp(
+            seg_loss += self.smooth_weight * torch.mean(torch.clamp(
                 self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1)
                 ), min=0, max=16) * masks[:, 1:].unsqueeze(1))
 

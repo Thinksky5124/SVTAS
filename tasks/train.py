@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-09 16:24:40
+LastEditTime: 2022-04-10 14:35:14
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -121,7 +121,7 @@ def train(cfg,
     # 4. construct Pipeline
     train_Pipeline = Pipeline(**cfg.PIPELINE.train)
     val_Pipeline = Pipeline(**cfg.PIPELINE.test)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg.OPTIMIZER.step_size, gamma=cfg.OPTIMIZER.gamma)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.OPTIMIZER.step_size, gamma=cfg.OPTIMIZER.gamma)
 
     # 5. Construct Dataset
     sliding_concate_fn = BatchCompose(**cfg.COLLATE)

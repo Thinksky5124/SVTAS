@@ -2,11 +2,10 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-07 10:56:10
+LastEditTime: 2022-04-10 17:18:22
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/mstcn.py
 '''
-from turtle import forward
 import torch
 import copy
 import torch.nn as nn
@@ -41,6 +40,36 @@ class SingleStageModel(nn.Module):
         out = self.conv_out(out) * mask[:, 0:1, :]
         return out
 
+class SuperSampleStageModel(nn.Module):
+    def __init__(self,
+                 in_channels,
+                 hidden_channels):
+        super().__init__()
+        self.conv_1x1 = nn.Conv1d(in_channels, hidden_channels, 1)
+        self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
+        self.transpose_conv = nn.Sequential(
+            nn.ConvTranspose1d(hidden_channels, hidden_channels, kernel_size=2, stride=2),
+            nn.BatchNorm1d(hidden_channels),
+            nn.ReLU())
+        self.dialtion_conv_1 = nn.Sequential(
+            nn.Conv1d(hidden_channels, in_channels, kernel_size=3, padding=1, dilation=1),
+            nn.BatchNorm1d(in_channels),
+            nn.ReLU()
+        )
+        self.dialtion_conv_2 = nn.Sequential(
+            nn.Conv1d(in_channels, in_channels, kernel_size=3, padding=1, dilation=1),
+            nn.BatchNorm1d(in_channels),
+            nn.ReLU()
+        )
+    
+    def forward(self, x, masks):
+        up_x = self.upsample(x)
+        x = self.conv_1x1(x)
+        x = self.transpose_conv(x)
+        x = self.dialtion_conv_1(x)
+        x = self.dialtion_conv_2(x)
+        return (x + up_x) * masks[:, 0:1, :]
+
 
 class DilatedResidualLayer(nn.Module):
     def __init__(self, dilation, in_channels, out_channels):
@@ -56,21 +85,19 @@ class DilatedResidualLayer(nn.Module):
         return (x + out) * mask[:, 0:1, :]
 
 class SlidingDilationResidualLyaer(nn.Module):
-    def __init__(self, dilation, in_channels, out_channels, sliding_window, sample_rate):
+    def __init__(self, dilation, in_channels, out_channels):
         super(SlidingDilationResidualLyaer, self).__init__()
         self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=0, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
         self.dropout = nn.Dropout()
         self.dilation = dilation
-        self.sliding = sliding_window // sample_rate
         self.memory = None
     
     def _resert_memory(self):
         self.memory = None
     
     def _memory(self, x):
-        over_x = x[:, :, :(self.sliding + self.dilation * 2)]
-        self.memory = over_x[:, :, -(self.dilation * 2):].detach().clone()
+        self.memory = x[:, :, -(self.dilation * 2):].detach().clone()
 
     def overlap_same_padding(self, x):
         if self.memory is None:
@@ -91,11 +118,11 @@ class SlidingDilationResidualLyaer(nn.Module):
         return (x + out) * mask[:, 0:1, :]
 
 class MemoryStage(nn.Module):
-    def __init__(self, num_layers, num_f_maps, dim, num_classes, sliding_window, sample_rate):
+    def __init__(self, num_layers, num_f_maps, dim, num_classes):
         super(MemoryStage, self).__init__()
         self.conv_1x1 = nn.Conv1d(dim, num_f_maps, 1)
-        self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2**(num_layers-1-i), num_f_maps, num_f_maps, sliding_window, sample_rate)) for i in range(num_layers)])
-        # self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2 ** i, num_f_maps, num_f_maps, sliding_window, sample_rate)) for i in range(num_layers)])
+        # self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2**(num_layers-1-i), num_f_maps, num_f_maps)) for i in range(num_layers)])
+        self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2 ** i, num_f_maps, num_f_maps)) for i in range(num_layers)])
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
     
     def forward(self, x, mask):
