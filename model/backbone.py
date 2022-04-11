@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:22
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-08 10:39:49
+LastEditTime: 2022-04-11 19:15:28
 Description: model backbone script
 FilePath: /ETESVS/model/backbone.py
 '''
@@ -53,12 +53,12 @@ class ETESVSBackBone(nn.Module):
             pretrained = model_urls[depth]
 
         if name == 'ResNet':
-            self.backbone = ResNet(
+            self.model = ResNet(
                 depth=depth,
                 pretrained=pretrained
             )
         elif name == 'ResNetTSM':
-            self.backbone = ResNetTSM(
+            self.model = ResNetTSM(
                 depth=depth,
                 pretrained=pretrained,
                 clip_seg_num=clip_seg_num,
@@ -68,7 +68,7 @@ class ETESVSBackBone(nn.Module):
         self.name = name
     
     def init_weights(self):
-        self.backbone.init_weights()
+        self.model.init_weights()
 
     def _clear_memory_buffer(self):
         # self.apply(self._clean_activation_buffers)
@@ -85,4 +85,4 @@ class ETESVSBackBone(nn.Module):
             # x [N, 1, T]
             x = torch.reshape(x, [-1] + list(x.shape[2:]))
             # x [N * T, C, H, W]
-        return self.backbone(x)
+        return self.model(x)

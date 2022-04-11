@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 14:35:14
+LastEditTime: 2022-04-11 10:12:39
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -91,6 +91,7 @@ def train(cfg,
             model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
             model = DDP(model, delay_allreduce=True)
         else:
+            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model).to(device)
             model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
     # 3. build metirc

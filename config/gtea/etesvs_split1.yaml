@@ -92,7 +92,7 @@ PIPELINE: #PIPELINE field
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
-    step_size: [5, 10, 20]
+    step_size: [30]
     gamma: 0.5
 
 METRIC:

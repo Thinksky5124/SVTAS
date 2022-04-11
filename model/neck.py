@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 15:55:59
+LastEditTime: 2022-04-11 16:30:48
 Description: model neck
 FilePath: /ETESVS/model/neck.py
 '''
@@ -40,7 +40,7 @@ class ETESVSNeck(nn.Module):
         self.data_format = data_format
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.memory = MemoryCache()
+        self.memory = MemoryMovingAverageConvModule()
 
         self.dropout = nn.Dropout(p=self.drop_ratio)
         
@@ -50,7 +50,7 @@ class ETESVSNeck(nn.Module):
         pass
 
     def _clear_memory_buffer(self):
-        self.memory._resert_memory()
+        self.memory._reset_memory()
         # pass
 
     def forward(self, x, masks):
@@ -65,12 +65,12 @@ class ETESVSNeck(nn.Module):
         seg_feature = torch.reshape(seg_x, shape=[-1, self.clip_seg_num, seg_x.shape[-1]])
 
         # [N, 2048, num_segs]
-        pre_seg_feature = torch.permute(seg_feature, dims=[0, 2, 1])
+        seg_feature = torch.permute(seg_feature, dims=[0, 2, 1])
         # [N, 2048, num_segs]
-        seg_feature = self.memory(pre_seg_feature, masks)
+        seg_feature = self.memory(seg_feature, masks)
 
         # recognition branch
-        cls_feature = torch.permute(pre_seg_feature, dims=[0, 2, 1])
+        cls_feature = torch.permute(seg_feature, dims=[0, 2, 1])
         cls_feature = torch.reshape(cls_feature, shape=[-1, self.in_channel]).unsqueeze(-1).unsqueeze(-1)
         if self.dropout is not None:
             x = self.dropout(cls_feature)  # [N * num_seg, in_channels, 1, 1]
@@ -87,100 +87,81 @@ class ETESVSNeck(nn.Module):
                                shape=[-1, self.num_classes])  # [N, num_class]
         return seg_feature, cls_score
 
-class MemoryCache(nn.Module):
-    def __init__(self) -> None:
+class MemoryMovingAverageConvModule(nn.Module):
+    def __init__(self,
+                 in_channels=2048,
+                 out_channels=2048,
+                 hidden_channels=512,
+                 clip_seg_num=30):
         super().__init__()
-        self.memory_matrix_dim = 512
-        self.memory_len = 90
-        self.in_channel = 2048
+        self.memory_matrix_dim = hidden_channels
+        self.in_channel = in_channels
+        self.clip_seg_num = clip_seg_num
+        self.out_channels = out_channels
         conv_cfg = dict(type='Conv1d')
         norm_cfg = dict(type='BN1d', requires_grad=True)
-        self.reduce_x = nn.Conv1d(self.in_channel, self.memory_matrix_dim, 1)
-        self.up_x = nn.Conv1d(self.memory_matrix_dim, self.in_channel, 1)
-        self.read_att = nn.MultiheadAttention(self.memory_matrix_dim, 1, batch_first=True)
-        self.read_conv = ReadBasicBlock(self.memory_matrix_dim + self.in_channel,
-                                    self.in_channel,
-                                    dropout=0.5,
-                                    conv_cfg=conv_cfg,
-                                    norm_cfg=norm_cfg)
-        self.update_conv = BasicBlock(self.memory_matrix_dim,
+        self.reduce_conv = BasicBlock(self.in_channel,
                                      self.memory_matrix_dim,
                                      conv_cfg=conv_cfg,
-                                     norm_cfg=norm_cfg)
-        self.avg_pool = nn.AdaptiveAvgPool1d(self.memory_len)
+                                     norm_cfg=None,
+                                     downsample=ConvModule(
+                                        self.in_channel,
+                                        self.memory_matrix_dim,
+                                        kernel_size=1,
+                                        conv_cfg=conv_cfg,
+                                        act_cfg=None))
+        self.down_sample_conv_1 = nn.Sequential(
+            nn.Conv1d(self.memory_matrix_dim, self.memory_matrix_dim, 3, 1, 1),
+            nn.AvgPool1d(2, 2))
+        self.down_sample_conv_2 = nn.Sequential(
+            nn.Conv1d(self.memory_matrix_dim, self.memory_matrix_dim, 3, 1, 1),
+            nn.AvgPool1d(2, 2),
+            nn.ReLU())
+        self.conv_out = ConvModule(
+            self.memory_matrix_dim,
+            self.out_channels,
+            kernel_size=1,
+            act_cfg=None,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg)
+        self.avg_pool = nn.AdaptiveAvgPool1d(self.clip_seg_num * 2)
 
-        self.memory = None
+        self.register_buffer('memory_init', torch.Tensor(self.memory_matrix_dim, self.clip_seg_num * 2))
+        self.register_buffer('last_x_init', torch.Tensor(self.memory_matrix_dim, self.clip_seg_num))
 
-        # self.tensorboard_writer = get_logger("ETESVS", tensorboard=True)
-        # self.step = 0
+        # Initialize memory bias
+        nn.init.constant_(self.memory_init, 0)
+        nn.init.constant_(self.last_x_init, 0)
+        self.memory_reset_flag = True
 
-    def _resert_memory(self):
-        self.memory = None
+        self.tensorboard_writer = get_logger("ETESVS", tensorboard=True)
+        self.step = 0
 
-    def _write(self):
-        # write
-        # update = self.update_conv(self.last_x).transpose(1, 2)
-        cat_video_feature = torch.concat([self.memory, self.last_x.transpose(1, 2)], dim=1)
-        memory = self.avg_pool(cat_video_feature.transpose(1, 2)).transpose(1, 2)
-        self.memory = memory.detach().clone()
-        # self.tensorboard_writer.add_image('update', update.detach().cpu(), self.step)
-        return memory
-
-    def _read(self, re_x, x, memory, masks):
-        # x.shape[N, T, in_channel]
-        x_transpose = torch.permute(x, dims=[0, 2, 1])
-        # self.tensorboard_writer.add_image('x', x.detach().cpu(), self.step)
-        # read
-        out, _ = self.read_att(re_x, memory, memory)
-        
-        # [N, 4096, num_segs]
-        out_cat = torch.permute(torch.cat([x_transpose, out], dim=2), dims=[0, 2, 1])
-        
-        # self.tensorboard_writer.add_image('memory', memory.detach().cpu(), self.step)
-        
-        out = self.read_conv(out_cat, x) * masks[:, 0:1, :]
-        # self.tensorboard_writer.add_image('out', out.permute([0, 2, 1]).detach().cpu(), self.step)
-        # self.step = self.step + 1
-        return out
+    def _reset_memory(self):
+        self.memory = self.memory_init.clone()
+        self.last_x = self.last_x_init.clone()
+        self.memory_reset_flag = True
 
     def forward(self, x, masks):
         # x.shape[N, memory_matrix_dim, T]
-        re_x = self.reduce_x(x)
-        if self.memory is None:
-            self.memory = torch.zeros([x.shape[0], self.memory_len, self.memory_matrix_dim]).to(x.device)
-            memory = self.memory.detach()
-        else:
-            memory = self._write()
+        reduce_x = self.reduce_conv(x)
+        if self.memory_reset_flag is True:
+            self.memory = self.memory_init.repeat(reduce_x.shape[0], 1, 1).clone()
+            self.last_x = self.last_x_init.repeat(reduce_x.shape[0], 1, 1).clone()
+            self.memory_reset_flag = False
+        
+        moving_avg_feature = torch.cat([self.memory, self.last_x, reduce_x], dim=-1)
+        out = self.down_sample_conv_1(moving_avg_feature)
+        out = self.down_sample_conv_2(out)
+        out = self.conv_out(out)
+        out = (x + out) * masks[:, 0:1, :]
 
-        x_transpose = torch.permute(re_x, dims=[0, 2, 1])
-        self.last_x = re_x.detach().clone()
-        out = self._read(x_transpose, x, memory, masks)
-        return out
+        self.memory = self.avg_pool(torch.cat([self.memory, self.last_x], dim=-1)).detach().clone()
+        self.last_x = reduce_x.detach().clone()
 
-class ReadBasicBlock(BasicBlock):
-    def __init__(self, inplanes, planes, dropout, conv_cfg, norm_cfg):
-        super().__init__(inplanes, planes, conv_cfg=conv_cfg, norm_cfg=norm_cfg)
-        self.dropout = nn.Dropout(p=dropout)
-    
-    def forward(self, read_cat_x, raw_x):
-        """Defines the computation performed at every call.
-
-        Args:
-            x (torch.Tensor): The input data.
-
-        Returns:
-            torch.Tensor: The output of the module.
-        """
-        identity = raw_x
-
-        out = self.conv1(read_cat_x)
-        out = self.conv2(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(raw_x)
-
-        out = self.dropout(out)
-        out = out + identity
-        out = self.relu(out)
+        # self.tensorboard_writer.add_image('out', out.permute([0, 2, 1]).detach().cpu(), self.step)
+        # self.tensorboard_writer.add_image('memory', self.memory.permute([0, 2, 1]).detach().cpu(), self.step)
+        # self.tensorboard_writer.add_image('last_x', self.last_x.permute([0, 2, 1]).detach().cpu(), self.step)
+        # self.step = self.step + 1
 
         return out

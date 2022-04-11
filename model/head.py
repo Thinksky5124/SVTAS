@@ -2,19 +2,17 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 17:12:18
+LastEditTime: 2022-04-11 19:11:08
 Description: model head
 FilePath: /ETESVS/model/head.py
 '''
-from re import I
-from turtle import forward
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import copy
 from .mstcn import MemoryStage
 from .mstcn import SingleStageModel
-from .mstcn import SuperSampleStageModel
+from .mstcn import SuperSampleSingleStageModel
 
 class ETESVSHead(nn.Module):
     def __init__(self,
@@ -35,7 +33,7 @@ class ETESVSHead(nn.Module):
 
         self.seg_conv = SingleStageModel(num_layers, num_f_maps, seg_in_channels,
                                        num_classes)
-        self.spuer_conv_stages = nn.ModuleList([copy.deepcopy(SuperSampleStageModel(num_classes, num_f_maps)) for s in range(sample_rate // 2)])
+        # self.spuer_conv_stages = nn.ModuleList([copy.deepcopy(SuperSampleSingleStageModel(num_classes, num_f_maps)) for s in range(sample_rate // 2)])
         # self.seg_conv = MemoryStage(num_layers, num_f_maps, seg_in_channels,
         #                                num_classes)
 
@@ -58,14 +56,14 @@ class ETESVSHead(nn.Module):
             input=outputs,
             scale_factor=[1, self.sample_rate],
             mode="nearest")
-        for i in range(len(self.spuer_conv_stages)):
-            out = self.spuer_conv_stages[i](F.softmax(out, dim=1) * masks[:, 0:1, ::2 ** (self.sample_rate //2 - i)],
-                                            masks[:, 0:1, ::2 ** (max(self.sample_rate //2 - i - 1, 0))])
-            out_score = out.unsqueeze(0)
-            out_score = F.interpolate(
-                input=out_score,
-                scale_factor=[1, 2 ** (max(self.sample_rate //2 - i - 1, 0))],
-                mode="nearest")
-            outputs = torch.cat((outputs, out_score), dim=0)
+        # for i in range(len(self.spuer_conv_stages)):
+        #     out = self.spuer_conv_stages[i](F.softmax(out, dim=1) * masks[:, 0:1, ::2 ** (self.sample_rate //2 - i)],
+        #                                     masks[:, 0:1, ::2 ** (max(self.sample_rate //2 - i - 1, 0))])
+        #     out_score = out.unsqueeze(0)
+        #     out_score = F.interpolate(
+        #         input=out_score,
+        #         scale_factor=[1, 2 ** (max(self.sample_rate //2 - i - 1, 0))],
+        #         mode="nearest")
+        #     outputs = torch.cat((outputs, out_score), dim=0)
         seg_score = outputs
         return seg_score

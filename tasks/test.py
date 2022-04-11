@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 20:27:38
+LastEditTime: 2022-04-11 19:32:25
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -19,7 +19,8 @@ from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
 from model.post_processing import PostProcessing
 from torchinfo import summary
-import thop
+from mmcv.cnn.utils.flops_counter import get_model_complexity_info
+from thop import clever_format
 
 try:
     from apex import amp
@@ -94,8 +95,8 @@ def test(cfg,
         map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
         checkpoint = torch.load(weights, map_location=map_location)
 
-    state_dicts = checkpoint['model_state_dict']
-    model.load_state_dict(state_dicts)
+    # state_dicts = checkpoint['model_state_dict']
+    # model.load_state_dict(state_dicts)
     if use_amp is True:
         amp.load_state_dict(checkpoint['amp'])
 
@@ -126,8 +127,24 @@ def test(cfg,
     if local_rank <= 0:
         # metric output
         runner.Metric.accumulate()
-        x = torch.randn(1, cfg.MODEL.neck.clip_seg_num, 3, 244, 244).cuda()
-        mask = torch.randn(1, cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate).cuda()
+
+        # model param flops caculate
+        x_shape = [cfg.MODEL.neck.clip_seg_num, 3, 244, 244]
+        mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+        input_shape = (x_shape, mask_shape)
+        def input_constructor(input_shape):
+            x_shape, mask_shape = input_shape
+            x = torch.randn([1] + x_shape).cuda()
+            mask = torch.randn([1] + mask_shape).cuda()
+            idx = torch.randn([1] + [1]).cuda()
+            return dict(imgs=x, masks=mask, idx=idx)
+        output = input_constructor(input_shape)
+        x, mask = output["imgs"], output["masks"]
+        # tensorboard_writer.add_graph(model, input_to_model=[x, mask, torch.ones(1).cuda()])
         summary(model, input_size=[x.shape, mask.shape, [1]], col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
-        flops, params = thop.profile(model, inputs=(x, mask, 1))
-        print("Mult-Adds: ", flops, "Total params", params)
+        flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)
+        flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
+        flops, params = clever_format([flops_number, params_number], "%.3f")
+        flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.3f")
+        print("Hitp: This FLOPs is caculation by", cfg.DATASET.test.clip_seg_num, "imgs")
+        print("Per Image FLOPs:", flops_per_image, ", Total FLOPs:", flops, ", Total params", params)

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-09 16:35:49
+LastEditTime: 2022-04-10 21:57:15
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
@@ -72,7 +72,14 @@ def setup_logger(output=None, name="ETESVS", level="INFO", tensorboard=False):
         ch.setFormatter(formatter)
         logger.addHandler(ch)
         if tensorboard is True:
-            writer = SummaryWriter("output/tensorboard", comment=name)
+            idx = str(0)
+            path = os.path.join(output, "tensorboard", idx)
+            isExists = os.path.exists(path)
+            while isExists:
+                idx = str(int(idx) + 1)
+                path = os.path.join(output, "tensorboard", idx)
+                isExists = os.path.exists(path)
+            writer = SummaryWriter(path, comment=name)
 
     # file logging: all workers
     if output is not None:

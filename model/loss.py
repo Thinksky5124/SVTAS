@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-09 19:26:26
+LastEditTime: 2022-04-11 16:18:41
 Description: loss function
 FilePath: /ETESVS/model/loss.py
 '''
@@ -17,7 +17,7 @@ class ETESVSLoss(nn.Module):
                  sample_rate=4,
                  seg_weight=1.0,
                  cls_weight=1.0,
-                 smooth_weight=1.0,
+                 smooth_weight=0.15,
                  ignore_index=-100):
         super().__init__()
         self.seg_weight = seg_weight

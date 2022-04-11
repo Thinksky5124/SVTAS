@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 19:43:44
+LastEditTime: 2022-04-10 20:43:53
 Description: model postprecessing
 FilePath: /ETESVS/model/post_processing.py
 '''
@@ -46,7 +46,6 @@ class PostProcessing():
             self.video_gt[:, start_frame:end_frame] = gt.detach().cpu().numpy().copy()
             pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
             acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
-            # print('Seg_Acc', acc)
         return acc
 
     def output(self):

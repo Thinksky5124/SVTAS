@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 17:18:22
+LastEditTime: 2022-04-11 10:40:24
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/mstcn.py
 '''
@@ -40,36 +40,6 @@ class SingleStageModel(nn.Module):
         out = self.conv_out(out) * mask[:, 0:1, :]
         return out
 
-class SuperSampleStageModel(nn.Module):
-    def __init__(self,
-                 in_channels,
-                 hidden_channels):
-        super().__init__()
-        self.conv_1x1 = nn.Conv1d(in_channels, hidden_channels, 1)
-        self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
-        self.transpose_conv = nn.Sequential(
-            nn.ConvTranspose1d(hidden_channels, hidden_channels, kernel_size=2, stride=2),
-            nn.BatchNorm1d(hidden_channels),
-            nn.ReLU())
-        self.dialtion_conv_1 = nn.Sequential(
-            nn.Conv1d(hidden_channels, in_channels, kernel_size=3, padding=1, dilation=1),
-            nn.BatchNorm1d(in_channels),
-            nn.ReLU()
-        )
-        self.dialtion_conv_2 = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=3, padding=1, dilation=1),
-            nn.BatchNorm1d(in_channels),
-            nn.ReLU()
-        )
-    
-    def forward(self, x, masks):
-        up_x = self.upsample(x)
-        x = self.conv_1x1(x)
-        x = self.transpose_conv(x)
-        x = self.dialtion_conv_1(x)
-        x = self.dialtion_conv_2(x)
-        return (x + up_x) * masks[:, 0:1, :]
-
 
 class DilatedResidualLayer(nn.Module):
     def __init__(self, dilation, in_channels, out_channels):
@@ -83,6 +53,32 @@ class DilatedResidualLayer(nn.Module):
         out = self.conv_1x1(out)
         out = self.dropout(out)
         return (x + out) * mask[:, 0:1, :]
+
+
+class SuperSampleSingleStageModel(nn.Module):
+    def __init__(self,
+                 in_channels,
+                 hidden_channels):
+        super().__init__()
+        self.conv_1x1 = nn.Conv1d(in_channels, hidden_channels, 1)
+        self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
+        self.transpose_conv = nn.ConvTranspose1d(hidden_channels, hidden_channels, kernel_size=2, stride=2)
+        self.dialtion_conv_1 = nn.Conv1d(hidden_channels, in_channels, kernel_size=3, padding=1, dilation=1)
+        self.dialtion_conv_2 = nn.Sequential(
+            nn.Conv1d(in_channels, in_channels, kernel_size=3, padding=1, dilation=1),
+            nn.ReLU()
+        )
+        self.dropout = nn.Dropout()
+    
+    def forward(self, x, masks):
+        up_x = self.upsample(x)
+        x = self.conv_1x1(x)
+        x = self.transpose_conv(x)
+        x = self.dialtion_conv_1(x)
+        x = self.dialtion_conv_2(x)
+        x = self.dropout(x)
+        return (x + up_x) * masks[:, 0:1, :]
+        
 
 class SlidingDilationResidualLyaer(nn.Module):
     def __init__(self, dilation, in_channels, out_channels):
