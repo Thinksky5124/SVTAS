@@ -111,4 +111,4 @@ METRIC:
 model_name: "ETESVS_50salads_split1"
 log_interval: 3 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
-save_interval: 3
+save_interval: 10

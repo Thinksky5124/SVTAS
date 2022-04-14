@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-11 19:11:08
+LastEditTime: 2022-04-13 21:31:12
 Description: model head
 FilePath: /ETESVS/model/head.py
 '''
@@ -10,9 +10,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import copy
-from .mstcn import MemoryStage
 from .mstcn import SingleStageModel
-from .mstcn import SuperSampleSingleStageModel
+from .memory_layer import MemoryStage
 
 class ETESVSHead(nn.Module):
     def __init__(self,
@@ -31,11 +30,9 @@ class ETESVSHead(nn.Module):
         if sample_rate % 2 != 0:
             raise NotImplementedError
 
-        self.seg_conv = SingleStageModel(num_layers, num_f_maps, seg_in_channels,
-                                       num_classes)
+        self.seg_conv = SingleStageModel(num_layers, num_f_maps, seg_in_channels, num_classes)
         # self.spuer_conv_stages = nn.ModuleList([copy.deepcopy(SuperSampleSingleStageModel(num_classes, num_f_maps)) for s in range(sample_rate // 2)])
-        # self.seg_conv = MemoryStage(num_layers, num_f_maps, seg_in_channels,
-        #                                num_classes)
+        # self.seg_conv = MemoryStage(num_layers, num_f_maps, seg_in_channels, num_classes)
 
     def init_weights(self):
         pass

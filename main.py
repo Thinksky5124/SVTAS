@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-09 16:05:47
+LastEditTime: 2022-04-13 15:40:18
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -86,8 +86,7 @@ def main():
     else:
         nprocs = torch.cuda.device_count()
         # weather accelerate conv op
-        torch.backends.cudnn.benchmark = True
-
+        torch.backends.cudnn.benchmark = False
     # set seed if specified
     seed = args.seed
     if seed is not None:

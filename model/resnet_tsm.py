@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-11 16:00:35
+LastEditTime: 2022-04-13 14:25:14
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/resnet_tsm.py
 '''

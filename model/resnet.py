@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-31 14:27:11
+LastEditTime: 2022-04-13 14:47:15
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/resnet.py
 '''
@@ -532,7 +532,7 @@ class ResNet(nn.Module):
         else:
             raise TypeError('pretrained must be a str or None')
 
-    def forward(self, x):
+    def forward(self, x, masks):
         """Defines the computation performed at every call.
 
         Args:
@@ -547,7 +547,7 @@ class ResNet(nn.Module):
         outs = []
         for i, layer_name in enumerate(self.res_layers):
             res_layer = getattr(self, layer_name)
-            x = res_layer(x)
+            x = res_layer(x) * masks
             if i in self.out_indices:
                 outs.append(x)
         if len(outs) == 1:

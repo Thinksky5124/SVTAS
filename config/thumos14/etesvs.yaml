@@ -6,23 +6,20 @@ MODEL:
         clip_seg_num: 30
         shift_div: 30
     neck:
-        pos_channels: 2048
-        num_layers: 2
-        num_f_maps: 2048
-        input_dim: 2048
-        output_dim: 2048
+        num_classes: 21
+        num_layers: 8
+        out_channel: 64
+        in_channel: 2048
         clip_seg_num: 30
-        clip_buffer_num: 0
-        sliding_window: 120
+        drop_ratio: 0.5
+        sample_rate: 8
     head:
         num_classes: 21
-        num_stages: 1
         num_layers: 4
-        num_f_maps: 64
-        cls_in_channels: 2048
+        sliding_window: 240
         seg_in_channels: 2048
         sample_rate: 8
-        drop_ratio: 0.5
+        num_f_maps: 64
     loss:
         num_classes: 21
         sample_rate: 8
@@ -45,7 +42,7 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/thumos14/mapping.txt"
         dataset_type: "thumos14"
         train_mode: True
-        sliding_window: 120
+        sliding_window: 240
         clip_seg_num: 30
         sample_rate: 8
     test:
@@ -56,7 +53,7 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/thumos14/mapping.txt"
         dataset_type: "thumos14"
         train_mode: False
-        sliding_window: 120
+        sliding_window: 240
         clip_seg_num: 30
         sample_rate: 8
 
@@ -68,8 +65,8 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 8
             clip_seg_num: 30
-            sliding_window: 120
-            sample_mode: "random"
+            sliding_window: 240
+            sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             - Resize:
                 size: 256
@@ -88,7 +85,7 @@ PIPELINE: #PIPELINE field
             seg_len: 1
             sample_rate: 8
             clip_seg_num: 30
-            sliding_window: 120
+            sliding_window: 240
             sample_mode: "uniform"
         transform:
             - Resize:
@@ -102,7 +99,7 @@ PIPELINE: #PIPELINE field
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
-    step_size: 50
+    step_size: [50]
     gamma: 0.1
 
 METRIC:

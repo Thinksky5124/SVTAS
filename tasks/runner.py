@@ -122,8 +122,6 @@ class TrainRunner():
                 cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
             
                 loss = (cls_loss + seg_loss) / sliding_num
-            
-                loss = seg_loss / sliding_num
                 if self.use_amp is True:
                     with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                         scaled_loss.backward()

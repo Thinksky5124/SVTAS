@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-11 19:06:14
+LastEditTime: 2022-04-13 13:53:12
 Description: model framework
 FilePath: /ETESVS/model/etesvs.py
 '''
@@ -43,7 +43,7 @@ class ETESVS(nn.Module):
         masks = masks.unsqueeze(1)
 
         if self.backbone is not None:
-            feature = self.backbone(imgs)
+            feature = self.backbone(imgs, masks[:, :, ::self.sample_rate])
         else:
             feature = None
 

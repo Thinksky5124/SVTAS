@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-29 19:13:17
+LastEditTime: 2022-04-12 10:17:08
 Description: metric evaluate utils function
 FilePath: /ETESVS/utils/metric_utils.py
 '''
@@ -284,7 +284,7 @@ def compute_average_precision_detection(ground_truth,
         Average precision score.
     """
     ap = np.zeros(len(tiou_thresholds))
-    if prediction.empty:
+    if prediction.empty or ground_truth.empty:
         return ap
 
     npos = float(len(ground_truth))

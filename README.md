@@ -45,7 +45,7 @@ pip freeze > requirements.txt
 
 ## gtea
 
-| Model |   Param(M) | Flops(G) |   RES   |   FRAMES |  FPS |   AUC |   F1@0.5  |   mAP@0.5 |   Top1 Acc    |   pre-train  |    fine-tune   |   split-train |
+| Model |   Param(M) | Single Frame Flops(G) |   RES   |   FRAMES |  FPS |   AUC |   F1@0.5  |   mAP@0.5 |   Top1 Acc    |   pre-train  |    fine-tune   |   split-train |
 | ----- |   -----   |   -----   |   -----   |   -----   |   -----   |   -----   |   ----- |   ----- |   ----- |   ----- |   ----- |   ----- |
 | tsm |   24.380752 | 4.087136256 |   224   |   1x15  |  -   |   -  |   -  |   - |   98.86%  |  是  |   gtea    |
 | i3d+mstcn |   13.095319 | 28.6235698 |   224   |   1x15  |  -   |   82.92%  |   74.6%  |   64.45% |   -  |  -  | -   |    yes   |
@@ -153,6 +153,10 @@ std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
 ```bash
 # thumos14
 python utils/transform_segmentation_label.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --mode segmentation --fps 30
+
+# egtea
+python utils/transform_egtea_label.py data/egtea/splits_label data/egtea/verb_idx.txt data/egtea
+python utils/transform_segmentation_label.py data/egtea/egtea.json data/egtea/Videos data/egtea --mode segmentation --fps 24
 ```
 
 # Prepare Pretrain Weight
@@ -184,11 +188,12 @@ python main.py  --validate -c config/50salads/etesvs_split4.yaml --seed 0
 python main.py  --validate -c config/50salads/etesvs_split5.yaml --seed 0
 
 # multi gpu
-export CUDA_VISIBLE_DEVICES=2,3
+export CUDA_VISIBLE_DEVICES=1,3
+export DECORD_EOF_RETRY_MAX=20480
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_split1.yaml --seed 0
 
 # breakfast
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=2
 export DECORD_EOF_RETRY_MAX=20480
 python main.py  --validate -c config/breakfast/etesvs_split1.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split2.yaml  --seed 0
@@ -210,6 +215,11 @@ python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS
 
 # 50salads
 python main.py  --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
+
+export CUDA_VISIBLE_DEVICES=2,3
+export DECORD_EOF_RETRY_MAX=20480
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
+
 ```
 
 # Visualization

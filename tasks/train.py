@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-11 10:12:39
+LastEditTime: 2022-04-13 11:33:49
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -41,7 +41,7 @@ def train(cfg,
     """
     
     logger = get_logger("ETESVS")
-    if args.use_tensorboard:
+    if args.use_tensorboard and local_rank <= 0:
         tensorboard_writer = get_logger("ETESVS", tensorboard=args.use_tensorboard)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
@@ -91,7 +91,7 @@ def train(cfg,
             model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
             model = DDP(model, delay_allreduce=True)
         else:
-            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model).to(device)
+            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
             model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
     # 3. build metirc
@@ -214,7 +214,7 @@ def train(cfg,
             video_batch_size * record_dict["batch_time"].count /
             record_dict["batch_time"].sum)
         log_epoch(record_dict, epoch + 1, "train", ips, logger)
-        if args.use_tensorboard:
+        if args.use_tensorboard and local_rank <= 0:
             tenorboard_log_epoch(record_dict, epoch + 1, "train", writer=tensorboard_writer)
 
         def evaluate(best):
@@ -260,7 +260,7 @@ def train(cfg,
                 video_batch_size * record_dict["batch_time"].count /
                 record_dict["batch_time"].sum)
             log_epoch(record_dict, epoch + 1, "val", ips, logger)
-            if args.use_tensorboard:
+            if args.use_tensorboard and local_rank <= 0:
                 tenorboard_log_epoch(record_dict, epoch + 1, "val", writer=tensorboard_writer)
             return best, best_flag
 
