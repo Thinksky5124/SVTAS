@@ -207,6 +207,13 @@ python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch
 # thumos14
 export CUDA_VISIBLE_DEVICES=3
 python main.py  --validate -c config/thumos14/etesvs.yaml  --seed 0
+
+# egtea
+# single gpu
+export CUDA_VISIBLE_DEVICES=2
+python main.py  --validate -c config/egtea/etesvs_split1.yaml --seed 0
+python main.py  --validate -c config/gtea/etesvs_split2.yaml --seed 0
+python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
 ```
 # Test Model
 ```bash
