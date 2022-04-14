@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 21:31:12
+LastEditTime: 2022-04-14 17:05:32
 Description: model head
-FilePath: /ETESVS/model/head.py
+FilePath: /ETESVS/model/heads/etesvs_head.py
 '''
 import torch
 import torch.nn as nn
@@ -13,6 +13,9 @@ import copy
 from .mstcn import SingleStageModel
 from ..necks.memory_layer import MemoryStage
 
+from ..builder import HEADS
+
+@HEADS.register()
 class ETESVSHead(nn.Module):
     def __init__(self,
                  num_classes,

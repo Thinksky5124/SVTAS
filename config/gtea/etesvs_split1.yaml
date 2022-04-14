@@ -1,13 +1,16 @@
 MODEL:
+    architecture: "ETESVS"
     backbone:
         name: "ResNetTSM"
-        pretrained: True
+        pretrained: "./data/resnet50-0676ba61.pth"
         depth: 50
         clip_seg_num: 30
         shift_div: 30
     neck:
+        name: "ETESVSNeck"
         clip_seg_num: 30
     head:
+        name: "ETESVSHead"
         num_classes: 11
         num_layers: 4
         sample_rate: 4
@@ -15,6 +18,7 @@ MODEL:
         seg_in_channels: 2048
         num_f_maps: 64
     loss:
+        name: "ETESVSLoss"
         num_classes: 11
         sample_rate: 4
         seg_weight: 1.0

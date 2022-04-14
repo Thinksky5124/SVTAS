@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 21:37:15
+LastEditTime: 2022-04-14 17:06:25
 Description: model neck
-FilePath: /ETESVS/model/neck.py
+FilePath: /ETESVS/model/necks/etesvs_neck.py
 '''
 import torch
 import copy
@@ -12,6 +12,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .memory_layer import RNNConvModule
 
+from ..builder import NECKS
+
+@NECKS.register()
 class ETESVSNeck(nn.Module):
     def __init__(self,
                  num_classes=11,

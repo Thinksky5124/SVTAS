@@ -2,17 +2,20 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 13:53:12
+LastEditTime: 2022-04-14 17:17:45
 Description: model framework
-FilePath: /ETESVS/model/etesvs.py
+FilePath: /ETESVS/model/architectures/etesvs.py
 '''
 import torch
 import torch.nn as nn
 
-from ..backbones.etesvs_backbone import ETESVSBackBone
-from ..necks.etesvs_neck import ETESVSNeck
-from ..heads.etesvs_head import ETESVSHead
+from ..builder import build_backbone
+from ..builder import build_neck
+from ..builder import build_head
 
+from ..builder import ARCHITECTURE
+
+@ARCHITECTURE.register()
 class ETESVS(nn.Module):
     def __init__(self,
                  backbone=None,
@@ -20,9 +23,9 @@ class ETESVS(nn.Module):
                  head=None,
                  loss=None):
         super().__init__()
-        self.backbone = ETESVSBackBone(**backbone)
-        self.neck = ETESVSNeck(**neck)
-        self.head = ETESVSHead(**head)
+        self.backbone = build_backbone(backbone)
+        self.neck = build_neck(neck)
+        self.head = build_head(head)
         
         self.init_weights()
 
@@ -34,7 +37,7 @@ class ETESVS(nn.Module):
         self.head.init_weights()
     
     def _clear_memory_buffer(self):
-        self.backbone._clear_memory_buffer()
+        # self.backbone._clear_memory_buffer()
         self.neck._clear_memory_buffer()
         self.head._clear_memory_buffer()
 
@@ -42,8 +45,14 @@ class ETESVS(nn.Module):
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 
+        # x.shape=[N,T,C,H,W], for most commonly case
+        imgs = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
+        # x [N * T, C, H, W]
+
         if self.backbone is not None:
-            feature = self.backbone(imgs, masks[:, :, ::self.sample_rate])
+             # masks.shape [N * T, 1, 1, 1]
+            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            feature = self.backbone(imgs, backbone_masks)
         else:
             feature = None
 

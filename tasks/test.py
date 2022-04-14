@@ -2,15 +2,16 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 16:01:40
+LastEditTime: 2022-04-14 19:26:41
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
+from typing import OrderedDict
 import torch
 from utils.logger import get_logger
-from .runner import testRunner
+from .runner import Runner
 
-from model.frameworks.etesvs import ETESVS
+import model.builder as builder
 from dataset.segmentation_dataset import SegmentationDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
@@ -45,7 +46,7 @@ def test(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = ETESVS(**cfg.MODEL).cuda()
+        model = builder.build_model(cfg.MODEL).cuda()
 
         # wheather to use amp
         if use_amp is True:
@@ -54,7 +55,7 @@ def test(cfg,
         torch.cuda.set_device(local_rank)
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
-        model = ETESVS(**cfg.MODEL).cuda(local_rank)
+        model = builder.build_model(cfg.MODEL).cuda(local_rank)
     
         # wheather to use amp
         if use_amp is True:
@@ -86,27 +87,27 @@ def test(cfg,
         num_workers=test_num_workers,
         collate_fn=sliding_concate_fn)
 
-    # if local_rank < 0:
-    #     checkpoint = torch.load(weights)
-    # else:
-    #     # configure map_location properly
-    #     map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
-    #     checkpoint = torch.load(weights, map_location=map_location)
+    if local_rank < 0:
+        checkpoint = torch.load(weights)
+    else:
+        # configure map_location properly
+        map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
+        checkpoint = torch.load(weights, map_location=map_location)
 
-    # state_dicts = checkpoint['model_state_dict']
+    state_dicts = checkpoint['model_state_dict']
 
-    # if nprocs > 1:
-    #     state_dicts_new = OrderedDict()   # create new OrderedDict that does not contain `module.`
-    #     for k, v in state_dicts.items():
-    #         name = k.replace('module.', '')
-    #         state_dicts_new[name] = v
-    #     model.module.load_state_dict(state_dicts_new)
-    # else:
-    #     state_dicts_new = state_dicts
-    #     model.load_state_dict(state_dicts_new)
+    if nprocs > 1:
+        state_dicts_new = OrderedDict()   # create new OrderedDict that does not contain `module.`
+        for k, v in state_dicts.items():
+            name = k.replace('module.', '')
+            state_dicts_new[name] = v
+        model.module.load_state_dict(state_dicts_new)
+    else:
+        state_dicts_new = state_dicts
+        model.load_state_dict(state_dicts_new)
 
-    # if use_amp is True:
-    #     amp.load_state_dict(checkpoint['amp'])
+    if use_amp is True:
+        amp.load_state_dict(checkpoint['amp'])
 
     # add params to metrics
     Metric = SegmentationMetric(**cfg.METRIC)
@@ -117,7 +118,7 @@ def test(cfg,
         sliding_window=cfg.DATASET.test.sliding_window,
         sample_rate=cfg.DATASET.test.sample_rate)
 
-    runner = testRunner(logger=logger,
+    runner = Runner(logger=logger,
                 video_batch_size=video_batch_size,
                 Metric=Metric,
                 cfg=cfg,
@@ -125,16 +126,17 @@ def test(cfg,
                 post_processing=post_processing,
                 use_amp=use_amp,
                 nprocs=nprocs,
-                local_rank=local_rank)
+                local_rank=local_rank,
+                runner_mode='test')
 
     runner.epoch_init()
 
-    # for i, data in enumerate(test_dataloader):
-    #     runner.test_one_iter(data=data)
+    for i, data in enumerate(test_dataloader):
+        runner.run_one_iter(data=data)
 
     if local_rank <= 0:
         # metric output
-        # runner.Metric.accumulate()
+        runner.Metric.accumulate()
 
         # model param flops caculate
         x_shape = [cfg.MODEL.neck.clip_seg_num, 3, 244, 244]

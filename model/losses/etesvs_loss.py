@@ -2,15 +2,18 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-11 16:18:41
+LastEditTime: 2022-04-14 17:06:01
 Description: loss function
-FilePath: /ETESVS/model/loss.py
+FilePath: /ETESVS/model/losses/etesvs_loss.py
 '''
 import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
+from ..builder import LOSSES
+
+@LOSSES.register()
 class ETESVSLoss(nn.Module):
     def __init__(self,
                  num_classes,

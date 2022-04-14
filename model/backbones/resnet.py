@@ -2,10 +2,28 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 14:47:15
+LastEditTime: 2022-04-14 17:05:12
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
-FilePath: /ETESVS/model/resnet.py
+FilePath: /ETESVS/model/backbones/resnet.py
 '''
+
+# form neckwork
+# model_urls = {
+#     "resnet18": "https://download.pytorch.org/models/resnet18-f37072fd.pth",
+#     "resnet34": "https://download.pytorch.org/models/resnet34-b627a593.pth",
+#     "resnet50": "https://download.pytorch.org/models/resnet50-0676ba61.pth",
+#     "resnet101": "https://download.pytorch.org/models/resnet101-63fe2227.pth",
+#     "resnet152": "https://download.pytorch.org/models/resnet152-394f9c45.pth"
+# }
+# from local
+model_urls = {
+    18: "./data/resnet18-f37072fd.pth",
+    34: "./data/resnet34-b627a593.pth",
+    50: "./data/resnet50-0676ba61.pth",
+    101: "./dataresnet101-63fe2227.pth",
+    152: "./data/resnet152-394f9c45.pth"
+}
+
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import ConvModule, constant_init, kaiming_init
@@ -13,6 +31,8 @@ from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import _BatchNorm
 from torch.utils import checkpoint as cp
 from utils.logger import get_logger
+
+from ..builder import BACKBONES
 
 class BasicBlock(nn.Module):
     """Basic block for ResNet.
@@ -297,7 +317,7 @@ def make_res_layer(block,
 
     return nn.Sequential(*layers)
 
-
+@BACKBONES.register()
 class ResNet(nn.Module):
     """ResNet backbone.
 

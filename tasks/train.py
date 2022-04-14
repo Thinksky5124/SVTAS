@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 15:57:49
+LastEditTime: 2022-04-14 19:03:55
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -13,15 +13,14 @@ import torch
 import torch.distributed as dist
 from utils.logger import get_logger, AverageMeter, log_epoch, tenorboard_log_epoch
 from utils.save_load import mkdir
+import model.builder as builder
 
-from model.frameworks.etesvs import ETESVS
-from model.losses.etesvs_loss import ETESVSLoss
 from dataset.segmentation_dataset import SegmentationDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
 from model.post_precessings.etesvs_post_processing import PostProcessing
-from .runner import TrainRunner, valRunner
+from .runner import Runner
 
 try:
     from apex import amp
@@ -59,8 +58,8 @@ def train(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = ETESVS(**cfg.MODEL).cuda()
-        criterion = ETESVSLoss(**cfg.MODEL.loss)
+        model = builder.build_model(cfg.MODEL).cuda()
+        criterion = builder.build_loss(cfg.MODEL.loss).cuda()
 
         # 2. Construct solver.
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
@@ -75,8 +74,8 @@ def train(cfg,
         torch.cuda.set_device(local_rank)
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
-        model = ETESVS(**cfg.MODEL).cuda(local_rank)
-        criterion = ETESVSLoss(**cfg.MODEL.loss).cuda(local_rank)
+        model = builder.build_model(cfg.MODEL).cuda(local_rank)
+        criterion = builder.build_loss(cfg.MODEL.loss).cuda(local_rank)
 
         # 2. Construct solver.
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
@@ -171,7 +170,7 @@ def train(cfg,
         sample_rate=cfg.DATASET.train.sample_rate)
 
     # construct train runner
-    runner = TrainRunner(optimizer=optimizer,
+    runner = Runner(optimizer=optimizer,
                 logger=logger,
                 video_batch_size=video_batch_size,
                 Metric=Metric,
@@ -198,7 +197,7 @@ def train(cfg,
         train_dataloader.dataset._viodeo_sample_shuffle()
         r_tic = time.time()
         for i, data in enumerate(train_dataloader):
-            runner.train_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+            runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
             r_tic = time.time()
             
         if local_rank <= 0:
@@ -227,7 +226,7 @@ def train(cfg,
                    'cls_loss': AverageMeter("cls_loss", '.5f'),
                    'seg_loss': AverageMeter("seg_loss", '.5f')
                   }
-            runner = valRunner(logger=logger,
+            runner = Runner(logger=logger,
                 video_batch_size=video_batch_size,
                 Metric=Metric,
                 record_dict=record_dict,
@@ -237,14 +236,15 @@ def train(cfg,
                 post_processing=post_processing,
                 use_amp=use_amp,
                 nprocs=nprocs,
-                local_rank=local_rank)
+                local_rank=local_rank,
+                runner_mode='validation')
 
             # model logger init
             runner.epoch_init()
             r_tic = time.time()
             for i, data in enumerate(val_dataloader):
                 # videos sliding stream train
-                runner.val_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+                runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
                 r_tic = time.time()
 
             best_flag = False

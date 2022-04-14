@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 14:25:14
+LastEditTime: 2022-04-14 17:04:44
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
-FilePath: /ETESVS/model/resnet_tsm.py
+FilePath: /ETESVS/model/backbones/resnet_tsm.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
@@ -13,6 +13,8 @@ from mmcv.cnn import NonLocal3d
 from torch.nn.modules.utils import _ntuple
 
 from .resnet import ResNet
+
+from ..builder import BACKBONES
 
 
 class NL3DWrapper(nn.Module):
@@ -128,7 +130,7 @@ class TemporalShift(nn.Module):
         # restore the original dimension
         return out.view(n, c, h, w)
 
-
+@BACKBONES.register()
 class ResNetTSM(ResNet):
     """ResNet backbone for TSM.
 
