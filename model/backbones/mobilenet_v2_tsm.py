@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:39
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:28:04
+LastEditTime: 2022-04-14 19:39:33
 Description: Mobilenet V2 TSM model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2_tsm.py
 FilePath: /ETESVS/model/backbones/mobilenet_v2_tsm.py
 '''
@@ -24,9 +24,9 @@ class MobileNetV2TSM(MobileNetV2):
         **kwargs (keyword arguments, optional): Arguments for MobilNetV2.
     """
 
-    def __init__(self, num_segments=8, is_shift=True, shift_div=8, **kwargs):
+    def __init__(self, clip_seg_num=8, is_shift=True, shift_div=8, **kwargs):
         super().__init__(**kwargs)
-        self.num_segments = num_segments
+        self.num_segments = clip_seg_num
         self.is_shift = is_shift
         self.shift_div = shift_div
 

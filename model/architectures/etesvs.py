@@ -2,12 +2,15 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 17:17:45
+LastEditTime: 2022-04-14 20:02:55
 Description: model framework
 FilePath: /ETESVS/model/architectures/etesvs.py
 '''
 import torch
 import torch.nn as nn
+from mmcv.runner import load_checkpoint
+
+from utils.logger import get_logger
 
 from ..builder import build_backbone
 from ..builder import build_neck
@@ -32,9 +35,13 @@ class ETESVS(nn.Module):
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
-        self.backbone.init_weights()
-        self.neck.init_weights()
-        self.head.init_weights()
+        if isinstance(self.backbone.pretrained, str):
+            logger = logger = get_logger("ETESVS")
+            load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
+        else:
+            self.backbone.init_weights()
+            self.neck.init_weights()
+            self.head.init_weights()
     
     def _clear_memory_buffer(self):
         # self.backbone._clear_memory_buffer()

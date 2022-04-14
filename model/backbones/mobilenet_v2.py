@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:27:45
+LastEditTime: 2022-04-14 19:42:09
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath: /ETESVS/model/backbones/mobilenet_v2.py
 '''
@@ -17,6 +17,10 @@ from utils.logger import get_logger
 
 from ..builder import BACKBONES
 
+# form neckwork
+# model_urls = {
+#     "MobileNetV2": "https://download.openmmlab.com/mmclassification/v0/mobilenet_v2/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth"
+# }
 
 def make_divisible(value, divisor, min_value=None, min_ratio=0.9):
     """Make divisible function.
@@ -273,13 +277,13 @@ class MobileNetV2(nn.Module):
         else:
             raise TypeError('pretrained must be a str or None')
 
-    def forward(self, x):
+    def forward(self, x, masks):
         x = self.conv1(x)
 
         outs = []
         for i, layer_name in enumerate(self.layers):
             layer = getattr(self, layer_name)
-            x = layer(x)
+            x = layer(x) * masks
             if i in self.out_indices:
                 outs.append(x)
 

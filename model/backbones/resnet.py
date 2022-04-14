@@ -2,27 +2,19 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 17:05:12
+LastEditTime: 2022-04-14 19:58:20
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/backbones/resnet.py
 '''
 
 # form neckwork
 # model_urls = {
-#     "resnet18": "https://download.pytorch.org/models/resnet18-f37072fd.pth",
-#     "resnet34": "https://download.pytorch.org/models/resnet34-b627a593.pth",
-#     "resnet50": "https://download.pytorch.org/models/resnet50-0676ba61.pth",
-#     "resnet101": "https://download.pytorch.org/models/resnet101-63fe2227.pth",
-#     "resnet152": "https://download.pytorch.org/models/resnet152-394f9c45.pth"
+#     "resnet18": "https://download.openmmlab.com/mmclassification/v0/resnet/resnet18_8xb32_in1k_20210831-fbbb1da6.pth",
+#     "resnet34": "https://download.openmmlab.com/mmclassification/v0/resnet/resnet34_8xb32_in1k_20210831-f257d4e6.pth",
+#     "resnet50": "https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_8xb32_in1k_20210831-ea4938fc.pth",
+#     "resnet101": "https://download.openmmlab.com/mmclassification/v0/resnet/resnet101_8xb32_in1k_20210831-539c63f8.pth",
+#     "resnet152": "https://download.openmmlab.com/mmclassification/v0/resnet/resnet152_8xb32_in1k_20210901-4d7582fa.pth"
 # }
-# from local
-model_urls = {
-    18: "./data/resnet18-f37072fd.pth",
-    34: "./data/resnet34-b627a593.pth",
-    50: "./data/resnet50-0676ba61.pth",
-    101: "./dataresnet101-63fe2227.pth",
-    152: "./data/resnet152-394f9c45.pth"
-}
 
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
@@ -358,7 +350,7 @@ class ResNet(nn.Module):
     def __init__(self,
                  depth,
                  pretrained=None,
-                 torchvision_pretrain=True,
+                 torchvision_pretrain=False,
                  in_channels=3,
                  num_stages=4,
                  out_indices=(3, ),
