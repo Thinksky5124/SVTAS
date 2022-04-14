@@ -9,9 +9,9 @@ FilePath: /ETESVS/model/etesvs.py
 import torch
 import torch.nn as nn
 
-from .backbone import ETESVSBackBone
-from .neck import ETESVSNeck
-from .head import ETESVSHead
+from ..backbones.etesvs_backbone import ETESVSBackBone
+from ..necks.etesvs_neck import ETESVSNeck
+from ..heads.etesvs_head import ETESVSHead
 
 class ETESVS(nn.Module):
     def __init__(self,

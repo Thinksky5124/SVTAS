@@ -11,7 +11,7 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from .resnet import BasicBlock
+from ..backbones.resnet import BasicBlock
 from mmcv.cnn import ConvModule
 
 class RNNConvModule(nn.Module):

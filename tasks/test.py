@@ -2,21 +2,20 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 14:20:10
+LastEditTime: 2022-04-14 16:01:40
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
-from collections import OrderedDict
 import torch
 from utils.logger import get_logger
 from .runner import testRunner
 
-from model.etesvs import ETESVS
+from model.frameworks.etesvs import ETESVS
 from dataset.segmentation_dataset import SegmentationDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
-from model.post_processing import PostProcessing
+from model.post_precessings import PostProcessing
 from torchinfo import summary
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from thop import clever_format

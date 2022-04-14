@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 from .mstcn import SingleStageModel
-from .memory_layer import MemoryStage
+from ..necks.memory_layer import MemoryStage
 
 class ETESVSHead(nn.Module):
     def __init__(self,

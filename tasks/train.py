@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 11:33:49
+LastEditTime: 2022-04-14 15:57:49
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -14,13 +14,13 @@ import torch.distributed as dist
 from utils.logger import get_logger, AverageMeter, log_epoch, tenorboard_log_epoch
 from utils.save_load import mkdir
 
-from model.etesvs import ETESVS
-from model.loss import ETESVSLoss
+from model.frameworks.etesvs import ETESVS
+from model.losses.etesvs_loss import ETESVSLoss
 from dataset.segmentation_dataset import SegmentationDataset
 from utils.metric import SegmentationMetric
 from dataset.pipline import Pipeline
 from dataset.pipline import BatchCompose
-from model.post_processing import PostProcessing
+from model.post_precessings.etesvs_post_processing import PostProcessing
 from .runner import TrainRunner, valRunner
 
 try:
