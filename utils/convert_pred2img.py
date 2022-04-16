@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 16:44:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 18:25:47
+LastEditTime: 2022-04-16 22:52:49
 Description: convert img function script
 FilePath: /ETESVS/utils/convert_pred2img.py
 '''
@@ -128,6 +128,8 @@ def main() -> None:
         plt.imshow(img)
         plt.xlabel('Prediction')
         plt.gca().xaxis.set_major_locator(MultipleLocator(args.sliding_windows))
+        plt.xticks(fontsize=5)
+        plt.yticks(fontsize=3)
         
         plt.savefig(os.path.join(args.output_dir, vid + ".png"), bbox_inches='tight', dpi=500)
         plt.close()
