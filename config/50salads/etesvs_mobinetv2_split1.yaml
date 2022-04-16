@@ -61,7 +61,7 @@ DATASET: #DATASET field
         sample_rate: 20
 
 PIPELINE: #PIPELINE field
-    train: #Mandotary, indicate the pipeline to deal with the training data, associate to the 'paddlevideo/loader/pipelines/'
+    train: 
         decode:
             backend: "decord"
         sample:
@@ -112,6 +112,6 @@ METRIC:
 
 
 model_name: "ETESVS_MobileNetV2_50salads_split1"
-log_interval: 10 #Optional, the interal of logger, default:10
-epochs: 50 #Mandatory, total epoch
+log_interval: 3 #Optional, the interal of logger, default:10
+epochs: 70 #Mandatory, total epoch
 save_interval: 10

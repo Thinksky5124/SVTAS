@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:04:27
+LastEditTime: 2022-04-16 15:05:59
 Description: transform segmentation label script
 FilePath: /ETESVS/utils/transform_segmentation_label.py
 '''
@@ -36,7 +36,7 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
 
     output_dict = {}
     output_dict["fps"] = fps
-    labels_dict = []
+    labels_dict = {}
     for label_name in tqdm(label_txt_name_list, desc='label convert:'):
         label_dict = {}
         # Todos: according video format change
@@ -53,6 +53,7 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
             if before_action_name != gt[index]:
                 boundary_index_list.append(index)
                 before_action_name = gt[index]
+        boundary_index_list.append(len(gt) - 1)
         actions_list = []
         for index in range(len(boundary_index_list) - 1):
             if gt[boundary_index_list[index]] not in ignore_action_list:
@@ -62,9 +63,8 @@ def segmentation_convert_localization_label(prefix_data_path, out_path,
                 action_id = action_dict[action_name]
                 label_action_dict = {}
                 label_action_dict["label"] = action_name
-                label_action_dict["start_id"] = start_sec
+                label_action_dict["segment"] = [start_sec, end_sec]
                 label_action_dict["start_frame"] = boundary_index_list[index]
-                label_action_dict["end_id"] = end_sec
                 label_action_dict["end_frame"] = boundary_index_list[index +
                                                                      1] - 1
                 label_action_dict["label_ids"] = action_id

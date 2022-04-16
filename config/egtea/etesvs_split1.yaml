@@ -57,7 +57,7 @@ DATASET: #DATASET field
         sample_rate: 4
 
 PIPELINE: #PIPELINE field
-    train: #Mandotary, indicate the pipeline to deal with the training data, associate to the 'paddlevideo/loader/pipelines/'
+    train: 
         decode:
             backend: "decord"
         sample:

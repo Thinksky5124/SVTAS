@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 15:04:20
+LastEditTime: 2022-04-16 15:22:53
 Description: prepare video recognition data and compute image std and mean script
 FilePath: /ETESVS/utils/prepare_video_recognition_data.py
 '''
@@ -16,7 +16,7 @@ import math
 
 from tqdm import tqdm
 
-ignore_action_list = ["background", "None"]
+ignore_action_list = ["background", "None", "STL"]
 
 
 def get_video_clip_list(label, background_id, fps, total_frames):
@@ -57,7 +57,8 @@ def get_video_clip_list(label, background_id, fps, total_frames):
 
 def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
                         sample_rate, video_clip_list, action_dict,
-                        background_id, val_prob, only_norm_flag):
+                        background_id, val_prob, only_norm_flag,
+                        dataset_type):
     result_dict = {}
     result_dict["rec_label_list"] = []
     result_dict["rec_val_label_list"] = []
@@ -70,7 +71,23 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
             os.makedirs(output_path_fix)
 
     # read video
-    video_capture = cv2.VideoCapture(video_path + ".mp4")
+    if dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:
+        video_capture = cv2.VideoCapture(video_path)
+    elif dataset_type in ['breakfast']:
+        video_ptr = video_path.split('/')[-1].split('.')[0].split('_')
+        video_prefix = '/'.join(video_path.split('/')[:-1])
+        file_name = ''
+        for j in range(2):
+            if video_ptr[j] == 'stereo01':
+                video_ptr[j] = 'stereo'
+            file_name = file_name + video_ptr[j] + '/'
+        file_name = file_name + video_ptr[2] + '_' + video_ptr[3]
+        if 'stereo' in file_name:
+            file_name = file_name + '_ch0'
+        video_path = os.path.join(video_prefix, file_name)
+        video_capture = cv2.VideoCapture(video_path + ".avi")
+    else:
+        raise NotImplementedError
 
     # FPS
     # fps = video_capture.get(5)
@@ -95,12 +112,19 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
     video_mean = []
     video_std = []
     for clip_info in tqdm(video_clip_list, desc=video_name):
-        start_frame = int(np.floor(clip_info[0] * fps))
-        end_frame = int(np.floor(clip_info[1] * fps)) + 1
+        start_frame = int(np.floor(clip_info[0]))
+        end_frame = int(np.floor(clip_info[1])) + 1
         action_name = clip_info[2]
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         if action_name in ignore_action_list:
-            label_action_name = "background"
+            if dataset_type == "gtea":
+                action_name = "background"
+            elif dataset_type == "50salads":
+                action_name = "action_end"
+            elif dataset_type == "breakfast":
+                action_name = "SIL"
+            else:
+                action_name = "None"
         else:
             label_action_name = action_name
         # prepare path fix
@@ -276,6 +300,12 @@ def get_arguments():
         default=True,
         help="Only caculate video RGB mean and std.",
     )
+    parser.add_argument(
+        "--dataset_type",
+        type=str,
+        default="gtea",
+        help="sample rate of computing mean and std.",
+    )
     return parser.parse_args()
 
 
@@ -330,7 +360,7 @@ def main():
                                           video_name, fps, args.sample_rate,
                                           video_clip_list, class2id_map,
                                           background_id, args.validation_prob,
-                                          only_norm_flag)
+                                          only_norm_flag, args.dataset_type)
         label_list = result_dict["rec_label_list"]
         val_list = result_dict["rec_val_label_list"]
         mean = mean + result_dict["mean"]

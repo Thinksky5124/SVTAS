@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 13:30:17
+LastEditTime: 2022-04-16 16:43:42
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -156,8 +156,8 @@ def test(cfg,
         print('Use mmcv get_model_complexity_info function')
         flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)
         flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
-        flops, params = clever_format([flops_number, params_number], "%.3f")
-        flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.3f")
+        flops, params = clever_format([flops_number, params_number], "%.6f")
+        flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.6f")
         print("Hitp: This FLOPs is caculation by", cfg.DATASET.test.clip_seg_num, "imgs")
         print("Per Image FLOPs:", flops_per_image, ", Total FLOPs:", flops, ", Total params", params)
         print("="*20)
