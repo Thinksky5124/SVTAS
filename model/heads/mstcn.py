@@ -2,15 +2,18 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 14:01:26
+LastEditTime: 2022-04-16 13:57:47
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
-FilePath: /ETESVS/model/mstcn.py
+FilePath: /ETESVS/model/heads/mstcn.py
 '''
 import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
 
+from ..builder import HEADS
+
+@HEADS.register()
 class MultiStageModel(nn.Module):
     def __init__(self, num_stages, num_layers, num_f_maps, dim, num_classes):
         super(MultiStageModel, self).__init__()
@@ -25,7 +28,7 @@ class MultiStageModel(nn.Module):
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
         return outputs
 
-
+@HEADS.register()
 class SingleStageModel(nn.Module):
     def __init__(self, num_layers, num_f_maps, dim, num_classes):
         super(SingleStageModel, self).__init__()

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 16:58:31
+LastEditTime: 2022-04-16 13:28:50
 Description: file content
 FilePath: /ETESVS/model/backbones/__init__.py
 '''
@@ -10,8 +10,10 @@ from .resnet import ResNet
 from .resnet_tsm import ResNetTSM
 from .mobilenet_v2 import MobileNetV2
 from .mobilenet_v2_tsm import MobileNetV2TSM
+from .i3d import InceptionI3d
 
 __all__ = [
     'ResNet', 'ResNetTSM',
-    'MobileNetV2', 'MobileNetV2TSM'
+    'MobileNetV2', 'MobileNetV2TSM',
+    'InceptionI3d'
 ]
