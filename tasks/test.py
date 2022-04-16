@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 16:43:42
+LastEditTime: 2022-04-16 21:06:51
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -97,14 +97,9 @@ def test(cfg,
     state_dicts = checkpoint['model_state_dict']
 
     if nprocs > 1:
-        state_dicts_new = OrderedDict()   # create new OrderedDict that does not contain `module.`
-        for k, v in state_dicts.items():
-            name = k.replace('module.', '')
-            state_dicts_new[name] = v
-        model.module.load_state_dict(state_dicts_new)
+        model.module.load_state_dict(state_dicts)
     else:
-        state_dicts_new = state_dicts
-        model.load_state_dict(state_dicts_new)
+        model.load_state_dict(state_dicts)
 
     if use_amp is True:
         amp.load_state_dict(checkpoint['amp'])

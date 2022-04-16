@@ -43,7 +43,7 @@ pip freeze > requirements.txt
 
 # Baseline
 FSF: Flops of Single Frame(G)
-FMSF:  FLOPs of Model Single Forward(G)
+FMSF:FLOPs of Model Single Forward(G)
 
 ## other utils model
 | Model         | Param(M)  | FSF(G)        | FMSF(G)     | RES   | FRAMES | FPS |
@@ -73,7 +73,7 @@ FMSF:  FLOPs of Model Single Forward(G)
 | i3d+asformer  | 25.705986 | -             | -           | 224   |  1x64  | -   | -        | 85.1000%  | 83.4000%  | 76.0000%  | 85.6000% | 79.6000% | -        | -        | Kinetics-400 | yes         |
 | i3d+asrf      | 25.875126 | 4.09125628    | 262.302448  | 224   |  1x64  | -   | -        | 84.9000%  | 83.5000%  | 77.3000%  | 84.5000% | 79.3000% | -        | -        | Kinetics-400 | yes         |
 | i3d+mstcn     | 25.371906 | 4.086323      | 261.8104799 | 224   |  1x64  | -   | -        | 76.3000%  | 74.0000%  | 64.5000%  | 80.7000% | 67.9000% | -        | -        | Kinetics-400 | yes         |
-| mobiV2+ms     | 15.518241 | 0.01609396    | 0.402349    | 224   |  1x30  | -   | -        |  -        |  -        | -         | -        | -        | -        | -        | ImageNe1000  | no          |
+| mobiV2+ms     | 15.518241 | 0.01609396    | 0.402349    | 224   |  1x30  | -   | 77.9101% | 66.1818%  | 62.9091%  | 56.3636%  | 81.1014% | 56.2990% | 67.7964% | 42.2856% | ImageNe1000  | no          |
 | tsm+mstcn     | 25.177532 | 4.8784962     | -           | 224   |  1x30  | -   | 76.2602% | 67.1560%  | 65.3211%  | 55.4128%  | 84.2123& | 57.7032% | 66.9675% | 44.8097% | ImageNe1000  | no          |
 
 
@@ -162,7 +162,7 @@ python utils/transform_segmentation_label.py data/breakfast data/breakfast/groun
 python utils/prepare_video_recognition_data.py data/breakfast/label.json data/breakfast/Videos data/breakfast --negative_sample_num 10000 --only_norm True --fps 15 --dataset_type breakfast
 
 # thumos14
-python utils/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 1000 --only_norm True --fps 30
+python utils/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type thumos14
 ```
 
 Here releases dataset mean and std config
@@ -179,8 +179,8 @@ std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
 ```
 - breakfast:
 ```txt
-mean RGB ∶[0.5139909998345553, 0.5117725498677757，0.4798814301515671]
-std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
+mean RGB ∶[0.4245283568405083, 0.3904851168609079, 0.33709139617292494]
+std RGB :[0.26207845745959846, 0.26008439810422, 0.24623600365905168]
 ```
 - thumos14
 ```txt
@@ -272,10 +272,12 @@ python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=out
 # 50salads
 python main.py  --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
 python main.py  --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_50salads_split1/ETESVS_MobileNetV2_50salads_split1_best.pkl
+python main.py  --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/baseline/50salads_split1_baseline/ETESVS_MobileNetV2_50salads_split1_best.pkl
 
 export CUDA_VISIBLE_DEVICES=2,3
 export DECORD_EOF_RETRY_MAX=20480
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
 
 ```
 

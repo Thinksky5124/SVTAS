@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-15 18:34:24
+LastEditTime: 2022-04-16 20:56:29
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -272,12 +272,16 @@ def train(cfg,
                 best, save_best_flag = evaluate(best)
             # save best
             if save_best_flag:
+                if nprocs > 1:
+                    model_weight_dict = model.module.state_dict()
+                else:
+                    model_weight_dict = model.state_dict()
                 if use_amp is False:
-                    checkpoint = {"model_state_dict": model.state_dict(),
+                    checkpoint = {"model_state_dict": model_weight_dict,
                             "optimizer_state_dict": optimizer.state_dict(),
                             "epoch": epoch}
                 else:
-                    checkpoint = {"model_state_dict": model.state_dict(),
+                    checkpoint = {"model_state_dict": model_weight_dict,
                             "optimizer_state_dict": optimizer.state_dict(),
                             "amp": amp.state_dict(),
                             "epoch": epoch}
@@ -292,12 +296,16 @@ def train(cfg,
 
         # 6. Save model and optimizer
         if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1 and local_rank <= 0:
+            if nprocs > 1:
+                model_weight_dict = model.module.state_dict()
+            else:
+                model_weight_dict = model.state_dict()
             if use_amp is False:
-                checkpoint = {"model_state_dict": model.state_dict(),
+                checkpoint = {"model_state_dict": model_weight_dict,
                         "optimizer_state_dict": optimizer.state_dict(),
                         "epoch": epoch}
             else:
-                checkpoint = {"model_state_dict": model.state_dict(),
+                checkpoint = {"model_state_dict": model_weight_dict,
                         "optimizer_state_dict": optimizer.state_dict(),
                         "amp": amp.state_dict(),
                         "epoch": epoch}

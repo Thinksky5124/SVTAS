@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 15:22:53
+LastEditTime: 2022-04-16 22:23:19
 Description: prepare video recognition data and compute image std and mean script
 FilePath: /ETESVS/utils/prepare_video_recognition_data.py
 '''
@@ -10,6 +10,7 @@ import json
 import argparse
 import os
 import cv2
+import decord as de
 import numpy as np
 import random
 import math
@@ -54,6 +55,58 @@ def get_video_clip_list(label, background_id, fps, total_frames):
     clip_dict["background_idx"] = background_idx_list
     return clip_dict
 
+def caculate_video_std_mean(video_path, sample_rate, label_fps, dataset_type):
+    result_dict = {}
+    # read video
+    if dataset_type in ['gtea', '50salads', 'egtea']:
+        video_capture = de.VideoReader(video_path)
+    elif dataset_type in ['thumos14']:
+        video_capture = de.VideoReader(video_path + ".mp4")
+    elif dataset_type in ['breakfast']:
+        video_ptr = video_path.split('/')[-1].split('.')[0].split('_')
+        video_prefix = '/'.join(video_path.split('/')[:-1])
+        file_name = ''
+        for j in range(2):
+            if video_ptr[j] == 'stereo01':
+                video_ptr[j] = 'stereo'
+            file_name = file_name + video_ptr[j] + '/'
+        file_name = file_name + video_ptr[2] + '_' + video_ptr[3]
+        if 'stereo' in file_name:
+            file_name = file_name + '_ch0'
+        video_path = os.path.join(video_prefix, file_name)
+        video_capture = de.VideoReader(video_path + ".avi")
+    else:
+        raise NotImplementedError
+    
+    fps = label_fps
+
+    videolen = len(video_capture)
+
+    # store mean std
+    video_mean = []
+    video_std = []
+    frames_select = random.sample(range(videolen - 1), 10)
+    frames_select.sort()
+    if len(frames_select) > 0:
+        bgr_image = video_capture.get_batch(frames_select).asnumpy()
+        # caculate BGR std and mean
+        norm_imgs = np.reshape(bgr_image, (-1, 3)) / 255.0
+        action_mean = list(np.mean(norm_imgs, axis=0))
+        action_std = list(np.std(norm_imgs, axis=0))
+        video_mean.append(action_mean)
+        video_std.append(action_std)
+    else:
+        bgr_image = video_capture.get_batch([(videolen - 1)//2]).asnumpy()
+        # caculate BGR std and mean
+        norm_imgs = np.reshape(bgr_image, (-1, 3)) / 255.0
+        action_mean = list(np.mean(norm_imgs, axis=0))
+        action_std = list(np.std(norm_imgs, axis=0))
+        video_mean.append(action_mean)
+        video_std.append(action_std)
+
+    result_dict["mean"] = video_mean
+    result_dict["std"] = video_std
+    return result_dict
 
 def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
                         sample_rate, video_clip_list, action_dict,
@@ -356,17 +409,24 @@ def main():
         video_name = vid.split(".")[0]
         video_path = os.path.join(args.video_path, vid)
         video_clip_list = clips_dict[video_name]["list"]
-        result_dict = video_split_to_clip(video_path, output_path_fix,
-                                          video_name, fps, args.sample_rate,
-                                          video_clip_list, class2id_map,
-                                          background_id, args.validation_prob,
-                                          only_norm_flag, args.dataset_type)
-        label_list = result_dict["rec_label_list"]
-        val_list = result_dict["rec_val_label_list"]
-        mean = mean + result_dict["mean"]
-        std = std + result_dict["std"]
-        rec_label_list = rec_label_list + label_list
-        rec_val_label_list = rec_val_label_list + val_list
+        if only_norm_flag is False:
+            result_dict = video_split_to_clip(video_path, output_path_fix,
+                                            video_name, fps, args.sample_rate,
+                                            video_clip_list, class2id_map,
+                                            background_id, args.validation_prob,
+                                            only_norm_flag, args.dataset_type)
+            label_list = result_dict["rec_label_list"]
+            val_list = result_dict["rec_val_label_list"]
+            mean = mean + result_dict["mean"]
+            std = std + result_dict["std"]
+            rec_label_list = rec_label_list + label_list
+            rec_val_label_list = rec_val_label_list + val_list
+        elif only_norm_flag is True:
+            result_dict = caculate_video_std_mean(video_path, args.sample_rate, fps, args.dataset_type)
+            mean = mean + result_dict["mean"]
+            std = std + result_dict["std"]
+        else:
+            break
 
     if only_norm_flag is False:
         recog_content = [line + "\n" for line in rec_label_list]
@@ -379,8 +439,12 @@ def main():
         f.writelines(recog_content)
         f.close()
 
-    total_mean = list(np.mean(np.array(mean), axis=0))[::-1]
-    total_std = list(np.mean(np.array(std), axis=0))[::-1]
+    if only_norm_flag is False:
+        total_mean = list(np.mean(np.array(mean), axis=0))[::-1]
+        total_std = list(np.mean(np.array(std), axis=0))[::-1]
+    else:
+        total_mean = list(np.mean(np.array(mean), axis=0))
+        total_std = list(np.mean(np.array(std), axis=0))
     print("mean RGB :", total_mean, "std RGB :", total_std)
 
 
