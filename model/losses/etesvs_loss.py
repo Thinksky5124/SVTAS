@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 17:06:01
+LastEditTime: 2022-04-15 19:18:59
 Description: loss function
 FilePath: /ETESVS/model/losses/etesvs_loss.py
 '''
@@ -32,11 +32,11 @@ class ETESVSLoss(nn.Module):
         self.elps = 1e-10
 
         self.seg_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
-        self.cls_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index)
+        self.cls_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.ce_soft = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.mse = nn.MSELoss(reduction='none')
 
-    def forward(self, seg_score, cls_score, masks, labels):
+    def forward(self, seg_score, cls_score, frames_score, masks, labels):
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
         # labels [N, T]
@@ -52,8 +52,9 @@ class ETESVSLoss(nn.Module):
         # classification branch loss
         # hard label learning
         # [N T]
-        # ce_y = labels[:, ::self.sample_rate]
-        # cls_loss = self.cls_ce(cls_score.transpose(2, 1).contiguous().view(-1, self.num_classes), ce_y.view(-1))
+        ce_y = labels[:, ::self.sample_rate]
+        frames_score_loss = self.cls_ce(frames_score.transpose(2, 1).contiguous().view(-1, self.num_classes), ce_y.view(-1))
+        frames_cls_score_loss = torch.sum(frames_score_loss / (torch.sum(ce_y != -100) + self.elps))
 
         # smooth label learning
         with torch.no_grad():
@@ -79,6 +80,6 @@ class ETESVSLoss(nn.Module):
 
         cls_loss = torch.mean(self.ce_soft(cls_score, smooth_label) * mask)
 
-        cls_loss = self.cls_weight * cls_loss
+        cls_loss = self.cls_weight * (cls_loss + frames_cls_score_loss)
         seg_loss = self.seg_weight * seg_loss
         return cls_loss, seg_loss

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-13 14:01:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 16:10:55
+LastEditTime: 2022-04-15 17:28:19
 Description: file content
-FilePath: /ETESVS/model/memory_layer.py
+FilePath: /ETESVS/model/necks/memory_layer.py
 '''
 import math
 import torch
@@ -163,3 +163,50 @@ class MemoryStage(nn.Module):
     def _clean_buffers(m):
         if issubclass(type(m), SlidingDilationResidualLyaer):
             m._resert_memory()
+
+class LSTMEmbeddingLayer(nn.Module):
+    def __init__(self, in_channels, hidden_channels, num_classes, num_layers):
+        super().__init__()
+        self.hidden_channels = hidden_channels
+        self.in_channels = in_channels
+        self.num_classes = num_classes
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(in_channels, hidden_channels, num_layers, batch_first=True)
+        self.fc_frames_cls = nn.Linear(hidden_channels, num_classes)
+        self.seg_dropout = nn.Dropout()
+        self.cls_dropout = nn.Dropout()
+
+        # init buffer
+        self.hidden = None
+        self.cell = None
+    
+    def _reset_memory(self):
+        self.hidden = None
+        self.cell = None
+
+    def forward(self, x, masks):
+        if self.hidden is None or self.cell is None:
+            self.hidden = torch.zeros(self.num_layers, x.shape[0], self.hidden_channels).to(x.device)
+            self.cell = torch.zeros(self.num_layers, x.shape[0], self.hidden_channels).to(x.device)
+        
+        x = x.transpose(1, 2)
+        frames_feature, (hidden, cell) = self.lstm(x, (self.hidden, self.cell))
+        frames_feature = torch.permute(frames_feature, dims=[0, 2, 1])
+
+        if self.seg_dropout is not None:
+            x = self.seg_dropout(frames_feature)  # [N * num_seg, in_channels]
+        seg_feature = frames_feature + x
+
+        cls_feature = torch.reshape(frames_feature, shape=[-1, self.hidden_channels])
+        if self.cls_dropout is not None:
+            x = self.cls_dropout(cls_feature)  # [N * num_seg, in_channels]
+            
+        frames_score = self.fc_frames_cls(cls_feature)
+        # [N, num_seg, num_class]
+        frames_score = torch.reshape(
+            frames_score, [frames_feature.shape[0], -1, self.num_classes]) * masks.transpose(1, 2)
+
+        # memory
+        self.hidden = hidden.detach().clone()
+        self.cell = cell.detach().clone()
+        return seg_feature * masks[:, 0:1, :], frames_score

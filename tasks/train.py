@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:03:55
+LastEditTime: 2022-04-15 18:34:24
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -54,6 +54,7 @@ def train(cfg,
     # wheather use amp
     if use_amp is True:
         logger.info("use amp")
+        amp.register_float_function(torch.nn, 'ReLU6')
         
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

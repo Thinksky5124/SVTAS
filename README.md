@@ -43,23 +43,45 @@ pip freeze > requirements.txt
 
 # Baseline
 
+## other utils model
+| Model         | Param(M)  | Single Frame Flops(G) | RES   | FRAMES | FPS |
+| -----         | -----     |   -----               | ----- | -----  | --- |
+| bmn           | 13.095319 | 28.6235698            | 224   |  1x15  | -   |
+| i3d           | 12.298539 | 27.832209856          | 224   |  1x15  | -   |
+| ssd           | 12.298539 | 27.832209856          | 224   |  1x15  | -   |
+| asrf          | 1.3       | 1.283328              | 224   |  1x15  | -   |
+| mstcn         | 0.796780  | 0.791359944           | 224   |  1x15  | -   |
+| tsm           | 24.380752 | 4.087136256           | 224   |  1x15  | -   |
+
 ## gtea
 
-| Model |   Param(M) | Single Frame Flops(G) |   RES   |   FRAMES |  FPS |   AUC |   F1@0.5  |   mAP@0.5 |   Top1 Acc    |   pre-train  |    fine-tune   |   split-train |
-| ----- |   -----   |   -----   |   -----   |   -----   |   -----   |   -----   |   ----- |   ----- |   ----- |   ----- |   ----- |   ----- |
-| tsm |   24.380752 | 4.087136256 |   224   |   1x15  |  -   |   -  |   -  |   - |   98.86%  |  是  |   gtea    |
-| i3d+mstcn |   13.095319 | 28.6235698 |   224   |   1x15  |  -   |   82.92%  |   74.6%  |   64.45% |   -  |  -  | -   |    yes   |
-| tsm+mstcn |   25.177532 | 4.8784962 |   224   |   1x15  |  -   |   83.78%  |   91.99%  |   80.93% |   98.86%  |  ImageNet1000  |   gtea    |  yes |
-| bmn |   13.095319 | 28.6235698 |   224   |   1x15  |  -   |   -  |   74.6%  |   - |   -  |  是  | -   |    -   |
-| i3d |   12.298539 | 27.832209856 |   224   |   1x15  |  -   |   -  |   74.6%  |   - |   -  |  是  | -   |    -   |
-| ssd |   12.298539 | 27.832209856 |   224   |   1x15  |  -   |   -  |   74.6%  |   - |   -  |  是  | -   |    -   |
-| asrf |   1.3 | 1.283328 |   224   |   1x15  |  -   |   -  |   79.8%  |   - |   -  |  是  | -   |    -   |
-| mstcn |   0.796780 | 0.791359944 |   224   |   1x15  |  -   |   -  |   79.8%  |   - |   -  |  是  | -   |    -   |
+| Model         | Param(M)  | Single Frame Flops(G) | RES   | FRAMES | FPS | AUC      | F1@0.10   | F1@0.25   | F1@0.5    | Acc      | Edit     | mAP@0.5  | avgmAP   | pre-train    | split-train |
+| -----         | -----     |   -----               | ----- | -----  | --- | -----    | -----     | -----     | -----     | -----    | -----    | -----    |  -----   | -----        | -----       |
+| i3d+asformer  | -         | -                     | 224   |  1x15  | -   | -        | 90.1000%  | 88.8000%  | 79.2000%  | 79.7000% | 84.6000% | -        | -        | Kinetics-400 | yes         |
+| i3d+asrf      | 13.598539 | 29.115537856          | 224   |  1x15  | -   | -        | 89.4000%  | 87.8000%  | 79.8000%  | 77.3000% | 83.7000% | -        | -        | Kinetics-400 | yes         |
+| i3d+mstcn     | 13.095319 | 28.6235698            | 224   |  1x15  | -   | 82.9200% | 87.5000%  | 85.4000%  | 74.6000%  | 79.2000% | 81.4000% | 64.4500% | -        | Kinetics-400 | yes         |
+| mobiV2+ms     | 15.518241 | 0.402349              | 224   |  1x30  | -   | 76.5571% | 82.7839%  | 79.1209%  | 68.8645%  | 76.3886% | 75.4410% | 58.7359% | 32.7357% | ImageNet1000 | no          |
 
 ## 50salads
-| Model |   Param(M) | Flops(G) |   RES   |   FRAMES |  FPS |   AUC |   F1@0.5  |   mAP@0.5 |   Top1 Acc    |   pre-train  |    fine-tune   |   split-train |
-| ----- |   -----   |   -----   |   -----   |   -----   |   -----   |   -----   |   ----- |   ----- |   ----- |   ----- |   ----- |   ----- |
-| tsm |   24.380752 | 4.087136256 |   224   |   1x15  |  -   |   -  |   -  |   - |   98.86%  |  是  |   gtea    |
+
+| Model         | Param(M)  | Single Frame Flops(G) | RES   | FRAMES | FPS | AUC      | F1@0.10   | F1@0.25   | F1@0.5    | Acc      | Edit     | mAP@0.5  | avgmAP   | pre-train    | split-train |
+| -----         | -----     |   -----               | ----- | -----  | --- | -----    | -----     | -----     | -----     | -----    | -----    | -----    |  -----   | -----        | -----       |
+| i3d+asformer  | -         | -                     | 224   |  1x15  | -   | -        | 85.1000%  | 83.4000%  | 76.0000%  | 85.6000% | 79.6000% | -        | -        | Kinetics-400 | yes         |
+| i3d+asrf      | 13.598539 | 29.115537856          | 224   |  1x15  | -   | -        | 84.9000%  | 83.5000%  | 77.3000%  | 84.5000% | 79.3000% | -        | -        | Kinetics-400 | yes         |
+| i3d+mstcn     | 13.095319 | 28.6235698            | 224   |  1x15  | -   | -        | 76.3000%  | 74.0000%  | 64.5000%  | 80.7000% | 67.9000% | -        | -        | Kinetics-400 | yes         |
+| mobiV2+ms     | 15.518241 | 0.402349              | 224   |  1x30  | -   | -        |  -        |  -        | -         | -        | -        | -        | -        | ImageNe1000  | no          |
+| tsm+mstcn     | 25.177532 | 4.8784962             | 224   |  1x30  | -   | 76.2602% | 67.1560%  | 65.3211%  | 55.4128%  | 84.2123& | 57.7032% | 66.9675% | 44.8097% | ImageNe1000  | no          |
+
+
+## breakfast
+
+| Model         | Param(M)  | Single Frame Flops(G) | RES   | FRAMES | FPS | AUC      | F1@0.10   | F1@0.25   | F1@0.5    | Acc      | Edit     | mAP@0.5  | avgmAP   | pre-train    | split-train |
+| -----         | -----     |   -----               | ----- | -----  | --- | -----    | -----     | -----     | -----     | -----    | -----    | -----    |  -----   | -----        | -----       |
+| i3d+asformer  | -         | -                     | 224   |  1x15  | -   | -        | 76.0000%  | 70.6000%  | 57.4000%  | 73.5000% | 75.0000% | -        | -        | Kinetics-400 | yes         |
+| i3d+asrf      | 13.598539 | 29.115537856          | 224   |  1x15  | -   | -        | 75.3000%  | 68.9000%  | 56.1000%  | 67.6000% | 72.4000% | -        | -        | Kinetics-400 | yes         |
+| i3d+mstcn     | 13.095319 | 28.6235698            | 224   |  1x15  | -   | -        | 52.6000%  | 48.1000%  | 37.9000%  | 66.3000% | 61.7000% | -        | -        | Kinetics-400 | yes         |
+| i3d+ms++      | -         | -                     | 224   |  1x15  | -   | -        | 63.3000%  | 57.7000%  | 44.5000%  | 67.3000% | 64.5000% | -        | -        | Kinetics-400 | yes         |
+| mobiV2+ms     | 15.518241 | 0.402349              | 224   |  1x30  | -   | -        | -         | -         | -         | -        | -        | -        | -        | ImageNet1000 | no          |
 
 # Prepare Data
 
@@ -189,10 +211,13 @@ python main.py  --validate -c config/50salads/etesvs_split3.yaml --seed 0
 python main.py  --validate -c config/50salads/etesvs_split4.yaml --seed 0
 python main.py  --validate -c config/50salads/etesvs_split5.yaml --seed 0
 
+python main.py  --validate -c config/50salads/etesvs_mobinetv2_split1.yaml --seed 0
+
 # multi gpu
-export CUDA_VISIBLE_DEVICES=1,3
+export CUDA_VISIBLE_DEVICES=1,2
 export DECORD_EOF_RETRY_MAX=20480
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_split1.yaml --seed 0
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_mobinetv2_split1.yaml --seed 0
 
 # breakfast
 export CUDA_VISIBLE_DEVICES=2
@@ -202,9 +227,13 @@ python main.py  --validate -c config/breakfast/etesvs_split2.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split3.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split4.yaml  --seed 0
 
+python main.py  --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0
+
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_split1.yaml --seed 0
+export CUDA_VISIBLE_DEVICES=2,3
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0 --use_amp True
 
 # thumos14
 export CUDA_VISIBLE_DEVICES=3
@@ -221,9 +250,11 @@ python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
 ```bash
 # gtea
 python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS_gtea_split1/ETESVS_gtea_split1_best.pkl
+python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_gtea_split1/ETESVS_MobileNetV2_gtea_split1_best.pkl
 
 # 50salads
 python main.py  --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
+python main.py  --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_50salads_split1/ETESVS_MobileNetV2_50salads_split1_best.pkl
 
 export CUDA_VISIBLE_DEVICES=2,3
 export DECORD_EOF_RETRY_MAX=20480

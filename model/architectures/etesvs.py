@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 20:02:55
+LastEditTime: 2022-04-15 17:16:30
 Description: model framework
 FilePath: /ETESVS/model/architectures/etesvs.py
 '''
@@ -66,12 +66,13 @@ class ETESVS(nn.Module):
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, cls_score = self.neck(
+            seg_feature, cls_score, frames_score = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
             cls_score = None
+            frames_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
@@ -82,4 +83,4 @@ class ETESVS(nn.Module):
             seg_score = None
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return seg_score, cls_score
+        return seg_score, cls_score, frames_score

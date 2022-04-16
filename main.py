@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 15:40:18
+LastEditTime: 2022-04-15 18:24:12
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -18,7 +18,7 @@ from tasks.test import test
 from tasks.train import train
 
 def parse_args():
-    parser = argparse.ArgumentParser("PaddleVideo train script")
+    parser = argparse.ArgumentParser("ETESVS train script")
     parser.add_argument('-c',
                         '--config',
                         type=str,

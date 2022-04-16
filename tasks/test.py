@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:26:41
+LastEditTime: 2022-04-16 12:02:49
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -87,27 +87,27 @@ def test(cfg,
         num_workers=test_num_workers,
         collate_fn=sliding_concate_fn)
 
-    if local_rank < 0:
-        checkpoint = torch.load(weights)
-    else:
-        # configure map_location properly
-        map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
-        checkpoint = torch.load(weights, map_location=map_location)
+    # if local_rank < 0:
+    #     checkpoint = torch.load(weights)
+    # else:
+    #     # configure map_location properly
+    #     map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
+    #     checkpoint = torch.load(weights, map_location=map_location)
 
-    state_dicts = checkpoint['model_state_dict']
+    # state_dicts = checkpoint['model_state_dict']
 
-    if nprocs > 1:
-        state_dicts_new = OrderedDict()   # create new OrderedDict that does not contain `module.`
-        for k, v in state_dicts.items():
-            name = k.replace('module.', '')
-            state_dicts_new[name] = v
-        model.module.load_state_dict(state_dicts_new)
-    else:
-        state_dicts_new = state_dicts
-        model.load_state_dict(state_dicts_new)
+    # if nprocs > 1:
+    #     state_dicts_new = OrderedDict()   # create new OrderedDict that does not contain `module.`
+    #     for k, v in state_dicts.items():
+    #         name = k.replace('module.', '')
+    #         state_dicts_new[name] = v
+    #     model.module.load_state_dict(state_dicts_new)
+    # else:
+    #     state_dicts_new = state_dicts
+    #     model.load_state_dict(state_dicts_new)
 
-    if use_amp is True:
-        amp.load_state_dict(checkpoint['amp'])
+    # if use_amp is True:
+    #     amp.load_state_dict(checkpoint['amp'])
 
     # add params to metrics
     Metric = SegmentationMetric(**cfg.METRIC)
@@ -131,12 +131,12 @@ def test(cfg,
 
     runner.epoch_init()
 
-    for i, data in enumerate(test_dataloader):
-        runner.run_one_iter(data=data)
+    # for i, data in enumerate(test_dataloader):
+    #     runner.run_one_iter(data=data)
 
     if local_rank <= 0:
         # metric output
-        runner.Metric.accumulate()
+        # runner.Metric.accumulate()
 
         # model param flops caculate
         x_shape = [cfg.MODEL.neck.clip_seg_num, 3, 244, 244]

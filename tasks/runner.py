@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:25:38
+LastEditTime: 2022-04-15 17:17:47
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -154,7 +154,11 @@ class Runner():
             if self.current_step % self.cfg.get("log_interval", 10) == 0:
                 ips = "ips: {:.5f} instance/sec.".format(
                     self.video_batch_size / self.record_dict["batch_time"].val)
-                log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "train", ips, self.logger)
+                if self.runner_mode in ['train']:
+                    log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "train", ips, self.logger)
+                elif self.runner_mode in ['validation']:
+                    log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "validation", ips, self.logger)
+
             self.b_tic = time.time()
 
         self.current_step = step
@@ -169,9 +173,9 @@ class Runner():
             with self.model.no_sync():
                 # multi-gpus
                 outputs = self.model(imgs, masks, idx)
-                seg_score, cls_score = outputs
+                seg_score, cls_score, frames_score = outputs
                 if self.runner_mode in ['train', 'validation']:
-                    cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
+                    cls_loss, seg_loss = self.criterion(seg_score, cls_score, frames_score, masks, labels)
                 
                     loss = (cls_loss + seg_loss) / sliding_num
 
@@ -184,9 +188,9 @@ class Runner():
         else:
             # single gpu
             outputs = self.model(imgs, masks, idx)
-            seg_score, cls_score = outputs
+            seg_score, cls_score, frames_score = outputs
             if self.runner_mode in ['train', 'validation']:
-                cls_loss, seg_loss = self.criterion(seg_score, cls_score, masks, labels)
+                cls_loss, seg_loss = self.criterion(seg_score, cls_score, frames_score, masks, labels)
             
                 loss = (cls_loss + seg_loss) / sliding_num
 
