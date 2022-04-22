@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 20:56:29
+LastEditTime: 2022-04-20 16:36:26
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -44,6 +44,7 @@ def train(cfg,
         tensorboard_writer = get_logger("ETESVS", tensorboard=args.use_tensorboard)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
+    weight_decay = cfg.OPTIMIZER.get('weight_decay', 0.0005)
 
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)
@@ -64,7 +65,7 @@ def train(cfg,
 
         # 2. Construct solver.
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
-            betas=(0.9, 0.999), weight_decay=0.0005)
+            betas=(0.9, 0.999), weight_decay=weight_decay)
         # grad to zeros
         optimizer.zero_grad()
 
@@ -80,7 +81,7 @@ def train(cfg,
 
         # 2. Construct solver.
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
-            betas=(0.9, 0.999), weight_decay=0.0005)
+            betas=(0.9, 0.999), weight_decay=weight_decay)
         # grad to zeros
         optimizer.zero_grad()
     
@@ -159,8 +160,9 @@ def train(cfg,
                    'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                    'Acc': AverageMeter("Acc", '.5f'),
                    'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
-                   'cls_loss': AverageMeter("cls_loss", '.5f'),
-                   'seg_loss': AverageMeter("seg_loss", '.5f')
+                   'backbone_loss': AverageMeter("backbone_loss", '.5f'),
+                   'neck_loss': AverageMeter("neck_loss", '.5f'),
+                   'head_loss': AverageMeter("head_loss", '.5f')
                   }
 
     # 7. Construct post precesing
@@ -224,8 +226,9 @@ def train(cfg,
                    'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                    'Acc': AverageMeter("Acc", '.5f'),
                    'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
-                   'cls_loss': AverageMeter("cls_loss", '.5f'),
-                   'seg_loss': AverageMeter("seg_loss", '.5f')
+                   'backbone_loss': AverageMeter("backbone_loss", '.5f'),
+                   'neck_loss': AverageMeter("neck_loss", '.5f'),
+                   'head_loss': AverageMeter("head_loss", '.5f')
                   }
             runner = Runner(logger=logger,
                 video_batch_size=video_batch_size,

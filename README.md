@@ -42,8 +42,8 @@ pip freeze > requirements.txt
 ```
 
 # Baseline
-FSF: Flops of Single Frame(G)
-FMSF:FLOPs of Model Single Forward(G)
+- FSF:  Flops of Single Frame(G)
+- FMSF: FLOPs of Model Single Forward(G)
 
 ## other utils model
 | Model         | Param(M)  | FSF(G)        | FMSF(G)     | RES   | FRAMES | FPS |
@@ -247,21 +247,26 @@ python main.py  --validate -c config/breakfast/etesvs_split4.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0
 
 # multi gpu
-export CUDA_VISIBLE_DEVICES=2,3
+export CUDA_VISIBLE_DEVICES=0,1
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_split1.yaml --seed 0
-export CUDA_VISIBLE_DEVICES=2,3
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0 --use_amp True
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0
 
 # thumos14
 export CUDA_VISIBLE_DEVICES=3
 python main.py  --validate -c config/thumos14/etesvs.yaml  --seed 0
 
+# multi gpu
+export CUDA_VISIBLE_DEVICES=0,1
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/thumos14/etesvs_mobinetv2_split1.yaml --seed 0
+
+
 # egtea
 # single gpu
 export CUDA_VISIBLE_DEVICES=2
 python main.py  --validate -c config/egtea/etesvs_split1.yaml --seed 0
-python main.py  --validate -c config/gtea/etesvs_split2.yaml --seed 0
-python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
+python main.py  --validate -c config/egtea/etesvs_split2.yaml --seed 0
+python main.py  --validate -c config/egtea/etesvs_split3.yaml --seed 0
 ```
 # Test Model
 ```bash

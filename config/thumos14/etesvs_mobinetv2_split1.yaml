@@ -7,25 +7,25 @@ MODEL:
         shift_div: 30
     neck:
         name: "ETESVSNeck"
-        num_classes: 48
-        num_layers: 1
-        num_stages: 1
+        num_classes: 21
+        num_layers: 8
+        out_channel: 64
         in_channel: 1280
         clip_seg_num: 30
         drop_ratio: 0.5
-        bidirectional: False
+        sample_rate: 8
     head:
         name: "ETESVSHead"
-        num_classes: 48
-        num_layers: 4
-        sliding_window: 120
+        num_classes: 21
+        num_layers: 8
+        sliding_window: 240
         seg_in_channels: 1280
-        sample_rate: 4
+        sample_rate: 8
         num_f_maps: 64
     loss:
         name: "ETESVSLoss"
-        num_classes: 48
-        sample_rate: 4
+        num_classes: 21
+        sample_rate: 8
         seg_weight: 1.0
         cls_weight: 1.0
         ignore_index: -100
@@ -35,30 +35,30 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 4
+    video_batch_size: 2
     num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/thumos14/val_list.txt" #Mandatory, train data index file path
+        videos_path: "./data/thumos14/Videos"
+        gt_path: "./data/thumos14/groundTruth"
+        actions_map_file_path: "./data/thumos14/mapping.txt"
+        dataset_type: "thumos14"
         train_mode: True
-        sliding_window: 120
+        sliding_window: 240
         clip_seg_num: 30
-        sample_rate: 4
+        sample_rate: 8
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/thumos14/test_list.txt" #Mandatory, train data index file path
+        videos_path: "./data/thumos14/Videos"
+        gt_path: "./data/thumos14/groundTruth"
+        actions_map_file_path: "./data/thumos14/mapping.txt"
+        dataset_type: "thumos14"
         train_mode: False
-        sliding_window: 120
+        sliding_window: 240
         clip_seg_num: 30
-        sample_rate: 4
+        sample_rate: 8
 
 PIPELINE: #PIPELINE field
     train: 
@@ -66,9 +66,9 @@ PIPELINE: #PIPELINE field
             backend: "decord"
         sample:
             seg_len: 1
-            sample_rate: 4
+            sample_rate: 8
             clip_seg_num: 30
-            sliding_window: 120
+            sliding_window: 240
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             - Resize:
@@ -78,17 +78,17 @@ PIPELINE: #PIPELINE field
             - RandomHorizontalFlip:
             - ToTensor:
             - Normalize:
-                mean: [0.425, 0.390, 0.337]
-                std: [0.262, 0.260, 0.246]
+                mean: [0.385, 0.383, 0.353]
+                std: [0.258, 0.254, 0.248]
 
     test:
         decode:
             backend: "decord"
         sample:
             seg_len: 1
-            sample_rate: 4
+            sample_rate: 8
             clip_seg_num: 30
-            sliding_window: 120
+            sliding_window: 240
             sample_mode: "uniform"
         transform:
             - Resize:
@@ -97,20 +97,21 @@ PIPELINE: #PIPELINE field
                 size: 224
             - ToTensor:
             - Normalize:
-                mean: [0.425, 0.390, 0.337]
-                std: [0.262, 0.260, 0.246]
+                mean: [0.385, 0.383, 0.353]
+                std: [0.258, 0.254, 0.248]
 
 OPTIMIZER: #OPTIMIZER field
-    learning_rate: 0.001 # 4 videos * 4 gpus
+    learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
     step_size: [50]
-    gamma: 0.5
+    gamma: 0.1
 
 METRIC:
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/breakfast/mapping.txt"
+    actions_map_file_path: "./data/thumos14/mapping.txt"
+    file_output: True
 
 
-model_name: "ETESVS_MobileNetV2_breakfast_split1"
-log_interval: 10 #Optional, the interal of logger, default:10
+model_name: "ETESVS_thumos14"
+log_interval: 5 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

@@ -2,16 +2,17 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 17:05:32
+LastEditTime: 2022-04-20 13:38:48
 Description: model head
 FilePath: /ETESVS/model/heads/etesvs_head.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from mmcv.cnn import constant_init, kaiming_init
 import copy
 from .mstcn import SingleStageModel
-from ..necks.memory_layer import MemoryStage
+from .memory_tcn import MemoryCausalConvolution
 
 from ..builder import HEADS
 
@@ -35,10 +36,12 @@ class ETESVSHead(nn.Module):
 
         self.seg_conv = SingleStageModel(num_layers, num_f_maps, seg_in_channels, num_classes)
         # self.spuer_conv_stages = nn.ModuleList([copy.deepcopy(SuperSampleSingleStageModel(num_classes, num_f_maps)) for s in range(sample_rate // 2)])
-        # self.seg_conv = MemoryStage(num_layers, num_f_maps, seg_in_channels, num_classes)
+        # self.seg_conv = MemoryCausalConvolution(num_layers, num_f_maps, seg_in_channels, num_classes)
 
     def init_weights(self):
-        pass
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                kaiming_init(m)
 
     def _clear_memory_buffer(self):
         # self.seg_conv._clear_memory_buffer()

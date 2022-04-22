@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-15 17:16:30
+LastEditTime: 2022-04-21 11:50:55
 Description: model framework
 FilePath: /ETESVS/model/architectures/etesvs.py
 '''
@@ -48,7 +48,7 @@ class ETESVS(nn.Module):
         self.neck._clear_memory_buffer()
         self.head._clear_memory_buffer()
 
-    def forward(self, imgs, masks, idx):
+    def forward(self, imgs, masks, idx=None):
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 
@@ -66,21 +66,21 @@ class ETESVS(nn.Module):
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, cls_score, frames_score = self.neck(
+            seg_feature, backbone_score, neck_score = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
-            cls_score = None
-            frames_score = None
+            backbone_score = None
+            neck_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
         # cls_feature [N, F_dim, T]
         if self.head is not None:
-            seg_score = self.head(seg_feature, masks)
+            head_score = self.head(seg_feature, masks)
         else:
-            seg_score = None
+            head_score = None
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return seg_score, cls_score, frames_score
+        return backbone_score, neck_score, head_score

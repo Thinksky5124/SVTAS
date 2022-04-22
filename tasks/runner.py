@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-15 17:17:47
+LastEditTime: 2022-04-22 16:14:57
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -52,8 +52,9 @@ class Runner():
     def epoch_init(self):
         # batch videos sampler
         self.videos_loss = 0.
-        self.video_seg_loss = 0.
-        self.video_cls_loss = 0.
+        self.video_backbone_loss = 0.
+        self.video_neck_loss = 0.
+        self.video_head_loss = 0.
         self.seg_acc = 0.
         self.post_processing.init_flag = False
         self.current_step = 0
@@ -131,8 +132,9 @@ class Runner():
         if self.runner_mode in ['train', 'validation']:
             if self.nprocs > 1:
                 torch.distributed.barrier()
-                self.video_seg_loss = reduce_mean(self.video_seg_loss, self.nprocs)
-                self.video_cls_loss = reduce_mean(self.video_cls_loss, self.nprocs)
+                self.video_backbone_loss = reduce_mean(self.video_backbone_loss, self.nprocs)
+                self.video_neck_loss = reduce_mean(self.video_neck_loss, self.nprocs)
+                self.video_head_loss = reduce_mean(self.video_head_loss, self.nprocs)
 
             # logger
             if self.runner_mode in ['train']:
@@ -143,12 +145,14 @@ class Runner():
             self.record_dict['F1@0.5'].update(f1, self.video_batch_size)
             self.record_dict['Acc'].update(acc, self.video_batch_size)
             self.record_dict['Seg_Acc'].update(self.seg_acc, self.video_batch_size)
-            self.record_dict['cls_loss'].update(self.video_cls_loss.item(), self.video_batch_size)
-            self.record_dict['seg_loss'].update(self.video_seg_loss.item(), self.video_batch_size)
+            self.record_dict['backbone_loss'].update(self.video_backbone_loss.item(), self.video_batch_size)
+            self.record_dict['neck_loss'].update(self.video_neck_loss.item(), self.video_batch_size)
+            self.record_dict['head_loss'].update(self.video_head_loss.item(), self.video_batch_size)
 
             self.videos_loss = 0.
-            self.video_seg_loss = 0.
-            self.video_cls_loss = 0.
+            self.video_backbone_loss = 0.
+            self.video_neck_loss = 0.
+            self.video_head_loss = 0.
             self.seg_acc = 0.
 
             if self.current_step % self.cfg.get("log_interval", 10) == 0:
@@ -173,11 +177,11 @@ class Runner():
             with self.model.no_sync():
                 # multi-gpus
                 outputs = self.model(imgs, masks, idx)
-                seg_score, cls_score, frames_score = outputs
+                backbone_score, neck_score, head_score = outputs
                 if self.runner_mode in ['train', 'validation']:
-                    cls_loss, seg_loss = self.criterion(seg_score, cls_score, frames_score, masks, labels)
+                    backone_loss, neck_loss, head_loss = self.criterion(backbone_score, neck_score, head_score, masks, labels)
                 
-                    loss = (cls_loss + seg_loss) / sliding_num
+                    loss = (backone_loss + neck_loss + head_loss) / sliding_num
 
                     if self.runner_mode in ['train']:
                         if self.use_amp is True:
@@ -188,11 +192,11 @@ class Runner():
         else:
             # single gpu
             outputs = self.model(imgs, masks, idx)
-            seg_score, cls_score, frames_score = outputs
+            backbone_score, neck_score, head_score= outputs
             if self.runner_mode in ['train', 'validation']:
-                cls_loss, seg_loss = self.criterion(seg_score, cls_score, frames_score, masks, labels)
+                backone_loss, neck_loss, head_loss = self.criterion(backbone_score, neck_score, head_score, masks, labels)
             
-                loss = (cls_loss + seg_loss) / sliding_num
+                loss = (backone_loss + neck_loss + head_loss) / sliding_num
 
                 if self.runner_mode in ['train']:
                     if self.use_amp is True:
@@ -201,17 +205,29 @@ class Runner():
                     else:
                         loss.backward()
 
+        # neck_score = neck_score.unsqueeze(0)
+        # neck_score = torch.nn.functional.interpolate(
+        #     input=neck_score,
+        #     scale_factor=[1, 4],
+        #     mode="nearest")
+        # backbone_score = backbone_score.unsqueeze(0)
+        # backbone_score = torch.nn.functional.interpolate(
+        #     input=backbone_score,
+        #     scale_factor=[1, 4],
+        #     mode="nearest")
+            
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
                 self.post_processing.init_scores(sliding_num, len(vid_list))
                 self.current_step_vid_list = vid_list
-            self.seg_acc += self.post_processing.update(seg_score, labels, idx) / sliding_num
+            self.seg_acc += self.post_processing.update(head_score, labels, idx) / sliding_num
 
             if self.runner_mode in ['train', 'validation']:
                 # logger loss
                 self.videos_loss = self.videos_loss + loss.detach().clone()
-                self.video_seg_loss = self.video_seg_loss + seg_loss.detach().clone() / sliding_num
-                self.video_cls_loss = self.video_cls_loss + cls_loss.detach().clone() / sliding_num
+                self.video_backbone_loss = self.video_backbone_loss + backone_loss.detach().clone() / sliding_num
+                self.video_neck_loss = self.video_neck_loss + neck_loss.detach().clone() / sliding_num
+                self.video_head_loss = self.video_head_loss + head_loss.detach().clone() / sliding_num
 
     def run_one_iter(self, data, r_tic=None, epoch=None):
         # videos sliding stream train

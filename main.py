@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-15 18:24:12
+LastEditTime: 2022-04-18 16:33:13
 Description: main script
 FilePath: /ETESVS/main.py
 '''
@@ -82,11 +82,11 @@ def main():
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
         nprocs = 1
-        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.benchmark = True
     else:
         nprocs = torch.cuda.device_count()
         # weather accelerate conv op
-        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.benchmark = True
     # set seed if specified
     seed = args.seed
     if seed is not None:
