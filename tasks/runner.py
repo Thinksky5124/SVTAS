@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-22 16:14:57
+LastEditTime: 2022-04-22 21:38:20
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -10,7 +10,10 @@ import torch
 import time
 from utils.logger import log_batch
 import torch.distributed as dist
-from apex import amp
+try:
+    from apex import amp
+except:
+    pass
 
 def reduce_mean(tensor, nprocs):
     rt = tensor.clone()

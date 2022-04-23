@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-22 20:39:15
+LastEditTime: 2022-04-22 23:04:11
 Description: loss function
 FilePath: /ETESVS/model/losses/etesvs_loss.py
 '''
@@ -54,7 +54,7 @@ class ETESVSLoss(nn.Module):
         # neck label learning
         neck_cls_loss = self.neck_ce(neck_score.transpose(2, 1).contiguous().view(-1, self.num_classes), labels[:, ::self.sample_rate].view(-1))
         neck_cls_score_loss = torch.sum(neck_cls_loss / (torch.sum(labels[:, ::self.sample_rate] != -100) + self.elps))
-        neck_cls_score_loss += 0.2 * self.neck_frame_num_loss(neck_score, labels[:, ::self.sample_rate], masks[:, ::self.sample_rate])
+        # neck_cls_score_loss += 0.4 * self.neck_frame_num_loss(neck_score, labels[:, ::self.sample_rate], masks[:, ::self.sample_rate])
 
         # segmentation branch loss
         seg_loss = 0.

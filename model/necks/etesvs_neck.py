@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-22 21:27:18
+LastEditTime: 2022-04-23 14:27:42
 Description: model neck
 FilePath: /ETESVS/model/necks/etesvs_neck.py
 '''
@@ -12,6 +12,7 @@ import random
 import torch.nn as nn
 import torch.nn.functional as F
 from .memory_layer import LSTMResidualLayer
+from .memory_layer import CausalConvEncoderDecoder
 
 from ..builder import NECKS
 
@@ -38,11 +39,13 @@ class ETESVSNeck(nn.Module):
         self.maxpool = nn.AdaptiveMaxPool1d(1)
         self.softmax = nn.Softmax(dim=1)
         self.softmax_neck_score = nn.Softmax(dim=-1)
-        self.rnn_conv = LSTMResidualLayer(self.in_channel, self.in_channel, self.num_classes, self.num_layers,
-                                dropout=self.drop_ratio, bidirectional=self.bidirectional)
+        self.rnn_conv = CausalConvEncoderDecoder(self.in_channel, self.in_channel)
+        # self.rnn_conv = LSTMResidualLayer(self.in_channel, self.in_channel, self.num_classes, self.num_layers,
+        #                         dropout=self.drop_ratio, bidirectional=self.bidirectional)
+        self.neck_cls = nn.Conv1d(self.in_channel, self.num_classes, 1)
 
-        self.dropout = nn.Dropout(p=self.drop_ratio)
-        self.temporal_dropout = nn.Dropout(p=self.drop_ratio)
+        self.backbone_dropout = nn.Dropout(p=self.drop_ratio)
+        self.neck_dropout = nn.Dropout(p=self.drop_ratio)
         
         self.fc = nn.Linear(self.in_channel, num_classes)
 
@@ -56,12 +59,7 @@ class ETESVSNeck(nn.Module):
     def forward(self, x, masks):
         # x.shape = [N * num_segs, 2048, 7, 7]
         # masks.shape = [N, T]
-        t_x = torch.reshape(x, shape=[-1, self.clip_seg_num] + list(x.shape[-3:]))
-
-        # memory branch
-        # [N, 2048, num_segs]
-        seg_feature, neck_score = self.rnn_conv(t_x, masks)
-        neck_score = torch.permute(neck_score, dims=[0, 2, 1])
+        # t_x = torch.reshape(x, shape=[-1, self.clip_seg_num] + list(x.shape[-3:]))
 
         # x.shape = [N * num_segs, 2048, 1, 1]
         x = self.avgpool(x)
@@ -78,11 +76,20 @@ class ETESVSNeck(nn.Module):
         # recognition branch
         cls_feature = torch.permute(feature, dims=[0, 2, 1])
         cls_feature = torch.reshape(cls_feature, shape=[-1, self.in_channel])
-        if self.dropout is not None:
-            x = self.dropout(cls_feature)  # [N * num_seg, in_channels]
+        if self.backbone_dropout is not None:
+            x = self.backbone_dropout(cls_feature)  # [N * num_seg, in_channels]
 
         score = self.fc(x)  # [N * num_seg, num_class]
         backbone_score = torch.reshape(
             score, [-1, self.clip_seg_num, score.shape[1]]).permute([0, 2, 1])  # [N, num_class, num_seg]
+        
+        # memory branch
+        # [N, 2048, num_segs]
+        seg_feature = self.rnn_conv(feature, masks)
+        if self.neck_dropout is not None:
+            seg_feature = self.neck_dropout(seg_feature)
+
+        neck_score = self.neck_cls(seg_feature)
+        neck_score = torch.permute(neck_score, dims=[0, 2, 1])
         
         return seg_feature, backbone_score, neck_score
