@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 14:26:26
+LastEditTime: 2022-04-25 21:57:52
 Description: dataset class
 FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''

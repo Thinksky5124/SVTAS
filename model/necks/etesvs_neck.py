@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 20:26:51
+LastEditTime: 2022-04-25 23:12:06
 Description: model neck
 FilePath: /ETESVS/model/necks/etesvs_neck.py
 '''
@@ -41,13 +41,13 @@ class ETESVSNeck(nn.Module):
         
         self.backbone_avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.neck_avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.rnn_conv = ConvLSTMResidualLayer(self.seg_in_channel, self.seg_hidden_channel, self.num_classes, self.num_layers,
-                                dropout=self.drop_ratio, bidirectional=self.bidirectional)
-        self.neck_cls = nn.Conv1d(self.seg_hidden_channel, self.num_classes, 1)
+        # self.rnn_conv = ConvLSTMResidualLayer(self.seg_in_channel, self.seg_hidden_channel, self.num_classes, self.num_layers,
+        #                         dropout=self.drop_ratio, bidirectional=self.bidirectional)
+        # self.neck_cls = nn.Conv1d(self.seg_hidden_channel, self.num_classes, 1)
 
         self.backbone_dropout = nn.Dropout(p=self.drop_ratio)
         self.neck_dropout = nn.Dropout(p=self.drop_ratio)
-        self.neck_cls_dropout = nn.Dropout(p=self.drop_ratio)
+        # self.neck_cls_dropout = nn.Dropout(p=self.drop_ratio)
         
         self.backbone_cls_conv = nn.Conv1d(self.cls_hidden_channel, self.seg_hidden_channel, 1)
         self.backbone_cls_fc_2 = nn.Linear(self.seg_hidden_channel, num_classes)
@@ -58,8 +58,8 @@ class ETESVSNeck(nn.Module):
                 kaiming_init(m)
 
     def _clear_memory_buffer(self):
-        self.rnn_conv._reset_memory()
-        # pass
+        # self.rnn_conv._reset_memory()
+        pass
 
     def forward(self, x, masks):
         # x.shape = [N * num_segs, 320, 7, 7] [N * num_segs, 1280, 7, 7]
@@ -86,34 +86,35 @@ class ETESVSNeck(nn.Module):
 
         # segmentation feature branch
         # masks.shape = [N, T]
-        seg_feature = torch.reshape(seg_feature, shape=[-1, self.clip_seg_num] + list(seg_feature.shape[-3:]))
+        # seg_feature = torch.reshape(seg_feature, shape=[-1, self.clip_seg_num] + list(seg_feature.shape[-3:]))
 
-        # memory branch
-        # [N, num_segs, 1280, 7, 7]
-        spatio_temporal_feature = self.rnn_conv(seg_feature, masks)
+        # # memory branch
+        # # [N, num_segs, 1280, 7, 7]
+        # spatio_temporal_feature = self.rnn_conv(seg_feature, masks)
 
-        spatio_temporal_feature = torch.reshape(spatio_temporal_feature, shape=[-1] + list(seg_feature.shape[-3:]))
-        # seg_feature_pool.shape = [N * num_segs, 1280, 1, 1]
-        spatio_temporal_feature_pool = self.neck_avgpool(spatio_temporal_feature)
+        # spatio_temporal_feature = torch.reshape(spatio_temporal_feature, shape=[-1] + list(seg_feature.shape[-3:]))
+        # # seg_feature_pool.shape = [N * num_segs, 1280, 1, 1]
+        # spatio_temporal_feature_pool = self.neck_avgpool(spatio_temporal_feature)
 
-        # seg_feature_pool.shape = [N, num_segs, 1280, 1, 1]
-        spatio_temporal_feature_pool = torch.reshape(spatio_temporal_feature_pool, shape=[-1, self.clip_seg_num] + list(spatio_temporal_feature_pool.shape[-3:]))
+        # # seg_feature_pool.shape = [N, num_segs, 1280, 1, 1]
+        # spatio_temporal_feature_pool = torch.reshape(spatio_temporal_feature_pool, shape=[-1, self.clip_seg_num] + list(spatio_temporal_feature_pool.shape[-3:]))
 
-        # segmentation feature branch
-        # [N, num_segs, 2048]
-        spatio_temporal_feature_pool = spatio_temporal_feature_pool.squeeze(-1).squeeze(-1)
-        # [N, 2048, num_segs]
-        spatio_temporal_feature_pool = torch.permute(spatio_temporal_feature_pool, dims=[0, 2, 1])
-        if self.neck_cls_dropout is not None:
-            spatio_temporal_feature_pool_dropout = self.neck_cls_dropout(spatio_temporal_feature_pool)  # [N, num_segs, 2048]
+        # # segmentation feature branch
+        # # [N, num_segs, 2048]
+        # spatio_temporal_feature_pool = spatio_temporal_feature_pool.squeeze(-1).squeeze(-1)
+        # # [N, 2048, num_segs]
+        # spatio_temporal_feature_pool = torch.permute(spatio_temporal_feature_pool, dims=[0, 2, 1])
+        # if self.neck_cls_dropout is not None:
+        #     spatio_temporal_feature_pool_dropout = self.neck_cls_dropout(spatio_temporal_feature_pool)  # [N, num_segs, 2048]
 
-        # [N, num_seg, num_class]
-        neck_score = self.neck_cls(spatio_temporal_feature_pool_dropout) 
+        # # [N, num_seg, num_class]
+        # neck_score = self.neck_cls(spatio_temporal_feature_pool_dropout)
 
         # [N D T]
-        seg_feature = (backbone_feature + spatio_temporal_feature_pool).contiguous() * masks[:, 0:1, :]
+        # seg_feature = (backbone_feature + spatio_temporal_feature_pool).contiguous() * masks[:, 0:1, :]
+        seg_feature = backbone_feature.contiguous() * masks[:, 0:1, :]
         
         if self.neck_dropout is not None:
             seg_feature = self.neck_dropout(seg_feature)
 
-        return seg_feature, backbone_score, neck_score
+        return seg_feature, backbone_score, None

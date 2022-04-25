@@ -2,8 +2,8 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-21 11:50:55
-Description: model framework
+LastEditTime: 2022-04-25 21:06:38
+Description: etesvs model framework
 FilePath: /ETESVS/model/architectures/etesvs.py
 '''
 import torch

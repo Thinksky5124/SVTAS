@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 20:43:55
+LastEditTime: 2022-04-25 23:06:07
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -52,12 +52,31 @@ class Runner():
         assert runner_mode in ['train', 'validation', 'test'], "Not support this runner mode: " + runner_mode
         self.runner_mode = runner_mode
     
+    def _init_loss_dict(self):
+        self.loss_dict = {}
+        for key, _ in self.record_dict.items():
+            if key.endswith("loss"):
+                self.loss_dict[key] = 0.
+    
+    def _update_loss_dict(self, input_loss_dict, sliding_num):
+        for key, _ in self.loss_dict.items():
+            if key == "loss":
+                self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone()
+            else:
+                self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone() / sliding_num
+    
+    def _distribute_sync_loss_dict(self):
+        for key, value in self.loss_dict.items():
+            if key != "loss":
+                self.loss_dict[key] = reduce_mean(value, self.nprocs)
+
+    def _log_loss_dict(self):
+        for key, value in self.loss_dict.items(): 
+            self.record_dict[key].update(value.item(), self.video_batch_size)
+
     def epoch_init(self):
         # batch videos sampler
-        self.videos_loss = 0.
-        self.video_backbone_loss = 0.
-        self.video_neck_loss = 0.
-        self.video_head_loss = 0.
+        self._init_loss_dict()
         self.seg_acc = 0.
         self.post_processing.init_flag = False
         self.current_step = 0
@@ -135,27 +154,19 @@ class Runner():
         if self.runner_mode in ['train', 'validation']:
             if self.nprocs > 1:
                 torch.distributed.barrier()
-                self.video_backbone_loss = reduce_mean(self.video_backbone_loss, self.nprocs)
-                self.video_neck_loss = reduce_mean(self.video_neck_loss, self.nprocs)
-                self.video_head_loss = reduce_mean(self.video_head_loss, self.nprocs)
+                self._distribute_sync_loss_dict()
 
             # logger
             if self.runner_mode in ['train']:
                 self.record_dict['lr'].update(self.optimizer.state_dict()['param_groups'][0]['lr'], self.video_batch_size)
             
-            self.record_dict['loss'].update(self.videos_loss.item(), self.video_batch_size)
+            self._log_loss_dict()
             self.record_dict['batch_time'].update(time.time() - self.b_tic)
             self.record_dict['F1@0.5'].update(f1, self.video_batch_size)
             self.record_dict['Acc'].update(acc, self.video_batch_size)
             self.record_dict['Seg_Acc'].update(self.seg_acc, self.video_batch_size)
-            self.record_dict['backbone_loss'].update(self.video_backbone_loss.item(), self.video_batch_size)
-            self.record_dict['neck_loss'].update(self.video_neck_loss.item(), self.video_batch_size)
-            self.record_dict['head_loss'].update(self.video_head_loss.item(), self.video_batch_size)
 
-            self.videos_loss = 0.
-            self.video_backbone_loss = 0.
-            self.video_neck_loss = 0.
-            self.video_head_loss = 0.
+            self._init_loss_dict()
             self.seg_acc = 0.
 
             if self.current_step % self.cfg.get("log_interval", 10) == 0:
@@ -169,53 +180,48 @@ class Runner():
             self.b_tic = time.time()
 
         self.current_step = step
-
-    def run_one_clip(self, imgs, labels, masks, vid_list, sliding_num, idx):
+    
+    def _model_forward(self, imgs, labels, masks, idx, sliding_num):
         # move data
         imgs = imgs.cuda()
         masks = masks.cuda()
         labels = labels.cuda()
+
+        outputs = self.model(imgs, masks, idx)
+        backbone_score, neck_score, head_score = outputs
+        if self.runner_mode in ['train', 'validation']:
+            backbone_loss, neck_loss, head_loss = self.criterion(backbone_score, neck_score, head_score, masks, labels)
+        
+            loss = (backbone_loss + head_loss) / sliding_num
+            # loss = (backone_loss + neck_loss + head_loss) / sliding_num
+
+            if self.runner_mode in ['train']:
+                if self.use_amp is True:
+                    with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+
+        loss_dict={}
+        loss_dict["loss"] = loss
+        loss_dict["backbone_loss"] = backbone_loss
+        loss_dict["neck_loss"] = neck_loss
+        loss_dict["head_loss"] = head_loss
+        return head_score, loss_dict
+
+    def run_one_clip(self, imgs, labels, masks, vid_list, sliding_num, idx):
         # train segment
         if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
-                outputs = self.model(imgs, masks, idx)
-                backbone_score, neck_score, head_score = outputs
-                if self.runner_mode in ['train', 'validation']:
-                    backone_loss, neck_loss, head_loss = self.criterion(backbone_score, neck_score, head_score, masks, labels)
-                
-                    loss = (backone_loss + neck_loss + head_loss) / sliding_num
-
-                    if self.runner_mode in ['train']:
-                        if self.use_amp is True:
-                            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
+                score, loss_dict = self._model_forward(imgs, labels, masks, idx, sliding_num)
         else:
             # single gpu
-            outputs = self.model(imgs, masks, idx)
-            backbone_score, neck_score, head_score= outputs
-            if self.runner_mode in ['train', 'validation']:
-                backone_loss, neck_loss, head_loss = self.criterion(backbone_score, neck_score, head_score, masks, labels)
-            
-                loss = (backone_loss + neck_loss + head_loss) / sliding_num
+            score, loss_dict = self._model_forward(imgs, labels, masks, idx, sliding_num)
 
-                if self.runner_mode in ['train']:
-                    if self.use_amp is True:
-                        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                            scaled_loss.backward()
-                    else:
-                        loss.backward()
-
-        # neck_score = neck_score.unsqueeze(0)
-        # neck_score = torch.nn.functional.interpolate(
-        #     input=neck_score,
-        #     scale_factor=[1, 4],
-        #     mode="nearest")
-        # backbone_score = backbone_score.unsqueeze(0)
-        # backbone_score = torch.nn.functional.interpolate(
-        #     input=backbone_score,
+        # score = score.unsqueeze(0)
+        # score = torch.nn.functional.interpolate(
+        #     input=score,
         #     scale_factor=[1, 4],
         #     mode="nearest")
             
@@ -223,14 +229,11 @@ class Runner():
             if self.post_processing.init_flag is not True:
                 self.post_processing.init_scores(sliding_num, len(vid_list))
                 self.current_step_vid_list = vid_list
-            self.seg_acc += self.post_processing.update(head_score, labels, idx) / sliding_num
+            self.seg_acc += self.post_processing.update(score, labels, idx) / sliding_num
 
             if self.runner_mode in ['train', 'validation']:
                 # logger loss
-                self.videos_loss = self.videos_loss + loss.detach().clone()
-                self.video_backbone_loss = self.video_backbone_loss + backone_loss.detach().clone() / sliding_num
-                self.video_neck_loss = self.video_neck_loss + neck_loss.detach().clone() / sliding_num
-                self.video_head_loss = self.video_head_loss + head_loss.detach().clone() / sliding_num
+                self._update_loss_dict(loss_dict, sliding_num)
 
     def run_one_iter(self, data, r_tic=None, epoch=None):
         # videos sliding stream train

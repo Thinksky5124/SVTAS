@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 13:54:45
+LastEditTime: 2022-04-25 23:09:59
 Description: loss function
 FilePath: /ETESVS/model/losses/etesvs_loss.py
 '''
@@ -35,10 +35,10 @@ class ETESVSLoss(nn.Module):
         self.elps = 1e-10
 
         self.seg_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
-        self.neck_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
+        # self.neck_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         # self.backbone_clip_loss = TemporalSplitMeanPoolingLoss(self.num_classes, ignore_index=self.ignore_index)
         self.backbone_clip_loss = SoftLabelLoss(self.num_classes, ignore_index=self.ignore_index)
-        self.neck_frame_num_loss = TemporalClassNumMSELoss(self.num_classes, ignore_index=self.ignore_index)
+        # self.neck_frame_num_loss = TemporalClassNumMSELoss(self.num_classes, ignore_index=self.ignore_index)
         self.mse = nn.MSELoss(reduction='none')
 
     def forward(self, backbone_score, neck_score, head_score, masks, labels):
@@ -53,9 +53,10 @@ class ETESVSLoss(nn.Module):
         backbone_cls_score_loss = self.backbone_clip_loss(backbone_score, labels[:, ::self.sample_rate], masks[:, ::self.sample_rate])
 
         # neck label learning
-        neck_cls_loss = self.neck_ce(neck_score.transpose(2, 1).contiguous().view(-1, self.num_classes), labels[:, ::self.sample_rate].view(-1))
-        neck_cls_score_loss = torch.sum(neck_cls_loss / (torch.sum(labels[:, ::self.sample_rate] != -100) + self.elps))
+        # neck_cls_loss = self.neck_ce(neck_score.transpose(2, 1).contiguous().view(-1, self.num_classes), labels[:, ::self.sample_rate].view(-1))
+        # neck_cls_score_loss = torch.sum(neck_cls_loss / (torch.sum(labels[:, ::self.sample_rate] != -100) + self.elps))
         # neck_cls_score_loss += 0.4 * self.neck_frame_num_loss(neck_score, labels[:, ::self.sample_rate], masks[:, ::self.sample_rate])
+        neck_cls_score_loss = torch.tensor(0.).cuda()
 
         # segmentation branch loss
         seg_loss = 0.
