@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-22 21:05:07
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-22 21:05:07
+LastEditTime: 2022-04-25 20:44:13
 Description: ConvLSTM script ref:https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py
 FilePath: /ETESVS/model/necks/convlstm.py
 '''
@@ -36,11 +36,29 @@ class ConvLSTMCell(nn.Module):
         self.padding = kernel_size[0] // 2, kernel_size[1] // 2
         self.bias = bias
 
-        self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
-                              out_channels=4 * self.hidden_dim,
-                              kernel_size=self.kernel_size,
-                              padding=self.padding,
-                              bias=self.bias)
+        # tranditional conv
+        # self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
+        #                       out_channels=4 * self.hidden_dim,
+        #                       kernel_size=self.kernel_size,
+        #                       padding=self.padding,
+        #                       bias=self.bias)
+
+        # deepwise conv
+        self.conv = nn.Sequential(
+            nn.Conv2d(
+                in_channels=self.input_dim + self.hidden_dim,
+                out_channels=self.input_dim + self.hidden_dim,
+                kernel_size=self.kernel_size,
+                padding=self.padding,
+                bias=self.bias,
+                groups=self.input_dim + self.hidden_dim),
+            nn.Conv2d(
+                in_channels=self.input_dim + self.hidden_dim,
+                out_channels=4 * self.hidden_dim,
+                kernel_size=1,
+                padding=0,
+                bias=self.bias,
+                groups=1))
 
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state
@@ -141,9 +159,7 @@ class ConvLSTM(nn.Module):
         b, _, _, h, w = input_tensor.size()
 
         # Implement stateful ConvLSTM
-        if hidden_state is not None:
-            raise NotImplementedError()
-        else:
+        if hidden_state is None:
             # Since the init is done in forward. Can send image size here
             hidden_state = self._init_hidden(batch_size=b,
                                              image_size=(h, w))

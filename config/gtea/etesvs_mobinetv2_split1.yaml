@@ -5,12 +5,15 @@ MODEL:
         pretrained: "./data/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth"
         clip_seg_num: 32
         shift_div: 30
+        out_indices: (6, 7, )
     neck:
         name: "ETESVSNeck"
         num_classes: 11
         num_layers: 1
-        num_stages: 1
-        in_channel: 1280
+        cls_in_channel: 1280
+        cls_hidden_channel: 1280
+        seg_in_channel: 320
+        seg_hidden_channel: 320
         clip_seg_num: 32
         drop_ratio: 0.5
         bidirectional: False
@@ -20,7 +23,7 @@ MODEL:
         num_layers: 4
         sample_rate: 4
         sliding_window: 128
-        seg_in_channels: 1280
+        seg_in_channels: 320
         num_f_maps: 64
     loss:
         name: "ETESVSLoss"

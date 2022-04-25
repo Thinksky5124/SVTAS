@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:42:09
+LastEditTime: 2022-04-25 19:29:09
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath: /ETESVS/model/backbones/mobilenet_v2.py
 '''

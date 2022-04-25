@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 16:44:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 22:52:49
+LastEditTime: 2022-04-25 10:33:28
 Description: convert img function script
 FilePath: /ETESVS/utils/convert_pred2img.py
 '''
@@ -133,6 +133,21 @@ def main() -> None:
         
         plt.savefig(os.path.join(args.output_dir, vid + ".png"), bbox_inches='tight', dpi=500)
         plt.close()
+    
+
+    output_arr = np.zeros((32,(len(actions_dict) + 1)*100), dtype=np.uint8)
+    for i in range(len(actions_dict)):
+        output_arr[:,i*100:(i+1)*100]=i
+    output_arr[:,len(actions_dict)*100:]=255
+
+    output_img = Image.fromarray(output_arr,mode='L')
+    output_img.putpalette(palette)
+    plt.figure()
+    plt.title('Palette index')
+    plt.gca().xaxis.set_major_locator(MultipleLocator(100))
+    plt.imshow(output_img)
+    plt.savefig(os.path.join(args.output_dir, "palette.png"), bbox_inches='tight', dpi=500)
+    plt.close()
 
 if __name__ == "__main__":
     main()

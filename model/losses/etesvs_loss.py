@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-22 23:04:11
+LastEditTime: 2022-04-25 13:54:45
 Description: loss function
 FilePath: /ETESVS/model/losses/etesvs_loss.py
 '''
@@ -36,7 +36,8 @@ class ETESVSLoss(nn.Module):
 
         self.seg_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.neck_ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
-        self.backbone_clip_loss = TemporalSplitMeanPoolingLoss(self.num_classes, ignore_index=self.ignore_index)
+        # self.backbone_clip_loss = TemporalSplitMeanPoolingLoss(self.num_classes, ignore_index=self.ignore_index)
+        self.backbone_clip_loss = SoftLabelLoss(self.num_classes, ignore_index=self.ignore_index)
         self.neck_frame_num_loss = TemporalClassNumMSELoss(self.num_classes, ignore_index=self.ignore_index)
         self.mse = nn.MSELoss(reduction='none')
 
@@ -69,6 +70,46 @@ class ETESVSLoss(nn.Module):
         neck_loss = self.neck_loss_weight * neck_cls_score_loss
         head_loss = self.head_loss_weight * seg_loss
         return backone_loss, neck_loss, head_loss
+
+class SoftLabelLoss(nn.Module):
+    def __init__(self,
+                 num_classes,
+                 ignore_index=-100):
+        super().__init__()
+        self.num_classes = num_classes
+        self.ignore_index = ignore_index
+        self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
+        self.elps = 1e-10
+    
+    def forward(self, score, gt, mask):
+        score = torch.mean(score, axis=-1)  # [N, num_class]
+        cls_score = torch.reshape(score,
+                               shape=[-1, self.num_classes])  # [N, num_class]
+
+        # smooth label learning
+        with torch.no_grad():
+            device = cls_score.device
+            # [N T]
+            raw_labels = gt
+            # deal label over num_classes
+            # [N, 1]
+            y = torch.zeros(raw_labels.shape, dtype=raw_labels.dtype, device=device)
+            refine_label = torch.where(raw_labels != self.ignore_index, raw_labels, y)
+            # [N C T]
+            ce_y = F.one_hot(refine_label, num_classes=self.num_classes)
+
+            raw_labels_repeat = torch.tile(raw_labels.unsqueeze(2), dims=[1, 1, self.num_classes])
+            ce_y = torch.where(raw_labels_repeat != self.ignore_index, ce_y, torch.zeros(ce_y.shape, device=device, dtype=ce_y.dtype))
+            # [N C]
+            smooth_label = (torch.sum(ce_y.float(), dim=1) / ce_y.shape[1])
+
+            # [N, 1]
+            x = torch.ones((smooth_label.shape[0]), device=device)
+            y = torch.zeros((smooth_label.shape[0]), device=device)
+            mask = torch.where(torch.sum(smooth_label, dim=1)!=0, x, y)
+
+        cls_loss = torch.mean(self.ce(cls_score, smooth_label) * mask)
+        return cls_loss
 
 class TemporalSplitMeanPoolingLoss(nn.Module):
     def __init__(self,
