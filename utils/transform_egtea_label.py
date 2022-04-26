@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-13 18:33:33
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-26 21:30:34
+LastEditTime: 2022-04-26 21:45:40
 Description: transform egtea dataset label script
 FilePath: /ETESVS/utils/transform_egtea_label.py
 '''
@@ -34,7 +34,7 @@ def generate_mapping_list_txt(action_dict, out_path):
         str_str = str(key) + " " + action_name + "\n"
         f.write(str_str)
     # add None
-    str_str = str(len(action_dict)) + " None" + "\n"
+    str_str = str(0) + " None" + "\n"
     f.write(str_str)
     f.close()
     
