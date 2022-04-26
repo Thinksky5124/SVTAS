@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 16:44:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 10:33:28
+LastEditTime: 2022-04-26 14:50:22
 Description: convert img function script
 FilePath: /ETESVS/utils/convert_pred2img.py
 '''
@@ -145,6 +145,8 @@ def main() -> None:
     plt.figure()
     plt.title('Palette index')
     plt.gca().xaxis.set_major_locator(MultipleLocator(100))
+    plt.xticks(fontsize=5)
+    plt.yticks(fontsize=3)
     plt.imshow(output_img)
     plt.savefig(os.path.join(args.output_dir, "palette.png"), bbox_inches='tight', dpi=500)
     plt.close()

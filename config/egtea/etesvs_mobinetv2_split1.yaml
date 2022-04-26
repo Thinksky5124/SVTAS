@@ -8,7 +8,7 @@ MODEL:
         out_indices: (6, 7, )
     neck:
         name: "ETESVSNeck"
-        num_classes: 11
+        num_classes: 20
         num_layers: 1
         cls_in_channel: 1280
         cls_hidden_channel: 1280
@@ -19,7 +19,7 @@ MODEL:
         bidirectional: False
     head:
         name: "ETESVSHead"
-        num_classes: 11
+        num_classes: 20
         num_layers: 4
         sample_rate: 4
         sliding_window: 128
@@ -27,7 +27,7 @@ MODEL:
         num_f_maps: 64
     loss:
         name: "ETESVSLoss"
-        num_classes: 11
+        num_classes: 20
         sample_rate: 4
         backone_loss_weight: 1.0
         neck_loss_weight: 1.0
@@ -43,22 +43,22 @@ DATASET: #DATASET field
     num_workers: 2
     train:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
-        gt_path: "./data/gtea/groundTruth"
-        actions_map_file_path: "./data/gtea/mapping.txt"
-        dataset_type: "gtea"
+        file_path: "./data/egtea/splits/train_split1.txt" #Mandatory, train data index file path
+        videos_path: "./data/egtea/Videos"
+        gt_path: "./data/egtea/groundTruth"
+        actions_map_file_path: "./data/egtea/mapping.txt"
+        dataset_type: "egtea"
         train_mode: True
         sliding_window: 128
         clip_seg_num: 32
         sample_rate: 4
     test:
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
-        gt_path: "./data/gtea/groundTruth"
-        actions_map_file_path: "./data/gtea/mapping.txt"
-        dataset_type: "gtea"
+        file_path: "./data/egtea/splits/test_split1.txt" #Mandatory, train data index file path
+        videos_path: "./data/egtea/Videos"
+        gt_path: "./data/egtea/groundTruth"
+        actions_map_file_path: "./data/egtea/mapping.txt"
+        dataset_type: "egtea"
         train_mode: False
         sliding_window: 128
         clip_seg_num: 32
@@ -82,8 +82,8 @@ PIPELINE: #PIPELINE field
             - RandomHorizontalFlip:
             - ToTensor:
             - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+                mean: [0.479, 0.307, 0.176]
+                std: [0.264, 0.204, 0.163]
 
     test:
         decode:
@@ -101,8 +101,8 @@ PIPELINE: #PIPELINE field
                 size: 224
             - ToTensor:
             - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+                mean: [0.479, 0.307, 0.176]
+                std: [0.264, 0.204, 0.163]
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
@@ -111,11 +111,11 @@ OPTIMIZER: #OPTIMIZER field
 
 METRIC:
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/gtea/mapping.txt"
+    actions_map_file_path: "./data/egtea/mapping.txt"
     file_output: True
 
 
-model_name: "ETESVS_MobileNetV2_gtea_split1"
-log_interval: 4 #Optional, the interal of logger, default:10
+model_name: "ETESVS_MobileNetV2_egtea_split1"
+log_interval: 5 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

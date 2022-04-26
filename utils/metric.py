@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 12:04:29
+LastEditTime: 2022-04-26 14:48:07
 Description: metric class
 FilePath: /ETESVS/utils/metric.py
 '''
@@ -343,6 +343,8 @@ class SegmentationMetric(BaseSegmentationMetric):
                 outputs_np = predicted
                 outputs_arr = output_np
                 gt_np = groundTruth
+            
+            # np.save("output/results/analysis/" + vid[bs] + ".npy", output_np)
 
             result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result

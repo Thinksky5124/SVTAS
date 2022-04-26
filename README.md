@@ -153,6 +153,9 @@ The video action segmentation model uses [breakfast](https://serre-lab.clps.brow
 python utils/transform_segmentation_label.py data/gtea data/gtea/groundTruth data/gtea --mode localization --fps 15
 python utils/prepare_video_recognition_data.py data/gtea/label.json data/gtea/Videos data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea
 
+# egtea
+python utils/prepare_video_recognition_data.py data/egtea/egtea.json data/egtea/Videos data/egtea --negative_sample_num 1000 --only_norm True --fps 24 --dataset_type egtea
+
 # 50salads
 python utils/transform_segmentation_label.py data/50salads data/50salads/groundTruth data/50salads --mode localization --fps 30
 python utils/prepare_video_recognition_data.py data/50salads/label.json data/50salads/Videos data/50salads --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type 50salads
@@ -170,7 +173,12 @@ Here releases dataset mean and std config
 - gtea:
 ```txt
 mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
-std RGB : [0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
+std RGB :[0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
+```
+- egtea:
+```txt
+mean RGB ∶[0.47882690412518875, 0.30667687330914223, 0.1764174579795214]
+std RGB :[0.26380785444954574, 0.20396220265286277, 0.16305419562005563]
 ```
 - 50salads:
 ```txt
@@ -182,7 +190,7 @@ std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
 mean RGB ∶[0.4245283568405083, 0.3904851168609079, 0.33709139617292494]
 std RGB :[0.26207845745959846, 0.26008439810422, 0.24623600365905168]
 ```
-- thumos14
+- thumos14:
 ```txt
 mean RGB ∶[0.384953972862144, 0.38326867429930167, 0.3525199505706894]
 std RGB :[0.258450710004705, 0.2544892750057763, 0.24812118173426492]
@@ -218,6 +226,15 @@ python main.py  --validate -c config/gtea/etesvs_mobinetv2_split1.yaml --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/gtea/etesvs_split1.yaml --seed 0
+
+# egtea
+# single gpu
+export CUDA_VISIBLE_DEVICES=2
+python main.py  --validate -c config/egtea/etesvs_split1.yaml --seed 0
+python main.py  --validate -c config/egtea/etesvs_split2.yaml --seed 0
+python main.py  --validate -c config/egtea/etesvs_split3.yaml --seed 0
+
+python main.py  --validate -c config/egtea/etesvs_mobinetv2_split1.yaml --seed 0
 
 # 50salads
 export CUDA_VISIBLE_DEVICES=1
@@ -259,14 +276,6 @@ python main.py  --validate -c config/thumos14/etesvs.yaml  --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=0,1
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/thumos14/etesvs_mobinetv2_split1.yaml --seed 0
-
-
-# egtea
-# single gpu
-export CUDA_VISIBLE_DEVICES=2
-python main.py  --validate -c config/egtea/etesvs_split1.yaml --seed 0
-python main.py  --validate -c config/egtea/etesvs_split2.yaml --seed 0
-python main.py  --validate -c config/egtea/etesvs_split3.yaml --seed 0
 ```
 # Test Model
 ```bash
@@ -284,6 +293,8 @@ export DECORD_EOF_RETRY_MAX=20480
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
 
+# thumos14
+python main.py  --test -c config/thumos14/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_thumos14/ETESVS_thumos14_best.pkl
 ```
 
 # Visualization
@@ -292,4 +303,6 @@ python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch
 python utils/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 120
 # 50salads
 python utils/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
+# thumos14
+python utils/convert_pred2img.py output/results/pred_gt_list data/thumos14/mapping.txt output/results/imgs --sliding_windows 256
 ```

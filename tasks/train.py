@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-20 16:36:26
+LastEditTime: 2022-04-26 16:54:54
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -44,7 +44,7 @@ def train(cfg,
         tensorboard_writer = get_logger("ETESVS", tensorboard=args.use_tensorboard)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    weight_decay = cfg.OPTIMIZER.get('weight_decay', 0.0005)
+    weight_decay = cfg.OPTIMIZER.get('weight_decay', 1e-4)
 
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)

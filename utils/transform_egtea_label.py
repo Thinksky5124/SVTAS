@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-13 18:33:33
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 21:35:28
+LastEditTime: 2022-04-26 21:30:34
 Description: transform egtea dataset label script
 FilePath: /ETESVS/utils/transform_egtea_label.py
 '''
@@ -13,6 +13,7 @@ import json
 import numpy as np
 import argparse
 import os
+import decord as de
 
 from tqdm import tqdm
 
@@ -54,8 +55,8 @@ def main():
             train_list.append(file)
 
     split_dict = {"version": "EGTEA", "fps":args.fps, "database":{}}
-    for test_split, train_split in tqdm(zip(test_list, train_list), desc="convert:"):
-        
+    for i in tqdm(range(len(test_list)), desc="convert"):
+        test_split, train_split = test_list[i], train_list[i]
         test_file = open(os.path.join(args.label_path, test_split), "r", encoding='utf-8')
         test_split_video_name_list = []
         train_split_video_name_list = []
@@ -69,7 +70,11 @@ def main():
             end_second = float(video_name_frame_start_end_list[6][1:]) / args.fps
 
             if video_name not in list(split_dict["database"].keys()):
-                split_dict["database"][video_name] = {"subset":"test", "annotations":[
+                # get frames
+                video_path = os.path.join(args.out_path, "Videos", video_name + ".mp4")
+                video_len = len(de.VideoReader(video_path))
+
+                split_dict["database"][video_name] = {"subset":"test", "frames": video_len, "annotations":[
                     {"segment": [start_second, end_second], "label": verb_label_name}
                 ]}
             else:
@@ -97,7 +102,11 @@ def main():
             end_second = float(video_name_frame_start_end_list[6][1:]) / args.fps
 
             if video_name not in list(split_dict["database"].keys()):
-                split_dict["database"][video_name] = {"subset":"validation", "annotations":[
+                # get frames
+                video_path = os.path.join(args.out_path, "Videos", video_name + ".mp4")
+                video_len = len(de.VideoReader(video_path))
+                
+                split_dict["database"][video_name] = {"subset":"validation", "frames": video_len, "annotations":[
                     {"segment": [start_second, end_second], "label": verb_label_name}
                 ]}
             else:

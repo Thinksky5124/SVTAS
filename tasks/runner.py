@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 23:06:07
+LastEditTime: 2022-04-26 14:40:44
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -54,9 +54,10 @@ class Runner():
     
     def _init_loss_dict(self):
         self.loss_dict = {}
-        for key, _ in self.record_dict.items():
-            if key.endswith("loss"):
-                self.loss_dict[key] = 0.
+        if self.record_dict is not None:
+            for key, _ in self.record_dict.items():
+                if key.endswith("loss"):
+                    self.loss_dict[key] = 0.
     
     def _update_loss_dict(self, input_loss_dict, sliding_num):
         for key, _ in self.loss_dict.items():
@@ -186,6 +187,7 @@ class Runner():
         imgs = imgs.cuda()
         masks = masks.cuda()
         labels = labels.cuda()
+        loss_dict={}
 
         outputs = self.model(imgs, masks, idx)
         backbone_score, neck_score, head_score = outputs
@@ -202,11 +204,11 @@ class Runner():
                 else:
                     loss.backward()
 
-        loss_dict={}
-        loss_dict["loss"] = loss
-        loss_dict["backbone_loss"] = backbone_loss
-        loss_dict["neck_loss"] = neck_loss
-        loss_dict["head_loss"] = head_loss
+            loss_dict["loss"] = loss
+            loss_dict["backbone_loss"] = backbone_loss
+            loss_dict["neck_loss"] = neck_loss
+            loss_dict["head_loss"] = head_loss
+            
         return head_score, loss_dict
 
     def run_one_clip(self, imgs, labels, masks, vid_list, sliding_num, idx):
