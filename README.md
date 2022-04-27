@@ -89,220 +89,24 @@ pip freeze > requirements.txt
 
 # Prepare Data
 
-## Download Dataset
+Read Doc [Prepare Datset](doc/prepare_dataset.md)
 
-prepare data follow below instruction.
-- data directory file tree
-```txt
-─── data
-    ├── 50salads
-    ├── breakfast
-    ├── gtea
-    └── ...
-```
+# Model Train
 
-### gtea and 50salads and breakfast
+## RGB Base model train
 
-The video action segmentation model uses [breakfast](https://serre-lab.clps.brown.edu/resource/breakfast-actions-dataset/), [50salads](https://cvip.computing.dundee.ac.uk/datasets/foodpreparation/50salads/) and [gtea](https://cbs.ic.gatech.edu/fpv/) data sets.
+Read Doc [RGB Base Model Train](doc/rgb_base.md)
 
-- Dataset tree example
-```txt
-─── gtea
-    ├── Videos
-    │   ├── S1_Cheese_C1.mp4
-    │   ├── S1_Coffee_C1.mp4
-    │   ├── S1_CofHoney_C1.mp4
-    │   └── ...
-    ├── groundTruth
-    │   ├── S1_Cheese_C1.txt
-    │   ├── S1_Coffee_C1.txt
-    │   ├── S1_CofHoney_C1.txt
-    │   └── ...
-    ├── splits
-    │   ├── test.split1.bundle
-    │   ├── test.split2.bundle
-    │   ├── test.split3.bundle
-    │   └── ...
-    └── mapping.txt
-```
+## Feature Base model train
 
-### thumos14
-[Thumos14](http://crcv.ucf.edu/THUMOS14/home.html) dataset is temporal action localization dataset.
-- Dataset tree
-```txt
-─── thumos14
-    ├── Videos
-    │   ├── video_test_0000896.mp4
-    │   ├── video_test_0000897.mp4
-    │   ├── video_validation_0000482.mp4
-    │   └── ...
-    ├── groundTruth
-    │   ├── video_test_0000897.txt
-    │   ├── video_test_0000897.txt
-    │   ├── video_validation_0000482.txt
-    │   └── ...
-    ├── val_list.txt
-    ├── test_list.txt
-    └── mapping.txt
-```
-
-## Dataset Normalization
-```bash
-# count mean and std from video
-# gtea
-python utils/transform_segmentation_label.py data/gtea data/gtea/groundTruth data/gtea --mode localization --fps 15
-python utils/prepare_video_recognition_data.py data/gtea/label.json data/gtea/Videos data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea
-
-# egtea
-python utils/prepare_video_recognition_data.py data/egtea/egtea.json data/egtea/Videos data/egtea --negative_sample_num 1000 --only_norm True --fps 24 --dataset_type egtea
-
-# 50salads
-python utils/transform_segmentation_label.py data/50salads data/50salads/groundTruth data/50salads --mode localization --fps 30
-python utils/prepare_video_recognition_data.py data/50salads/label.json data/50salads/Videos data/50salads --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type 50salads
-
-# breakfast
-python utils/transform_segmentation_label.py data/breakfast data/breakfast/groundTruth data/breakfast --mode localization --fps 15
-python utils/prepare_video_recognition_data.py data/breakfast/label.json data/breakfast/Videos data/breakfast --negative_sample_num 10000 --only_norm True --fps 15 --dataset_type breakfast
-
-# thumos14
-python utils/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type thumos14
-```
-
-Here releases dataset mean and std config
-
-- gtea:
-```txt
-mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
-std RGB :[0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
-```
-- egtea:
-```txt
-mean RGB ∶[0.47882690412518875, 0.30667687330914223, 0.1764174579795214]
-std RGB :[0.26380785444954574, 0.20396220265286277, 0.16305419562005563]
-```
-- 50salads:
-```txt
-mean RGB ∶[0.5139909998345553, 0.5117725498677757，0.4798814301515671]
-std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
-```
-- breakfast:
-```txt
-mean RGB ∶[0.4245283568405083, 0.3904851168609079, 0.33709139617292494]
-std RGB :[0.26207845745959846, 0.26008439810422, 0.24623600365905168]
-```
-- thumos14:
-```txt
-mean RGB ∶[0.384953972862144, 0.38326867429930167, 0.3525199505706894]
-std RGB :[0.258450710004705, 0.2544892750057763, 0.24812118173426492]
-```
-
-## Convert Localization Label to Segmentation Label
-```bash
-# thumos14
-python utils/transform_segmentation_label.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --mode segmentation --fps 30
-
-# egtea
-python utils/transform_egtea_label.py data/egtea/splits_label data/egtea/verb_idx.txt data/egtea
-python utils/transform_segmentation_label.py data/egtea/egtea.json data/egtea/Videos data/egtea --mode segmentation --fps 24
-```
-
-# Prepare Pretrain Weight
-
-- step 1 Down resnet pretrain weight checkpoint file from `./model/backbone.py`'s `model_urls`
-
-- step 2 Move this checkpoint file in `./data` directory
-
-# Train Model
-```bash
-# gtea
-# single gpu
-export CUDA_VISIBLE_DEVICES=1
-python main.py  --validate -c config/gtea/etesvs_split1.yaml --seed 0
-python main.py  --validate -c config/gtea/etesvs_split2.yaml --seed 0
-python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
-python main.py  --validate -c config/gtea/etesvs_split4.yaml --seed 0
-
-python main.py  --validate -c config/gtea/etesvs_mobinetv2_split1.yaml --seed 0
-# multi gpu
-export CUDA_VISIBLE_DEVICES=2,3
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/gtea/etesvs_split1.yaml --seed 0
-
-# egtea
-# single gpu
-export CUDA_VISIBLE_DEVICES=2
-python main.py  --validate -c config/egtea/etesvs_split1.yaml --seed 0
-python main.py  --validate -c config/egtea/etesvs_split2.yaml --seed 0
-python main.py  --validate -c config/egtea/etesvs_split3.yaml --seed 0
-
-python main.py  --validate -c config/egtea/etesvs_mobinetv2_split1.yaml --seed 0
-
-# 50salads
-export CUDA_VISIBLE_DEVICES=1
-export DECORD_EOF_RETRY_MAX=20480
-python main.py  --validate -c config/50salads/etesvs_split1.yaml --seed 0
-python main.py  --validate -c config/50salads/etesvs_split2.yaml --seed 0
-python main.py  --validate -c config/50salads/etesvs_split3.yaml --seed 0
-python main.py  --validate -c config/50salads/etesvs_split4.yaml --seed 0
-python main.py  --validate -c config/50salads/etesvs_split5.yaml --seed 0
-
-python main.py  --validate -c config/50salads/etesvs_mobinetv2_split1.yaml --seed 0
-
-# multi gpu
-export CUDA_VISIBLE_DEVICES=0,1
-export DECORD_EOF_RETRY_MAX=20480
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_split1.yaml --seed 0
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_mobinetv2_split1.yaml --seed 0
-
-# breakfast
-export CUDA_VISIBLE_DEVICES=2
-export DECORD_EOF_RETRY_MAX=20480
-python main.py  --validate -c config/breakfast/etesvs_split1.yaml  --seed 0
-python main.py  --validate -c config/breakfast/etesvs_split2.yaml  --seed 0
-python main.py  --validate -c config/breakfast/etesvs_split3.yaml  --seed 0
-python main.py  --validate -c config/breakfast/etesvs_split4.yaml  --seed 0
-
-python main.py  --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0
-
-# multi gpu
-export CUDA_VISIBLE_DEVICES=0,1
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_split1.yaml --seed 0
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0
-
-# thumos14
-export CUDA_VISIBLE_DEVICES=3
-python main.py  --validate -c config/thumos14/etesvs.yaml  --seed 0
-
-# multi gpu
-export CUDA_VISIBLE_DEVICES=0,1
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/thumos14/etesvs_mobinetv2_split1.yaml --seed 0
-```
-# Test Model
-```bash
-# gtea
-python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS_gtea_split1/ETESVS_gtea_split1_best.pkl
-python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_gtea_split1/ETESVS_MobileNetV2_gtea_split1_best.pkl
-
-# 50salads
-python main.py  --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
-python main.py  --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_50salads_split1/ETESVS_MobileNetV2_50salads_split1_best.pkl
-python main.py  --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/baseline/50salads_split1_baseline/ETESVS_MobileNetV2_50salads_split1_best.pkl
-
-export CUDA_VISIBLE_DEVICES=2,3
-export DECORD_EOF_RETRY_MAX=20480
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
-python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
-
-# thumos14
-python main.py  --test -c config/thumos14/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_thumos14/ETESVS_thumos14_best.pkl
-```
+Read Doc [Feature Base Model Train](doc/feature_base.md)
 
 # Visualization
 ```bash
 # gtea
-python utils/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 120
+python tools/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 120
 # 50salads
-python utils/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
+python tools/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
 # thumos14
-python utils/convert_pred2img.py output/results/pred_gt_list data/thumos14/mapping.txt output/results/imgs --sliding_windows 256
+python tools/convert_pred2img.py output/results/pred_gt_list data/thumos14/mapping.txt output/results/imgs --sliding_windows 256
 ```

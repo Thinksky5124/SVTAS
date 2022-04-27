@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-26 16:54:54
+LastEditTime: 2022-04-27 20:36:30
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -11,14 +11,13 @@ import time
 
 import torch
 import torch.distributed as dist
-from utils.logger import get_logger, AverageMeter, log_epoch, tenorboard_log_epoch
+from utils.logger import get_logger, log_epoch, tenorboard_log_epoch
 from utils.save_load import mkdir
-import model.builder as builder
+from utils.recorder import build_recod
+import model.builder as model_builder
+import dataset.builder as dataset_builder
 
-from dataset.segmentation_dataset import SegmentationDataset
 from utils.metric import SegmentationMetric
-from dataset.pipline import Pipeline
-from dataset.pipline import BatchCompose
 from model.post_precessings.etesvs_post_processing import PostProcessing
 from .runner import Runner
 
@@ -60,8 +59,8 @@ def train(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = builder.build_model(cfg.MODEL).cuda()
-        criterion = builder.build_loss(cfg.MODEL.loss).cuda()
+        model = model_builder.build_model(cfg.MODEL).cuda()
+        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
 
         # 2. Construct solver.
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
@@ -76,8 +75,8 @@ def train(cfg,
         torch.cuda.set_device(local_rank)
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
-        model = builder.build_model(cfg.MODEL).cuda(local_rank)
-        criterion = builder.build_loss(cfg.MODEL.loss).cuda(local_rank)
+        model = model_builder.build_model(cfg.MODEL).cuda(local_rank)
+        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda(local_rank)
 
         # 2. Construct solver.
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
@@ -121,12 +120,12 @@ def train(cfg,
             amp.load_state_dict(checkpoint['amp'])
         resume_epoch = start_epoch
     # 4. construct Pipeline
-    train_Pipeline = Pipeline(**cfg.PIPELINE.train)
-    val_Pipeline = Pipeline(**cfg.PIPELINE.test)
+    train_Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.train)
+    val_Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.test)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.OPTIMIZER.step_size, gamma=cfg.OPTIMIZER.gamma)
 
     # 5. Construct Dataset
-    sliding_concate_fn = BatchCompose(**cfg.COLLATE)
+    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
     train_dataset_config = cfg.DATASET.train
     train_dataset_config['pipeline'] = train_Pipeline
     train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -134,7 +133,7 @@ def train(cfg,
     train_dataset_config['local_rank'] = local_rank
     train_dataset_config['nprocs'] = nprocs
     train_dataloader = torch.utils.data.DataLoader(
-        SegmentationDataset(**train_dataset_config),
+        dataset_builder.build_dataset(train_dataset_config),
         batch_size=temporal_clip_batch_size,
         num_workers=num_workers,
         collate_fn=sliding_concate_fn)
@@ -147,28 +146,18 @@ def train(cfg,
         val_dataset_config['local_rank'] = local_rank
         val_dataset_config['nprocs'] = nprocs
         val_dataloader = torch.utils.data.DataLoader(
-            SegmentationDataset(**val_dataset_config),
+            dataset_builder.build_dataset(val_dataset_config),
             batch_size=temporal_clip_batch_size,
             num_workers=num_workers,
             collate_fn=sliding_concate_fn)
 
     # 6. Train Model
-    record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
-                   'reader_time': AverageMeter('reader_time', '.5f'),
-                   'loss': AverageMeter('loss', '7.5f'),
-                   'lr': AverageMeter('lr', 'f', need_avg=False),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
-                   'Acc': AverageMeter("Acc", '.5f'),
-                   'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
-                   'backbone_loss': AverageMeter("backbone_loss", '.5f'),
-                   'neck_loss': AverageMeter("neck_loss", '.5f'),
-                   'head_loss': AverageMeter("head_loss", '.5f')
-                  }
+    record_dict = build_recod(cfg.MODEL.architecture, mode="train")
 
     # 7. Construct post precesing
     post_processing = PostProcessing(
-        num_classes=cfg.MODEL.head.num_classes,
-        clip_seg_num=cfg.MODEL.neck.clip_seg_num,
+        num_classes=cfg.MODEL.loss.num_classes,
+        clip_seg_num=cfg.DATASET.train.clip_seg_num,
         sliding_window=cfg.DATASET.train.sliding_window,
         sample_rate=cfg.DATASET.train.sample_rate)
 
@@ -220,16 +209,7 @@ def train(cfg,
             tenorboard_log_epoch(record_dict, epoch + 1, "train", writer=tensorboard_writer)
 
         def evaluate(best):
-            record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
-                   'reader_time': AverageMeter('reader_time', '.5f'),
-                   'loss': AverageMeter('loss', '7.5f'),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
-                   'Acc': AverageMeter("Acc", '.5f'),
-                   'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
-                   'backbone_loss': AverageMeter("backbone_loss", '.5f'),
-                   'neck_loss': AverageMeter("neck_loss", '.5f'),
-                   'head_loss': AverageMeter("head_loss", '.5f')
-                  }
+            record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
             runner = Runner(logger=logger,
                 video_batch_size=video_batch_size,
                 Metric=Metric,

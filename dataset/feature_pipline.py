@@ -1,46 +1,27 @@
 '''
 Author: Thyssen Wen
-Date: 2022-03-18 19:25:14
+Date: 2022-04-27 16:12:40
 LastEditors: Thyssen Wen
-LastEditTime: 2022-03-31 22:48:55
-Description: data prepare pipline function
-FilePath: /ETESVS/dataset/pipline.py
+LastEditTime: 2022-04-27 21:03:55
+Description: file content
+FilePath: /ETESVS/dataset/feature_pipline.py
 '''
-import torchvision.transforms as transforms
-import decord as de
 import numpy as np
 import random
 import torch
 import copy
-from PIL import Image
+import torchvision.transforms as transforms
+from .builder import PIPLINE
 
-class BatchCompose():
-    def __init__(self, to_tensor_idx=3):
-        self.to_tensor_idx = to_tensor_idx
-
-    def __call__(self, batch):
-        result_batch = []
-        for index in range(len(batch)):
-            data = []
-            for i in range(len(batch[index])):
-                if i < self.to_tensor_idx:
-                    if not torch.is_tensor(batch[index][i]):
-                        data.append(torch.tensor(batch[index][i]))
-                    else:
-                        data.append(batch[index][i])
-                else:
-                    data.append(batch[index][i])
-            result_batch.append(data)
-        return result_batch
-
-class Pipeline():
+@PIPLINE.register()
+class FeaturePipline():
     def __init__(self,
                  decode=None,
                  sample=None,
                  transform=None):
-        self.decode = VideoDecoder(**decode)
-        self.sample = VideoStreamSampler(**sample)
-        self.transform = VideoStreamTransform(transform)
+        self.decode = FeatureDecoder(**decode)
+        self.sample = FeatureStreamSampler(**sample)
+        self.transform = FeatureStreamTransform(transform)
 
     def __call__(self, results):
         # decode
@@ -51,14 +32,14 @@ class Pipeline():
         results = self.transform(results)
         return results
 
-class VideoDecoder():
+class FeatureDecoder():
     """
     Decode mp4 file to frames.
     Args:
         filepath: the file path of mp4 file
     """
     def __init__(self,
-                 backend='decord'):
+                 backend='numpy'):
 
         self.backend = backend
 
@@ -69,18 +50,17 @@ class VideoDecoder():
             List where each item is a numpy array after decoder.
         """
         file_path = results['filename']
-        results['format'] = 'video'
-        results['backend'] = self.backend
+        results['format'] = 'feature'
 
-        container = de.VideoReader(file_path)
-        video_len = len(container)
-        results['frames'] = container
+        feature = np.load(file_path)
+        feature_len = feature.shape[-1]
+        results['frames'] = feature
         results['frames_len'] = results['raw_labels'].shape[0]
-        results['video_len'] = video_len
+        results['feature_len'] = feature_len
         
         return results
 
-class VideoFrameSample():
+class FeatureFrameSample():
     def __init__(self, mode='random'):
         assert mode in ['random', 'uniform'], 'not support mode'
         self.mode = mode
@@ -103,7 +83,7 @@ class VideoFrameSample():
         else:
             raise NotImplementedError
 
-class VideoStreamSampler():
+class FeatureStreamSampler():
     """
     Sample frames id.
     Returns:
@@ -112,7 +92,7 @@ class VideoStreamSampler():
 
     def __init__(self,
                  seg_len,
-                 sample_rate=4,
+                 sample_rate=1,
                  clip_seg_num=15,
                  sliding_window=60,
                  ignore_index=-100,
@@ -123,7 +103,7 @@ class VideoStreamSampler():
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
-        self.sample = VideoFrameSample(mode = sample_mode)
+        self.sample = FeatureFrameSample(mode = sample_mode)
 
     def __call__(self, results):
         """
@@ -133,10 +113,9 @@ class VideoStreamSampler():
             sampling id.
         """
         frames_len = int(results['frames_len'])
-        video_len = int(results['video_len'])
+        feature_len = int(results['feature_len'])
         results['frames_len'] = frames_len
-        container = results['frames']
-        imgs = []
+        feature = results['frames']
         labels = results['raw_labels']
 
         # generate sample index
@@ -144,56 +123,34 @@ class VideoStreamSampler():
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
         if start_frame < frames_len and end_frame < frames_len:
             vid_end_frame = end_frame
-            if end_frame > video_len:
-                vid_end_frame = video_len
+            if end_frame > feature_len:
+                vid_end_frame = feature_len
             frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
             labels = labels[start_frame:end_frame].copy()
-            frames_select = container.get_batch(frames_idx)
-            # dearray_to_img
-            np_frames = frames_select.asnumpy()
-            for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i].copy()
-                imgs.append(Image.fromarray(imgbuf, mode='RGB'))
-
-            if len(imgs) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
-                pad_len = self.clip_seg_num - len(imgs)
-                for i in range(pad_len):
-                    imgs.append(Image.fromarray(np_frames, mode='RGB'))
-                    
+            frames_feature = feature[:, frames_idx]
             mask = np.ones((labels.shape[0]))
         elif start_frame < frames_len and end_frame >= frames_len:
-            frames_idx = self.sample(start_frame, video_len, self.sample_rate)
+            frames_idx = self.sample(start_frame, feature_len, self.sample_rate)
             labels = labels[start_frame:frames_len].copy()
-            frames_select = container.get_batch(frames_idx)
-            # dearray_to_img
-            np_frames = frames_select.asnumpy()
-            for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i].copy()
-                imgs.append(Image.fromarray(imgbuf, mode='RGB'))
-            np_frames = np.zeros_like(np_frames[0])
-            pad_len = self.clip_seg_num - len(imgs)
-            for i in range(pad_len):
-                imgs.append(Image.fromarray(np_frames, mode='RGB'))
+            frames_feature = feature[:, frames_idx]
+            pad_len = self.clip_seg_num - frames_feature.shape[-1]
+            frames_feature = np.concatenate([frames_feature, np.zeros((2048, pad_len))], axis=-1)
             vaild_mask = np.ones((labels.shape[0]))
             mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
             void_mask = np.zeros((mask_pad_len))
             mask = np.concatenate([vaild_mask, void_mask], axis=0)
             labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
         else:
-            np_frames = np.random.random((240, 320, 3))
-            pad_len = self.clip_seg_num
-            for i in range(pad_len):
-                imgs.append(Image.fromarray(np_frames, mode='RGB'))
+            frames_feature = np.zeros((2048, self.clip_seg_num))
             mask = np.zeros((self.clip_seg_num * self.sample_rate))
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 
-        results['imgs'] = imgs[:self.clip_seg_num].copy()
+        results['feature'] = frames_feature[:, :self.clip_seg_num].copy()
         results['labels'] = labels.copy()
         results['mask'] = mask.copy()
         return results
 
-class VideoStreamTransform():
+class FeatureStreamTransform():
     def __init__(self, transform_list):
         transform_op_list = []
         for transforms_op in transform_list:
@@ -206,10 +163,7 @@ class VideoStreamTransform():
         self.imgs_transforms_pipeline = transforms.Compose(transform_op_list)
 
     def __call__(self, results):
-        imgs = []
-        for img in results['imgs']:
-            img = self.imgs_transforms_pipeline(img)
-            imgs.append(img.unsqueeze(0))
-        imgs = torch.cat(imgs, dim=0)
-        results['imgs'] = copy.deepcopy(imgs)
+        feature = results['feature'].astype(np.float32)
+        feature = self.imgs_transforms_pipeline(feature).squeeze(0)
+        results['feature'] = copy.deepcopy(feature)
         return results

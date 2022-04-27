@@ -2,11 +2,10 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-26 10:25:13
+LastEditTime: 2022-04-27 20:01:49
 Description: loss function
 FilePath: /ETESVS/model/losses/etesvs_loss.py
 '''
-from turtle import forward
 import torch
 import numpy as np
 import torch.nn as nn
@@ -41,7 +40,8 @@ class ETESVSLoss(nn.Module):
         # self.neck_frame_num_loss = TemporalClassNumMSELoss(self.num_classes, ignore_index=self.ignore_index)
         self.mse = nn.MSELoss(reduction='none')
 
-    def forward(self, backbone_score, neck_score, head_score, masks, labels):
+    def forward(self, model_output, masks, labels):
+        backbone_score, neck_score, head_score = model_output
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
         # labels [N, T]
@@ -67,10 +67,19 @@ class ETESVSLoss(nn.Module):
                 self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1)
                 ), min=0, max=16) * masks[:, 1:].unsqueeze(1))
 
-        backone_loss = self.backone_loss_weight * backbone_cls_score_loss
+        backbone_loss = self.backone_loss_weight * backbone_cls_score_loss
         neck_loss = self.neck_loss_weight * neck_cls_score_loss
         head_loss = self.head_loss_weight * seg_loss
-        return backone_loss, neck_loss, head_loss
+
+        # output dict compose
+        loss = backbone_loss + head_loss
+
+        loss_dict={}
+        loss_dict["loss"] = loss
+        loss_dict["backbone_loss"] = backbone_loss
+        loss_dict["neck_loss"] = neck_loss
+        loss_dict["head_loss"] = head_loss
+        return loss_dict
 
 class SoftLabelLoss(nn.Module):
     def __init__(self,

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 21:57:52
+LastEditTime: 2022-04-27 15:42:39
 Description: dataset class
 FilePath: /ETESVS/dataset/segmentation_dataset.py
 '''
@@ -12,8 +12,10 @@ import os
 import copy
 import torch
 import torch.utils.data as data
+from .builder import DATASET
 
-class SegmentationDataset(data.IterableDataset):
+@DATASET.register()
+class RawFrameSegmentationDataset(data.IterableDataset):
     """Video dataset for action recognition
        The dataset loads raw videos and apply specified transforms on them.
        The index file is a file with multiple lines, and each line indicates

@@ -1,37 +1,19 @@
 MODEL:
-    architecture: "ETESVS"
+    architecture: "FeatureSegmentation"
     backbone:
-        name: "MobileNetV2TSM"
-        pretrained: "./data/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth"
-        clip_seg_num: 32
-        shift_div: 8
-        out_indices: (6, 7, )
     neck:
-        name: "ETESVSNeck"
-        num_classes: 11
-        num_layers: 1
-        cls_in_channel: 1280
-        cls_hidden_channel: 1280
-        seg_in_channel: 320
-        seg_hidden_channel: 320
-        clip_seg_num: 32
-        drop_ratio: 0.5
-        bidirectional: False
     head:
-        name: "ETESVSHead"
-        num_classes: 11
+        name: "MultiStageModel"
+        num_stages: 4
         num_layers: 4
-        sample_rate: 4
-        sliding_window: 128
-        seg_in_channels: 320
         num_f_maps: 64
+        dim: 2048
+        num_classes: 11
     loss:
-        name: "ETESVSLoss"
+        name: "MSTCNLoss"
         num_classes: 11
         sample_rate: 4
-        backone_loss_weight: 1.0
-        neck_loss_weight: 1.0
-        head_loss_weight: 1.0
+        smooth_weight: 0.15
         ignore_index: -100
 
 COLLATE:
@@ -43,10 +25,10 @@ DATASET: #DATASET field
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "RawFrameSegmentationDataset"
+        name: "FeatureSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
+        videos_path: "./data/gtea/features"
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
@@ -55,10 +37,10 @@ DATASET: #DATASET field
         clip_seg_num: 32
         sample_rate: 4
     test:
-        name: "RawFrameSegmentationDataset"
+        name: "FeatureSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
+        videos_path: "./data/gtea/features"
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
@@ -69,30 +51,9 @@ DATASET: #DATASET field
 
 PIPELINE: #PIPELINE field
     train: 
-        name: "RawFramePipeline"
+        name: "FeaturePipline"
         decode:
-            backend: "decord"
-        sample:
-            seg_len: 1
-            sample_rate: 4
-            clip_seg_num: 32
-            sliding_window: 128
-            sample_mode: "uniform"
-        transform: #Mandotary, image transform operator.
-            - Resize:
-                size: 256
-            - RandomCrop:
-                size: 224
-            - RandomHorizontalFlip:
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
-
-    test:
-        name: "RawFramePipeline"
-        decode:
-            backend: "decord"
+            backend: "numpy"
         sample:
             seg_len: 1
             sample_rate: 4
@@ -100,14 +61,20 @@ PIPELINE: #PIPELINE field
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            - Resize:
-                size: 256
-            - CenterCrop:
-                size: 224
             - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+
+    test:
+        name: "FeaturePipline"
+        decode:
+            backend: "numpy"
+        sample:
+            seg_len: 1
+            sample_rate: 4
+            clip_seg_num: 32
+            sliding_window: 128
+            sample_mode: "uniform"
+        transform:
+            - ToTensor:
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
@@ -120,7 +87,7 @@ METRIC:
     file_output: True
 
 
-model_name: "ETESVS_MobileNetV2_gtea_split1"
+model_name: "Sliding_MSTCN_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

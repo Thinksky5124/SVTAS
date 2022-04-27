@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-26 14:40:44
+LastEditTime: 2022-04-27 16:20:08
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -61,10 +61,7 @@ class Runner():
     
     def _update_loss_dict(self, input_loss_dict, sliding_num):
         for key, _ in self.loss_dict.items():
-            if key == "loss":
-                self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone()
-            else:
-                self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone() / sliding_num
+            self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone() / sliding_num
     
     def _distribute_sync_loss_dict(self):
         for key, value in self.loss_dict.items():
@@ -190,26 +187,18 @@ class Runner():
         loss_dict={}
 
         outputs = self.model(imgs, masks, idx)
-        backbone_score, neck_score, head_score = outputs
         if self.runner_mode in ['train', 'validation']:
-            backbone_loss, neck_loss, head_loss = self.criterion(backbone_score, neck_score, head_score, masks, labels)
-        
-            loss = (backbone_loss + head_loss) / sliding_num
-            # loss = (backone_loss + neck_loss + head_loss) / sliding_num
+            loss_dict = self.criterion(outputs, masks, labels)
 
+            loss = loss_dict["loss"] / sliding_num
             if self.runner_mode in ['train']:
                 if self.use_amp is True:
                     with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                         scaled_loss.backward()
                 else:
                     loss.backward()
-
-            loss_dict["loss"] = loss
-            loss_dict["backbone_loss"] = backbone_loss
-            loss_dict["neck_loss"] = neck_loss
-            loss_dict["head_loss"] = head_loss
             
-        return head_score, loss_dict
+        return outputs[-1], loss_dict
 
     def run_one_clip(self, imgs, labels, masks, vid_list, sliding_num, idx):
         # train segment

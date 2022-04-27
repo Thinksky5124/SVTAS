@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 13:57:47
+LastEditTime: 2022-04-27 20:31:14
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/heads/mstcn.py
 '''
@@ -10,6 +10,7 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
+from mmcv.cnn import constant_init, kaiming_init
 
 from ..builder import HEADS
 
@@ -19,6 +20,11 @@ class MultiStageModel(nn.Module):
         super(MultiStageModel, self).__init__()
         self.stage1 = SingleStageModel(num_layers, num_f_maps, dim, num_classes)
         self.stages = nn.ModuleList([copy.deepcopy(SingleStageModel(num_layers, num_f_maps, num_classes, num_classes)) for s in range(num_stages-1)])
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                kaiming_init(m)
 
     def forward(self, x, mask):
         out = self.stage1(x, mask)

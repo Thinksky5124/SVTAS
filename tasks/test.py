@@ -2,20 +2,17 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 21:06:51
+LastEditTime: 2022-04-27 20:37:21
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
-from typing import OrderedDict
 import torch
 from utils.logger import get_logger
 from .runner import Runner
 
-import model.builder as builder
-from dataset.segmentation_dataset import SegmentationDataset
+import model.builder as model_builder
+import dataset.builder as dataset_builder
 from utils.metric import SegmentationMetric
-from dataset.pipline import Pipeline
-from dataset.pipline import BatchCompose
 from model.post_precessings import PostProcessing
 from torchinfo import summary
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
@@ -46,7 +43,7 @@ def test(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = builder.build_model(cfg.MODEL).cuda()
+        model = model_builder.build_model(cfg.MODEL).cuda()
 
         # wheather to use amp
         if use_amp is True:
@@ -55,7 +52,7 @@ def test(cfg,
         torch.cuda.set_device(local_rank)
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
-        model = builder.build_model(cfg.MODEL).cuda(local_rank)
+        model = model_builder.build_model(cfg.MODEL).cuda(local_rank)
     
         # wheather to use amp
         if use_amp is True:
@@ -73,8 +70,8 @@ def test(cfg,
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    sliding_concate_fn = BatchCompose(**cfg.COLLATE)
-    test_Pipeline = Pipeline(**cfg.PIPELINE.test)
+    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
+    test_Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_Pipeline
     test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -82,7 +79,7 @@ def test(cfg,
     test_dataset_config['local_rank'] = local_rank
     test_dataset_config['nprocs'] = nprocs
     test_dataloader = torch.utils.data.DataLoader(
-        SegmentationDataset(**test_dataset_config),
+        dataset_builder.build_dataset(test_dataset_config),
         batch_size=temporal_clip_batch_size,
         num_workers=test_num_workers,
         collate_fn=sliding_concate_fn)
@@ -108,8 +105,8 @@ def test(cfg,
     Metric = SegmentationMetric(**cfg.METRIC)
 
     post_processing = PostProcessing(
-        num_classes=cfg.MODEL.head.num_classes,
-        clip_seg_num=cfg.MODEL.neck.clip_seg_num,
+        num_classes=cfg.MODEL.loss.num_classes,
+        clip_seg_num=cfg.DATASET.test.clip_seg_num,
         sliding_window=cfg.DATASET.test.sliding_window,
         sample_rate=cfg.DATASET.test.sample_rate)
 
