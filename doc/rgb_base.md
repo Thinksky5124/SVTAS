@@ -88,7 +88,7 @@ python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch
 
 ```bash
 python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS_gtea_split1/ETESVS_gtea_split1_best.pkl
-python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_neck_gtea_split1/ETESVS_MobileNetV2_gtea_split1_best.pkl
+python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_gtea_split1/ETESVS_MobileNetV2_gtea_split1_best.pkl
 ```
 - egtea
 

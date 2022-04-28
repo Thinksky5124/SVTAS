@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 11:33:55
+LastEditTime: 2022-04-28 14:15:08
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
@@ -183,7 +183,7 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
             coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
             coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
     elif mode in ["test"]:
-        logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+        logger.info("{:s} {:s} {:s} {:s} {}".format(
             coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
             coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
 

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 11:28:26
+LastEditTime: 2022-04-28 14:14:54
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -87,15 +87,12 @@ class Runner():
             for _, recod in self.record_dict.items():
                 recod.reset()
 
-        elif self.runner_mode in ['validation']:
+        elif self.runner_mode in ['validation', 'test']:
             self.model.eval()
             self.b_tic = time.time()
             # reset recoder
             for _, recod in self.record_dict.items():
                 recod.reset()
-
-        elif self.runner_mode in ['test']:
-            self.model.eval()
         
         
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
@@ -173,8 +170,8 @@ class Runner():
                 log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "train", ips, self.logger)
             elif self.runner_mode in ['validation']:
                 log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "validation", ips, self.logger)
-            elif self.runner_modemin ['test']:
-                log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "test", ips, self.logger)
+            elif self.runner_mode in ['test']:
+                log_batch(self.record_dict, self.current_step, 1, 1, "test", ips, self.logger)
 
         self.b_tic = time.time()
 
