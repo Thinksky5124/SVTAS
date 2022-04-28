@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 11:29:47
+LastEditTime: 2022-04-28 14:20:20
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -151,6 +151,7 @@ def test(cfg,
             return dict(imgs=x, masks=mask, idx=idx)
         output = input_constructor(input_shape)
         x, mask = output["imgs"], output["masks"]
+        print(model)
         # tensorboard_writer.add_graph(model, input_to_model=[x, mask, torch.ones(1).cuda()])
         summary(model, input_size=[x.shape, mask.shape, [1]], col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
         print("="*20)

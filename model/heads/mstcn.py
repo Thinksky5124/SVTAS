@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 20:31:14
+LastEditTime: 2022-04-28 14:50:06
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/heads/mstcn.py
 '''
@@ -55,10 +55,11 @@ class DilatedResidualLayer(nn.Module):
         super(DilatedResidualLayer, self).__init__()
         self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=dilation, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
-        self.dropout = nn.Dropout()
+        self.norm = nn.BatchNorm1d(out_channels)
+        # self.dropout = nn.Dropout()
 
     def forward(self, x, mask):
         out = F.relu(self.conv_dilated(x))
         out = self.conv_1x1(out)
-        out = self.dropout(out)
+        out = self.norm(out)
         return (x + out) * mask[:, 0:1, :]

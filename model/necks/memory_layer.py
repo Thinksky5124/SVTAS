@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-13 14:01:12
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 18:59:53
+LastEditTime: 2022-04-28 14:46:54
 Description: file content
 FilePath: /ETESVS/model/necks/memory_layer.py
 '''
@@ -15,7 +15,7 @@ from .convlstm import ConvLSTM
 from utils.logger import get_logger
 
 class ConvLSTMResidualLayer(nn.Module):
-    def __init__(self, in_channels, hidden_channels, num_classes, num_layers=1, dropout=0.5, bidirectional=False):
+    def __init__(self, in_channels, hidden_channels, num_classes, num_layers=1, bidirectional=False):
         super().__init__()
         self.hidden_channels = hidden_channels
         self.in_channels = in_channels
@@ -26,7 +26,6 @@ class ConvLSTMResidualLayer(nn.Module):
             self.direction = 1
         else:
             self.direction = 2
-        self.dropout = dropout
         
         self.conv_lstm = ConvLSTM(in_channels, hidden_channels, (3, 3), num_layers, batch_first=True)
         self.fc_frames_cls = nn.Linear(hidden_channels, num_classes)

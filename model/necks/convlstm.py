@@ -2,13 +2,13 @@
 Author: Thyssen Wen
 Date: 2022-04-22 21:05:07
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 20:44:13
+LastEditTime: 2022-04-28 14:56:38
 Description: ConvLSTM script ref:https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py
 FilePath: /ETESVS/model/necks/convlstm.py
 '''
 import torch.nn as nn
 import torch
-
+from mmcv.cnn import ConvModule
 
 class ConvLSTMCell(nn.Module):
 
@@ -44,21 +44,30 @@ class ConvLSTMCell(nn.Module):
         #                       bias=self.bias)
 
         # deepwise conv
+        conv_cfg=dict(type='Conv2d')
+        norm_cfg=dict(type='BN2d')
+        act_cfg=dict(type='ReLU6')
         self.conv = nn.Sequential(
-            nn.Conv2d(
+            ConvModule(
                 in_channels=self.input_dim + self.hidden_dim,
                 out_channels=self.input_dim + self.hidden_dim,
                 kernel_size=self.kernel_size,
                 padding=self.padding,
                 bias=self.bias,
-                groups=self.input_dim + self.hidden_dim),
-            nn.Conv2d(
+                groups=self.input_dim + self.hidden_dim,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                act_cfg=act_cfg),
+            ConvModule(
                 in_channels=self.input_dim + self.hidden_dim,
                 out_channels=4 * self.hidden_dim,
                 kernel_size=1,
                 padding=0,
                 bias=self.bias,
-                groups=1))
+                groups=1,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                act_cfg=None))
 
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state

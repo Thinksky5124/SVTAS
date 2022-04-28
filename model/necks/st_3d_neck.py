@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
-Date: 2022-03-25 10:29:18
+Date: 2022-04-28 19:52:16
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 14:48:39
-Description: model neck
-FilePath: /ETESVS/model/necks/etesvs_neck.py
+LastEditTime: 2022-04-28 20:10:11
+Description: Spatial Time 3D conv neck
+FilePath: /ETESVS/model/necks/st_3d_neck.py
 '''
 import torch
 import copy
@@ -17,7 +17,7 @@ from .memory_layer import ConvLSTMResidualLayer
 from ..builder import NECKS
 
 @NECKS.register()
-class ETESVSNeck(nn.Module):
+class ST3DNeck(nn.Module):
     def __init__(self,
                  num_classes=11,
                  num_layers=1,
@@ -45,7 +45,7 @@ class ETESVSNeck(nn.Module):
         self.neck_cls = nn.Conv1d(self.seg_hidden_channel, self.num_classes, 1)
 
         self.backbone_dropout = nn.Dropout(p=self.drop_ratio)
-        self.neck_norm = nn.BatchNorm1d(self.seg_hidden_channel)
+        self.neck_norm = nn.BatchNorm3d(self.seg_hidden_channel)
         self.neck_cls_dropout = nn.Dropout(p=self.drop_ratio)
         
         self.backbone_cls_conv = nn.Conv1d(self.cls_hidden_channel, self.seg_hidden_channel, 1)
@@ -91,9 +91,9 @@ class ETESVSNeck(nn.Module):
         # [N, num_segs, 1280, 7, 7]
         spatio_temporal_feature = self.rnn_conv(seg_feature, masks)
 
-        spatio_temporal_feature = torch.reshape(spatio_temporal_feature, shape=[-1] + list(seg_feature.shape[-3:]))
+        spatio_temporal_feature_reshape = torch.reshape(spatio_temporal_feature, shape=[-1] + list(seg_feature.shape[-3:]))
         # seg_feature_pool.shape = [N * num_segs, 1280, 1, 1]
-        spatio_temporal_feature_pool = self.neck_avgpool(spatio_temporal_feature)
+        spatio_temporal_feature_pool = self.neck_avgpool(spatio_temporal_feature_reshape)
 
         # seg_feature_pool.shape = [N, num_segs, 1280, 1, 1]
         spatio_temporal_feature_pool = torch.reshape(spatio_temporal_feature_pool, shape=[-1, self.clip_seg_num] + list(spatio_temporal_feature_pool.shape[-3:]))
@@ -110,7 +110,8 @@ class ETESVSNeck(nn.Module):
         neck_score = self.neck_cls(spatio_temporal_feature_pool_dropout)
 
         # [N D T]
-        seg_feature = (backbone_feature + spatio_temporal_feature_pool).contiguous() * masks[:, 0:1, :]
+        seg_feature = spatio_temporal_feature.contiguous() * masks[:, 0:1, :].transpose(1, 2).unsqueeze(-1).unsqueeze(-1)
+        seg_feature = torch.permute(seg_feature, [0, 2, 1, 3, 4])
         # seg_feature = backbone_feature.contiguous() * masks[:, 0:1, :]
         
         if self.neck_norm is not None:
