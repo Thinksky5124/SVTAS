@@ -35,6 +35,7 @@ MODEL:
         ignore_index: -100
 
 COLLATE:
+    name: "BatchCompose"
     to_tensor_idx: 3
 
 DATASET: #DATASET field
@@ -42,6 +43,7 @@ DATASET: #DATASET field
     video_batch_size: 2
     num_workers: 2
     train:
+        name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/egtea/splits/train_split1.txt" #Mandatory, train data index file path
         videos_path: "./data/egtea/Videos"
@@ -53,6 +55,7 @@ DATASET: #DATASET field
         clip_seg_num: 32
         sample_rate: 4
     test:
+        name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/egtea/splits/test_split1.txt" #Mandatory, train data index file path
         videos_path: "./data/egtea/Videos"
@@ -65,7 +68,8 @@ DATASET: #DATASET field
         sample_rate: 4
 
 PIPELINE: #PIPELINE field
-    train: 
+    train:
+        name: "RawFramePipeline"
         decode:
             backend: "decord"
         sample:
@@ -86,6 +90,7 @@ PIPELINE: #PIPELINE field
                 std: [0.264, 0.204, 0.163]
 
     test:
+        name: "RawFramePipeline"
         decode:
             backend: "decord"
         sample:

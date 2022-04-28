@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-13 11:32:44
+LastEditTime: 2022-04-28 11:33:55
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
@@ -173,13 +173,19 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
         if not (m == 'batch_time' or m == 'reader_time'):
             metric_values.append(metric_list[m].value)
     metric_str = ' '.join([str(v) for v in metric_values])
-    epoch_str = "epoch:[{:>3d}/{:<3d}]".format(epoch_id, total_epoch)
+    if mode in ["train", "validation"]:
+        epoch_str = "epoch:[{:>3d}/{:<3d}]".format(epoch_id, total_epoch)
     step_str = "{:s} step:{:<4d}".format(mode, batch_id)
 
-    logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
-        coloring(epoch_str, "HEADER") if batch_id == 0 else epoch_str,
-        coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
-        coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+    if mode in ["train", "validation"]:
+        logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+            coloring(epoch_str, "HEADER") if batch_id == 0 else epoch_str,
+            coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
+            coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+    elif mode in ["test"]:
+        logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+            coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
+            coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
 
 def log_epoch(metric_list, epoch, mode, ips, logger):
     batch_cost = 'avg_' + str(metric_list['batch_time'].value) + ' sec,'

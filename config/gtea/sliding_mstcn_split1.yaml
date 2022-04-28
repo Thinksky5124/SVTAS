@@ -4,7 +4,7 @@ MODEL:
     neck:
     head:
         name: "MultiStageModel"
-        num_stages: 4
+        num_stages: 10
         num_layers: 4
         num_f_maps: 64
         dim: 2048
@@ -80,6 +80,7 @@ OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
     step_size: [20, 40]
     gamma: 0.1
+    weight_decay: 0
 
 METRIC:
     overlap: [.1, .25, .5]

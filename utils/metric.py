@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-26 14:48:07
+LastEditTime: 2022-04-28 10:44:27
 Description: metric class
 FilePath: /ETESVS/utils/metric.py
 '''
@@ -201,8 +201,8 @@ class BaseSegmentationMetric():
 
     def _compute_metrics(self):
         # cls metric
-        Acc = 100 * float(self.total_correct) / self.total_frame
-        Edit = (1.0 * self.total_edit) / self.total_video
+        Acc = 100 * float(self.total_correct) / (self.total_frame + self.elps)
+        Edit = (1.0 * self.total_edit) / (self.total_video + self.elps)
         Fscore = dict()
         for s in range(self.overlap_len):
             precision = self.cls_tp[s] / float(self.cls_tp[s] + self.cls_fp[s] + self.elps)

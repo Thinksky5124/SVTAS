@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-10 20:43:53
+LastEditTime: 2022-04-28 10:42:05
 Description: model postprecessing
-FilePath: /ETESVS/model/post_processing.py
+FilePath: /ETESVS/model/post_precessings/etesvs_post_processing.py
 '''
 import numpy as np
 import torch
@@ -33,7 +33,7 @@ class PostProcessing():
                 (self.sliding_window - (sample_videos_max_len % self.sliding_window))
         self.sample_videos_max_len = sample_videos_max_len
         self.pred_scores = np.zeros((batch_size, self.num_classes, sample_videos_max_len))
-        self.video_gt = np.zeros((batch_size, sample_videos_max_len))
+        self.video_gt = np.full((batch_size, sample_videos_max_len), self.ignore_index)
         self.init_flag = True
 
     def update(self, seg_scores, gt, idx):

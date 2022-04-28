@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 20:36:30
+LastEditTime: 2022-04-28 13:52:52
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -203,7 +203,7 @@ def train(cfg,
         scheduler.step()
         ips = "avg_ips: {:.5f} instance/sec.".format(
             video_batch_size * record_dict["batch_time"].count /
-            record_dict["batch_time"].sum)
+            (record_dict["batch_time"].sum + 1e-10))
         log_epoch(record_dict, epoch + 1, "train", ips, logger)
         if args.use_tensorboard and local_rank <= 0:
             tenorboard_log_epoch(record_dict, epoch + 1, "train", writer=tensorboard_writer)
@@ -242,7 +242,7 @@ def train(cfg,
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
                 video_batch_size * record_dict["batch_time"].count /
-                record_dict["batch_time"].sum)
+                (record_dict["batch_time"].sum + 1e-10))
             log_epoch(record_dict, epoch + 1, "val", ips, logger)
             if args.use_tensorboard and local_rank <= 0:
                 tenorboard_log_epoch(record_dict, epoch + 1, "val", writer=tensorboard_writer)
@@ -273,9 +273,6 @@ def train(cfg,
                 logger.info(
                         f"Already save the best model (F1@0.50){int(best * 10000) / 10000}"
                     )
-            
-            if local_rank >= 0:
-                torch.distributed.barrier()
 
         # 6. Save model and optimizer
         if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1 and local_rank <= 0:

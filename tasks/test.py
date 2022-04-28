@@ -2,13 +2,15 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 20:37:21
+LastEditTime: 2022-04-28 11:29:47
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
 import torch
 from utils.logger import get_logger
 from .runner import Runner
+from utils.recorder import build_recod
+import time
 
 import model.builder as model_builder
 import dataset.builder as dataset_builder
@@ -44,6 +46,7 @@ def test(cfg,
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
         model = model_builder.build_model(cfg.MODEL).cuda()
+        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
 
         # wheather to use amp
         if use_amp is True:
@@ -53,6 +56,7 @@ def test(cfg,
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
         model = model_builder.build_model(cfg.MODEL).cuda(local_rank)
+        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
     
         # wheather to use amp
         if use_amp is True:
@@ -103,6 +107,8 @@ def test(cfg,
 
     # add params to metrics
     Metric = SegmentationMetric(**cfg.METRIC)
+    
+    record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
 
     post_processing = PostProcessing(
         num_classes=cfg.MODEL.loss.num_classes,
@@ -113,8 +119,10 @@ def test(cfg,
     runner = Runner(logger=logger,
                 video_batch_size=video_batch_size,
                 Metric=Metric,
+                record_dict=record_dict,
                 cfg=cfg,
                 model=model,
+                criterion=criterion,
                 post_processing=post_processing,
                 use_amp=use_amp,
                 nprocs=nprocs,
@@ -122,9 +130,10 @@ def test(cfg,
                 runner_mode='test')
 
     runner.epoch_init()
-
+    r_tic = time.time()
     for i, data in enumerate(test_dataloader):
-        runner.run_one_iter(data=data)
+        runner.run_one_iter(data=data, r_tic=r_tic)
+        r_tic = time.time()
 
     if local_rank <= 0:
         # metric output

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 16:20:08
+LastEditTime: 2022-04-28 11:28:26
 Description: runner script
 FilePath: /ETESVS/tasks/runner.py
 '''
@@ -149,33 +149,34 @@ class Runner():
             self.post_processing.init_scores(sliding_num, len(vid_list))
         
 
-        if self.runner_mode in ['train', 'validation']:
-            if self.nprocs > 1:
-                torch.distributed.barrier()
-                self._distribute_sync_loss_dict()
+        if self.nprocs > 1:
+            torch.distributed.barrier()
+            self._distribute_sync_loss_dict()
 
-            # logger
+        # logger
+        if self.runner_mode in ['train']:
+            self.record_dict['lr'].update(self.optimizer.state_dict()['param_groups'][0]['lr'], self.video_batch_size)
+        
+        self._log_loss_dict()
+        self.record_dict['batch_time'].update(time.time() - self.b_tic)
+        self.record_dict['F1@0.5'].update(f1, self.video_batch_size)
+        self.record_dict['Acc'].update(acc, self.video_batch_size)
+        self.record_dict['Seg_Acc'].update(self.seg_acc, self.video_batch_size)
+
+        self._init_loss_dict()
+        self.seg_acc = 0.
+
+        if self.current_step % self.cfg.get("log_interval", 10) == 0:
+            ips = "ips: {:.5f} instance/sec.".format(
+                self.video_batch_size / self.record_dict["batch_time"].val)
             if self.runner_mode in ['train']:
-                self.record_dict['lr'].update(self.optimizer.state_dict()['param_groups'][0]['lr'], self.video_batch_size)
-            
-            self._log_loss_dict()
-            self.record_dict['batch_time'].update(time.time() - self.b_tic)
-            self.record_dict['F1@0.5'].update(f1, self.video_batch_size)
-            self.record_dict['Acc'].update(acc, self.video_batch_size)
-            self.record_dict['Seg_Acc'].update(self.seg_acc, self.video_batch_size)
+                log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "train", ips, self.logger)
+            elif self.runner_mode in ['validation']:
+                log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "validation", ips, self.logger)
+            elif self.runner_modemin ['test']:
+                log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "test", ips, self.logger)
 
-            self._init_loss_dict()
-            self.seg_acc = 0.
-
-            if self.current_step % self.cfg.get("log_interval", 10) == 0:
-                ips = "ips: {:.5f} instance/sec.".format(
-                    self.video_batch_size / self.record_dict["batch_time"].val)
-                if self.runner_mode in ['train']:
-                    log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "train", ips, self.logger)
-                elif self.runner_mode in ['validation']:
-                    log_batch(self.record_dict, self.current_step, epoch + 1, self.cfg.epochs, "validation", ips, self.logger)
-
-            self.b_tic = time.time()
+        self.b_tic = time.time()
 
         self.current_step = step
     
@@ -187,16 +188,15 @@ class Runner():
         loss_dict={}
 
         outputs = self.model(imgs, masks, idx)
-        if self.runner_mode in ['train', 'validation']:
-            loss_dict = self.criterion(outputs, masks, labels)
+        loss_dict = self.criterion(outputs, masks, labels)
 
-            loss = loss_dict["loss"] / sliding_num
-            if self.runner_mode in ['train']:
-                if self.use_amp is True:
-                    with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                        scaled_loss.backward()
-                else:
-                    loss.backward()
+        loss = loss_dict["loss"] / sliding_num
+        if self.runner_mode in ['train']:
+            if self.use_amp is True:
+                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
             
         return outputs[-1], loss_dict
 
@@ -222,19 +222,17 @@ class Runner():
                 self.current_step_vid_list = vid_list
             self.seg_acc += self.post_processing.update(score, labels, idx) / sliding_num
 
-            if self.runner_mode in ['train', 'validation']:
-                # logger loss
-                self._update_loss_dict(loss_dict, sliding_num)
+            # logger loss
+            self._update_loss_dict(loss_dict, sliding_num)
 
     def run_one_iter(self, data, r_tic=None, epoch=None):
         # videos sliding stream train
-        if self.runner_mode in ['train', 'validation']:
-            self.record_dict['reader_time'].update(time.time() - r_tic)
+        self.record_dict['reader_time'].update(time.time() - r_tic)
 
         for sliding_seg in data:
             imgs, labels, masks, vid_list, sliding_num, step, idx = sliding_seg
             # wheather next step
-            if self.current_step != step:
+            if self.current_step != step and not (self.current_step == 0 and len(vid_list) <= 0):
                 self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
 
             if idx >= 0: 
