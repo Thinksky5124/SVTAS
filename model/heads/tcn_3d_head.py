@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 20:12:19
+LastEditTime: 2022-04-28 20:23:12
 Description: 3D TCN model
 FilePath: /ETESVS/model/heads/tcn_3d_head.py
 '''
@@ -54,26 +54,27 @@ class TCN3DHead(nn.Module):
         for layer in self.layers:
             out = layer(out, mask[:, :, ::self.sample_rate])
         
+        out = torch.permute(out, dims=[0, 2, 1, 3, 4])
         # seg_feature [N, num_segs, 1280, 7, 7]
         out = torch.reshape(out, shape=[-1] + list(out.shape[-3:]))
         # seg_feature_pool.shape = [N * num_segs, 1280, 1, 1]
-        out = self.haed_avgpool(out)
+        out = self.head_avgpool(out)
 
         # seg_feature_pool.shape = [N, num_segs, 1280, 1, 1]
-        out = torch.reshape(out, shape=[-1, seg_feature.shape[1]] + list(out.shape[-3:]))
+        out = torch.reshape(out, shape=[-1, seg_feature.shape[2]] + list(out.shape[-3:]))
 
         # segmentation feature branch
-        # [N, num_segs, 2048]
-        out = out.squeeze(-1).squeeze(-1)
+        # [N, 2048, num_segs]
+        out = out.squeeze(-1).squeeze(-1).transpose(1, 2)
 
-        out = self.conv_out(out) * mask[:, 0:1, :]
+        out = self.conv_out(out) * mask[:, 0:1, ::self.sample_rate]
 
         outputs = out.unsqueeze(0)
         outputs = F.interpolate(
             input=outputs,
             scale_factor=[1, self.sample_rate],
             mode="nearest")
-        return out
+        return outputs
 
 
 class DilatedResidual3DLayer(nn.Module):

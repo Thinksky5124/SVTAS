@@ -18,6 +18,7 @@ python main.py  --validate -c config/gtea/etesvs_split3.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_split4.yaml --seed 0
 
 python main.py  --validate -c config/gtea/etesvs_mobinetv2_split1.yaml --seed 0
+python main.py  --validate -c config/gtea/etesvs_3d_split1.yaml --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/gtea/etesvs_split1.yaml --seed 0
@@ -48,12 +49,14 @@ python main.py  --validate -c config/50salads/etesvs_split4.yaml --seed 0
 python main.py  --validate -c config/50salads/etesvs_split5.yaml --seed 0
 
 python main.py  --validate -c config/50salads/etesvs_mobinetv2_split1.yaml --seed 0
+python main.py  --validate -c config/50salads/etesvs_3d_split1.yaml --seed 0
 
 # multi gpu
-export CUDA_VISIBLE_DEVICES=0,1
+export CUDA_VISIBLE_DEVICES=1,2
 export DECORD_EOF_RETRY_MAX=20480
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_split1.yaml --seed 0
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_mobinetv2_split1.yaml --seed 0
+python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/50salads/etesvs_3d_split1.yaml --seed 0
 ```
 - breakfast
 
@@ -89,6 +92,7 @@ python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch
 ```bash
 python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS_gtea_split1/ETESVS_gtea_split1_best.pkl
 python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_gtea_split1/ETESVS_MobileNetV2_gtea_split1_best.pkl
+python main.py  --test -c config/gtea/etesvs_3d_split1.yaml --weights=output/ETESVS_3D_gtea_split1/ETESVS_3D_gtea_split1_best.pkl
 ```
 - egtea
 
