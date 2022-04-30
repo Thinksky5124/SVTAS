@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 19:29:09
+LastEditTime: 2022-04-29 12:42:52
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath: /ETESVS/model/backbones/mobilenet_v2.py
 '''
@@ -264,18 +264,25 @@ class MobileNetV2(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def init_weights(self):
-        if isinstance(self.pretrained, str):
-            logger = logger = get_logger("ETESVS")
-            load_checkpoint(self, self.pretrained, strict=False, logger=logger)
-        elif self.pretrained is None:
-            for m in self.modules():
-                if isinstance(m, nn.Conv2d):
-                    kaiming_init(m)
-                elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
-                    constant_init(m, 1)
+    def init_weights(self, child_model=False):
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                logger = logger = get_logger("ETESVS")
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger)
+            elif self.pretrained is None:
+                for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
+                        constant_init(m, 1)
+            else:
+                raise TypeError('pretrained must be a str or None')
         else:
-            raise TypeError('pretrained must be a str or None')
+            for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
+                        constant_init(m, 1)
 
     def forward(self, x, masks):
         x = self.conv1(x)

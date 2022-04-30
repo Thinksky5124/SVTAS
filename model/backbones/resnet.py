@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:58:20
+LastEditTime: 2022-04-29 12:43:24
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/backbones/resnet.py
 '''
@@ -523,26 +523,33 @@ class ResNet(nn.Module):
                 f'These parameters in pretrained checkpoint are not loaded'
                 f': {remaining_names}')
 
-    def init_weights(self):
+    def init_weights(self, child_model=False):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
-        if isinstance(self.pretrained, str):
-            logger = get_logger("ETESVS")
-            if self.torchvision_pretrain:
-                # torchvision's
-                self._load_torchvision_checkpoint(logger)
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                logger = get_logger("ETESVS")
+                if self.torchvision_pretrain:
+                    # torchvision's
+                    self._load_torchvision_checkpoint(logger)
+                else:
+                    # ours
+                    load_checkpoint(
+                        self, self.pretrained, strict=False, logger=logger)
+            elif self.pretrained is None:
+                for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, nn.BatchNorm2d):
+                        constant_init(m, 1)
             else:
-                # ours
-                load_checkpoint(
-                    self, self.pretrained, strict=False, logger=logger)
-        elif self.pretrained is None:
-            for m in self.modules():
-                if isinstance(m, nn.Conv2d):
-                    kaiming_init(m)
-                elif isinstance(m, nn.BatchNorm2d):
-                    constant_init(m, 1)
+                raise TypeError('pretrained must be a str or None')
         else:
-            raise TypeError('pretrained must be a str or None')
+            for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, nn.BatchNorm2d):
+                        constant_init(m, 1)
 
     def forward(self, x, masks):
         """Defines the computation performed at every call.

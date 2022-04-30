@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 14:20:20
+LastEditTime: 2022-04-29 12:25:18
 Description: test script api
 FilePath: /ETESVS/tasks/test.py
 '''
@@ -140,7 +140,7 @@ def test(cfg,
         runner.Metric.accumulate()
 
         # model param flops caculate
-        x_shape = [cfg.MODEL.neck.clip_seg_num, 3, 244, 244]
+        x_shape = [cfg.DATASET.test.clip_seg_num, 3, 244, 244]
         mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
         input_shape = (x_shape, mask_shape)
         def input_constructor(input_shape):

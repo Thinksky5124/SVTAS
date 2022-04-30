@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:39
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 19:39:33
+LastEditTime: 2022-04-29 12:44:29
 Description: Mobilenet V2 TSM model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2_tsm.py
 FilePath: /ETESVS/model/backbones/mobilenet_v2_tsm.py
 '''
@@ -41,9 +41,9 @@ class MobileNetV2TSM(MobileNetV2):
                     shift_div=self.shift_div,
                 )
 
-    def init_weights(self):
+    def init_weights(self, child_model=False):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
-        super().init_weights()
+        super().init_weights(child_model)
         if self.is_shift:
             self.make_temporal_shift()

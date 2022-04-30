@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
-Date: 2022-04-27 17:01:33
+Date: 2022-04-29 10:59:22
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 15:08:06
-Description: feaeture segmentation model framework
-FilePath: /ETESVS/model/architectures/feature_segmentation.py
+LastEditTime: 2022-04-29 15:08:52
+Description: Action Recognition 2D framework
+FilePath: /ETESVS/model/architectures/recognition2d.py
 '''
 import torch
 import torch.nn as nn
@@ -20,7 +20,7 @@ from ..builder import build_head
 from ..builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class FeatureSegmentation(nn.Module):
+class Recognition2D(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -60,18 +60,20 @@ class FeatureSegmentation(nn.Module):
         # self.head._clear_memory_buffer()
         pass
 
-    def forward(self, feature, masks, idx=None):
+    def forward(self, imgs, masks, idx=None):
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 
-        # feature.shape=[N,T,C], for most commonly case
+        # x.shape=[N,T,C,H,W], for most commonly case
+        imgs = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
+        # x [N * T, C, H, W]
 
         if self.backbone is not None:
              # masks.shape [N * T, 1, 1, 1]
-            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1)
-            feature = self.backbone(feature, backbone_masks)
+            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            feature = self.backbone(imgs, backbone_masks)
         else:
-            feature = feature
+            feature = imgs
 
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
@@ -91,8 +93,9 @@ class FeatureSegmentation(nn.Module):
             head_score = self.head(seg_feature, masks[:, :, ::self.sample_rate])
         else:
             head_score = None
-        # seg_score [stage_num, N, C, T]
-        # cls_score [N, C, T]
+        # head_score [stage_num, N, C, T // sample_rate]
+        head_score = head_score.unsqueeze(0)
+        # head_score [stage_num, N, C, T]
         head_score = F.interpolate(
             input=head_score,
             scale_factor=[1, self.sample_rate],

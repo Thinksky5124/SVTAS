@@ -14,7 +14,7 @@ kiwisolver==1.4.0
 lazy-object-proxy==1.7.1
 matplotlib==3.5.1
 mccabe==0.6.1
-mmcv==1.4.7
+mmcv-full==1.5.0
 numpy==1.22.3
 opencv-python==4.5.5.64
 packaging==21.3

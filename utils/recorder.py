@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 16:30:10
+LastEditTime: 2022-04-29 11:11:04
 Description: recorder construct function
 FilePath: /ETESVS/utils/recorder.py
 '''
@@ -34,7 +34,7 @@ def build_recod(architecture_type, mode):
                    'neck_loss': AverageMeter("neck_loss", '.5f'),
                    'head_loss': AverageMeter("head_loss", '.5f')
                   }
-    elif architecture_type in ["FeatureSegmentation"]:
+    elif architecture_type in ["FeatureSegmentation", "Recognition2D"]:
         if mode == "train":
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                     'reader_time': AverageMeter('reader_time', '.5f'),

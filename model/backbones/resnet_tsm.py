@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-14 17:04:44
+LastEditTime: 2022-04-29 12:45:02
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
 FilePath: /ETESVS/model/backbones/resnet_tsm.py
 '''
@@ -291,10 +291,10 @@ class ResNetTSM(ResNet):
                                                  self.num_segments,
                                                  self.non_local_cfg)
 
-    def init_weights(self):
+    def init_weights(self, child_model=False):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
-        super().init_weights()
+        super().init_weights(child_model)
         if self.is_shift:
             self.make_temporal_shift()
         if len(self.non_local_cfg) != 0:

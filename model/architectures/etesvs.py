@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-25 21:06:38
+LastEditTime: 2022-04-29 12:45:30
 Description: etesvs model framework
 FilePath: /ETESVS/model/architectures/etesvs.py
 '''
@@ -35,13 +35,13 @@ class ETESVS(nn.Module):
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
+        self.backbone.init_weights(child_model=True)
+        self.neck.init_weights()
+        self.head.init_weights()
+        
         if isinstance(self.backbone.pretrained, str):
             logger = logger = get_logger("ETESVS")
             load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
-        else:
-            self.backbone.init_weights()
-            self.neck.init_weights()
-            self.head.init_weights()
     
     def _clear_memory_buffer(self):
         # self.backbone._clear_memory_buffer()
@@ -61,7 +61,7 @@ class ETESVS(nn.Module):
             backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             feature = self.backbone(imgs, backbone_masks)
         else:
-            feature = None
+            feature = imgs
 
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature

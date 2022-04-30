@@ -19,6 +19,7 @@ python main.py  --validate -c config/gtea/etesvs_split4.yaml --seed 0
 
 python main.py  --validate -c config/gtea/etesvs_mobinetv2_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_3d_split1.yaml --seed 0
+python main.py  --validate -c config/gtea/mobilev2_split1.yaml --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/gtea/etesvs_split1.yaml --seed 0
@@ -93,6 +94,7 @@ python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch
 python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS_gtea_split1/ETESVS_gtea_split1_best.pkl
 python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_gtea_split1/ETESVS_MobileNetV2_gtea_split1_best.pkl
 python main.py  --test -c config/gtea/etesvs_3d_split1.yaml --weights=output/ETESVS_3D_gtea_split1/ETESVS_3D_gtea_split1_best.pkl
+python main.py  --test -c config/gtea/mobilev2_split1.yaml --weights=output/MobileV2TSM_gtea_split1/MobileV2TSM_gtea_split1_best.pkl
 ```
 - egtea
 
