@@ -2,14 +2,14 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:53
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 11:04:06
+LastEditTime: 2022-04-30 14:42:40
 Description: file content
 FilePath: /ETESVS/model/losses/__init__.py
 '''
 from .etesvs_loss import ETESVSLoss
 from .mstcn_loss import MSTCNLoss
-from .tsm_loss import TSMLoss
+from .tsm_loss import SegmentationLoss
 
 __all__ = [
-    'ETESVSLoss', 'MSTCNLoss', 'TSMLoss'
+    'ETESVSLoss', 'MSTCNLoss', 'SegmentationLoss'
 ]

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 11:32:11
+LastEditTime: 2022-04-30 14:42:03
 Description: Action recognition model loss
 FilePath: /ETESVS/model/losses/tsm_loss.py
 '''
@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from ..builder import LOSSES
 
 @LOSSES.register()
-class TSMLoss(nn.Module):
+class SegmentationLoss(nn.Module):
     def __init__(self,
                  num_classes,
                  label_mode='soft',

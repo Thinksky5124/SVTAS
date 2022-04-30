@@ -34,7 +34,7 @@ def build_recod(architecture_type, mode):
                    'neck_loss': AverageMeter("neck_loss", '.5f'),
                    'head_loss': AverageMeter("head_loss", '.5f')
                   }
-    elif architecture_type in ["FeatureSegmentation", "Recognition2D"]:
+    elif architecture_type in ["FeatureSegmentation", "Recognition2D", "Recognition3D"]:
         if mode == "train":
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                     'reader_time': AverageMeter('reader_time', '.5f'),

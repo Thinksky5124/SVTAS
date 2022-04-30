@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
-Date: 2022-04-29 10:59:22
+Date: 2022-04-30 14:45:38
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-30 14:45:18
-Description: Action Recognition 2D framework
-FilePath: /ETESVS/model/architectures/recognition2d.py
+LastEditTime: 2022-04-30 15:30:24
+Description: Action Recognition 3D framework
+FilePath: /ETESVS/model/architectures/recognition3d.py
 '''
 import torch
 import torch.nn as nn
@@ -20,7 +20,7 @@ from ..builder import build_head
 from ..builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class Recognition2D(nn.Module):
+class Recognition3D(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -65,12 +65,12 @@ class Recognition2D(nn.Module):
         masks = masks.unsqueeze(1)
 
         # x.shape=[N,T,C,H,W], for most commonly case
-        imgs = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
-        # x [N * T, C, H, W]
+        imgs = torch.permute(imgs, dims=[0, 2, 1, 3, 4]).contiguous()
+        # imgs.shape=[N,C,T,H,W]
 
         if self.backbone is not None:
-             # masks.shape [N * T, 1, 1, 1]
-            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+             # masks.shape [N, 1, T, 1, 1]
+            backbone_masks = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
             feature = self.backbone(imgs, backbone_masks)
         else:
             feature = imgs
