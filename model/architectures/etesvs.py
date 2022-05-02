@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 12:45:30
+LastEditTime: 2022-05-02 21:25:53
 Description: etesvs model framework
 FilePath: /ETESVS/model/architectures/etesvs.py
 '''
@@ -44,7 +44,7 @@ class ETESVS(nn.Module):
             load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
     
     def _clear_memory_buffer(self):
-        # self.backbone._clear_memory_buffer()
+        self.backbone._clear_memory_buffer()
         self.neck._clear_memory_buffer()
         self.head._clear_memory_buffer()
 

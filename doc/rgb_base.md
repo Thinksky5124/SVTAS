@@ -19,6 +19,7 @@ python main.py  --validate -c config/gtea/etesvs_split4.yaml --seed 0
 
 python main.py  --validate -c config/gtea/etesvs_mobinetv2_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_3d_split1.yaml --seed 0
+python main.py  --validate -c config/gtea/etesvs_3d_memory_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/mobilev2_split1.yaml --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3

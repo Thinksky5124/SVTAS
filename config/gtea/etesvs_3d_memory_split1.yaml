@@ -1,7 +1,7 @@
 MODEL:
     architecture: "ETESVS"
     backbone:
-        name: "MobileNetV2TSM"
+        name: "MobileNetV2TMM"
         pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
         clip_seg_num: 32
         shift_div: 8
@@ -120,7 +120,7 @@ METRIC:
     file_output: True
 
 
-model_name: "ETESVS_3D_gtea_split1"
+model_name: "ETESVS_3D_Memory_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

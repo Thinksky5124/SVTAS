@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-30 15:43:50
+LastEditTime: 2022-05-02 20:34:04
 Description: train script api
 FilePath: /ETESVS/tasks/train.py
 '''
@@ -174,7 +174,6 @@ def train(cfg,
                 use_amp=use_amp,
                 nprocs=nprocs,
                 local_rank=local_rank)
-
     best = 0.0
     for epoch in range(0, cfg.epochs):
         if epoch < resume_epoch:
