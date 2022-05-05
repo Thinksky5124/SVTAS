@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-04 11:23:38
+LastEditTime : 2022-05-05 16:08:06
 Description: Action Recognition 3D framework
 FilePath     : /ETESVS/model/architectures/recognition3d.py
 '''
@@ -60,7 +60,10 @@ class Recognition3D(nn.Module):
         # self.head._clear_memory_buffer()
         pass
 
-    def forward(self, imgs, masks, idx=None):
+    def forward(self, input_data):
+        masks = input_data['masks']
+        imgs = input_data['imgs']
+        
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 

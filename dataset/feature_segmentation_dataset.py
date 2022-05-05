@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-27 16:13:11
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 21:03:20
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 15:38:03
 Description: feature dataset class
-FilePath: /ETESVS/dataset/feature_segmentation_dataset.py
+FilePath     : /ETESVS/dataset/feature_segmentation_dataset.py
 '''
 
 import numpy as np
@@ -95,4 +95,23 @@ class FeatureSegmentationDataset(RawFrameSegmentationDataset):
         feature = copy.deepcopy(torch.concat(feature_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
-        return feature, labels, masks, vid_list
+
+        # compose result
+        data_dict = {}
+        data_dict['feature'] = feature
+        data_dict['labels'] = labels
+        data_dict['masks'] = masks
+        data_dict['vid_list'] = vid_list
+        return data_dict
+    
+    def _get_end_videos_clip(self):
+        # compose result
+        data_dict = {}
+        data_dict['feature'] = 0
+        data_dict['labels'] = 0
+        data_dict['masks'] = 0
+        data_dict['vid_list'] = []
+        data_dict['sliding_num'] = 0
+        data_dict['step'] = self.step_num
+        data_dict['current_sliding_cnt'] = -1
+        return data_dict

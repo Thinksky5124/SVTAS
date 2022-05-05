@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-04 11:23:54
+LastEditTime : 2022-05-05 16:06:19
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -177,15 +177,18 @@ class Runner():
 
         self.current_step = step
     
-    def _model_forward(self, imgs, labels, masks, idx, sliding_num):
+    def _model_forward(self, data_dict):
+        sliding_num = data_dict['sliding_num']
+
         # move data
-        imgs = imgs.cuda()
-        masks = masks.cuda()
-        labels = labels.cuda()
+        input_data = {}
+        for key, value in data_dict.items():
+            if torch.is_tensor(value):
+                input_data[key] = value.cuda()
         loss_dict={}
 
-        outputs = self.model(imgs, masks, idx)
-        loss_dict = self.criterion(outputs, masks, labels)
+        outputs = self.model(input_data)
+        loss_dict = self.criterion(outputs, input_data["masks"], input_data["labels"])
 
         loss = loss_dict["loss"] / sliding_num
         if self.runner_mode in ['train']:
@@ -197,15 +200,19 @@ class Runner():
             
         return outputs[-1], loss_dict
 
-    def run_one_clip(self, imgs, labels, masks, vid_list, sliding_num, idx):
+    def run_one_clip(self, data_dict):
+        vid_list = data_dict['vid_list']
+        sliding_num = data_dict['sliding_num']
+        idx = data_dict['current_sliding_cnt']
+        labels = data_dict['labels']
         # train segment
         if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
-                score, loss_dict = self._model_forward(imgs, labels, masks, idx, sliding_num)
+                score, loss_dict = self._model_forward(data_dict)
         else:
             # single gpu
-            score, loss_dict = self._model_forward(imgs, labels, masks, idx, sliding_num)
+            score, loss_dict = self._model_forward(data_dict)
 
         # score = score.unsqueeze(0)
         # score = torch.nn.functional.interpolate(
@@ -227,10 +234,13 @@ class Runner():
         self.record_dict['reader_time'].update(time.time() - r_tic)
 
         for sliding_seg in data:
-            imgs, labels, masks, vid_list, sliding_num, step, idx = sliding_seg
+            step = sliding_seg['step']
+            vid_list = sliding_seg['vid_list']
+            sliding_num = sliding_seg['sliding_num']
+            idx = sliding_seg['current_sliding_cnt']
             # wheather next step
             if self.current_step != step and not (self.current_step == 0 and len(vid_list) <= 0):
                 self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
 
             if idx >= 0: 
-                self.run_one_clip(imgs, labels, masks, vid_list, sliding_num, idx)
+                self.run_one_clip(sliding_seg)

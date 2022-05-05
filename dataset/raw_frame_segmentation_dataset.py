@@ -1,12 +1,13 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 11:04:42
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 15:37:28
 Description: dataset class
-FilePath: /ETESVS/dataset/raw_frame_segmentation_dataset.py
+FilePath     : /ETESVS/dataset/raw_frame_segmentation_dataset.py
 '''
 import os.path as osp
+from unittest import result
 import numpy as np
 import os
 import copy
@@ -223,7 +224,26 @@ class RawFrameSegmentationDataset(data.IterableDataset):
         imgs = copy.deepcopy(torch.concat(imgs_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
-        return imgs, labels, masks, vid_list
+
+        # compose result
+        data_dict = {}
+        data_dict['imgs'] = imgs
+        data_dict['labels'] = labels
+        data_dict['masks'] = masks
+        data_dict['vid_list'] = vid_list
+        return data_dict
+    
+    def _get_end_videos_clip(self):
+        # compose result
+        data_dict = {}
+        data_dict['imgs'] = 0
+        data_dict['labels'] = 0
+        data_dict['masks'] = 0
+        data_dict['vid_list'] = []
+        data_dict['sliding_num'] = 0
+        data_dict['step'] = self.step_num
+        data_dict['current_sliding_cnt'] = -1
+        return data_dict
     
     def _genrate_sampler(self, woker_id, num_workers):
         if self.local_rank < 0:
@@ -243,8 +263,11 @@ class RawFrameSegmentationDataset(data.IterableDataset):
             while current_sliding_cnt < sliding_num and len(info) > 0:
                 while mini_sliding_cnt < self.temporal_clip_batch_size:
                     if current_sliding_cnt < sliding_num:
-                        imgs, labels, masks, vid_list = self._get_one_videos_clip(current_sliding_cnt, info)
-                        yield imgs, labels, masks, vid_list, sliding_num, step, current_sliding_cnt
+                        data_dict = self._get_one_videos_clip(current_sliding_cnt, info)
+                        data_dict['sliding_num'] = sliding_num
+                        data_dict['step'] = step
+                        data_dict['current_sliding_cnt'] = current_sliding_cnt
+                        yield data_dict
                         current_sliding_cnt = current_sliding_cnt + 1
                         mini_sliding_cnt = mini_sliding_cnt + 1
                     else:
@@ -259,7 +282,7 @@ class RawFrameSegmentationDataset(data.IterableDataset):
             # modify num_worker
             current_sliding_cnt = current_sliding_cnt - sliding_num
             next_step_flag = False
-        yield 0, 0, 0, [], 0, self.step_num, -1
+        yield self._get_end_videos_clip()
 
     def __len__(self):
         """get the size of the dataset."""

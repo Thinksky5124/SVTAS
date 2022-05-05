@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 21:01:43
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:02:22
 Description: data prepare pipline function
-FilePath: /ETESVS/dataset/raw_frame_pipline.py
+FilePath     : /ETESVS/dataset/raw_frame_pipline.py
 '''
 import torchvision.transforms as transforms
 import decord as de
@@ -17,21 +17,21 @@ from .builder import PIPLINE
 
 @PIPLINE.register()
 class BatchCompose():
-    def __init__(self, to_tensor_idx=3):
-        self.to_tensor_idx = to_tensor_idx
+    def __init__(self, to_tensor_keys=["imgs", "masks", "labels"]):
+        self.to_tensor_keys = to_tensor_keys
 
     def __call__(self, batch):
         result_batch = []
         for index in range(len(batch)):
-            data = []
-            for i in range(len(batch[index])):
-                if i < self.to_tensor_idx:
-                    if not torch.is_tensor(batch[index][i]):
-                        data.append(torch.tensor(batch[index][i]))
+            data = {}
+            for key, value in batch[index].items():
+                if key in self.to_tensor_keys:
+                    if not torch.is_tensor(value):
+                        data[key] = torch.tensor(value)
                     else:
-                        data.append(batch[index][i])
+                        data[key] = value
                 else:
-                    data.append(batch[index][i])
+                    data[key] = value
             result_batch.append(data)
         return result_batch
 

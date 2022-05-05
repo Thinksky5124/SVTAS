@@ -1,18 +1,17 @@
 '''
-Author: thinksky5124 thinksky@mail.dlut.edu.cn
-Date: 2022-05-04 20:11:18
-LastEditors: thinksky5124 thinksky@mail.dlut.edu.cn
-LastEditTime: 2022-05-04 20:27:30
-FilePath: /ETESVS/dataset/rgb_flow_frame_segmentation_dataset.py
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+Author       : Thyssen Wen
+Date         : 2022-05-04 20:11:18
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:00:04
+Description  : file content
+FilePath     : /ETESVS/dataset/rgb_flow_frame_segmentation_dataset.py
 '''
 import os.path as osp
 import numpy as np
 import os
 import copy
 import torch
-import torch.utils.data as data
-from .rgb_flow_frame_segmentation_dataset import RawFrameSegmentationDataset
+from .raw_frame_segmentation_dataset import RawFrameSegmentationDataset
 from .builder import DATASET
 
 @DATASET.register()
@@ -20,8 +19,8 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
     def __init__(self,
                  flows_path,
                  **kwargs):
-        super().__init__(**kwargs)
         self.flows_path = flows_path
+        super().__init__(**kwargs)
     
     def parse_file_paths(self, input_path):
         if self.dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:
@@ -125,7 +124,7 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
             sample_segment = self.pipeline(sample_segment)
             # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
             imgs_list.append(copy.deepcopy(sample_segment['imgs'].unsqueeze(0)))
-            flow_imgs.append(copy.deepcopy(sample_segment['flow_imgs'].unsqueeze(0)))
+            flow_imgs_list.append(copy.deepcopy(sample_segment['flows'].unsqueeze(0)))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
@@ -134,4 +133,25 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
         flow_imgs = copy.deepcopy(torch.concat(flow_imgs_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
-        return imgs, flow_imgs, labels, masks, vid_list
+        
+        # compose result
+        data_dict = {}
+        data_dict['imgs'] = imgs
+        data_dict['flows'] = flow_imgs
+        data_dict['labels'] = labels
+        data_dict['masks'] = masks
+        data_dict['vid_list'] = vid_list
+        return data_dict
+    
+    def _get_end_videos_clip(self):
+        # compose result
+        data_dict = {}
+        data_dict['imgs'] = 0
+        data_dict['flows'] = 0
+        data_dict['labels'] = 0
+        data_dict['masks'] = 0
+        data_dict['vid_list'] = []
+        data_dict['sliding_num'] = 0
+        data_dict['step'] = self.step_num
+        data_dict['current_sliding_cnt'] = -1
+        return data_dict

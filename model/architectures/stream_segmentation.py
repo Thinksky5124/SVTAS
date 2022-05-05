@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-04 11:23:43
+LastEditTime : 2022-05-05 16:07:02
 Description: etesvs model framework
 FilePath     : /ETESVS/model/architectures/stream_segmentation.py
 '''
@@ -49,7 +49,10 @@ class StreamSegmentation(nn.Module):
             self.neck._clear_memory_buffer()
         self.head._clear_memory_buffer()
 
-    def forward(self, imgs, masks, idx=None):
+    def forward(self, input_data):
+        masks = input_data['masks']
+        imgs = input_data['imgs']
+
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 

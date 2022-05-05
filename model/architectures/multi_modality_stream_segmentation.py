@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-04 15:18:31
+LastEditTime : 2022-05-05 16:08:27
 Description  : Multi Modality stream segmentation
 FilePath     : /ETESVS/model/architectures/multi_modality_stream_segmentation.py
 '''
@@ -21,78 +21,82 @@ from ..builder import ARCHITECTURE
 @ARCHITECTURE.register()
 class MulModStreamSegmentation(nn.Module):
     def __init__(self,
-                 backbone=None,
-                 opticalflow=None,
-                 audio=None,
+                 rgb_backbone=None,
+                 flow_backbone=None,
+                 audio_backbone=None,
                  neck=None,
                  head=None,
                  loss=None):
         super().__init__()
-        self.backbone = build_backbone(backbone)
+        self.rgb_backbone = build_backbone(rgb_backbone)
         self.neck = build_neck(neck)
         self.head = build_head(head)
 
-        if opticalflow is not None:
-            self.opticalflow = build_backbone(opticalflow)
+        if flow_backbone is not None:
+            self.flow_backbone = build_backbone(flow_backbone)
         else:
-            self.opticalflow = None
-        if audio is not None:
-            self.audio = build_backbone(audio)
+            self.flow_backbone = None
+        if audio_backbone is not None:
+            self.audio_backbone = build_backbone(audio_backbone)
         else:
-            self.audio = None
+            self.audio_backbone = None
         
         self.init_weights()
 
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
-        self.backbone.init_weights(child_model=True)
+        self.rgb_backbone.init_weights(child_model=True)
         self.neck.init_weights()
         self.head.init_weights()
 
-        if isinstance(self.backbone.pretrained, str):
+        if isinstance(self.rgb_backbone.pretrained, str):
             logger = logger = get_logger("ETESVS")
-            load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
+            load_checkpoint(self, self.rgb_backbone.pretrained, strict=False, logger=logger, revise_keys=[(r'backbone', r'rgb_backbone')])
 
-        if self.audio is not None:
-            self.audio.init_weights(child_model=False)
-        if self.opticalflow is not None:
-            self.opticalflow.init_weights(child_model=False)
+        if self.audio_backbone is not None:
+            self.audio_backbone.init_weights(child_model=False)
+        if self.flow_backbone is not None:
+            self.flow_backbone.init_weights(child_model=False)
     
     def _clear_memory_buffer(self):
-        if self.backbone is not None:
+        if self.rgb_backbone is not None:
             # self.backbone._clear_memory_buffer()
             pass
         if self.neck is not None:
             self.neck._clear_memory_buffer()
         if self.head is not None:
             self.head._clear_memory_buffer()
-        if self.audio is not None:
-            self.audio._clear_memory_buffer()
-        if self.opticalflow is not None:
-            self.opticalflow._clear_memory_buffer()
+        if self.audio_backbone is not None:
+            self.audio_backbone._clear_memory_buffer()
+        if self.flow_backbone is not None:
+            self.flow_backbone._clear_memory_buffer()
 
-    def forward(self, imgs, masks, idx=None):
+    def forward(self, input_data):
+        masks = input_data['masks']
+        imgs = input_data['imgs']
+        flows = input_data['flows']
+
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 
-        if self.audio is not None:
-            audio_feature = self.audio()
-        if self.opticalflow is not None:
-            flow_imgs = self.opticalflow(imgs)
+        if self.audio_backbone is not None:
+            audio_feature = self.audio_backbone()
+        if self.flow_backbone is not None:
+            flow_imgs = self.flow_backbone(flows)
 
         # x.shape=[N,T,C,H,W], for most commonly case
-        if self.opticalflow is not None:
+        if self.flow_backbone is not None:
             # imgs = torch.cat([imgs, flow_imgs], dim=2)
             x = torch.reshape(flow_imgs, [-1] + list(flow_imgs.shape[2:]))
         else:
             x = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
         # x [N * T, C, H, W]
 
-        if self.backbone is not None:
+        if self.rgb_backbone is not None:
              # masks.shape [N * T, 1, 1, 1]
             backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-            feature = self.backbone(x, backbone_masks)
+            feature = self.rgb_backbone(x, backbone_masks)
         else:
             feature = x
 

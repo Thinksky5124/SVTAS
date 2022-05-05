@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-04 11:23:22
+LastEditTime : 2022-05-05 16:08:56
 Description: feaeture segmentation model framework
 FilePath     : /ETESVS/model/architectures/feature_segmentation.py
 '''
@@ -60,7 +60,10 @@ class FeatureSegmentation(nn.Module):
         # self.head._clear_memory_buffer()
         pass
 
-    def forward(self, feature, masks, idx=None):
+    def forward(self, input_data):
+        masks = input_data['masks']
+        feature = input_data['feature']
+        
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 

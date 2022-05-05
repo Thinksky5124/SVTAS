@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:57:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 10:52:39
+LastEditTime : 2022-05-05 16:08:17
 Description  : file content
 FilePath     : /ETESVS/model/architectures/optical_flow_estimator.py
 '''
@@ -62,7 +62,8 @@ class OpticalFlowEstimation(nn.Module):
         # self.neck._clear_memory_buffer()
         # self.head._clear_memory_buffer()
 
-    def forward(self, flow_imgs, idx=None):
+    def forward(self, input_data):
+        flow_imgs = input_data['imgs']
 
         # feature.shape=[N,T,C,H,W], for most commonly case
 

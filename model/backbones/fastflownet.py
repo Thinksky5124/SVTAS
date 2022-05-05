@@ -1,8 +1,8 @@
 '''
 Author: Thyssen Wen
 Date: 2022-05-03 15:29:18
-LastEditors: thinksky5124 thinksky@mail.dlut.edu.cn
-LastEditTime: 2022-05-04 19:46:10
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 15:05:04
 Description: flow net
 FilePath     : /ETESVS/model/backbones/fastflownet.py
 '''
@@ -148,7 +148,6 @@ class FastFlowNet(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("ETESVS")
-                logger = logger = get_logger("ETESVS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger)
                 if self.freeze is True:
                     self.eval()

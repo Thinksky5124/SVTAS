@@ -1,20 +1,14 @@
 MODEL:
     architecture: "MulModStreamSegmentation"
-    backbone:
+    rgb_backbone:
         name: "MobileNetV2TSM"
         pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
-        in_channels: 2
+        in_channels: 3
         clip_seg_num: 32
         shift_div: 8
         out_indices: (7, )
-    opticalflow:
-        name: "FastFlowNet"
-        pretrained: "./data/fastflownet_ft_mix.pth"
-        extract_mode: True
-        freeze: True
-        num_segments: 32
-        img_size: (224, 224)
-    audio:
+    flow_backbone:
+    audio_backbone:
     neck:
         name: "AvgPoolNeck"
         num_classes: 11
@@ -41,17 +35,18 @@ MODEL:
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_idx: 3
+    to_tensor_keys: ["imgs", "flows", "labels", "masks"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "RawFrameSegmentationDataset"
+        name: "RGBFlowFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/Videos"
+        flows_path: "./data/gtea/flow"
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
@@ -60,10 +55,11 @@ DATASET: #DATASET field
         clip_seg_num: 32
         sample_rate: 4
     test:
-        name: "RawFrameSegmentationDataset"
+        name: "RGBFlowFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/Videos"
+        flows_path: "./data/gtea/flow"
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
@@ -74,7 +70,7 @@ DATASET: #DATASET field
 
 PIPELINE: #PIPELINE field
     train: 
-        name: "RawFramePipeline"
+        name: "RGBFlowFramePipeline"
         decode:
             backend: "decord"
         sample:
@@ -84,18 +80,29 @@ PIPELINE: #PIPELINE field
             sliding_window: 128
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
-            - Resize:
-                size: 256
-            - RandomCrop:
-                size: 224
-            - RandomHorizontalFlip:
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+            rgb:
+                - Resize:
+                    size: 256
+                - RandomCrop:
+                    size: 224
+                - RandomHorizontalFlip:
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
+            flow:
+                - Resize:
+                    size: 256
+                - RandomCrop:
+                    size: 224
+                - RandomHorizontalFlip:
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
 
     test:
-        name: "RawFramePipeline"
+        name: "RGBFlowFramePipeline"
         decode:
             backend: "decord"
         sample:
@@ -105,14 +112,24 @@ PIPELINE: #PIPELINE field
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            - Resize:
-                size: 256
-            - CenterCrop:
-                size: 224
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+            rgb:
+                - Resize:
+                    size: 256
+                - CenterCrop:
+                    size: 224
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
+            flow:
+                - Resize:
+                    size: 256
+                - CenterCrop:
+                    size: 224
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
 
 OPTIMIZER: #OPTIMIZER field
     learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
