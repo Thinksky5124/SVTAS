@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:31:55
+LastEditTime : 2022-05-05 19:54:12
 Description: prepare video recognition data and compute image std and mean script
 FilePath     : /ETESVS/tools/prepare_video_recognition_data.py
 '''
@@ -58,10 +58,10 @@ def get_video_clip_list(label, background_id, fps, total_frames):
 def caculate_video_std_mean(video_path, sample_rate, label_fps, dataset_type):
     result_dict = {}
     # read video
-    if dataset_type in ['gtea_rgb', '50salads_rgb']:
+    if dataset_type in ['gtea_rgb', '50salads_rgb',
+    'gtea_flow', '50salads_flow', 'thumos14_flow', 'egtea_flow', 'breakfast_flow']:
         video_capture = de.VideoReader(video_path)
-    elif dataset_type in ['thumos14_rgb', 'egtea_rgb',
-        'gtea_flow', '50salads_flow', 'thumos14_flow', 'egtea_flow', 'breakfast_flow']:
+    elif dataset_type in ['thumos14_rgb', 'egtea_rgb']:
         video_capture = de.VideoReader(video_path + ".mp4")
     elif dataset_type in ['breakfast_rgb']:
         video_ptr = video_path.split('/')[-1].split('.')[0].split('_')

@@ -6,11 +6,6 @@
 
 - step 2 Move this checkpoint file in `./data` directory
 
-## Extract Optical Flow
-```bash
-python tools/extract_flow.py -c config/extract_flow/extract_optical_flow.yaml -o data/gtea
-```
-
 ## Train Model
 - gtea
 

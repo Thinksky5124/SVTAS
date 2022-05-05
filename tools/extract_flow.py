@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 13:57:17
+LastEditTime : 2022-05-05 19:31:39
 Description  : file content
 FilePath     : /ETESVS/tools/extract_flow.py
 '''
@@ -68,13 +68,14 @@ def extractor(cfg, file_list, outpath):
                     imgbuf = np_frames[i].copy()
                     imgs.append(Image.fromarray(imgbuf, mode='RGB'))
 
-                results = {}
-                results['imgs'] = imgs
-                results = transforms(results)
+                input_data = {}
+                input_data['imgs'] = imgs
+                input_data = transforms(input_data)
 
-                imgs = results['imgs']
+                imgs = input_data['imgs']
                 imgs = imgs.unsqueeze(0).cuda()
-                flows = model(imgs).squeeze(0)
+                input_data['imgs'] = imgs
+                flows = model(input_data).squeeze(0)
 
                 flows = flows.cpu().permute(0, 2, 3, 1).numpy()
 

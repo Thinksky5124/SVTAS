@@ -58,13 +58,18 @@ To download I3D feature from [ms-tcn](https://github.com/yabufarha/ms-tcn) repo.
     └── mapping.txt
 ```
 
+## Extract Optical Flow(Optional)
+```bash
+python tools/extract_flow.py -c config/extract_flow/extract_optical_flow.yaml -o data/gtea
+```
+
 ## Dataset Normalization
 ```bash
 # count mean and std from video
 # gtea
 python tools/transform_segmentation_label.py data/gtea data/gtea/groundTruth data/gtea --mode localization --fps 15
 python tools/prepare_video_recognition_data.py data/gtea/label.json data/gtea/Videos data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea_rgb
-python tools/prepare_video_recognition_data.py data/gtea/label.json data/gtea/flows data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea_flow
+python tools/prepare_video_recognition_data.py data/gtea/label.json data/gtea/flow data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea_flow
 
 # egtea
 python tools/prepare_video_recognition_data.py data/egtea/egtea.json data/egtea/Videos data/egtea --negative_sample_num 1000 --only_norm True --fps 24 --dataset_type egtea_rgb
@@ -89,8 +94,8 @@ Here releases dataset mean and std config
 mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
 std RGB :[0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
 # flos
-mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
-std RGB :[0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
+mean RGB :[0.9686297051020777, 0.9706158002294017, 0.972493270804535]
+std RGB :[0.039060756165796726, 0.03689212641350189, 0.03209093941013171]
 ```
 - egtea:
 ```txt

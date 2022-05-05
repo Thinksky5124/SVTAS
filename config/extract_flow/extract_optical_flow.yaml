@@ -11,7 +11,7 @@ MODEL:
 
 DATASET:
     video_path: "./data/gtea/Videos"
-    file_list: "./data/gtea/splits/train.split1.bundle"
+    file_list: "./data/gtea/video_list.txt"
     dataset_type: "gtea"
     num_segments: 32
     fps: 15
