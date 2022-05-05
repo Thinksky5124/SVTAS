@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-30 15:48:36
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:38:19
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
-FilePath: /ETESVS/model/backbones/i3d.py
+FilePath     : /ETESVS/model/backbones/i3d.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
@@ -793,7 +793,7 @@ class ResNet3d(nn.Module):
                 param.requires_grad = False
 
     @staticmethod
-    def _init_weights(self, pretrained=None):
+    def _init_weights(self, pretrained=None, revise_keys=[(r'^module\.', '')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch.
 
@@ -815,7 +815,7 @@ class ResNet3d(nn.Module):
             else:
                 # Directly load 3D model.
                 load_checkpoint(
-                    self, self.pretrained, strict=False, logger=logger)
+                    self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
         elif self.pretrained is None:
             for m in self.modules():
@@ -833,9 +833,9 @@ class ResNet3d(nn.Module):
         else:
             raise TypeError('pretrained must be a str or None')
 
-    def init_weights(self, pretrained=None, child_model=False):
+    def init_weights(self, pretrained=None, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
-            self._init_weights(self, pretrained)
+            self._init_weights(self, pretrained, revise_keys)
         else:
             for m in self.modules():
                 if isinstance(m, nn.Conv3d):
@@ -1017,9 +1017,9 @@ class ResNet3dLayer(nn.Module):
             for param in layer.parameters():
                 param.requires_grad = False
 
-    def init_weights(self, pretrained=None, child_model=False):
+    def init_weights(self, pretrained=None, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
-            self._init_weights(self, pretrained)
+            self._init_weights(self, pretrained, revise_keys)
         else:
             for m in self.modules():
                 if isinstance(m, nn.Conv3d):

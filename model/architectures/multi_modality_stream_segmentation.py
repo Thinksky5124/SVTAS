@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:08:27
+LastEditTime : 2022-05-05 16:49:26
 Description  : Multi Modality stream segmentation
 FilePath     : /ETESVS/model/architectures/multi_modality_stream_segmentation.py
 '''
@@ -46,18 +46,14 @@ class MulModStreamSegmentation(nn.Module):
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
-        self.rgb_backbone.init_weights(child_model=True)
+        self.rgb_backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         self.neck.init_weights()
         self.head.init_weights()
-
-        if isinstance(self.rgb_backbone.pretrained, str):
-            logger = logger = get_logger("ETESVS")
-            load_checkpoint(self, self.rgb_backbone.pretrained, strict=False, logger=logger, revise_keys=[(r'backbone', r'rgb_backbone')])
 
         if self.audio_backbone is not None:
             self.audio_backbone.init_weights(child_model=False)
         if self.flow_backbone is not None:
-            self.flow_backbone.init_weights(child_model=False)
+            self.flow_backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
     
     def _clear_memory_buffer(self):
         if self.rgb_backbone is not None:
@@ -83,22 +79,28 @@ class MulModStreamSegmentation(nn.Module):
         if self.audio_backbone is not None:
             audio_feature = self.audio_backbone()
         if self.flow_backbone is not None:
-            flow_imgs = self.flow_backbone(flows)
-
-        # x.shape=[N,T,C,H,W], for most commonly case
-        if self.flow_backbone is not None:
-            # imgs = torch.cat([imgs, flow_imgs], dim=2)
-            x = torch.reshape(flow_imgs, [-1] + list(flow_imgs.shape[2:]))
+            # x.shape=[N,T,C,H,W], for most commonly case
+            flow_x = torch.reshape(flows, [-1] + list(flows.shape[2:]))
+            # x [N * T, C, H, W]
+            # masks.shape [N * T, 1, 1, 1]
+            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            flow_feature = self.flow_backbone(flow_x, backbone_masks)
         else:
-            x = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
-        # x [N * T, C, H, W]
+            flow_feature = flows
 
         if self.rgb_backbone is not None:
-             # masks.shape [N * T, 1, 1, 1]
+            # x.shape=[N,T,C,H,W], for most commonly case
+            rgb_x = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
+            # x [N * T, C, H, W]
+            # masks.shape [N * T, 1, 1, 1]
             backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-            feature = self.rgb_backbone(x, backbone_masks)
+            feature = self.rgb_backbone(rgb_x, backbone_masks)
         else:
-            feature = x
+            feature = imgs
+        
+        # fusion
+        if self.flow_backbone is not None:
+            feature = (flow_feature + feature) / 2.0
 
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature

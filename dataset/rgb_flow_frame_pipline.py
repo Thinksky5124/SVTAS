@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:12:02
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:14:02
+LastEditTime : 2022-05-05 16:24:39
 Description  : file content
 FilePath     : /ETESVS/dataset/rgb_flow_frame_pipline.py
 '''
@@ -102,6 +102,7 @@ class RGBFlowVideoStreamSampler():
                  clip_seg_num=15,
                  sliding_window=60,
                  ignore_index=-100,
+                 channel_mode="RGB",
                  sample_mode='random'
                  ):
         self.sample_rate = sample_rate
@@ -109,6 +110,7 @@ class RGBFlowVideoStreamSampler():
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
+        self.channel_mode = channel_mode
         self.sample = VideoFrameSample(mode = sample_mode)
 
     def __call__(self, results):
@@ -142,24 +144,24 @@ class RGBFlowVideoStreamSampler():
             np_frames = rgb_frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i].copy()
-                imgs.append(Image.fromarray(imgbuf, mode='RGB'))
+                imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
 
             np_frames = flow_frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i].copy()
-                flows.append(Image.fromarray(imgbuf, mode='RGB'))
+                flows.append(Image.fromarray(imgbuf, mode=self.channel_mode))
 
             if len(imgs) < self.clip_seg_num:
                 np_frames = np_frames[-1].asnumpy().copy()
                 pad_len = self.clip_seg_num - len(imgs)
                 for i in range(pad_len):
-                    imgs.append(Image.fromarray(np_frames, mode='RGB'))
+                    imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
         
             if len(flows) < self.clip_seg_num:
                 np_frames = np_frames[-1].asnumpy().copy()
                 pad_len = self.clip_seg_num - len(flows)
                 for i in range(pad_len):
-                    flows.append(Image.fromarray(np_frames, mode='RGB'))
+                    flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
                     
             mask = np.ones((labels.shape[0]))
         elif start_frame < frames_len - 1 and end_frame >= frames_len - 1:
@@ -172,20 +174,20 @@ class RGBFlowVideoStreamSampler():
             np_frames = rgb_frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i].copy()
-                imgs.append(Image.fromarray(imgbuf, mode='RGB'))
+                imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
             np_frames = np.zeros_like(np_frames[0])
             pad_len = self.clip_seg_num - len(imgs)
             for i in range(pad_len):
-                imgs.append(Image.fromarray(np_frames, mode='RGB'))
+                imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
             
             np_frames = flow_frames_select.asnumpy()
             for i in range(np_frames.shape[0]):
                 imgbuf = np_frames[i].copy()
-                flows.append(Image.fromarray(imgbuf, mode='RGB'))
+                flows.append(Image.fromarray(imgbuf, mode=self.channel_mode))
             np_frames = np.zeros_like(np_frames[0])
             pad_len = self.clip_seg_num - len(flows)
             for i in range(pad_len):
-                flows.append(Image.fromarray(np_frames, mode='RGB'))
+                flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
                 
             vaild_mask = np.ones((labels.shape[0]))
             mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
@@ -196,9 +198,9 @@ class RGBFlowVideoStreamSampler():
             np_frames = np.zeros((224, 224, 3))
             pad_len = self.clip_seg_num
             for i in range(pad_len):
-                imgs.append(Image.fromarray(np_frames, mode='RGB'))
+                imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
             for i in range(pad_len):
-                flows.append(Image.fromarray(np_frames, mode='RGB'))
+                flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
             mask = np.zeros((self.clip_seg_num * self.sample_rate))
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 

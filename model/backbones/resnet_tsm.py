@@ -1,16 +1,19 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 12:45:02
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:52:48
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
-FilePath: /ETESVS/model/backbones/resnet_tsm.py
+FilePath     : /ETESVS/model/backbones/resnet_tsm.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 from mmcv.cnn import NonLocal3d
 from torch.nn.modules.utils import _ntuple
+from mmcv.cnn import constant_init, kaiming_init
+from mmcv.runner import load_checkpoint
+from utils.logger import get_logger
 
 from .resnet import ResNet
 
@@ -291,13 +294,37 @@ class ResNetTSM(ResNet):
                                                  self.num_segments,
                                                  self.non_local_cfg)
 
-    def init_weights(self, child_model=False):
+    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
-        super().init_weights(child_model)
         if self.is_shift:
             self.make_temporal_shift()
         if len(self.non_local_cfg) != 0:
             self.make_non_local()
         if self.temporal_pool:
             self.make_temporal_pool()
+            
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                logger = get_logger("ETESVS")
+                if self.torchvision_pretrain:
+                    # torchvision's
+                    self._load_torchvision_checkpoint(logger)
+                else:
+                    # ours
+                    load_checkpoint(
+                        self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+            elif self.pretrained is None:
+                for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, nn.BatchNorm2d):
+                        constant_init(m, 1)
+            else:
+                raise TypeError('pretrained must be a str or None')
+        else:
+            for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, nn.BatchNorm2d):
+                        constant_init(m, 1)

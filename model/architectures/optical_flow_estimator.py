@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:57:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:08:17
+LastEditTime : 2022-05-05 16:40:30
 Description  : file content
 FilePath     : /ETESVS/model/architectures/optical_flow_estimator.py
 '''
@@ -47,15 +47,11 @@ class OpticalFlowEstimation(nn.Module):
 
     def init_weights(self):
         if self.backbone is not None:
-            self.backbone.init_weights(child_model=True)
+            self.backbone.init_weights(child_model=False)
         if self.neck is not None:
             self.neck.init_weights()
         if self.head is not None:
             self.head.init_weights()
-        
-        if isinstance(self.backbone.pretrained, str):
-            logger = get_logger("ETESVS")
-            load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger, revise_keys=[(r'(^)', r'backbone.\1')])
     
     def _clear_memory_buffer(self):
         self.backbone._clear_memory_buffer()

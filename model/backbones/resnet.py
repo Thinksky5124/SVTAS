@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 12:43:24
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:36:00
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
-FilePath: /ETESVS/model/backbones/resnet.py
+FilePath     : /ETESVS/model/backbones/resnet.py
 '''
 
 # form neckwork
@@ -523,7 +523,7 @@ class ResNet(nn.Module):
                 f'These parameters in pretrained checkpoint are not loaded'
                 f': {remaining_names}')
 
-    def init_weights(self, child_model=False):
+    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
         if child_model is False:
@@ -535,7 +535,7 @@ class ResNet(nn.Module):
                 else:
                     # ours
                     load_checkpoint(
-                        self, self.pretrained, strict=False, logger=logger)
+                        self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 for m in self.modules():
                     if isinstance(m, nn.Conv2d):

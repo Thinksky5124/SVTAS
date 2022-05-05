@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:08:06
+LastEditTime : 2022-05-05 16:40:49
 Description: Action Recognition 3D framework
 FilePath     : /ETESVS/model/architectures/recognition3d.py
 '''
@@ -45,14 +45,10 @@ class Recognition3D(nn.Module):
 
     def init_weights(self):
         if self.backbone is not None:
-            self.backbone.init_weights(child_model=True)
+            self.backbone.init_weights(child_model=False, revise_keys=[(r'(^)', r'backbone.\1')])
         if self.neck is not None:
             self.neck.init_weights()
         self.head.init_weights()
-        
-        if isinstance(self.backbone.pretrained, str):
-            logger = logger = get_logger("ETESVS")
-            load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
     
     def _clear_memory_buffer(self):
         # self.backbone._clear_memory_buffer()

@@ -49,10 +49,6 @@ class FeatureSegmentation(nn.Module):
         if self.neck is not None:
             self.neck.init_weights()
         self.head.init_weights()
-        
-        if isinstance(self.backbone.pretrained, str):
-            logger = logger = get_logger("ETESVS")
-            load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
     
     def _clear_memory_buffer(self):
         # self.backbone._clear_memory_buffer()

@@ -1,13 +1,17 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-30 14:02:02
-LastEditors: Thyssen Wen
-LastEditTime: 2022-05-02 21:26:01
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:53:47
 Description: MobileNet V2 temporal memory module
-FilePath: /ETESVS/model/backbones/mobilenet_v2_tmm.py
+FilePath     : /ETESVS/model/backbones/mobilenet_v2_tmm.py
 '''
 import torch
 import torch.nn as nn
+from mmcv.cnn import constant_init, kaiming_init
+from mmcv.runner import load_checkpoint
+from torch.nn.modules.batchnorm import _BatchNorm
+from utils.logger import get_logger
 from mmcv.cnn import ConvModule
 from .mobilenet_v2 import InvertedResidual
 from .mobilenet_v2_tsm import MobileNetV2TSM
@@ -251,7 +255,25 @@ class MobileNetV2TMM(MobileNetV2TSM):
         if issubclass(type(m), TemporalMemoryBlock):
             m._resert_memory()
 
-    def init_weights(self, child_model=False):
-        super().init_weights(child_model)
+    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if self.is_memory:
             self.make_temporal_memory()
+        
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                logger = logger = get_logger("ETESVS")
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+            elif self.pretrained is None:
+                for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
+                        constant_init(m, 1)
+            else:
+                raise TypeError('pretrained must be a str or None')
+        else:
+            for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
+                        constant_init(m, 1)

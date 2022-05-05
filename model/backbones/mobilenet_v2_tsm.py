@@ -1,13 +1,18 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:39
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 12:44:29
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:53:44
 Description: Mobilenet V2 TSM model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2_tsm.py
-FilePath: /ETESVS/model/backbones/mobilenet_v2_tsm.py
+FilePath     : /ETESVS/model/backbones/mobilenet_v2_tsm.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
+import torch.nn as nn
+from mmcv.cnn import constant_init, kaiming_init
 from .mobilenet_v2 import InvertedResidual, MobileNetV2
+from mmcv.runner import load_checkpoint
+from torch.nn.modules.batchnorm import _BatchNorm
+from utils.logger import get_logger
 from .resnet_tsm import TemporalShift
 
 from ..builder import BACKBONES
@@ -41,9 +46,27 @@ class MobileNetV2TSM(MobileNetV2):
                     shift_div=self.shift_div,
                 )
 
-    def init_weights(self, child_model=False):
+    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
-        super().init_weights(child_model)
         if self.is_shift:
             self.make_temporal_shift()
+            
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                logger = logger = get_logger("ETESVS")
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+            elif self.pretrained is None:
+                for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
+                        constant_init(m, 1)
+            else:
+                raise TypeError('pretrained must be a str or None')
+        else:
+            for m in self.modules():
+                    if isinstance(m, nn.Conv2d):
+                        kaiming_init(m)
+                    elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
+                        constant_init(m, 1)

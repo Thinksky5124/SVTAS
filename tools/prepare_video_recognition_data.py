@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-26 21:34:35
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-05 16:31:55
 Description: prepare video recognition data and compute image std and mean script
-FilePath: /ETESVS/utils/prepare_video_recognition_data.py
+FilePath     : /ETESVS/tools/prepare_video_recognition_data.py
 '''
 import json
 import argparse
@@ -58,11 +58,12 @@ def get_video_clip_list(label, background_id, fps, total_frames):
 def caculate_video_std_mean(video_path, sample_rate, label_fps, dataset_type):
     result_dict = {}
     # read video
-    if dataset_type in ['gtea', '50salads']:
+    if dataset_type in ['gtea_rgb', '50salads_rgb']:
         video_capture = de.VideoReader(video_path)
-    elif dataset_type in ['thumos14', 'egtea']:
+    elif dataset_type in ['thumos14_rgb', 'egtea_rgb',
+        'gtea_flow', '50salads_flow', 'thumos14_flow', 'egtea_flow', 'breakfast_flow']:
         video_capture = de.VideoReader(video_path + ".mp4")
-    elif dataset_type in ['breakfast']:
+    elif dataset_type in ['breakfast_rgb']:
         video_ptr = video_path.split('/')[-1].split('.')[0].split('_')
         video_prefix = '/'.join(video_path.split('/')[:-1])
         file_name = ''
@@ -124,9 +125,10 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
             os.makedirs(output_path_fix)
 
     # read video
-    if dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:
+    if dataset_type in ['gtea_rgb', '50salads_rgb', 'thumos14_rgb', 'egtea_rgb',
+                        'gtea_flow', '50salads_flow', 'thumos14_flow', 'egtea_flow', 'breakfast_flow']:
         video_capture = cv2.VideoCapture(video_path)
-    elif dataset_type in ['breakfast']:
+    elif dataset_type in ['breakfast_rgb']:
         video_ptr = video_path.split('/')[-1].split('.')[0].split('_')
         video_prefix = '/'.join(video_path.split('/')[:-1])
         file_name = ''
@@ -170,11 +172,11 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
         action_name = clip_info[2]
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         if action_name in ignore_action_list:
-            if dataset_type == "gtea":
+            if dataset_type in ["gtea_rgb", "gtea_flow"]:
                 action_name = "background"
-            elif dataset_type == "50salads":
+            elif dataset_type in ["50salads_rgb", "50salads_flow"]:
                 action_name = "action_end"
-            elif dataset_type == "breakfast":
+            elif dataset_type in ["breakfast_rgb", "breakfast_flow"]:
                 action_name = "SIL"
             else:
                 action_name = "None"

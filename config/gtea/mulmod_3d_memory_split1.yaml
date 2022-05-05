@@ -8,6 +8,12 @@ MODEL:
         shift_div: 8
         out_indices: (7, )
     flow_backbone:
+        name: "MobileNetV2TSM"
+        pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
+        in_channels: 3
+        clip_seg_num: 32
+        shift_div: 8
+        out_indices: (7, )
     audio_backbone:
     neck:
         name: "AvgPoolNeck"

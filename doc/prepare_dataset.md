@@ -63,27 +63,32 @@ To download I3D feature from [ms-tcn](https://github.com/yabufarha/ms-tcn) repo.
 # count mean and std from video
 # gtea
 python tools/transform_segmentation_label.py data/gtea data/gtea/groundTruth data/gtea --mode localization --fps 15
-python tools/prepare_video_recognition_data.py data/gtea/label.json data/gtea/Videos data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea
+python tools/prepare_video_recognition_data.py data/gtea/label.json data/gtea/Videos data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea_rgb
+python tools/prepare_video_recognition_data.py data/gtea/label.json data/gtea/flows data/gtea --negative_sample_num 100 --only_norm True --fps 15 --dataset_type gtea_flow
 
 # egtea
-python tools/prepare_video_recognition_data.py data/egtea/egtea.json data/egtea/Videos data/egtea --negative_sample_num 1000 --only_norm True --fps 24 --dataset_type egtea
+python tools/prepare_video_recognition_data.py data/egtea/egtea.json data/egtea/Videos data/egtea --negative_sample_num 1000 --only_norm True --fps 24 --dataset_type egtea_rgb
 
 # 50salads
 python tools/transform_segmentation_label.py data/50salads data/50salads/groundTruth data/50salads --mode localization --fps 30
-python tools/prepare_video_recognition_data.py data/50salads/label.json data/50salads/Videos data/50salads --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type 50salads
+python tools/prepare_video_recognition_data.py data/50salads/label.json data/50salads/Videos data/50salads --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type 50salads_rgb
 
 # breakfast
 python tools/transform_segmentation_label.py data/breakfast data/breakfast/groundTruth data/breakfast --mode localization --fps 15
-python tools/prepare_video_recognition_data.py data/breakfast/label.json data/breakfast/Videos data/breakfast --negative_sample_num 10000 --only_norm True --fps 15 --dataset_type breakfast
+python tools/prepare_video_recognition_data.py data/breakfast/label.json data/breakfast/Videos data/breakfast --negative_sample_num 10000 --only_norm True --fps 15 --dataset_type breakfast_rgb
 
 # thumos14
-python tools/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type thumos14
+python tools/prepare_video_recognition_data.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type thumos14_rgb
 ```
 
 Here releases dataset mean and std config
 
 - gtea:
 ```txt
+# rgb
+mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
+std RGB :[0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
+# flos
 mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
 std RGB :[0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
 ```

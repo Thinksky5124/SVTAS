@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:07:02
+LastEditTime : 2022-05-05 16:40:57
 Description: etesvs model framework
 FilePath     : /ETESVS/model/architectures/stream_segmentation.py
 '''
@@ -38,10 +38,6 @@ class StreamSegmentation(nn.Module):
         self.backbone.init_weights(child_model=True)
         self.neck.init_weights()
         self.head.init_weights()
-        
-        if isinstance(self.backbone.pretrained, str):
-            logger = logger = get_logger("ETESVS")
-            load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
     
     def _clear_memory_buffer(self):
         # self.backbone._clear_memory_buffer()

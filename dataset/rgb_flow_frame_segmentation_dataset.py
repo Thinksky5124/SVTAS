@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:11:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:00:04
+LastEditTime : 2022-05-05 16:24:17
 Description  : file content
 FilePath     : /ETESVS/dataset/rgb_flow_frame_segmentation_dataset.py
 '''
@@ -86,7 +86,7 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
                             video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
                             if not osp.isfile(video_path):
                                 raise NotImplementedError
-                        flow_path = os.path.join(self.flows_path, video_segment_path + '.mp4')
+                        flow_path = os.path.join(self.flows_path, video_segment_name + '.mp4')
 
                     file_ptr = open(label_path, 'r')
                     content = file_ptr.read().split('\n')[:-1]
