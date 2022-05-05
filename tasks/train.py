@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
-LastEditors: Thyssen Wen
-LastEditTime: 2022-05-02 20:34:04
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-04 11:33:49
 Description: train script api
-FilePath: /ETESVS/tasks/train.py
+FilePath     : /ETESVS/tasks/train.py
 '''
 import os.path as osp
 import time
@@ -63,7 +63,7 @@ def train(cfg,
         criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
 
         # 2. Construct solver.
-        optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg.OPTIMIZER.learning_rate,
             betas=(0.9, 0.999), weight_decay=weight_decay)
         # grad to zeros
         optimizer.zero_grad()
@@ -79,7 +79,7 @@ def train(cfg,
         criterion = model_builder.build_loss(cfg.MODEL.loss).cuda(local_rank)
 
         # 2. Construct solver.
-        optimizer = torch.optim.Adam(model.parameters(), lr=cfg.OPTIMIZER.learning_rate,
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg.OPTIMIZER.learning_rate,
             betas=(0.9, 0.999), weight_decay=weight_decay)
         # grad to zeros
         optimizer.zero_grad()

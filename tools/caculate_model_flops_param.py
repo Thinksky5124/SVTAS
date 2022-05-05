@@ -1,14 +1,16 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-16 16:40:05
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 16:52:30
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-04 16:16:44
 Description: caculate model flops and param
-FilePath: /ETESVS/utils/caculate_model_flops_param.py
+FilePath     : /ETESVS/tools/caculate_model_flops_param.py
 '''
 import torch
+import os
 import sys
-sys.path.append("..")
+path = os.path.join(os.getcwd())
+sys.path.append(path)
 from torchinfo import summary
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from thop import clever_format

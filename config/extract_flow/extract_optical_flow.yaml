@@ -1,0 +1,23 @@
+MODEL:
+    architecture: "OpticalFlowEstimation"
+    backbone:
+        name: "FastFlowNet"
+        pretrained: "./data/fastflownet_ft_mix.pth"
+        extract_mode: True
+        freeze: True
+    neck:
+    head:
+    loss:
+
+DATASET:
+    video_path: "./data/gtea/Videos"
+    file_list: "./data/gtea/splits/train.split1.bundle"
+    dataset_type: "gtea"
+    num_segments: 32
+    fps: 15
+
+TRANSFORM: #Mandotary, image transform operator.
+    - ToTensor:
+    - Normalize:
+        mean: [0.551, 0.424, 0.179]
+        std: [0.133, 0.141, 0.124]

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 14:50:06
+LastEditTime: 2022-05-03 14:32:40
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath: /ETESVS/model/heads/mstcn.py
 '''
@@ -25,6 +25,8 @@ class MultiStageModel(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 kaiming_init(m)
+            elif isinstance(m, (nn.BatchNorm1d, nn.GroupNorm)):
+                constant_init(m, 1)
 
     def forward(self, x, mask):
         out = self.stage1(x, mask)

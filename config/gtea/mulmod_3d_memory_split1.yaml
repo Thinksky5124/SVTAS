@@ -1,11 +1,20 @@
 MODEL:
-    architecture: "StreamSegmentation"
+    architecture: "MulModStreamSegmentation"
     backbone:
         name: "MobileNetV2TSM"
         pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
+        in_channels: 2
         clip_seg_num: 32
         shift_div: 8
         out_indices: (7, )
+    opticalflow:
+        name: "FastFlowNet"
+        pretrained: "./data/fastflownet_ft_mix.pth"
+        extract_mode: True
+        freeze: True
+        num_segments: 32
+        img_size: (224, 224)
+    audio:
     neck:
         name: "AvgPoolNeck"
         num_classes: 11
@@ -116,7 +125,7 @@ METRIC:
     file_output: True
 
 
-model_name: "ETESVS_3D_Memory_gtea_split1"
+model_name: "MulMod_3D_Memory_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

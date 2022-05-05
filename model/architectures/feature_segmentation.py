@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 15:08:06
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-04 11:23:22
 Description: feaeture segmentation model framework
-FilePath: /ETESVS/model/architectures/feature_segmentation.py
+FilePath     : /ETESVS/model/architectures/feature_segmentation.py
 '''
 import torch
 import torch.nn as nn
@@ -38,7 +38,7 @@ class FeatureSegmentation(nn.Module):
             self.neck = None
 
         self.head = build_head(head)
-        
+
         self.init_weights()
 
         self.sample_rate = loss.sample_rate

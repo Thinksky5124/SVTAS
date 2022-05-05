@@ -6,6 +6,11 @@
 
 - step 2 Move this checkpoint file in `./data` directory
 
+## Extract Optical Flow
+```bash
+python tools/extract_flow.py -c config/extract_flow/extract_optical_flow.yaml -o data/gtea
+```
+
 ## Train Model
 - gtea
 
@@ -21,6 +26,7 @@ python main.py  --validate -c config/gtea/etesvs_mobinetv2_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_3d_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/etesvs_3d_memory_split1.yaml --seed 0
 python main.py  --validate -c config/gtea/mobilev2_split1.yaml --seed 0
+python main.py  --validate -c config/gtea/mulmod_3d_memory_split1.yaml --seed 0
 # multi gpu
 export CUDA_VISIBLE_DEVICES=2,3
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/gtea/etesvs_split1.yaml --seed 0
@@ -96,6 +102,7 @@ python main.py  --test -c config/gtea/etesvs_split1.yaml --weights=output/ETESVS
 python main.py  --test -c config/gtea/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_MobileNetV2_gtea_split1/ETESVS_MobileNetV2_gtea_split1_best.pkl
 python main.py  --test -c config/gtea/etesvs_3d_split1.yaml --weights=output/ETESVS_3D_gtea_split1/ETESVS_3D_gtea_split1_best.pkl
 python main.py  --test -c config/gtea/mobilev2_split1.yaml --weights=output/MobileV2TSM_gtea_split1/MobileV2TSM_gtea_split1_best.pkl
+python main.py  --test -c config/gtea/mulmod_3d_memory_split1.yaml --weights=output/MulMod_3D_Memory_gtea_split1/MulMod_3D_Memory_gtea_split1_best.pkl
 ```
 - egtea
 

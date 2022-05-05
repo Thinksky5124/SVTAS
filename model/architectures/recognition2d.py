@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-30 14:45:18
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-04 11:23:29
 Description: Action Recognition 2D framework
-FilePath: /ETESVS/model/architectures/recognition2d.py
+FilePath     : /ETESVS/model/architectures/recognition2d.py
 '''
 import torch
 import torch.nn as nn
@@ -38,7 +38,7 @@ class Recognition2D(nn.Module):
             self.neck = None
 
         self.head = build_head(head)
-        
+    
         self.init_weights()
 
         self.sample_rate = loss.sample_rate

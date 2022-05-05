@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:13
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 10:49:30
+LastEditTime: 2022-05-03 10:18:46
 Description: model head
 FilePath: /ETESVS/model/heads/etesvs_head.py
 '''
@@ -12,7 +12,6 @@ import torch.nn.functional as F
 from mmcv.cnn import constant_init, kaiming_init
 import copy
 from .mstcn import SingleStageModel
-from .memory_tcn import MemoryCausalConvolution
 
 from ..builder import HEADS
 
@@ -35,13 +34,12 @@ class ETESVSHead(nn.Module):
             raise NotImplementedError
 
         self.seg_conv = SingleStageModel(num_layers, num_f_maps, seg_in_channels, num_classes)
-        # self.spuer_conv_stages = nn.ModuleList([copy.deepcopy(SuperSampleSingleStageModel(num_classes, num_f_maps)) for s in range(sample_rate // 2)])
-        # self.seg_conv = MemoryCausalConvolution(num_layers, num_f_maps, seg_in_channels, num_classes)
 
     def init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv1d):
-                kaiming_init(m)
+        # for m in self.modules():
+        #     if isinstance(m, nn.Conv1d):
+        #         kaiming_init(m)
+        pass
 
     def _clear_memory_buffer(self):
         # self.seg_conv._clear_memory_buffer()
@@ -59,14 +57,5 @@ class ETESVSHead(nn.Module):
             input=outputs,
             scale_factor=[1, self.sample_rate],
             mode="nearest")
-        # for i in range(len(self.spuer_conv_stages)):
-        #     out = self.spuer_conv_stages[i](F.softmax(out, dim=1) * masks[:, 0:1, ::2 ** (self.sample_rate //2 - i)],
-        #                                     masks[:, 0:1, ::2 ** (max(self.sample_rate //2 - i - 1, 0))])
-        #     out_score = out.unsqueeze(0)
-        #     out_score = F.interpolate(
-        #         input=out_score,
-        #         scale_factor=[1, 2 ** (max(self.sample_rate //2 - i - 1, 0))],
-        #         mode="nearest")
-        #     outputs = torch.cat((outputs, out_score), dim=0)
         seg_score = outputs
         return seg_score

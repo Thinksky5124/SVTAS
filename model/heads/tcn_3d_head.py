@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
 LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 20:23:12
+LastEditTime: 2022-05-03 14:31:55
 Description: 3D TCN model
 FilePath: /ETESVS/model/heads/tcn_3d_head.py
 '''
@@ -40,8 +40,10 @@ class TCN3DHead(nn.Module):
 
     def init_weights(self):
         for m in self.modules():
-            if isinstance(m, nn.Conv1d):
+            if isinstance(m, nn.Conv3d):
                 kaiming_init(m)
+            elif isinstance(m, (nn.BatchNorm3d, nn.GroupNorm)):
+                constant_init(m, 1)
 
     def _clear_memory_buffer(self):
         # self.seg_conv._clear_memory_buffer()

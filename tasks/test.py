@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-29 12:25:18
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-04 11:47:56
 Description: test script api
-FilePath: /ETESVS/tasks/test.py
+FilePath     : /ETESVS/tasks/test.py
 '''
 import torch
 from utils.logger import get_logger
@@ -140,7 +140,7 @@ def test(cfg,
         runner.Metric.accumulate()
 
         # model param flops caculate
-        x_shape = [cfg.DATASET.test.clip_seg_num, 3, 244, 244]
+        x_shape = [cfg.DATASET.test.clip_seg_num, 3, 224, 224]
         mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
         input_shape = (x_shape, mask_shape)
         def input_constructor(input_shape):
@@ -151,7 +151,7 @@ def test(cfg,
             return dict(imgs=x, masks=mask, idx=idx)
         output = input_constructor(input_shape)
         x, mask = output["imgs"], output["masks"]
-        print(model)
+        # print(model)
         # tensorboard_writer.add_graph(model, input_to_model=[x, mask, torch.ones(1).cuda()])
         summary(model, input_size=[x.shape, mask.shape, [1]], col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
         print("="*20)
