@@ -1,13 +1,10 @@
 MODEL:
     architecture: "OpticalFlowEstimation"
-    backbone:
+    model:
         name: "FastFlowNet"
         pretrained: "./data/fastflownet_ft_mix.pth"
         extract_mode: True
         freeze: True
-    neck:
-    head:
-    loss:
 
 DATASET:
     video_path: "./data/gtea/Videos"

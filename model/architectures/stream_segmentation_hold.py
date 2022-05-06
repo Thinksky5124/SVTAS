@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:09:11
+LastEditTime : 2022-05-06 15:48:59
 Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/etesvs.py
+FilePath     : /ETESVS/model/architectures/stream_segmentation_hold.py
 '''
 import torch
 import torch.nn as nn
@@ -19,7 +19,7 @@ from ..builder import build_head
 from ..builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class ETESVS(nn.Module):
+class StreamSegmentationWithNeck(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -29,24 +29,24 @@ class ETESVS(nn.Module):
         self.backbone = build_backbone(backbone)
         self.neck = build_neck(neck)
         self.head = build_head(head)
-        
-        self.init_weights()
 
+        self.init_weights()
+        
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
-        self.backbone.init_weights(child_model=True)
+        self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         self.neck.init_weights()
         self.head.init_weights()
-        
-        if isinstance(self.backbone.pretrained, str):
-            logger = logger = get_logger("ETESVS")
-            load_checkpoint(self, self.backbone.pretrained, strict=False, logger=logger)
     
     def _clear_memory_buffer(self):
-        self.backbone._clear_memory_buffer()
-        self.neck._clear_memory_buffer()
-        self.head._clear_memory_buffer()
+        if self.backbone is not None:
+            # self.backbone._clear_memory_buffer()
+            pass
+        if self.neck is not None:
+            self.neck._clear_memory_buffer()
+        if self.head is not None:
+            self.head._clear_memory_buffer()
 
     def forward(self, input_data):
         masks = input_data['masks']

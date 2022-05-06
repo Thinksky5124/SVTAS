@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-04 11:47:56
+LastEditTime : 2022-05-06 13:09:18
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -147,13 +147,11 @@ def test(cfg,
             x_shape, mask_shape = input_shape
             x = torch.randn([1] + x_shape).cuda()
             mask = torch.randn([1] + mask_shape).cuda()
-            idx = torch.randn([1] + [1]).cuda()
-            return dict(imgs=x, masks=mask, idx=idx)
+            return dict(input_data=dict(imgs=x, masks=mask))
         output = input_constructor(input_shape)
-        x, mask = output["imgs"], output["masks"]
         # print(model)
         # tensorboard_writer.add_graph(model, input_to_model=[x, mask, torch.ones(1).cuda()])
-        summary(model, input_size=[x.shape, mask.shape, [1]], col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
+        summary(model, input_data=output, col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
         print("="*20)
         print('Use mmcv get_model_complexity_info function')
         flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)

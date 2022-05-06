@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
-LastEditors: Thyssen Wen
-LastEditTime: 2022-05-03 10:10:06
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-06 15:52:51
 Description: loss function
-FilePath: /ETESVS/model/losses/steam_segmentation_loss.py
+FilePath     : /ETESVS/model/losses/steam_segmentation_loss.py
 '''
 import torch
 import numpy as np
@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from ..builder import LOSSES
 
 @LOSSES.register()
-class StreamSegmentation(nn.Module):
+class StreamSegmentationLoss(nn.Module):
     def __init__(self,
                  num_classes,
                  sample_rate=4,

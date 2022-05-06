@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
-LastEditors: Thyssen Wen
-LastEditTime: 2022-05-03 14:26:08
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-06 13:11:07
 Description: avg pooling 3d to 2d neck
-FilePath: /ETESVS/model/necks/avg_pool_neck.py
+FilePath     : /ETESVS/model/necks/avg_pool_neck.py
 '''
 import torch
 import copy
@@ -12,7 +12,6 @@ import random
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import constant_init, kaiming_init
-from .memory_layer import ConvLSTMResidualLayer
 
 from ..builder import NECKS
 
@@ -20,13 +19,11 @@ from ..builder import NECKS
 class AvgPoolNeck(nn.Module):
     def __init__(self,
                  num_classes=11,
-                 num_layers=1,
                  in_channels=1280,
                  clip_seg_num=30,
                  drop_ratio=0.5,
                  need_pool=True):
         super().__init__()
-        self.num_layers = num_layers
         self.clip_seg_num = clip_seg_num
         self.in_channels = in_channels
         self.num_classes = num_classes

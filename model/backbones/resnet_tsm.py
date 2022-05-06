@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:52:48
+LastEditTime : 2022-05-06 15:59:51
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
 FilePath     : /ETESVS/model/backbones/resnet_tsm.py
 '''
@@ -158,6 +158,7 @@ class ResNetTSM(ResNet):
 
     def __init__(self,
                  depth,
+                 modality="RGB",
                  clip_seg_num=8,
                  is_shift=True,
                  non_local=(0, 0, 0, 0),
@@ -167,6 +168,7 @@ class ResNetTSM(ResNet):
                  temporal_pool=False,
                  **kwargs):
         super().__init__(depth, **kwargs)
+        self.modality = modality
         self.num_segments = clip_seg_num
         self.is_shift = is_shift
         self.shift_div = shift_div

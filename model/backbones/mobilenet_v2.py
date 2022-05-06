@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:34:57
+LastEditTime : 2022-05-06 15:58:41
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath     : /ETESVS/model/backbones/mobilenet_v2.py
 '''
@@ -164,7 +164,6 @@ class MobileNetV2(nn.Module):
                      [6, 320, 1, 1]]
 
     def __init__(self,
-                 in_channels=3,
                  pretrained=None,
                  widen_factor=1.,
                  out_indices=(7, ),
@@ -197,7 +196,7 @@ class MobileNetV2(nn.Module):
         self.in_channels = make_divisible(32 * widen_factor, 8)
 
         self.conv1 = ConvModule(
-            in_channels=in_channels,
+            in_channels=3,
             out_channels=self.in_channels,
             kernel_size=3,
             stride=2,

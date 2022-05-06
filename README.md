@@ -76,9 +76,11 @@ Read Doc [Feature Base Model Train](doc/feature_base.md)
 # Visualization
 ```bash
 # gtea
-python tools/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 120
+python tools/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 128
 # 50salads
 python tools/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
+# breakfast
+python tools/convert_pred2img.py output/results/pred_gt_list data/breakfast/mapping.txt output/results/imgs --sliding_windows 128
 # thumos14
 python tools/convert_pred2img.py output/results/pred_gt_list data/thumos14/mapping.txt output/results/imgs --sliding_windows 256
 ```

@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 10:44:27
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-06 10:37:09
 Description: metric class
-FilePath: /ETESVS/utils/metric.py
+FilePath     : /ETESVS/utils/metric.py
 '''
 import numpy as np
 import argparse
@@ -29,19 +29,28 @@ class BaseSegmentationMetric():
                  max_proposal=100,
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
-                 output_dir="output/results/pred_gt_list/"):
+                 score_output=False,
+                 output_dir="output/results/pred_gt_list/",
+                 score_output_dir="output/results/analysis/"):
         """prepare for metrics
         """
         self.logger = get_logger("ETESVS")
         self.elps = 1e-10
         self.file_output = file_output
+        self.score_output = score_output
         self.output_dir = output_dir
+        self.score_output_dir = score_output_dir
         self.train_mode = train_mode
 
         if self.file_output is True and self.train_mode is False:
             isExists = os.path.exists(self.output_dir)
             if not isExists:
                 os.makedirs(self.output_dir)
+
+        if self.score_output is True and self.train_mode is False:
+            isExists = os.path.exists(self.score_output_dir)
+            if not isExists:
+                os.makedirs(self.score_output_dir)
 
         # actions dict generate
         file_ptr = open(actions_map_file_path, 'r')
@@ -313,12 +322,14 @@ class SegmentationMetric(BaseSegmentationMetric):
                  max_proposal=100,
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
-                 output_dir="output/results/pred_gt_list/"):
+                 score_output=False,
+                 output_dir="output/results/pred_gt_list/",
+                 score_output_dir="output/results/analysis/"):
         """prepare for metrics
         """
         super().__init__(overlap, actions_map_file_path, train_mode,
                          max_proposal, tiou_thresholds,
-                         file_output, output_dir)
+                         file_output, score_output, output_dir, score_output_dir)
     
     def update(self, vid, ground_truth_batch, outputs):
         """update metrics during each iter
@@ -344,11 +355,12 @@ class SegmentationMetric(BaseSegmentationMetric):
                 outputs_arr = output_np
                 gt_np = groundTruth
             
-            # np.save("output/results/analysis/" + vid[bs] + ".npy", output_np)
+            if self.score_output is True and self.train_mode is False:
+                score_output_path = os.path.join(self.score_output_dir, vid[bs] + ".npy")
+                np.save(score_output_path, output_np)
 
             result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result
-            # print(vid[bs])
             single_f1, acc = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
                             gt_detection)
             single_batch_f1 += single_f1

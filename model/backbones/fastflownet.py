@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-03 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:39:30
+LastEditTime : 2022-05-06 13:55:59
 Description: flow net
 FilePath     : /ETESVS/model/backbones/fastflownet.py
 '''
@@ -221,13 +221,7 @@ class FastFlowNet(nn.Module):
 
         return refine_flow
 
-    def forward(self, x):
-
-        if self.extract_mode is True:
-            img1, img2, input_size, orig_size, temporal_len = self.pre_precessing(x)
-        else:
-            img1 = x[:, :3, :, :]
-            img2 = x[:, 3:6, :, :]
+    def forward(self, img1, img2):
         
         f11 = self.pconv1_2(self.pconv1_1(img1))
         f21 = self.pconv1_2(self.pconv1_1(img2))
@@ -276,10 +270,7 @@ class FastFlowNet(nn.Module):
         cat2 = torch.cat([cv2, r12, flow3_up], 1)
         flow2 = self.decoder2(cat2) + flow3_up
         
-        if self.training and self.extract_mode is False:
+        if self.training:
             return flow2, flow3, flow4, flow5, flow6
         else:
-            if self.extract_mode is False:
-                return flow2
-            else:
-                return self.post_precessing(flow2, input_size, orig_size, temporal_len)
+            return flow2

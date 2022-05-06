@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-04 11:33:49
+LastEditTime : 2022-05-06 15:42:29
 Description: train script api
 FilePath     : /ETESVS/tasks/train.py
 '''
@@ -16,6 +16,7 @@ from utils.save_load import mkdir
 from utils.recorder import build_recod
 import model.builder as model_builder
 import dataset.builder as dataset_builder
+import optimizer.builder as optimizer_builder
 
 from utils.metric import SegmentationMetric
 from model.post_precessings.etesvs_post_processing import PostProcessing
@@ -63,8 +64,9 @@ def train(cfg,
         criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
 
         # 2. Construct solver.
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg.OPTIMIZER.learning_rate,
-            betas=(0.9, 0.999), weight_decay=weight_decay)
+        optimizer_cfg = cfg.OPTIMIZER
+        optimizer_cfg['model'] = model
+        optimizer = optimizer_builder.build_optimizer(optimizer_cfg)
         # grad to zeros
         optimizer.zero_grad()
 
@@ -79,8 +81,9 @@ def train(cfg,
         criterion = model_builder.build_loss(cfg.MODEL.loss).cuda(local_rank)
 
         # 2. Construct solver.
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=cfg.OPTIMIZER.learning_rate,
-            betas=(0.9, 0.999), weight_decay=weight_decay)
+        optimizer_cfg = cfg.OPTIMIZER
+        optimizer_cfg['model'] = model
+        optimizer = optimizer_builder.build_optimizer(optimizer_cfg)
         # grad to zeros
         optimizer.zero_grad()
     
@@ -122,7 +125,9 @@ def train(cfg,
     # 4. construct Pipeline
     train_Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.train)
     val_Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.test)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.OPTIMIZER.step_size, gamma=cfg.OPTIMIZER.gamma)
+    scheduler_cfg = cfg.LRSCHEDULER
+    scheduler_cfg['optimizer'] = optimizer
+    scheduler = optimizer_builder.build_lr_scheduler(scheduler_cfg)
 
     # 5. Construct Dataset
     sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)

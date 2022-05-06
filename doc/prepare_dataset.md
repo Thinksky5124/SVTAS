@@ -60,7 +60,8 @@ To download I3D feature from [ms-tcn](https://github.com/yabufarha/ms-tcn) repo.
 
 ## Extract Optical Flow(Optional)
 ```bash
-python tools/extract_flow.py -c config/extract_flow/extract_optical_flow.yaml -o data/gtea
+python tools/extract_flow.py -c config/extract_flow/extract_optical_flow_fastflownet.yaml -o data/gtea
+python tools/extract_flow.py -c config/extract_flow/extract_optical_flow_raft.yaml -o data/gtea
 ```
 
 ## Dataset Normalization
@@ -93,7 +94,7 @@ Here releases dataset mean and std config
 # rgb
 mean RGB :[0.5505552534004328, 0.42423616561376576, 0.17930791124574694]
 std RGB :[0.13311456349527262, 0.14092562889239943, 0.12356268405634434]
-# flos
+# flows
 mean RGB :[0.9686297051020777, 0.9706158002294017, 0.972493270804535]
 std RGB :[0.039060756165796726, 0.03689212641350189, 0.03209093941013171]
 ```

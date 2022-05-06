@@ -72,6 +72,7 @@ python main.py  --validate -c config/breakfast/etesvs_split3.yaml  --seed 0
 python main.py  --validate -c config/breakfast/etesvs_split4.yaml  --seed 0
 
 python main.py  --validate -c config/breakfast/etesvs_mobinetv2_split1.yaml --seed 0
+python main.py  --validate -c config/breakfast/etesvs_3d_split1.yaml --seed 0
 
 # multi gpu
 export CUDA_VISIBLE_DEVICES=0,1
@@ -120,6 +121,13 @@ export DECORD_EOF_RETRY_MAX=20480
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --test -c config/50salads/etesvs_mobinetv2_split1.yaml --weights=output/ETESVS_50salads_split1/ETESVS_50salads_split1_best.pkl
 ```
+
+- breakfast
+
+```bash
+python main.py  --test -c config/breakfast/etesvs_3d_split1.yaml --weights=output/ETESVS_3D_breakfast_split1/ETESVS_3D_breakfast_split1_best.pkl
+```
+
 - thumos14
 
 ```bash

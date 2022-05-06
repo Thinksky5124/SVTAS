@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:40:57
+LastEditTime : 2022-05-06 15:47:32
 Description: etesvs model framework
 FilePath     : /ETESVS/model/architectures/stream_segmentation.py
 '''
@@ -35,15 +35,18 @@ class StreamSegmentation(nn.Module):
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
-        self.backbone.init_weights(child_model=True)
+        self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         self.neck.init_weights()
         self.head.init_weights()
     
     def _clear_memory_buffer(self):
-        # self.backbone._clear_memory_buffer()
+        if self.backbone is not None:
+            # self.backbone._clear_memory_buffer()
+            pass
         if self.neck is not None:
             self.neck._clear_memory_buffer()
-        self.head._clear_memory_buffer()
+        if self.head is not None:
+            self.head._clear_memory_buffer()
 
     def forward(self, input_data):
         masks = input_data['masks']
