@@ -3,12 +3,15 @@ MODEL:
     backbone:
     neck:
     head:
-        name: "MultiStageModel"
-        num_stages: 4
-        num_layers: 4
+        name: "ASFormer"
+        num_decoders: 3
+        num_layers: 10
+        r1: 2
+        r2: 2
         num_f_maps: 64
-        dim: 2048
+        input_dim: 2048
         num_classes: 11
+        channel_masking_rate: 0.5
     loss:
         name: "MSTCNLoss"
         num_classes: 11
@@ -22,8 +25,8 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 2
-    num_workers: 2
+    video_batch_size: 1
+    num_workers: 1
     train:
         name: "FeatureSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
@@ -77,10 +80,10 @@ PIPELINE: #PIPELINE field
             - ToTensor:
 
 OPTIMIZER:
-    name: "AdamOptimizer"
+    name: "SGDOptimizer"
     learning_rate: 0.0005
-    weight_decay: 1e-4
-    betas: (0.9, 0.999)
+    weight_decay: 0
+    momentum: 0.9
 
 LRSCHEDULER:
     name: "MultiStepLR"
@@ -94,7 +97,7 @@ METRIC:
     score_output: True
 
 
-model_name: "Sliding_MSTCN_gtea_split1"
+model_name: "Sliding_ASFormer_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

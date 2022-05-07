@@ -1,5 +1,5 @@
 MODEL:
-    architecture: "StreamSegmentation"
+    architecture: "StreamSegmentation2D"
     backbone:
         name: "MobileNetV2TSM"
         pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
@@ -105,10 +105,10 @@ PIPELINE: #PIPELINE field
                 std: [0.133, 0.141, 0.124]
 
 OPTIMIZER:
-    name: "TSMSGDOptimizer"
-    learning_rate: 0.05
+    name: "AdamOptimizer"
+    learning_rate: 0.0005
     weight_decay: 1e-4
-    momentum: 0.9
+    betas: (0.9, 0.999)
 
 LRSCHEDULER:
     name: "MultiStepLR"

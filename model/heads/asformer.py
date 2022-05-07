@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-16 14:09:23
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-06 19:57:42
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
-FilePath: /ETESVS/model/heads/asformer.py
+FilePath     : /ETESVS/model/heads/asformer.py
 '''
 import torch
 import torch.nn as nn
@@ -307,12 +307,14 @@ class Decoder(nn.Module):
         
 @HEADS.register()
 class ASFormer(nn.Module):
-    def __init__(self, num_decoders, num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate):
+    def __init__(self, num_decoders=3, num_layers=10, r1=2, r2=2, num_f_maps=64, input_dim=2048, num_classes=11, channel_masking_rate=0.5):
         super(ASFormer, self).__init__()
         self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='sliding_att', alpha=1)
         self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='sliding_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
         
-        
+    def init_weights(self):
+        pass
+                
     def forward(self, x, mask):
         out, feature = self.encoder(x, mask)
         outputs = out.unsqueeze(0)

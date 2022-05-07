@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 13:04:41
+LastEditTime : 2022-05-06 19:29:49
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -198,7 +198,7 @@ class Runner():
             else:
                 loss.backward()
             
-        return outputs[0], loss_dict
+        return outputs[-1], loss_dict
 
     def run_one_clip(self, data_dict):
         vid_list = data_dict['vid_list']
@@ -214,11 +214,11 @@ class Runner():
             # single gpu
             score, loss_dict = self._model_forward(data_dict)
 
-        score = score.unsqueeze(0)
-        score = torch.nn.functional.interpolate(
-            input=score,
-            scale_factor=[1, 4],
-            mode="nearest")
+        # score = score.unsqueeze(0)
+        # score = torch.nn.functional.interpolate(
+        #     input=score,
+        #     scale_factor=[1, 4],
+        #     mode="nearest")
             
         with torch.no_grad():
             if self.post_processing.init_flag is not True:

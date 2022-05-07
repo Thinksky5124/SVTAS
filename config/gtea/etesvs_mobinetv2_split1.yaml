@@ -1,5 +1,5 @@
 MODEL:
-    architecture: "ETESVS"
+    architecture: "StreamSegmentationWithNeck"
     backbone:
         name: "MobileNetV2TSM"
         pretrained: "./data/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth"
@@ -36,7 +36,7 @@ MODEL:
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_idx: 3
+    to_tensor_keys: ["imgs", "labels", "masks"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
@@ -109,15 +109,22 @@ PIPELINE: #PIPELINE field
                 mean: [0.551, 0.424, 0.179]
                 std: [0.133, 0.141, 0.124]
 
-OPTIMIZER: #OPTIMIZER field
-    learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
-    step_size: [20, 40]
+OPTIMIZER:
+    name: "TSMSGDOptimizer"
+    learning_rate: 0.0005
+    weight_decay: 1e-4
+    momentum: 0.9
+
+LRSCHEDULER:
+    name: "MultiStepLR"
+    step_size: [10, 30]
     gamma: 0.1
 
 METRIC:
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
     file_output: True
+    score_output: True
 
 
 model_name: "ETESVS_MobileNetV2_gtea_split1"

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 15:37:28
+LastEditTime : 2022-05-06 20:42:12
 Description: dataset class
 FilePath     : /ETESVS/dataset/raw_frame_segmentation_dataset.py
 '''
@@ -82,7 +82,7 @@ class RawFrameSegmentationDataset(data.IterableDataset):
         self.local_rank = local_rank
         self.nprocs = nprocs
         self.drap_last = drap_last
-        if self.nprocs > 1 and train_mode is True:
+        if self.nprocs > 1:
             self.drap_last = True
         self.video_batch_size = video_batch_size
 

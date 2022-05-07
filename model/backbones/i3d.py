@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:38:19
+LastEditTime : 2022-05-06 20:31:17
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /ETESVS/model/backbones/i3d.py
 '''
@@ -399,7 +399,7 @@ class ResNet3d(nn.Module):
 
     def __init__(self,
                  depth,
-                 pretrained,
+                 pretrained=None,
                  stage_blocks=None,
                  pretrained2d=True,
                  in_channels=3,
@@ -927,7 +927,7 @@ class ResNet3dLayer(nn.Module):
 
     def __init__(self,
                  depth,
-                 pretrained,
+                 pretrained=None,
                  pretrained2d=True,
                  stage=3,
                  base_channels=64,
@@ -1019,7 +1019,21 @@ class ResNet3dLayer(nn.Module):
 
     def init_weights(self, pretrained=None, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
-            self._init_weights(self, pretrained, revise_keys)
+            if pretrained is None:
+                for m in self.modules():
+                    if isinstance(m, nn.Conv3d):
+                        kaiming_init(m)
+                    elif isinstance(m, _BatchNorm):
+                        constant_init(m, 1)
+
+                if self.zero_init_residual:
+                    for m in self.modules():
+                        if isinstance(m, Bottleneck3d):
+                            constant_init(m.conv3.bn, 0)
+                        elif isinstance(m, BasicBlock3d):
+                            constant_init(m.conv2.bn, 0)
+            else:
+                self._init_weights(self, pretrained, revise_keys)
         else:
             for m in self.modules():
                 if isinstance(m, nn.Conv3d):

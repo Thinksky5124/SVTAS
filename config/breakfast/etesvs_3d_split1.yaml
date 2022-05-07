@@ -22,7 +22,7 @@ MODEL:
         seg_in_channels: 1280
         num_f_maps: 64
     loss:
-        name: "ETESVSLoss"
+        name: "StreamSegmentationLoss"
         num_classes: 48
         sample_rate: 4
         backone_loss_weight: 1.0
@@ -108,7 +108,7 @@ OPTIMIZER:
     name: "TSMSGDOptimizer"
     learning_rate: 0.0005
     weight_decay: 1e-4
-    betas: (0.9, 0.999)
+    momentum: 0.9
 
 LRSCHEDULER:
     name: "MultiStepLR"

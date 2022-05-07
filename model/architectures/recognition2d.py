@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:40:21
+LastEditTime : 2022-05-06 20:17:34
 Description: Action Recognition 2D framework
 FilePath     : /ETESVS/model/architectures/recognition2d.py
 '''
@@ -45,7 +45,7 @@ class Recognition2D(nn.Module):
 
     def init_weights(self):
         if self.backbone is not None:
-            self.backbone.init_weights(child_model=False, revise_keys=[(r'(^)', r'backbone.\1')])
+            self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         if self.neck is not None:
             self.neck.init_weights()
         self.head.init_weights()

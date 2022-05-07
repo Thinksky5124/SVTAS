@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
-LastEditors: Thyssen Wen
-LastEditTime: 2022-05-03 14:32:40
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-06 23:15:08
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
-FilePath: /ETESVS/model/heads/mstcn.py
+FilePath     : /ETESVS/model/heads/mstcn.py
 '''
 import torch
 import copy
@@ -22,11 +22,12 @@ class MultiStageModel(nn.Module):
         self.stages = nn.ModuleList([copy.deepcopy(SingleStageModel(num_layers, num_f_maps, num_classes, num_classes)) for s in range(num_stages-1)])
 
     def init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv1d):
-                kaiming_init(m)
-            elif isinstance(m, (nn.BatchNorm1d, nn.GroupNorm)):
-                constant_init(m, 1)
+        # for m in self.modules():
+        #     if isinstance(m, nn.Conv1d):
+        #         kaiming_init(m)
+        #     elif isinstance(m, (nn.BatchNorm1d, nn.GroupNorm)):
+        #         constant_init(m, 1)
+        pass
 
     def forward(self, x, mask):
         out = self.stage1(x, mask)
@@ -57,8 +58,8 @@ class DilatedResidualLayer(nn.Module):
         super(DilatedResidualLayer, self).__init__()
         self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=dilation, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
-        self.norm = nn.BatchNorm1d(out_channels)
-        # self.dropout = nn.Dropout()
+        # self.norm = nn.BatchNorm1d(out_channels)
+        self.norm = nn.Dropout()
 
     def forward(self, x, mask):
         out = F.relu(self.conv_dilated(x))

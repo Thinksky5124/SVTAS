@@ -1,8 +1,8 @@
 MODEL:
     architecture: "Recognition2D"
     backbone:
-        name: "MobileNetV2TSM"
-        pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
+        name: "MobileNetV2"
+        pretrained: "./data/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth"
         clip_seg_num: 32
         shift_div: 8
         out_indices: (7, )
@@ -24,7 +24,7 @@ MODEL:
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_idx: 3
+    to_tensor_keys: ["imgs", "labels", "masks"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
@@ -97,9 +97,15 @@ PIPELINE: #PIPELINE field
                 mean: [0.551, 0.424, 0.179]
                 std: [0.133, 0.141, 0.124]
 
-OPTIMIZER: #OPTIMIZER field
-    learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
-    step_size: [20, 40]
+OPTIMIZER:
+    name: "SGDOptimizer"
+    learning_rate: 0.0005
+    weight_decay: 1e-4
+    momentum: 0.9
+
+LRSCHEDULER:
+    name: "MultiStepLR"
+    step_size: [50]
     gamma: 0.1
 
 METRIC:
@@ -108,7 +114,7 @@ METRIC:
     file_output: True
 
 
-model_name: "MobileV2TSM_gtea_split1"
+model_name: "MobileV2_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

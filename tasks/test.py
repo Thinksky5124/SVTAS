@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 13:09:18
+LastEditTime : 2022-05-06 19:48:47
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -140,15 +140,26 @@ def test(cfg,
         runner.Metric.accumulate()
 
         # model param flops caculate
-        x_shape = [cfg.DATASET.test.clip_seg_num, 3, 224, 224]
-        mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-        input_shape = (x_shape, mask_shape)
-        def input_constructor(input_shape):
-            x_shape, mask_shape = input_shape
-            x = torch.randn([1] + x_shape).cuda()
-            mask = torch.randn([1] + mask_shape).cuda()
-            return dict(input_data=dict(imgs=x, masks=mask))
-        output = input_constructor(input_shape)
+        if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
+            x_shape = [cfg.DATASET.test.clip_seg_num, 3, 224, 224]
+            mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+            input_shape = (x_shape, mask_shape)
+            def input_constructor(input_shape):
+                x_shape, mask_shape = input_shape
+                x = torch.randn([1] + x_shape).cuda()
+                mask = torch.randn([1] + mask_shape).cuda()
+                return dict(input_data=dict(imgs=x, masks=mask))
+            output = input_constructor(input_shape)
+        else:
+            x_shape = [2048, cfg.DATASET.test.clip_seg_num]
+            mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+            input_shape = (x_shape, mask_shape)
+            def input_constructor(input_shape):
+                x_shape, mask_shape = input_shape
+                x = torch.randn([1] + x_shape).cuda()
+                mask = torch.randn([1] + mask_shape).cuda()
+                return dict(input_data=dict(feature=x, masks=mask))
+            output = input_constructor(input_shape)
         # print(model)
         # tensorboard_writer.add_graph(model, input_to_model=[x, mask, torch.ones(1).cuda()])
         summary(model, input_data=output, col_names=["kernel_size", "output_size", "num_params", "mult_adds"])

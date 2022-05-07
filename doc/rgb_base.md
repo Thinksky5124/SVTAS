@@ -91,6 +91,9 @@ export CUDA_VISIBLE_DEVICES=0,1
 python -m torch.distributed.launch --nproc_per_node=2 main.py --launcher pytorch --validate -c config/thumos14/etesvs_mobinetv2_split1.yaml --seed 0
 ```
 ## Test Model
+
+> if use distribute test and the last samples less than gpus, will **dropout** last samples.
+
 - gtea
 
 ```bash

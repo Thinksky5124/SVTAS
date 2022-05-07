@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 15:48:59
+LastEditTime : 2022-05-06 16:53:55
 Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/stream_segmentation_hold.py
+FilePath     : /ETESVS/model/architectures/stream_segmentation2d.py
 '''
 import torch
 import torch.nn as nn
@@ -19,7 +19,7 @@ from ..builder import build_head
 from ..builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class StreamSegmentationWithNeck(nn.Module):
+class StreamSegmentation2D(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -51,7 +51,7 @@ class StreamSegmentationWithNeck(nn.Module):
     def forward(self, input_data):
         masks = input_data['masks']
         imgs = input_data['imgs']
-        
+
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 
@@ -69,13 +69,12 @@ class StreamSegmentationWithNeck(nn.Module):
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, backbone_score, neck_score = self.neck(
+            seg_feature, backbone_score = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
             backbone_score = None
-            neck_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
@@ -86,4 +85,4 @@ class StreamSegmentationWithNeck(nn.Module):
             head_score = None
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return backbone_score, neck_score, head_score
+        return backbone_score, head_score

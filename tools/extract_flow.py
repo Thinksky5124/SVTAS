@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 19:31:39
+LastEditTime : 2022-05-06 23:09:34
 Description  : file content
 FilePath     : /ETESVS/tools/extract_flow.py
 '''
@@ -23,6 +23,7 @@ from dataset.raw_frame_pipline import VideoStreamTransform
 from PIL import Image
 from utils.flow_vis import make_colorwheel
 
+@torch.no_grad()
 def extractor(cfg, file_list, outpath):
     model = model_builder.build_model(cfg.MODEL).cuda()
     transforms = VideoStreamTransform(cfg.TRANSFORM)
@@ -54,64 +55,64 @@ def extractor(cfg, file_list, outpath):
         flow_path = os.path.join(out_path, video_name + '.mp4')
         videoWrite = cv2.VideoWriter(flow_path, fourcc, cfg.DATASET.fps, img.size)
 
-        with torch.no_grad():
-            for start_frame in range(0, video_len, cfg.DATASET.num_segments):
-                end_frame = start_frame + cfg.DATASET.num_segments
-                if end_frame > video_len:
-                    end_frame = video_len
-                frames_idx = list(range(start_frame, end_frame))
-                frames_select = video.get_batch(frames_idx)
-                imgs = []
-                # dearray_to_img
-                np_frames = frames_select.asnumpy()
-                for i in range(np_frames.shape[0]):
-                    imgbuf = np_frames[i].copy()
-                    imgs.append(Image.fromarray(imgbuf, mode='RGB'))
+        for start_frame in range(0, video_len, cfg.DATASET.num_segments):
+            end_frame = start_frame + cfg.DATASET.num_segments
+            if end_frame > video_len:
+                end_frame = video_len
+            frames_idx = list(range(start_frame, end_frame))
+            frames_select = video.get_batch(frames_idx)
+            imgs = []
+            # dearray_to_img
+            np_frames = frames_select.asnumpy()
+            for i in range(np_frames.shape[0]):
+                imgbuf = np_frames[i].copy()
+                imgs.append(Image.fromarray(imgbuf, mode='RGB'))
 
-                input_data = {}
-                input_data['imgs'] = imgs
-                input_data = transforms(input_data)
+            input_data = {}
+            input_data['imgs'] = imgs
+            input_data = transforms(input_data)
 
-                imgs = input_data['imgs']
-                imgs = imgs.unsqueeze(0).cuda()
-                input_data['imgs'] = imgs
-                flows = model(input_data).squeeze(0)
+            imgs = input_data['imgs']
+            imgs = imgs.unsqueeze(0).cuda()
+            input_data['imgs'] = imgs
+            flows = model(input_data).squeeze(0)
 
-                flows = flows.cpu().permute(0, 2, 3, 1).numpy()
+            flows = flows.cpu().permute(0, 2, 3, 1).numpy()
 
-                u = flows[:, :, :, 0]
-                v = flows[:, :, :, 1]
-                rad = np.sqrt(np.square(u) + np.square(v))
-                rad_max = np.max(rad)
-                epsilon = 1e-5
-                u = u / (rad_max + epsilon)
-                v = v / (rad_max + epsilon)
+            u = flows[:, :, :, 0]
+            v = flows[:, :, :, 1]
+            rad = np.sqrt(np.square(u) + np.square(v))
+            rad_max = np.max(rad)
+            epsilon = 1e-5
+            u = u / (rad_max + epsilon)
+            v = v / (rad_max + epsilon)
+            
+            colorwheel = make_colorwheel()  # shape [55x3]
+            flows_image = np.zeros((u.shape[0], u.shape[1], u.shape[2], 3), np.uint8)
+
+            ncols = colorwheel.shape[0]
+            rad = np.sqrt(np.square(u) + np.square(v))
+            a = np.arctan2(-v, -u)/np.pi
+            fk = (a + 1) / 2 * (ncols - 1)
+            k0 = np.floor(fk).astype(np.int32)
+            k1 = k0 + 1
+            k1[k1 == ncols] = 0
+            f = fk - k0
+            for i in range(colorwheel.shape[1]):
+                tmp = colorwheel[:, i]
+                col0 = tmp[k0] / 255.0
+                col1 = tmp[k1] / 255.0
+                col = (1 - f) * col0 + f * col1
+                idx = (rad <= 1)
+                col[idx]  = 1 - rad[idx] * (1-col[idx])
+                col[~idx] = col[~idx] * 0.75   # out of range
+                # Note the 2-i => BGR instead of RGB
+                ch_idx = 2 - i
+                flows_image[:, :, :, ch_idx] = np.floor(255 * col)
+
+            for flow_img in flows_image:
+                videoWrite.write(flow_img)
                 
-                colorwheel = make_colorwheel()  # shape [55x3]
-                flows_image = np.zeros((u.shape[0], u.shape[1], u.shape[2], 3), np.uint8)
-
-                ncols = colorwheel.shape[0]
-                rad = np.sqrt(np.square(u) + np.square(v))
-                a = np.arctan2(-v, -u)/np.pi
-                fk = (a + 1) / 2 * (ncols - 1)
-                k0 = np.floor(fk).astype(np.int32)
-                k1 = k0 + 1
-                k1[k1 == ncols] = 0
-                f = fk - k0
-                for i in range(colorwheel.shape[1]):
-                    tmp = colorwheel[:, i]
-                    col0 = tmp[k0] / 255.0
-                    col1 = tmp[k1] / 255.0
-                    col = (1 - f) * col0 + f * col1
-                    idx = (rad <= 1)
-                    col[idx]  = 1 - rad[idx] * (1-col[idx])
-                    col[~idx] = col[~idx] * 0.75   # out of range
-                    # Note the 2-i => BGR instead of RGB
-                    ch_idx = 2 - i
-                    flows_image[:, :, :, ch_idx] = np.floor(255 * col)
-
-                for flow_img in flows_image:
-                    videoWrite.write(flow_img)
             model._clear_memory_buffer()
         videoWrite.release()
         
