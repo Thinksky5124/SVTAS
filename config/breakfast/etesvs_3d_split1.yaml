@@ -52,7 +52,7 @@ DATASET: #DATASET field
     test:
         name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/test_tiny.bundle" #Mandatory, train data index file path
+        file_path: "./data/breakfast/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/breakfast/Videos"
         gt_path: "./data/breakfast/groundTruth"
         actions_map_file_path: "./data/breakfast/mapping.txt"

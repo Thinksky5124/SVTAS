@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 19:44:31
+LastEditTime : 2022-05-07 20:19:24
 Description: recorder construct function
 FilePath     : /ETESVS/utils/recorder.py
 '''
@@ -10,7 +10,7 @@ from utils.logger import AverageMeter
 
 def build_recod(architecture_type, mode):
     assert mode in ["train", "validation", "test"]
-    if architecture_type in ["StreamSegmentationWithNeck"]:
+    if architecture_type in ["StreamSegmentation2DWithNeck"]:
         if mode == "train":
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                     'reader_time': AverageMeter('reader_time', '.5f'),
