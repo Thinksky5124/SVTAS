@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-10 15:42:30
+LastEditTime : 2022-05-10 20:00:46
 Description: 3D TCN model
 FilePath     : /ETESVS/model/heads/tcn_3d_head.py
 '''
@@ -11,7 +11,7 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import constant_init, kaiming_init
+from mmcv.cnn import constant_init, kaiming_init, xavier_init
 
 from ..builder import HEADS
 
@@ -41,7 +41,7 @@ class TCN3DHead(nn.Module):
     def init_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
-                kaiming_init(m)
+                xavier_init(m)
             elif isinstance(m, (nn.BatchNorm3d, nn.GroupNorm)):
                 constant_init(m, 1)
 

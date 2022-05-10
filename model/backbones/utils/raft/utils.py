@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 14:09:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 14:09:11
+LastEditTime : 2022-05-10 15:55:14
 Description  : file content
 FilePath     : /ETESVS/model/backbones/utils/raft/utils.py
 '''
 import torch
 import torch.nn.functional as F
 import numpy as np
-from scipy import interpolate
+import scipy
 
 
 class InputPadder:
@@ -52,10 +52,10 @@ def forward_interpolate(flow):
     dx = dx[valid]
     dy = dy[valid]
 
-    flow_x = interpolate.griddata(
+    flow_x = scipy.interpolate.griddata(
         (x1, y1), dx, (x0, y0), method='nearest', fill_value=0)
 
-    flow_y = interpolate.griddata(
+    flow_y = scipy.interpolate.griddata(
         (x1, y1), dy, (x0, y0), method='nearest', fill_value=0)
 
     flow = np.stack([flow_x, flow_y], axis=0)

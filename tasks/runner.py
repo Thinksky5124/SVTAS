@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-10 14:42:36
+LastEditTime : 2022-05-10 19:56:33
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -10,7 +10,10 @@ import torch
 import time
 from utils.logger import log_batch
 import torch.distributed as dist
+
 from utils.logger import get_logger
+import numpy as np
+
 try:
     from apex import amp
 except:
@@ -52,6 +55,7 @@ class Runner():
 
         self.writer = get_logger(name="ETESVS", tensorboard=True)
         self.step = 1
+        self.cnt = 1
 
         assert runner_mode in ['train', 'validation', 'test'], "Not support this runner mode: " + runner_mode
         self.runner_mode = runner_mode
@@ -234,6 +238,12 @@ class Runner():
                 self.post_processing.init_scores(sliding_num, len(vid_list))
                 self.current_step_vid_list = vid_list
             self.seg_acc += self.post_processing.update(score, labels, idx) / sliding_num
+
+            img_score = score[0, 0].clone().cpu().data.numpy()
+            img_score = np.repeat(img_score, repeats=10, axis=0)
+            img_score = np.expand_dims(img_score, axis=0)
+            self.writer.add_image("pred_score", img_score, self.cnt)
+            self.cnt = self.cnt + 1
 
             # logger loss
             self._update_loss_dict(loss_dict, sliding_num)
