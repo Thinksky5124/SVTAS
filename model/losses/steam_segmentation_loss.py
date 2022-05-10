@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 15:52:51
+LastEditTime : 2022-05-10 21:40:08
 Description: loss function
 FilePath     : /ETESVS/model/losses/steam_segmentation_loss.py
 '''
@@ -78,8 +78,9 @@ class SoftLabelLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.elps = 1e-10
     
-    def forward(self, score, gt, mask):
-        score = torch.mean(score, axis=-1)  # [N, num_class]
+    def forward(self, score, gt, gt_mask):
+        # gt_mask [N, T]
+        score = torch.sum(score * gt_mask.unsqueeze(1), axis=-1) / (torch.sum(gt_mask.unsqueeze(1), dim=-1) + self.elps)  # [N, num_class]
         cls_score = torch.reshape(score,
                                shape=[-1, self.num_classes])  # [N, num_class]
 

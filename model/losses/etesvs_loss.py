@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 14:04:02
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-10 21:39:49
 Description: loss function
-FilePath: /ETESVS/model/losses/etesvs_loss.py
+FilePath     : /ETESVS/model/losses/etesvs_loss.py
 '''
 import torch
 import numpy as np
@@ -91,8 +91,8 @@ class SoftLabelLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.elps = 1e-10
     
-    def forward(self, score, gt, mask):
-        score = torch.mean(score, axis=-1)  # [N, num_class]
+    def forward(self, score, gt, gt_mask):
+        score = torch.sum(score * gt_mask.unsqueeze(1), axis=-1) / (torch.sum(gt_mask.unsqueeze(1), dim=-1) + self.elps)  # [N, num_class]
         cls_score = torch.reshape(score,
                                shape=[-1, self.num_classes])  # [N, num_class]
 
