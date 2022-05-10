@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 19:29:49
+LastEditTime : 2022-05-10 14:42:36
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -10,6 +10,7 @@ import torch
 import time
 from utils.logger import log_batch
 import torch.distributed as dist
+from utils.logger import get_logger
 try:
     from apex import amp
 except:
@@ -48,6 +49,9 @@ class Runner():
         self.nprocs = nprocs
         self.local_rank = local_rank
         self.use_amp = use_amp
+
+        self.writer = get_logger(name="ETESVS", tensorboard=True)
+        self.step = 1
 
         assert runner_mode in ['train', 'validation', 'test'], "Not support this runner mode: " + runner_mode
         self.runner_mode = runner_mode
@@ -97,6 +101,11 @@ class Runner():
         
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
         if self.runner_mode in ['train']:
+            for name, param in self.model.named_parameters():
+                self.writer.add_histogram(name, param.clone().cpu().data.numpy(), self.step)
+                self.writer.add_histogram(name + '/grad', param.grad.clone().cpu().data.numpy(), self.step)
+            self.step = self.step + 1
+
             self.optimizer.step()
             self.optimizer.zero_grad()
 

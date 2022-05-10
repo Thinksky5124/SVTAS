@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
-LastEditors: Thyssen Wen
-LastEditTime: 2022-05-03 14:31:55
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-10 15:42:30
 Description: 3D TCN model
-FilePath: /ETESVS/model/heads/tcn_3d_head.py
+FilePath     : /ETESVS/model/heads/tcn_3d_head.py
 '''
 from dataclasses import dataclass
 import torch
@@ -87,7 +87,10 @@ class DilatedResidual3DLayer(nn.Module):
         self.norm = nn.BatchNorm3d(out_channels)
 
     def forward(self, x, mask):
-        out = F.relu(self.conv_dilated(x))
+        # !
+        out = F.leaky_relu(self.conv_dilated(x))
+        # !
+        # out = F.relu(self.conv_dilated(x))
         out = self.conv_1x1(out)
         out = self.norm(out)
         return (x + out) * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1)

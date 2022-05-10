@@ -9,14 +9,14 @@ MODEL:
         pretrained2d: False
     neck:
         name: "AvgPoolNeck"
-        num_classes: 48
+        num_classes: 11
         in_channels: 2048
         clip_seg_num: 32
         drop_ratio: 0.5
         need_pool: False
     head:
         name: "TCN3DHead"
-        num_classes: 48
+        num_classes: 11
         num_layers: 4
         sample_rate: 4
         sliding_window: 128
@@ -24,7 +24,7 @@ MODEL:
         num_f_maps: 64
     loss:
         name: "StreamSegmentationLoss"
-        num_classes: 48
+        num_classes: 11
         sample_rate: 4
         backone_loss_weight: 1.0
         head_loss_weight: 1.0
@@ -35,17 +35,17 @@ COLLATE:
     to_tensor_keys: ["imgs", "labels", "masks"]
 
 DATASET: #DATASET field
-    temporal_clip_batch_size: 2
-    video_batch_size: 6
-    num_workers: 3
+    temporal_clip_batch_size: 3
+    video_batch_size: 2
+    num_workers: 2
     train:
         name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/gtea/Videos"
+        gt_path: "./data/gtea/groundTruth"
+        actions_map_file_path: "./data/gtea/mapping.txt"
+        dataset_type: "gtea"
         train_mode: True
         sliding_window: 128
         clip_seg_num: 32
@@ -53,11 +53,11 @@ DATASET: #DATASET field
     test:
         name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/gtea/Videos"
+        gt_path: "./data/gtea/groundTruth"
+        actions_map_file_path: "./data/gtea/mapping.txt"
+        dataset_type: "gtea"
         train_mode: False
         sliding_window: 128
         clip_seg_num: 32
@@ -82,8 +82,8 @@ PIPELINE: #PIPELINE field
             - RandomHorizontalFlip:
             - ToTensor:
             - Normalize:
-                mean: [0.425, 0.390, 0.337]
-                std: [0.262, 0.260, 0.246]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
     test:
         name: "RawFramePipeline"
@@ -102,29 +102,27 @@ PIPELINE: #PIPELINE field
                 size: 224
             - ToTensor:
             - Normalize:
-                mean: [0.425, 0.390, 0.337]
-                std: [0.262, 0.260, 0.246]
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]
 
 OPTIMIZER:
-    name: "SGDOptimizer"
-    learning_rate: 0.001
+    name: "AdamOptimizer"
+    learning_rate: 0.0005
     weight_decay: 1e-4
-    momentum: 0.9
+    betas: (0.9, 0.999)
 
 LRSCHEDULER:
     name: "MultiStepLR"
-    step_size: [20, 40]
+    step_size: [50]
     gamma: 0.1
 
 METRIC:
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/breakfast/mapping.txt"
+    actions_map_file_path: "./data/gtea/mapping.txt"
     file_output: True
-    score_output: True
 
 
-
-model_name: "I3D_breakfast_split1"
-log_interval: 10 #Optional, the interal of logger, default:10
+model_name: "I3DTCN_gtea_split1"
+log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10
