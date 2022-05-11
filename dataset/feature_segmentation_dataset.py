@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:13:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 15:38:03
+LastEditTime : 2022-05-11 10:49:15
 Description: feature dataset class
 FilePath     : /ETESVS/dataset/feature_segmentation_dataset.py
 '''
@@ -59,12 +59,20 @@ class FeatureSegmentationDataset(RawFrameSegmentationDataset):
                     classes = np.zeros(len(content), dtype='int64')
                     for i in range(len(content)):
                         classes[i] = self.actions_dict[content[i]]
+
+                    # caculate sliding num
+                    if max_len < len(content):
+                        max_len = len(content)
+                    precise_sliding_num = len(content) // self.sliding_window
+                    if len(content) % self.sliding_window != 0:
+                        precise_sliding_num = precise_sliding_num + 1
+
                     info.append(
                         dict(filename=video_path,
                             raw_labels=classes,
-                            video_name=video_name))
-                    if max_len < len(content):
-                        max_len = len(content)
+                            video_name=video_name,
+                            precise_sliding_num=precise_sliding_num))
+                        
                 info_proc[proces_idx] = info
 
             # construct sliding num
@@ -82,6 +90,8 @@ class FeatureSegmentationDataset(RawFrameSegmentationDataset):
         labels_list = []
         masks_list = []
         vid_list = []
+        precise_sliding_num_list = []
+
         for single_info in info:
             sample_segment = single_info.copy()
             sample_segment['sample_sliding_idx'] = idx
@@ -91,16 +101,19 @@ class FeatureSegmentationDataset(RawFrameSegmentationDataset):
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
+            precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 
         feature = copy.deepcopy(torch.concat(feature_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
+        precise_sliding_num = copy.deepcopy(np.concatenate(precise_sliding_num_list, axis=0).astype(np.float32))
 
         # compose result
         data_dict = {}
         data_dict['feature'] = feature
         data_dict['labels'] = labels
         data_dict['masks'] = masks
+        data_dict['precise_sliding_num'] = precise_sliding_num
         data_dict['vid_list'] = vid_list
         return data_dict
     
@@ -112,6 +125,7 @@ class FeatureSegmentationDataset(RawFrameSegmentationDataset):
         data_dict['masks'] = 0
         data_dict['vid_list'] = []
         data_dict['sliding_num'] = 0
+        data_dict['precise_sliding_num'] = 0
         data_dict['step'] = self.step_num
         data_dict['current_sliding_cnt'] = -1
         return data_dict

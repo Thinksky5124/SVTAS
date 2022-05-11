@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:11:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:24:17
+LastEditTime : 2022-05-11 10:48:00
 Description  : file content
 FilePath     : /ETESVS/dataset/rgb_flow_frame_segmentation_dataset.py
 '''
@@ -93,13 +93,20 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
                     classes = np.zeros(len(content), dtype='int64')
                     for i in range(len(content)):
                         classes[i] = self.actions_dict[content[i]]
-                    info.append(
-                        dict(filename=video_path,
-                            flow_path=flow_path,
-                            raw_labels=classes,
-                            video_name=video_name))
+
+                     # caculate sliding num
                     if max_len < len(content):
                         max_len = len(content)
+                    precise_sliding_num = len(content) // self.sliding_window
+                    if len(content) % self.sliding_window != 0:
+                        precise_sliding_num = precise_sliding_num + 1
+
+                    info.append(
+                        dict(filename=video_path,
+                            raw_labels=classes,
+                            video_name=video_name,
+                            precise_sliding_num=precise_sliding_num))
+
                 info_proc[proces_idx] = info
 
             # construct sliding num
@@ -118,6 +125,8 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
         labels_list = []
         masks_list = []
         vid_list = []
+        precise_sliding_num_list = []
+
         for single_info in info:
             sample_segment = single_info.copy()
             sample_segment['sample_sliding_idx'] = idx
@@ -128,11 +137,13 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
+            precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 
         imgs = copy.deepcopy(torch.concat(imgs_list, dim=0))
         flow_imgs = copy.deepcopy(torch.concat(flow_imgs_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
+        precise_sliding_num = copy.deepcopy(np.concatenate(precise_sliding_num_list, axis=0).astype(np.float32))
         
         # compose result
         data_dict = {}
@@ -140,6 +151,7 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
         data_dict['flows'] = flow_imgs
         data_dict['labels'] = labels
         data_dict['masks'] = masks
+        data_dict['precise_sliding_num'] = precise_sliding_num
         data_dict['vid_list'] = vid_list
         return data_dict
     
@@ -152,6 +164,7 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
         data_dict['masks'] = 0
         data_dict['vid_list'] = []
         data_dict['sliding_num'] = 0
+        data_dict['precise_sliding_num'] = 0
         data_dict['step'] = self.step_num
         data_dict['current_sliding_cnt'] = -1
         return data_dict

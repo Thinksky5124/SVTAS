@@ -32,12 +32,12 @@ MODEL:
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_keys: ["imgs", "labels", "masks"]
+    to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
 
 DATASET: #DATASET field
-    temporal_clip_batch_size: 2
-    video_batch_size: 6
-    num_workers: 3
+    temporal_clip_batch_size: 3
+    video_batch_size: 2
+    num_workers: 2
     train:
         name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
@@ -69,7 +69,7 @@ PIPELINE: #PIPELINE field
         decode:
             backend: "decord"
         sample:
-            seg_len: 1
+            is_train: True
             sample_rate: 4
             clip_seg_num: 32
             sliding_window: 128
@@ -90,7 +90,7 @@ PIPELINE: #PIPELINE field
         decode:
             backend: "decord"
         sample:
-            seg_len: 1
+            is_train: False
             sample_rate: 4
             clip_seg_num: 32
             sliding_window: 128
@@ -107,7 +107,7 @@ PIPELINE: #PIPELINE field
 
 OPTIMIZER:
     name: "AdamOptimizer"
-    learning_rate: 0.001
+    learning_rate: 0.0005
     weight_decay: 1e-4
     betas: (0.9, 0.999)
 

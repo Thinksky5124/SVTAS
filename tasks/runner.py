@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 09:48:41
+LastEditTime : 2022-05-11 13:07:35
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -67,9 +67,9 @@ class Runner():
                 if key.endswith("loss"):
                     self.loss_dict[key] = 0.
     
-    def _update_loss_dict(self, input_loss_dict, sliding_num):
+    def _update_loss_dict(self, input_loss_dict):
         for key, _ in self.loss_dict.items():
-            self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone() / sliding_num
+            self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone()
     
     def _distribute_sync_loss_dict(self):
         for key, value in self.loss_dict.items():
@@ -191,20 +191,16 @@ class Runner():
         self.current_step = step
     
     def _model_forward(self, data_dict):
-        sliding_num = data_dict['sliding_num']
-        precise_sliding_num = data_dict['precise_sliding_num']
-
         # move data
         input_data = {}
         for key, value in data_dict.items():
             if torch.is_tensor(value):
                 input_data[key] = value.cuda()
-        loss_dict={}
 
         outputs = self.model(input_data)
-        loss_dict = self.criterion(outputs, input_data["masks"], input_data["labels"])
+        loss_dict = self.criterion(outputs, input_data["masks"], input_data["labels"], input_data['precise_sliding_num'])
 
-        loss = loss_dict["loss"] / sliding_num
+        loss = loss_dict["loss"]
         if self.runner_mode in ['train']:
             if self.use_amp is True:
                 with amp.scale_loss(loss, self.optimizer) as scaled_loss:
@@ -247,7 +243,7 @@ class Runner():
             # self.cnt = self.cnt + 1
 
             # logger loss
-            self._update_loss_dict(loss_dict, sliding_num)
+            self._update_loss_dict(loss_dict)
 
     def run_one_iter(self, data, r_tic=None, epoch=None):
         # videos sliding stream train

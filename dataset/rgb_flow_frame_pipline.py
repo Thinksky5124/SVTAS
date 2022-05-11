@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:12:02
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:24:39
+LastEditTime : 2022-05-11 12:08:36
 Description  : file content
 FilePath     : /ETESVS/dataset/rgb_flow_frame_pipline.py
 '''
@@ -97,7 +97,7 @@ class RGBFlowVideoStreamSampler():
     """
 
     def __init__(self,
-                 seg_len,
+                 is_train=False,
                  sample_rate=4,
                  clip_seg_num=15,
                  sliding_window=60,
@@ -106,12 +106,93 @@ class RGBFlowVideoStreamSampler():
                  sample_mode='random'
                  ):
         self.sample_rate = sample_rate
-        self.seg_len = seg_len
+        self.is_train = is_train
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
         self.channel_mode = channel_mode
         self.sample = VideoFrameSample(mode = sample_mode)
+    
+    def _all_valid_frames(self, start_frame, end_frame, video_len, rgb_container, flow_container, labels):
+        imgs = []
+        flows = []
+        vid_end_frame = end_frame
+        if end_frame > video_len:
+            vid_end_frame = video_len
+        frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
+        labels = self._labels_sample(labels, samples_idx=frames_idx).copy()
+        rgb_frames_select = rgb_container.get_batch(frames_idx)
+        flow_frames_select = flow_container.get_batch(frames_idx)
+        # dearray_to_img
+        np_frames = rgb_frames_select.asnumpy()
+        for i in range(np_frames.shape[0]):
+            imgbuf = np_frames[i].copy()
+            imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
+
+        np_frames = flow_frames_select.asnumpy()
+        for i in range(np_frames.shape[0]):
+            imgbuf = np_frames[i].copy()
+            flows.append(Image.fromarray(imgbuf, mode=self.channel_mode))
+
+        if len(imgs) < self.clip_seg_num:
+            np_frames = np_frames[-1].asnumpy().copy()
+            pad_len = self.clip_seg_num - len(imgs)
+            for i in range(pad_len):
+                imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
+    
+        if len(flows) < self.clip_seg_num:
+            np_frames = np_frames[-1].asnumpy().copy()
+            pad_len = self.clip_seg_num - len(flows)
+            for i in range(pad_len):
+                flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
+                
+        mask = np.ones((labels.shape[0]))
+        return imgs, flows, labels, mask
+    
+    def _some_valid_frames(self, start_frame, end_frame, video_len, frames_len, rgb_container, flow_container, labels):
+        imgs = []
+        flows = []
+
+        rgb_frames_idx = self.sample(start_frame, video_len, self.sample_rate)
+        flow_frames_idx = self.sample(start_frame, video_len - 1, self.sample_rate)
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len).copy()
+        rgb_frames_select = rgb_container.get_batch(rgb_frames_idx)
+        flow_frames_select = flow_container.get_batch(flow_frames_idx)
+        # dearray_to_img
+        np_frames = rgb_frames_select.asnumpy()
+        for i in range(np_frames.shape[0]):
+            imgbuf = np_frames[i].copy()
+            imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
+        np_frames = np.zeros_like(np_frames[0])
+        pad_len = self.clip_seg_num - len(imgs)
+        for i in range(pad_len):
+            imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
+        
+        np_frames = flow_frames_select.asnumpy()
+        for i in range(np_frames.shape[0]):
+            imgbuf = np_frames[i].copy()
+            flows.append(Image.fromarray(imgbuf, mode=self.channel_mode))
+        np_frames = np.zeros_like(np_frames[0])
+        pad_len = self.clip_seg_num - len(flows)
+        for i in range(pad_len):
+            flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
+            
+        vaild_mask = np.ones((labels.shape[0]))
+        mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
+        void_mask = np.zeros((mask_pad_len))
+        mask = np.concatenate([vaild_mask, void_mask], axis=0)
+        labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
+        
+        return imgs, flows, labels, mask
+    
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[0]):
+        if self.is_train:
+            sample_labels = labels[samples_idx]
+            sample_labels = np.repeat(sample_labels, repeats=self.sample_rate, axis=-1)
+        else:
+            sample_labels = labels[start_frame:end_frame]
+        return sample_labels
+
 
     def __call__(self, results):
         """
@@ -125,76 +206,18 @@ class RGBFlowVideoStreamSampler():
         results['frames_len'] = frames_len
         rgb_container = results['rgb_frames']
         flow_container = results['flow_frames']
-        imgs = []
-        flows = []
         labels = results['raw_labels']
 
         # generate sample index
         start_frame = results['sample_sliding_idx'] * self.sliding_window
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
         if start_frame < frames_len - 1 and end_frame < frames_len - 1:
-            vid_end_frame = end_frame
-            if end_frame > video_len:
-                vid_end_frame = video_len
-            frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
-            labels = labels[start_frame:end_frame].copy()
-            rgb_frames_select = rgb_container.get_batch(frames_idx)
-            flow_frames_select = flow_container.get_batch(frames_idx)
-            # dearray_to_img
-            np_frames = rgb_frames_select.asnumpy()
-            for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i].copy()
-                imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
-
-            np_frames = flow_frames_select.asnumpy()
-            for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i].copy()
-                flows.append(Image.fromarray(imgbuf, mode=self.channel_mode))
-
-            if len(imgs) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
-                pad_len = self.clip_seg_num - len(imgs)
-                for i in range(pad_len):
-                    imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
-        
-            if len(flows) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
-                pad_len = self.clip_seg_num - len(flows)
-                for i in range(pad_len):
-                    flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
-                    
-            mask = np.ones((labels.shape[0]))
+            imgs, flows, labels, mask = self._all_valid_frames(start_frame, end_frame, video_len, rgb_container, flow_container, labels)
         elif start_frame < frames_len - 1 and end_frame >= frames_len - 1:
-            rgb_frames_idx = self.sample(start_frame, video_len, self.sample_rate)
-            flow_frames_idx = self.sample(start_frame, video_len - 1, self.sample_rate)
-            labels = labels[start_frame:frames_len].copy()
-            rgb_frames_select = rgb_container.get_batch(rgb_frames_idx)
-            flow_frames_select = rgb_container.get_batch(flow_frames_idx)
-            # dearray_to_img
-            np_frames = rgb_frames_select.asnumpy()
-            for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i].copy()
-                imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
-            np_frames = np.zeros_like(np_frames[0])
-            pad_len = self.clip_seg_num - len(imgs)
-            for i in range(pad_len):
-                imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
-            
-            np_frames = flow_frames_select.asnumpy()
-            for i in range(np_frames.shape[0]):
-                imgbuf = np_frames[i].copy()
-                flows.append(Image.fromarray(imgbuf, mode=self.channel_mode))
-            np_frames = np.zeros_like(np_frames[0])
-            pad_len = self.clip_seg_num - len(flows)
-            for i in range(pad_len):
-                flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
-                
-            vaild_mask = np.ones((labels.shape[0]))
-            mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
-            void_mask = np.zeros((mask_pad_len))
-            mask = np.concatenate([vaild_mask, void_mask], axis=0)
-            labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
+            imgs, flows, labels, mask = self._some_valid_frames(start_frame, end_frame, video_len, frames_len, rgb_container, flow_container, labels)
         else:
+            imgs = []
+            flows = []
             np_frames = np.zeros((224, 224, 3))
             pad_len = self.clip_seg_num
             for i in range(pad_len):

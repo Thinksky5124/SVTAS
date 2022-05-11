@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-27 16:12:40
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 21:03:55
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-11 12:12:54
 Description: file content
-FilePath: /ETESVS/dataset/feature_pipline.py
+FilePath     : /ETESVS/dataset/feature_pipline.py
 '''
 import numpy as np
 import random
@@ -104,6 +104,39 @@ class FeatureStreamSampler():
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
         self.sample = FeatureFrameSample(mode = sample_mode)
+    
+    def _all_valid_frames(self, start_frame, end_frame, feature_len, feature, labels):
+        vid_end_frame = end_frame
+        if end_frame > feature_len:
+            vid_end_frame = feature_len
+        frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
+        labels = self._labels_sample(labels, samples_idx=frames_idx).copy()
+        frames_feature = feature[:, frames_idx]
+        mask = np.ones((labels.shape[0]))
+
+        return frames_feature, labels, mask
+    
+    def _some_valid_frames(self, start_frame, end_frame, feature_len, frames_len, feature, labels):
+        frames_idx = self.sample(start_frame, feature_len, self.sample_rate)
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len).copy()
+        frames_feature = feature[:, frames_idx]
+        pad_len = self.clip_seg_num - frames_feature.shape[-1]
+        frames_feature = np.concatenate([frames_feature, np.zeros((2048, pad_len))], axis=-1)
+        vaild_mask = np.ones((labels.shape[0]))
+        mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
+        void_mask = np.zeros((mask_pad_len))
+        mask = np.concatenate([vaild_mask, void_mask], axis=0)
+        labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
+        
+        return frames_feature, labels, mask
+
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[0]):
+        if self.is_train:
+            sample_labels = labels[samples_idx]
+            sample_labels = np.repeat(sample_labels, repeats=self.sample_rate, axis=-1)
+        else:
+            sample_labels = labels[start_frame:end_frame]
+        return sample_labels
 
     def __call__(self, results):
         """
@@ -122,24 +155,9 @@ class FeatureStreamSampler():
         start_frame = results['sample_sliding_idx'] * self.sliding_window
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
         if start_frame < frames_len and end_frame < frames_len:
-            vid_end_frame = end_frame
-            if end_frame > feature_len:
-                vid_end_frame = feature_len
-            frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
-            labels = labels[start_frame:end_frame].copy()
-            frames_feature = feature[:, frames_idx]
-            mask = np.ones((labels.shape[0]))
+            frames_feature, labels, mask = self._all_valid_frames(start_frame, end_frame, feature_len, feature, labels)
         elif start_frame < frames_len and end_frame >= frames_len:
-            frames_idx = self.sample(start_frame, feature_len, self.sample_rate)
-            labels = labels[start_frame:frames_len].copy()
-            frames_feature = feature[:, frames_idx]
-            pad_len = self.clip_seg_num - frames_feature.shape[-1]
-            frames_feature = np.concatenate([frames_feature, np.zeros((2048, pad_len))], axis=-1)
-            vaild_mask = np.ones((labels.shape[0]))
-            mask_pad_len = self.clip_seg_num * self.sample_rate - labels.shape[0]
-            void_mask = np.zeros((mask_pad_len))
-            mask = np.concatenate([vaild_mask, void_mask], axis=0)
-            labels = np.concatenate([labels, np.full((mask_pad_len), self.ignore_index)])
+            frames_feature, labels, mask = self._some_valid_frames(start_frame, end_frame, feature_len, frames_len, feature, labels)
         else:
             frames_feature = np.zeros((2048, self.clip_seg_num))
             mask = np.zeros((self.clip_seg_num * self.sample_rate))

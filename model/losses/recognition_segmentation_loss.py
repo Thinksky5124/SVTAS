@@ -2,18 +2,19 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-10 23:01:04
+LastEditTime : 2022-05-11 10:45:16
 Description: Action recognition model loss
 FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from .segmentation_loss import SegmentationLoss
 
 from ..builder import LOSSES
 
 @LOSSES.register()
-class SegmentationLoss(nn.Module):
+class RecognitionSegmentationLoss(nn.Module):
     def __init__(self,
                  num_classes,
                  label_mode='soft',
@@ -29,13 +30,13 @@ class SegmentationLoss(nn.Module):
         self.elps = 1e-10
 
         if self.label_mode in ["soft"]:
-            self.criteria = SoftLabelLoss(self.num_classes, ignore_index=self.ignore_index)
+            self.criteria = SoftLabelRocgnitionLoss(self.num_classes, ignore_index=self.ignore_index)
         elif self.label_mode in ['hard']:
-            self.criteria = HardLableLoss(self.num_classes, ignore_index=self.ignore_index)
+            self.criteria = SegmentationLoss(self.num_classes, sample_rate=self.sample_rate, ignore_index=self.ignore_index)
         else:
             raise NotImplementedError
 
-    def forward(self, model_output, masks, labels):
+    def forward(self, model_output, masks, labels, precise_sliding_num):
         score = model_output
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
@@ -51,7 +52,7 @@ class SegmentationLoss(nn.Module):
             masks = masks[:, ::self.sample_rate]
             masks = torch.repeat_interleave(masks, self.sample_rate, dim=-1)
 
-        loss = self.criteria(score, labels, masks)
+        loss = self.criteria(score, labels, masks, precise_sliding_num)['loss']
 
         loss = self.loss_weight * loss
 
@@ -59,30 +60,8 @@ class SegmentationLoss(nn.Module):
         loss_dict["loss"] = loss
         return loss_dict
 
-class HardLableLoss(nn.Module):
-    def __init__(self,
-                 num_classes,
-                 smooth_weight=0.15,
-                 ignore_index=-100):
-        super().__init__()
-        self.num_classes = num_classes
-        self.ignore_index = ignore_index
-        self.smooth_weight = smooth_weight
-        self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
-        self.mse = nn.MSELoss(reduction='none')
-        self.elps = 1e-10
-
-    def forward(self, score, labels, masks):
-        seg_loss = 0.
-        for p in score:
-            seg_cls_loss = self.ce(p.transpose(2, 1).contiguous().view(-1, self.num_classes), labels.view(-1))
-            seg_loss += torch.sum(seg_cls_loss / (torch.sum(labels != -100) + self.elps))
-            seg_loss += self.smooth_weight * torch.mean(torch.clamp(
-                self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1)
-                ), min=0, max=16) * masks[:, 1:].unsqueeze(1))
-        return seg_loss
-
-class SoftLabelLoss(nn.Module):
+@LOSSES.register()
+class SoftLabelRocgnitionLoss(nn.Module):
     def __init__(self,
                  num_classes,
                  ignore_index=-100):
@@ -92,7 +71,8 @@ class SoftLabelLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.elps = 1e-10
     
-    def forward(self, score, gt, gt_mask):
+    def forward(self, score, gt, gt_mask, precise_sliding_num):
+        # gt_mask [N, T]
         score = torch.sum(score * gt_mask.unsqueeze(1), axis=-1) / (torch.sum(gt_mask.unsqueeze(1), dim=-1) + self.elps)  # [N, num_class]
         cls_score = torch.reshape(score,
                                shape=[-1, self.num_classes])  # [N, num_class]
@@ -119,5 +99,10 @@ class SoftLabelLoss(nn.Module):
             y = torch.zeros((smooth_label.shape[0]), device=device)
             mask = torch.where(torch.sum(smooth_label, dim=1)!=0, x, y)
 
-        cls_loss = torch.sum(self.ce(cls_score, smooth_label) * mask) / (torch.sum(mask) + self.elps)
-        return cls_loss
+        loss = torch.sum(
+            (self.ce(cls_score, smooth_label) * mask) / (precise_sliding_num + self.elps)
+            ) / (torch.sum(mask) + self.elps)
+
+        loss_dict={}
+        loss_dict["loss"] = loss
+        return loss_dict
