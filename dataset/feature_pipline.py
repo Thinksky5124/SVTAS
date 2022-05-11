@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:12:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 12:12:54
+LastEditTime : 2022-05-11 17:00:28
 Description: file content
 FilePath     : /ETESVS/dataset/feature_pipline.py
 '''
@@ -110,7 +110,7 @@ class FeatureStreamSampler():
         if end_frame > feature_len:
             vid_end_frame = feature_len
         frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
-        labels = self._labels_sample(labels, samples_idx=frames_idx).copy()
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=end_frame, samples_idx=frames_idx).copy()
         frames_feature = feature[:, frames_idx]
         mask = np.ones((labels.shape[0]))
 
@@ -118,7 +118,8 @@ class FeatureStreamSampler():
     
     def _some_valid_frames(self, start_frame, end_frame, feature_len, frames_len, feature, labels):
         frames_idx = self.sample(start_frame, feature_len, self.sample_rate)
-        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len).copy()
+        label_frames_idx = self.sample(start_frame, frames_len, self.sample_rate)
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len, samples_idx=label_frames_idx).copy()
         frames_feature = feature[:, frames_idx]
         pad_len = self.clip_seg_num - frames_feature.shape[-1]
         frames_feature = np.concatenate([frames_feature, np.zeros((2048, pad_len))], axis=-1)
@@ -130,7 +131,7 @@ class FeatureStreamSampler():
         
         return frames_feature, labels, mask
 
-    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[0]):
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[]):
         if self.is_train:
             sample_labels = labels[samples_idx]
             sample_labels = np.repeat(sample_labels, repeats=self.sample_rate, axis=-1)

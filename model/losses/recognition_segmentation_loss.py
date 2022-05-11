@@ -74,8 +74,7 @@ class SoftLabelRocgnitionLoss(nn.Module):
     def forward(self, score, gt, gt_mask, precise_sliding_num):
         # gt_mask [N, T]
         score = torch.sum(score * gt_mask.unsqueeze(1), axis=-1) / (torch.sum(gt_mask.unsqueeze(1), dim=-1) + self.elps)  # [N, num_class]
-        cls_score = torch.reshape(score,
-                               shape=[-1, self.num_classes])  # [N, num_class]
+        cls_score = torch.reshape(score, shape=[-1, self.num_classes])  # [N, num_class]
 
         # smooth label learning
         with torch.no_grad():

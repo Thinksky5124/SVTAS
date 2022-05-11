@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:12:02
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 12:08:36
+LastEditTime : 2022-05-11 17:00:16
 Description  : file content
 FilePath     : /ETESVS/dataset/rgb_flow_frame_pipline.py
 '''
@@ -120,7 +120,7 @@ class RGBFlowVideoStreamSampler():
         if end_frame > video_len:
             vid_end_frame = video_len
         frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
-        labels = self._labels_sample(labels, samples_idx=frames_idx).copy()
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=end_frame, samples_idx=frames_idx).copy()
         rgb_frames_select = rgb_container.get_batch(frames_idx)
         flow_frames_select = flow_container.get_batch(frames_idx)
         # dearray_to_img
@@ -155,7 +155,8 @@ class RGBFlowVideoStreamSampler():
 
         rgb_frames_idx = self.sample(start_frame, video_len, self.sample_rate)
         flow_frames_idx = self.sample(start_frame, video_len - 1, self.sample_rate)
-        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len).copy()
+        label_frames_idx = self.sample(start_frame, frames_len, self.sample_rate)
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len, samples_idx=label_frames_idx).copy()
         rgb_frames_select = rgb_container.get_batch(rgb_frames_idx)
         flow_frames_select = flow_container.get_batch(flow_frames_idx)
         # dearray_to_img
@@ -185,7 +186,7 @@ class RGBFlowVideoStreamSampler():
         
         return imgs, flows, labels, mask
     
-    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[0]):
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[]):
         if self.is_train:
             sample_labels = labels[samples_idx]
             sample_labels = np.repeat(sample_labels, repeats=self.sample_rate, axis=-1)

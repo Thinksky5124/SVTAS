@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 12:07:36
+LastEditTime : 2022-05-11 16:59:36
 Description: data prepare pipline function
 FilePath     : /ETESVS/dataset/raw_frame_pipline.py
 '''
@@ -136,7 +136,7 @@ class VideoStreamSampler():
         if end_frame > video_len:
             vid_end_frame = video_len
         frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
-        labels = self._labels_sample(labels, samples_idx=frames_idx).copy()
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=end_frame, samples_idx=frames_idx).copy()
         frames_select = container.get_batch(frames_idx)
         # dearray_to_img
         np_frames = frames_select.asnumpy()
@@ -157,7 +157,8 @@ class VideoStreamSampler():
     def _some_valid_frames(self, start_frame, end_frame, video_len, frames_len, container, labels):
         imgs = []
         frames_idx = self.sample(start_frame, video_len, self.sample_rate)
-        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len).copy()
+        label_frames_idx = self.sample(start_frame, frames_len, self.sample_rate)
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len, samples_idx=label_frames_idx).copy()
         frames_select = container.get_batch(frames_idx)
         # dearray_to_img
         np_frames = frames_select.asnumpy()
@@ -176,7 +177,7 @@ class VideoStreamSampler():
 
         return imgs, labels, mask
     
-    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[0]):
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[]):
         if self.is_train:
             sample_labels = labels[samples_idx]
             sample_labels = np.repeat(sample_labels, repeats=self.sample_rate, axis=-1)
