@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-10 21:39:28
+LastEditTime : 2022-05-10 23:01:04
 Description: Action recognition model loss
 FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
 '''
@@ -119,5 +119,5 @@ class SoftLabelLoss(nn.Module):
             y = torch.zeros((smooth_label.shape[0]), device=device)
             mask = torch.where(torch.sum(smooth_label, dim=1)!=0, x, y)
 
-        cls_loss = torch.mean(self.ce(cls_score, smooth_label) * mask)
+        cls_loss = torch.sum(self.ce(cls_score, smooth_label) * mask) / (torch.sum(mask) + self.elps)
         return cls_loss

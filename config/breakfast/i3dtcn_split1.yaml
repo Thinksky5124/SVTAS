@@ -35,9 +35,9 @@ COLLATE:
     to_tensor_keys: ["imgs", "labels", "masks"]
 
 DATASET: #DATASET field
-    temporal_clip_batch_size: 3
-    video_batch_size: 2
-    num_workers: 2
+    temporal_clip_batch_size: 2
+    video_batch_size: 6
+    num_workers: 3
     train:
         name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
@@ -107,7 +107,7 @@ PIPELINE: #PIPELINE field
 
 OPTIMIZER:
     name: "AdamOptimizer"
-    learning_rate: 0.0005
+    learning_rate: 0.001
     weight_decay: 1e-4
     betas: (0.9, 0.999)
 

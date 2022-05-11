@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-10 19:56:33
+LastEditTime : 2022-05-11 09:48:41
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -53,9 +53,9 @@ class Runner():
         self.local_rank = local_rank
         self.use_amp = use_amp
 
-        self.writer = get_logger(name="ETESVS", tensorboard=True)
-        self.step = 1
-        self.cnt = 1
+        # self.writer = get_logger(name="ETESVS", tensorboard=True)
+        # self.step = 1
+        # self.cnt = 1
 
         assert runner_mode in ['train', 'validation', 'test'], "Not support this runner mode: " + runner_mode
         self.runner_mode = runner_mode
@@ -105,10 +105,10 @@ class Runner():
         
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
         if self.runner_mode in ['train']:
-            for name, param in self.model.named_parameters():
-                self.writer.add_histogram(name, param.clone().cpu().data.numpy(), self.step)
-                self.writer.add_histogram(name + '/grad', param.grad.clone().cpu().data.numpy(), self.step)
-            self.step = self.step + 1
+            # for name, param in self.model.named_parameters():
+            #     self.writer.add_histogram(name, param.clone().cpu().data.numpy(), self.step)
+            #     self.writer.add_histogram(name + '/grad', param.grad.clone().cpu().data.numpy(), self.step)
+            # self.step = self.step + 1
 
             self.optimizer.step()
             self.optimizer.zero_grad()
@@ -192,6 +192,7 @@ class Runner():
     
     def _model_forward(self, data_dict):
         sliding_num = data_dict['sliding_num']
+        precise_sliding_num = data_dict['precise_sliding_num']
 
         # move data
         input_data = {}
@@ -239,11 +240,11 @@ class Runner():
                 self.current_step_vid_list = vid_list
             self.seg_acc += self.post_processing.update(score, labels, idx) / sliding_num
 
-            img_score = score[0, 0].clone().cpu().data.numpy()
-            img_score = np.repeat(img_score, repeats=10, axis=0)
-            img_score = np.expand_dims(img_score, axis=0)
-            self.writer.add_image("pred_score", img_score, self.cnt)
-            self.cnt = self.cnt + 1
+            # img_score = score[0, 0].clone().cpu().data.numpy()
+            # img_score = np.repeat(img_score, repeats=10, axis=0)
+            # img_score = np.expand_dims(img_score, axis=0)
+            # self.writer.add_image("pred_score", img_score, self.cnt)
+            # self.cnt = self.cnt + 1
 
             # logger loss
             self._update_loss_dict(loss_dict, sliding_num)

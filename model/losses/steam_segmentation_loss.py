@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-10 21:40:08
+LastEditTime : 2022-05-10 22:59:48
 Description: loss function
 FilePath     : /ETESVS/model/losses/steam_segmentation_loss.py
 '''
@@ -106,5 +106,5 @@ class SoftLabelLoss(nn.Module):
             y = torch.zeros((smooth_label.shape[0]), device=device)
             mask = torch.where(torch.sum(smooth_label, dim=1)!=0, x, y)
 
-        cls_loss = torch.mean(self.ce(cls_score, smooth_label) * mask)
+        cls_loss = torch.sum(self.ce(cls_score, smooth_label) * mask) / (torch.sum(mask) + self.elps)
         return cls_loss
