@@ -2,15 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:38:19
+LastEditTime : 2022-05-12 19:52:37
 Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/stream_segmentation2d_hold.py
+FilePath     : /ETESVS/model/architectures/stream_segmentation2d_with_neck.py
 '''
 import torch
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
-
-from utils.logger import get_logger
 
 from ..builder import build_backbone
 from ..builder import build_neck

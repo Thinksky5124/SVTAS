@@ -6,7 +6,7 @@ LastEditTime : 2022-05-07 20:07:05
 Description: file content
 FilePath     : /ETESVS/model/architectures/__init__.py
 '''
-from .stream_segmentation2d_hold import StreamSegmentation2DWithNeck
+from .stream_segmentation2d_with_neck import StreamSegmentation2DWithNeck
 from .feature_segmentation import FeatureSegmentation
 from .recognition2d import Recognition2D
 from .recognition3d import Recognition3D
