@@ -130,7 +130,7 @@ After starting training, log files will generated, and its format is shown as be
 
 ### Resume
 
-Indicate `-o resume_epoch` to resume, It will training from ```resume_epoch``` epoch, PaddleVideo will auto load optimizers parameters and checkpoints from `./output` folder, as it is the default output destination.
+Indicate `-o resume_epoch` to resume, It will training from ```resume_epoch``` epoch, ETESVS will auto load optimizers parameters and checkpoints from `./output` folder, as it is the default output destination.
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3
@@ -148,7 +148,7 @@ python -m paddle.distributed.launch \
 
 ### Finetune
 
-Indicate `--weights` to load pretrained parameters, PaddleVideo will auto treat it as a finetune mission.
+Indicate `--weights` to load pretrained parameters, ETESVS will auto treat it as a finetune mission.
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3
@@ -163,7 +163,7 @@ python -m paddle.distributed.launch \
     --weights=./outputs/example/path_to_weights
 ```
 
-Note: PaddleVideo will NOT load shape unmatched parameters.
+Note: ETESVS will NOT load shape unmatched parameters.
 
 ### Test
 
