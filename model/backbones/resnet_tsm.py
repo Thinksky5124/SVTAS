@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 15:59:51
+LastEditTime : 2022-05-12 14:37:33
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
 FilePath     : /ETESVS/model/backbones/resnet_tsm.py
 '''
@@ -296,6 +296,9 @@ class ResNetTSM(ResNet):
                                                  self.num_segments,
                                                  self.non_local_cfg)
 
+    def _clear_memory_buffer(self):
+        pass
+    
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""

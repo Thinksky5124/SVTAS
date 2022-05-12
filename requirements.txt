@@ -41,3 +41,4 @@ urllib3==1.26.8
 wrapt==1.13.3
 yapf==0.32.0
 spatial-correlation-sampler==0.3.0
+einops=0.4.1

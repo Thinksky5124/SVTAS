@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 13:11:07
+LastEditTime : 2022-05-12 19:29:13
 Description: avg pooling 3d to 2d neck
 FilePath     : /ETESVS/model/necks/avg_pool_neck.py
 '''
@@ -45,8 +45,12 @@ class AvgPoolNeck(nn.Module):
         pass
 
     def forward(self, x, masks):
-        # x.shape = [N * num_segs, in_channels, 7, 7]
+        # x.shape = [N * num_segs, in_channels, 7, 7] or [N * num_segs, in_channels]
         feature = x
+
+        if len(list(feature.shape)) == 2:
+            feature = feature.unsqueeze(-1).unsqueeze(-1)
+
         # backbone branch
         # x.shape = [N * num_segs, in_channels, 1, 1]
         backbone_x = self.backbone_avgpool(feature)

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-07 20:06:55
+LastEditTime : 2022-05-12 14:38:19
 Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/stream_segmentation_hold.py
+FilePath     : /ETESVS/model/architectures/stream_segmentation2d_hold.py
 '''
 import torch
 import torch.nn as nn
@@ -41,8 +41,7 @@ class StreamSegmentation2DWithNeck(nn.Module):
     
     def _clear_memory_buffer(self):
         if self.backbone is not None:
-            # self.backbone._clear_memory_buffer()
-            pass
+            self.backbone._clear_memory_buffer()
         if self.neck is not None:
             self.neck._clear_memory_buffer()
         if self.head is not None:

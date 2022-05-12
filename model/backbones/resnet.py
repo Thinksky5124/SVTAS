@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:36:00
+LastEditTime : 2022-05-12 14:37:42
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
 FilePath     : /ETESVS/model/backbones/resnet.py
 '''
@@ -551,6 +551,9 @@ class ResNet(nn.Module):
                     elif isinstance(m, nn.BatchNorm2d):
                         constant_init(m, 1)
 
+    def _clear_memory_buffer(self):
+        pass
+    
     def forward(self, x, masks):
         """Defines the computation performed at every call.
 

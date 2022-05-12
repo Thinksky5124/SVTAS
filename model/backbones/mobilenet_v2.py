@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 15:58:41
+LastEditTime : 2022-05-12 14:37:22
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath     : /ETESVS/model/backbones/mobilenet_v2.py
 '''
@@ -283,6 +283,9 @@ class MobileNetV2(nn.Module):
                         kaiming_init(m)
                     elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
                         constant_init(m, 1)
+    
+    def _clear_memory_buffer(self):
+        pass
 
     def forward(self, x, masks):
         x = self.conv1(x)

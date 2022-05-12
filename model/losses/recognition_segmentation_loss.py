@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 10:45:16
+LastEditTime : 2022-05-12 14:24:56
 Description: Action recognition model loss
 FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
 '''
@@ -52,7 +52,7 @@ class RecognitionSegmentationLoss(nn.Module):
             masks = masks[:, ::self.sample_rate]
             masks = torch.repeat_interleave(masks, self.sample_rate, dim=-1)
 
-        loss = self.criteria(score, labels, masks, precise_sliding_num)['loss']
+        loss = self.criteria(score, masks, labels, precise_sliding_num)['loss']
 
         loss = self.loss_weight * loss
 

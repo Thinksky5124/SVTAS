@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 19:50:56
+LastEditTime : 2022-05-12 14:38:35
 Description  : Multi Modality stream segmentation
 FilePath     : /ETESVS/model/architectures/multi_modality_stream_segmentation.py
 '''
@@ -57,8 +57,7 @@ class MulModStreamSegmentation(nn.Module):
     
     def _clear_memory_buffer(self):
         if self.rgb_backbone is not None:
-            # self.backbone._clear_memory_buffer()
-            pass
+            self.backbone._clear_memory_buffer()
         if self.neck is not None:
             self.neck._clear_memory_buffer()
         if self.head is not None:
@@ -66,8 +65,7 @@ class MulModStreamSegmentation(nn.Module):
         if self.audio_backbone is not None:
             self.audio_backbone._clear_memory_buffer()
         if self.flow_backbone is not None:
-            # self.flow_backbone._clear_memory_buffer()
-            pass
+            self.flow_backbone._clear_memory_buffer()
 
     def forward(self, input_data):
         masks = input_data['masks']

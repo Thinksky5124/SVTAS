@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 20:32:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 20:44:03
+LastEditTime : 2022-05-12 14:28:39
 Description  : MoViNet Head
 FilePath     : /ETESVS/model/heads/movinet_head.py
 '''
@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import constant_init, kaiming_init
-from ..backbones.movinet import ConvBlock3D, Swish
+from ..backbones.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
 
 from ..builder import HEADS
 
@@ -27,6 +27,7 @@ class MoViNetHead(nn.Module):
                  in_channels=2048,
                  hidden_channels=2048):
         super().__init__()
+        self.causal = causal
         self.in_channels = in_channels
         self.hidden_channels = hidden_channels
         self.num_classes = num_classes
@@ -35,8 +36,12 @@ class MoViNetHead(nn.Module):
         self.drop_ratio = drop_ratio
         if sample_rate % 2 != 0:
             raise NotImplementedError
+        
+        # if causal:
+        #     self.cgap = TemporalCGAvgPool3D()
 
-        self.avgpool = nn.AdaptiveAvgPool3d((self.in_channels, 1, 1))
+        self.avgpool = nn.AdaptiveAvgPool3d((self.clip_seg_num, 1, 1))
+
         # dense9
         self.dense = ConvBlock3D(self.in_channels,
                     self.hidden_channels,
@@ -58,11 +63,16 @@ class MoViNetHead(nn.Module):
 
     def init_weights(self):
         for m in self.modules():
-            if isinstance(m, nn.Conv1d, nn.Conv2d, nn.Conv3d):
+            if isinstance(m, nn.Conv1d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Conv3d):
                 kaiming_init(m)
 
     def _clear_memory_buffer(self):
-        pass
+        self.apply(self._clean_activation_buffers)
+
+    @staticmethod
+    def _clean_activation_buffers(m):
+        if issubclass(type(m), CausalModule):
+            m.reset_activation()
     
     def forward(self, feature, masks):
         # segmentation branch

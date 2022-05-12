@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 16:08:56
+LastEditTime : 2022-05-12 14:38:45
 Description: feaeture segmentation model framework
 FilePath     : /ETESVS/model/architectures/feature_segmentation.py
 '''
@@ -51,10 +51,12 @@ class FeatureSegmentation(nn.Module):
         self.head.init_weights()
     
     def _clear_memory_buffer(self):
-        # self.backbone._clear_memory_buffer()
-        # self.neck._clear_memory_buffer()
-        # self.head._clear_memory_buffer()
-        pass
+        if self.backbone is not None:
+            self.backbone._clear_memory_buffer()
+        if self.neck is not None:
+            self.neck._clear_memory_buffer()
+        if self.head is not None:
+            self.head._clear_memory_buffer()
 
     def forward(self, input_data):
         masks = input_data['masks']

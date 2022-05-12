@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 17:03:58
+LastEditTime : 2022-05-12 14:35:29
 Description: etesvs model framework
 FilePath     : /ETESVS/model/architectures/stream_segmentation3d.py
 '''
@@ -41,8 +41,7 @@ class StreamSegmentation3D(nn.Module):
     
     def _clear_memory_buffer(self):
         if self.backbone is not None:
-            # self.backbone._clear_memory_buffer()
-            pass
+            self.backbone._clear_memory_buffer()
         if self.neck is not None:
             self.neck._clear_memory_buffer()
         if self.head is not None:

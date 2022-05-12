@@ -2,20 +2,133 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 19:04:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 10:08:49
+LastEditTime : 2022-05-12 14:42:37
 Description  : MoViNet model ref:https://github.com/Atze00/MoViNet-pytorch/blob/main/movinets/models.py
 FilePath     : /ETESVS/model/backbones/movinet.py
 '''
+from ast import List
 from collections import OrderedDict
 import torch
 from torch.nn.modules.utils import _triple, _pair
 import torch.nn.functional as F
+from mmcv.runner import load_checkpoint
 from typing import Any, Callable, Optional, Tuple, Union
 from einops import rearrange
 from torch import nn, Tensor
+from utils.logger import get_logger
 from ..builder import BACKBONES
 
+class ObjectDict(dict):
+    def __getattr__(self, item):
+        val = self.__getitem__(item)
+        if isinstance(val, dict):
+            return self.__class__(**val)
+        elif isinstance(val, list):
+            return [self.__class__(**d) for d in val]
+        else:
+            return val
 
+def get_movinet_config(name):
+    if name not in ["A0", "A1", "A2"]:
+            raise ValueError("Only A0,A1,A2 networks are available reproducted")
+    if name in ["A0"]:
+        conv1 = {"input_channels": 3, "out_channels": 8, "kernel_size": (1, 3, 3), "stride": (1, 2, 2), "padding": (0, 1, 1)}
+        blocks = [
+            [{"input_channels": 8, "out_channels": 8, "expanded_channels": 24, "kernel_size": (1, 5, 5), "stride": (1, 2, 2), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 8, "out_channels": 32, "expanded_channels": 80, "kernel_size": (3, 3, 3), "stride": (1, 2, 2), "padding": (1, 0, 0), "padding_avg": (0, 1, 1)},
+             {"input_channels": 32, "out_channels": 32, "expanded_channels": 80, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 32, "out_channels": 32, "expanded_channels": 80, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 32, "out_channels": 56, "expanded_channels": 184, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 0, 0), "padding_avg": (0, 1, 1)},
+             {"input_channels": 56, "out_channels": 56, "expanded_channels": 112, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (5, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 56, "out_channels": 104, "expanded_channels": 384, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 104, "out_channels": 104, "expanded_channels": 280, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 104, "out_channels": 104, "expanded_channels": 280, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 104, "out_channels": 104, "expanded_channels": 344, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)}]
+        ]
+        conv7 = {"input_channels": 104, "out_channels": 480, "kernel_size": (1, 1, 1), "stride": (1, 1, 1), "padding": (0, 0, 0)}
+    elif name in ["A1"]:
+        conv1 = {"input_channels": 3, "out_channels": 16, "kernel_size": (1, 3, 3), "stride": (1, 2, 2), "padding": (0, 1, 1)}
+        blocks = [
+            [{"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (1, 5, 5), "stride": (1, 2, 2), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 16, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 2, 2), "padding": (1, 0, 0), "padding_avg": (0, 0, 0)},
+             {"input_channels": 40, "out_channels": 40, "expanded_channels": 120, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 40, "out_channels": 64, "expanded_channels": 216, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 0, 0), "padding_avg": (0, 0, 0)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 128, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 168, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+             
+            [{"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (5, 3, 3), "stride": (1, 1, 1), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 128, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 128, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 64, "out_channels": 136, "expanded_channels": 456, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 136, "out_channels": 136, "expanded_channels": 360, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 136, "out_channels": 136, "expanded_channels": 360, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 136, "out_channels": 136, "expanded_channels": 360, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 136, "out_channels": 136, "expanded_channels": 456, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 136, "out_channels": 136, "expanded_channels": 456, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 136, "out_channels": 136, "expanded_channels": 544, "kernel_size": (1, 3, 3), "stride": (1, 1, 1), "padding": (0, 1, 1), "padding_avg": (0, 1, 1)}]
+        ]
+        conv7 = {"input_channels": 136, "out_channels": 600, "kernel_size": (1, 1, 1), "stride": (1, 1, 1), "padding": (0, 0, 0)}
+    elif name in ["A2"]:
+        conv1 = {"input_channels": 3, "out_channels": 16, "kernel_size": (1, 3, 3), "stride": (1, 2, 2), "padding": (0, 1, 1)}
+        blocks = [
+            [{"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (1, 5, 5), "stride": (1, 2, 2), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 16, "out_channels": 16, "expanded_channels": 64, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 16, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 2, 2), "padding": (1, 0, 0), "padding_avg": (0, 0, 0)},
+             {"input_channels": 40, "out_channels": 40, "expanded_channels": 120, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 40, "out_channels": 40, "expanded_channels": 120, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 40, "out_channels": 72, "expanded_channels": 240, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 160, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 192, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+             
+            [{"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (5, 3, 3), "stride": (1, 1, 1), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 144, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
+
+            [{"input_channels": 72, "out_channels": 144, "expanded_channels": 480, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 144, "out_channels": 144, "expanded_channels": 384, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 144, "out_channels": 144, "expanded_channels": 384, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 144, "out_channels": 144, "expanded_channels": 480, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 144, "out_channels": 144, "expanded_channels": 480, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
+             {"input_channels": 144, "out_channels": 144, "expanded_channels": 480, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
+             {"input_channels": 144, "out_channels": 144, "expanded_channels": 576, "kernel_size": (1, 3, 3), "stride": (1, 1, 1), "padding": (0, 1, 1), "padding_avg": (0, 1, 1)}]
+        ]
+        conv7 = {"input_channels": 144, "out_channels": 640, "kernel_size": (1, 1, 1), "stride": (1, 1, 1), "padding": (0,0,0)}
+    
+    conv1 = ObjectDict(conv1)
+    blocks = [[ObjectDict(blocks[i][j]) for j in range(len(blocks[i]))] for i in range(len(blocks))]
+    conv7 = ObjectDict(conv7)
+    return conv1, blocks, conv7
+    
 class Hardsigmoid(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -496,7 +609,8 @@ class BasicBneck(nn.Module):
         # ReZero
         self.alpha = nn.Parameter(torch.tensor(0.0), requires_grad=True)
 
-    def forward(self, input: Tensor) -> Tensor:
+    def forward(self, input_list: List) -> Tensor:
+        input, masks = input_list[0], input_list[1]
         if self.res is not None:
             residual = self.res(input)
         else:
@@ -509,15 +623,15 @@ class BasicBneck(nn.Module):
         x = self.se(x)
         x = self.project(x)
         result = residual + self.alpha * x
-        return result
+        return [result * masks, masks]
 
 @BACKBONES.register()
 class MoViNet(nn.Module):
     def __init__(self,
-                 name="A0",
+                 cfg_name="A0",
                  causal=True,
                  pretrained=None,
-                 conv_type="3d",
+                 conv_type="2plus1d",
                  tf_like=False
                  ) -> None:
         super().__init__()
@@ -532,13 +646,16 @@ class MoViNet(nn.Module):
         tf_like: tf_like behaviour, basically same padding for convolutions
         """
         # load config
-        conv1, blocks, conv7 = get_movinet_config(name=name)
+        conv1, blocks, conv7 = get_movinet_config(name=cfg_name)
 
         # construct model
         if pretrained is not None:
             tf_like = True
             conv_type = "2plus1d" if causal else "3d"
         blocks_dic = OrderedDict()
+
+        self.causal = causal
+        self.pretrained = pretrained
 
         norm_layer = nn.BatchNorm3d if conv_type == "3d" else nn.BatchNorm2d
         activation_layer = Swish if conv_type == "3d" else nn.Hardswish
@@ -582,16 +699,19 @@ class MoViNet(nn.Module):
             )
         if causal:
             self.cgap = TemporalCGAvgPool3D()
-        if pretrained is not None:
-            if causal:
-                state_dict = (torch.hub
-                              .load_state_dict_from_url(pretrained))
+    
+    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                logger = logger = get_logger("ETESVS")
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             else:
-                state_dict = torch.hub.load_state_dict_from_url(pretrained)
-            self.load_state_dict(state_dict)
+                self.apply(self._weight_init)
         else:
             self.apply(self._weight_init)
-        self.causal = causal
+    
+    def _clear_memory_buffer(self):
+        self.apply(self._clean_activation_buffers)
 
     @staticmethod
     def _weight_init(m):  # TODO check this
@@ -606,117 +726,18 @@ class MoViNet(nn.Module):
             nn.init.normal_(m.weight, 0, 0.01)
             nn.init.zeros_(m.bias)
 
-    def _forward_impl(self, x: Tensor) -> Tensor:
+    def _forward_impl(self, x: Tensor, masks: Tensor) -> Tensor:
         x = self.conv1(x)
-        x = self.blocks(x)
-        x = self.conv7(x)
+        output_list = self.blocks([x, masks])
+        x = output_list[0]
+        x = self.conv7(x) * masks
 
         return x
 
-    def forward(self, x: Tensor) -> Tensor:
-        return self._forward_impl(x)
+    def forward(self, x: Tensor, masks: Tensor) -> Tensor:
+        return self._forward_impl(x, masks)
 
     @staticmethod
     def _clean_activation_buffers(m):
         if issubclass(type(m), CausalModule):
             m.reset_activation()
-
-    def clean_activation_buffers(self) -> None:
-        self.apply(self._clean_activation_buffers)
-
-def get_movinet_config(name):
-    if name not in ["A0", "A1", "A2"]:
-            raise ValueError("Only A0,A1,A2 networks are available reproducted")
-    if name in ["A0"]:
-        conv1 = {"input_channels": 3, "out_channels": 8, "kernel_size": (1, 3, 3), "stride": (1, 2, 2), "padding": (0, 1, 1)}
-        blocks = [
-            [{"input_channels": 8, "out_channels": 8, "expanded_channels": 24, "kernel_size": (1, 5, 5), "stride": (1, 2, 2), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 8, "out_channels": 32, "expanded_channels": 80, "kernel_size": (3, 3, 3), "stride": (1, 2, 2), "padding": (1, 0, 0), "padding_avg": (0, 1, 1)},
-             {"input_channels": 8, "out_channels": 32, "expanded_channels": 80, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 8, "out_channels": 32, "expanded_channels": 80, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 32, "out_channels": 56, "expanded_channels": 184, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 0, 0), "padding_avg": (0, 1, 1)},
-             {"input_channels": 56, "out_channels": 56, "expanded_channels": 112, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (5, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 56, "out_channels": 56, "expanded_channels": 184, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 56, "out_channels": 56, "expanded_channels": 104, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 104, "out_channels": 104, "expanded_channels": 280, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 104, "out_channels": 104, "expanded_channels": 280, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 104, "out_channels": 104, "expanded_channels": 344, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)}]
-        ]
-        conv7 = {"input_channels": 104, "out_channels": 480, "kernel_size": (1, 1, 1), "stride": (1, 1, 1), "padding": (0, 0, 0)}
-    elif name in ["A1"]:
-        conv1 = {"input_channels": 3, "out_channels": 16, "kernel_size": (1, 3, 3), "stride": (1, 2, 2), "padding": (0, 1, 1)}
-        blocks = [
-            [{"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (1, 5, 5), "stride": (1, 2, 2), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 16, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 2, 2), "padding": (1, 0, 0), "padding_avg": (0, 0, 0)},
-             {"input_channels": 40, "out_channels": 40, "expanded_channels": 120, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 40, "out_channels": 64, "expanded_channels": 216, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 0, 0), "padding_avg": (0, 0, 0)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 128, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 168, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-             
-            [{"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (5, 3, 3), "stride": (1, 1, 1), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 128, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 128, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 64, "out_channels": 64, "expanded_channels": 216, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 64, "out_channels": 136, "expanded_channels": 456, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 136, "out_channels": 136, "expanded_channels": 360, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 136, "out_channels": 136, "expanded_channels": 360, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 136, "out_channels": 136, "expanded_channels": 360, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 136, "out_channels": 136, "expanded_channels": 456, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 136, "out_channels": 136, "expanded_channels": 456, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 136, "out_channels": 136, "expanded_channels": 544, "kernel_size": (1, 3, 3), "stride": (1, 1, 1), "padding": (0, 1, 1), "padding_avg": (0, 1, 1)}]
-        ]
-        conv7 = {"input_channels": 136, "out_channels": 600, "kernel_size": (1, 1, 1), "stride": (1, 1, 1), "padding": (0, 0, 0)}
-    elif name in ["A2"]:
-        conv1 = {"input_channels": 3, "out_channels": 16, "kernel_size": (1, 3, 3), "stride": (1, 2, 2), "padding": (0, 1, 1)}
-        blocks = [
-            [{"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (1, 5, 5), "stride": (1, 2, 2), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 16, "out_channels": 16, "expanded_channels": 40, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 16, "out_channels": 16, "expanded_channels": 64, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 16, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 2, 2), "padding": (1, 0, 0), "padding_avg": (0, 0, 0)},
-             {"input_channels": 40, "out_channels": 40, "expanded_channels": 120, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 40, "out_channels": 40, "expanded_channels": 96, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 40, "out_channels": 40, "expanded_channels": 120, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 40, "out_channels": 72, "expanded_channels": 240, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 160, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 192, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-             
-            [{"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (5, 3, 3), "stride": (1, 1, 1), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 144, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 72, "out_channels": 72, "expanded_channels": 240, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)}],
-
-            [{"input_channels": 72, "out_channels": 144, "expanded_channels": 480, "kernel_size": (5, 3, 3), "stride": (1, 2, 2), "padding": (2, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 144, "out_channels": 144, "expanded_channels": 384, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 144, "out_channels": 144, "expanded_channels": 384, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 144, "out_channels": 144, "expanded_channels": 480, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 144, "out_channels": 144, "expanded_channels": 480, "kernel_size": (1, 5, 5), "stride": (1, 1, 1), "padding": (0, 2, 2), "padding_avg": (0, 1, 1)},
-             {"input_channels": 144, "out_channels": 144, "expanded_channels": 480, "kernel_size": (3, 3, 3), "stride": (1, 1, 1), "padding": (1, 1, 1), "padding_avg": (0, 1, 1)},
-             {"input_channels": 144, "out_channels": 144, "expanded_channels": 576, "kernel_size": (1, 3, 3), "stride": (1, 1, 1), "padding": (0, 1, 1), "padding_avg": (0, 1, 1)}]
-        ]
-        conv7 = {"input_channels": 144, "out_channels": 640, "kernel_size": (1, 1, 1), "stride": (1, 1, 1), "padding": (0,0,0)}
-    return conv1, blocks, conv7
