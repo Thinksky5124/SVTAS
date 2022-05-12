@@ -107,7 +107,7 @@ PIPELINE: #PIPELINE field
 
 OPTIMIZER:
     name: "AdamOptimizer"
-    learning_rate: 0.001
+    learning_rate: 0.0005
     weight_decay: 1e-4
     betas: (0.9, 0.999)
 

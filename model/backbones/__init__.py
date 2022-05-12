@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 14:22:28
+LastEditTime : 2022-05-11 19:25:35
 Description: file content
 FilePath     : /ETESVS/model/backbones/__init__.py
 '''
@@ -14,9 +14,11 @@ from .mobilenet_v2_tmm import MobileNetV2TMM
 from .i3d import ResNet3d
 from .fastflownet import FastFlowNet
 from .raft import RAFT
+from .movinet import MoViNet
 
 __all__ = [
     'ResNet', 'ResNetTSM',
     'MobileNetV2', 'MobileNetV2TSM', 'MobileNetV2TMM'
-    'ResNet3d', 'FastFlowNet', 'RAFT'
+    'ResNet3d', 'FastFlowNet', 'RAFT',
+    'MoViNet'
 ]

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 15:42:29
+LastEditTime : 2022-05-12 10:13:39
 Description: train script api
 FilePath     : /ETESVS/tasks/train.py
 '''
@@ -115,7 +115,10 @@ def train(cfg,
             map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
             checkpoint = torch.load(path_checkpoint, map_location=map_location)
 
-        model.load_state_dict(checkpoint['model_state_dict'])
+        if nprocs > 1:
+            model.module.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            model.load_state_dict(checkpoint['model_state_dict'])
 
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
