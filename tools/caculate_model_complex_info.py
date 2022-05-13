@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 16:40:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-09 15:42:35
+LastEditTime : 2022-05-12 21:14:47
 Description: caculate model flops param infer-time fps and throughput
 FilePath     : /ETESVS/tools/caculate_model_complex_info.py
 '''
@@ -12,8 +12,8 @@ import sys
 import numpy as np
 path = os.path.join(os.getcwd())
 sys.path.append(path)
-from torchinfo import summary
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
+from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
 from model.backbones.i3d import InceptionI3d
 
@@ -31,15 +31,28 @@ def input_constructor(input_shape):
     return dict(imgs=x, masks=mask, idx=idx)
 dummy_input = input_constructor(input_shape)
 model = InceptionI3d(num_classes=11, in_channels=2)
-summary(model, input_data=dummy_input, col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
+# mmcv caculate param and flops
 print("="*20)
 print('Use mmcv get_model_complexity_info function')
 flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)
-flops_per_image_number = flops_number / clip_seg_num
+flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
 flops, params = clever_format([flops_number, params_number], "%.6f")
 flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.6f")
-print("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=clip_seg_num))
+print("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
 print("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops + ", Total params:" + params)
+print("="*20)
+
+# fvcore caculate param and flops
+print('Use fvcore FlopCountAnalysis function')
+inputs = (dummy_input['input_data'])
+flops = FlopCountAnalysis(model, inputs)
+print(flop_count_table(flops))
+flops_number = flops.total()
+flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
+flops = clever_format([flops_number], "%.6f")
+flops_per_image = clever_format([flops_per_image_number], "%.6f")
+print("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
+print("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops)
 print("="*20)
 
 # model fps caculate

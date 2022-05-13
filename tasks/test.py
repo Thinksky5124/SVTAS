@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-09 15:39:16
+LastEditTime : 2022-05-13 12:54:20
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -17,8 +17,8 @@ import model.builder as model_builder
 import dataset.builder as dataset_builder
 from utils.metric import SegmentationMetric
 from model.post_precessings import PostProcessing
-from torchinfo import summary
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
+from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
 from utils.collect_env import collect_env
 
@@ -171,7 +171,8 @@ def test(cfg,
             dummy_input = input_constructor(input_shape)
         # print(model)
         # tensorboard_writer.add_graph(model, input_to_model=[x, mask, torch.ones(1).cuda()])
-        summary(model, input_data=dummy_input, col_names=["kernel_size", "output_size", "num_params", "mult_adds"])
+
+        # mmcv caculate param and flops
         logger.info("="*20)
         logger.info('Use mmcv get_model_complexity_info function')
         flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)
@@ -180,6 +181,19 @@ def test(cfg,
         flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.6f")
         logger.info("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
         logger.info("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops + ", Total params:" + params)
+        logger.info("="*20)
+
+        # fvcore caculate param and flops
+        logger.info('Use fvcore FlopCountAnalysis function')
+        inputs = (dummy_input['input_data'])
+        flops = FlopCountAnalysis(model, inputs)
+        logger.info("flop_count_table: \n" + flop_count_table(flops))
+        flops_number = flops.total()
+        flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
+        flops = clever_format([flops_number], "%.6f")
+        flops_per_image = clever_format([flops_per_image_number], "%.6f")
+        logger.info("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
+        logger.info("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops)
         logger.info("="*20)
 
         # model fps caculate

@@ -1,17 +1,17 @@
 MODEL:
-    architecture: "Recognition3D"
+    architecture: "Recognition2D"
     backbone:
-        name: "TimeSformer"
-        num_frames: 32
-        img_size: 224
-        patch_size: 16
+        name: "ViT"
+        image_size: 224
+        patch_size: 32
+        dim: 1024
     neck:
     head:
         name: "TimeSformerHead"
         num_classes: 11
         clip_seg_num: 32
         sample_rate: 4
-        in_channels: 384
+        in_channels: 1024
     loss:
         name: "RecognitionSegmentationLoss"
         label_mode: "hard"
