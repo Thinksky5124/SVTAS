@@ -10,13 +10,13 @@ MODEL:
     neck:
         name: "AvgPoolNeck"
         num_classes: 11
-        in_channels: 640
+        in_channels: 2048
         clip_seg_num: 32
         drop_ratio: 0.5
         need_pool: True
     head:
         name: "LSTMSegmentationHead"
-        in_channels: 640
+        in_channels: 2048
         num_classes: 11
         sample_rate: 4
         hidden_channels: 64

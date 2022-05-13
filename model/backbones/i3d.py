@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:36:54
+LastEditTime : 2022-05-13 21:01:18
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /ETESVS/model/backbones/i3d.py
 '''
@@ -849,6 +849,9 @@ class ResNet3d(nn.Module):
                         constant_init(m.conv3.bn, 0)
                     elif isinstance(m, BasicBlock3d):
                         constant_init(m.conv2.bn, 0)
+    
+    def _clear_memory_buffer(self):
+        pass
 
     def forward(self, x, masks):
         """Defines the computation performed at every call.
@@ -1047,9 +1050,6 @@ class ResNet3dLayer(nn.Module):
                         constant_init(m.conv3.bn, 0)
                     elif isinstance(m, BasicBlock3d):
                         constant_init(m.conv2.bn, 0)
-
-    def _clear_memory_buffer(self):
-        pass
 
     def forward(self, x):
         """Defines the computation performed at every call.
