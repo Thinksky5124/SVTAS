@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 12:54:20
+LastEditTime : 2022-05-13 14:06:12
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -241,5 +241,5 @@ def test(cfg,
                 curr_time = starter.elapsed_time(ender) / 1000
                 total_time += curr_time
         Throughput = (repetitions * optimal_batch_size) / total_time
-        logger.info("Final Throughput: {Throughput:.2f} V/s".format(Throughput=Throughput))
+        logger.info("Final Throughput: {Throughput:.2f} V/s, Measuring by batch_size: {Batch_size:d}".format(Throughput=Throughput, Batch_size=optimal_batch_size))
         logger.info("="*20)

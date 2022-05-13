@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 16:40:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 21:14:47
+LastEditTime : 2022-05-13 14:06:50
 Description: caculate model flops param infer-time fps and throughput
 FilePath     : /ETESVS/tools/caculate_model_complex_info.py
 '''
@@ -100,5 +100,5 @@ with torch.no_grad():
         curr_time = starter.elapsed_time(ender) / 1000
         total_time += curr_time
 Throughput = (repetitions * optimal_batch_size) / total_time
-print("Final Throughput: {Throughput:.2f} V/s".format(Throughput=Throughput))
+print("Final Throughput: {Throughput:.2f} V/s, Measuring by batch_size: {Batch_size:d}".format(Throughput=Throughput, Batch_size=optimal_batch_size))
 print("="*20)

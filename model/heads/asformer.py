@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 19:57:42
+LastEditTime : 2022-05-13 20:38:41
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
 FilePath     : /ETESVS/model/heads/asformer.py
 '''
@@ -307,12 +307,25 @@ class Decoder(nn.Module):
         
 @HEADS.register()
 class ASFormer(nn.Module):
-    def __init__(self, num_decoders=3, num_layers=10, r1=2, r2=2, num_f_maps=64, input_dim=2048, num_classes=11, channel_masking_rate=0.5):
+    def __init__(self,
+                 num_decoders=3,
+                 num_layers=10,
+                 r1=2,
+                 r2=2,
+                 num_f_maps=64,
+                 input_dim=2048,
+                 num_classes=11,
+                 channel_masking_rate=0.5,
+                 sample_rate=1):
         super(ASFormer, self).__init__()
+        self.sample_rate = sample_rate
         self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='sliding_att', alpha=1)
         self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='sliding_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
         
     def init_weights(self):
+        pass
+
+    def _clear_memory_buffer(self):
         pass
                 
     def forward(self, x, mask):
@@ -322,5 +335,10 @@ class ASFormer(nn.Module):
         for decoder in self.decoders:
             out, feature = decoder(F.softmax(out, dim=1) * mask[:, 0:1, :], feature* mask[:, 0:1, :], mask)
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
- 
+        
+        outputs = F.interpolate(
+            input=outputs,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
+
         return outputs

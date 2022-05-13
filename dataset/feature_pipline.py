@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:12:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 17:00:28
+LastEditTime : 2022-05-13 16:07:30
 Description: file content
 FilePath     : /ETESVS/dataset/feature_pipline.py
 '''
@@ -91,7 +91,7 @@ class FeatureStreamSampler():
     """
 
     def __init__(self,
-                 seg_len,
+                 is_train=False,
                  sample_rate=1,
                  clip_seg_num=15,
                  sliding_window=60,
@@ -99,7 +99,7 @@ class FeatureStreamSampler():
                  sample_mode='random'
                  ):
         self.sample_rate = sample_rate
-        self.seg_len = seg_len
+        self.is_train = is_train
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index

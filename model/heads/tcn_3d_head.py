@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-10 20:00:46
+LastEditTime : 2022-05-13 14:09:39
 Description: 3D TCN model
 FilePath     : /ETESVS/model/heads/tcn_3d_head.py
 '''
@@ -84,7 +84,7 @@ class DilatedResidual3DLayer(nn.Module):
         super(DilatedResidual3DLayer, self).__init__()
         self.conv_dilated = nn.Conv3d(in_channels, out_channels, (3,3,3), stride=(1, 1, 1), padding=(dilation, dilation, dilation), dilation=(dilation, dilation, dilation))
         self.conv_1x1 = nn.Conv3d(out_channels, out_channels, (1, 1, 1))
-        self.norm = nn.BatchNorm3d(out_channels)
+        self.norm = nn.LazyBatchNorm3d()
 
     def forward(self, x, mask):
         # !

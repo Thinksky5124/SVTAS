@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 19:04:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:42:37
+LastEditTime : 2022-05-13 13:33:20
 Description  : MoViNet model ref:https://github.com/Atze00/MoViNet-pytorch/blob/main/movinets/models.py
 FilePath     : /ETESVS/model/backbones/movinet.py
 '''
@@ -609,8 +609,7 @@ class BasicBneck(nn.Module):
         # ReZero
         self.alpha = nn.Parameter(torch.tensor(0.0), requires_grad=True)
 
-    def forward(self, input_list: List) -> Tensor:
-        input, masks = input_list[0], input_list[1]
+    def forward(self, input: Tensor) -> Tensor:
         if self.res is not None:
             residual = self.res(input)
         else:
@@ -623,7 +622,7 @@ class BasicBneck(nn.Module):
         x = self.se(x)
         x = self.project(x)
         result = residual + self.alpha * x
-        return [result * masks, masks]
+        return result
 
 @BACKBONES.register()
 class MoViNet(nn.Module):
@@ -728,8 +727,7 @@ class MoViNet(nn.Module):
 
     def _forward_impl(self, x: Tensor, masks: Tensor) -> Tensor:
         x = self.conv1(x)
-        output_list = self.blocks([x, masks])
-        x = output_list[0]
+        x = self.blocks(x)
         x = self.conv7(x) * masks
 
         return x

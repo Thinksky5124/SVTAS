@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:35:29
+LastEditTime : 2022-05-13 20:29:27
 Description: etesvs model framework
 FilePath     : /ETESVS/model/architectures/stream_segmentation3d.py
 '''
@@ -32,7 +32,7 @@ class StreamSegmentation3D(nn.Module):
 
         self.init_weights()
         
-        self.sample_rate = head.sample_rate
+        self.sample_rate = loss.sample_rate
 
     def init_weights(self):
         self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])

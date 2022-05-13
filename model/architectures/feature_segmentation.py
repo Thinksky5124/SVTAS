@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:38:45
+LastEditTime : 2022-05-13 20:38:27
 Description: feaeture segmentation model framework
 FilePath     : /ETESVS/model/architectures/feature_segmentation.py
 '''
@@ -94,8 +94,4 @@ class FeatureSegmentation(nn.Module):
             head_score = None
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        head_score = F.interpolate(
-            input=head_score,
-            scale_factor=[1, self.sample_rate],
-            mode="nearest")
         return head_score

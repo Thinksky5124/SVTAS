@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 23:15:08
+LastEditTime : 2022-05-13 20:39:40
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath     : /ETESVS/model/heads/mstcn.py
 '''
@@ -16,8 +16,15 @@ from ..builder import HEADS
 
 @HEADS.register()
 class MultiStageModel(nn.Module):
-    def __init__(self, num_stages, num_layers, num_f_maps, dim, num_classes):
+    def __init__(self,
+                 num_stages,
+                 num_layers,
+                 num_f_maps,
+                 dim,
+                 num_classes,
+                 sample_rate=1):
         super(MultiStageModel, self).__init__()
+        self.sample_rate = sample_rate
         self.stage1 = SingleStageModel(num_layers, num_f_maps, dim, num_classes)
         self.stages = nn.ModuleList([copy.deepcopy(SingleStageModel(num_layers, num_f_maps, num_classes, num_classes)) for s in range(num_stages-1)])
 
@@ -29,12 +36,20 @@ class MultiStageModel(nn.Module):
         #         constant_init(m, 1)
         pass
 
+    def _clear_memory_buffer(self):
+        pass
+
     def forward(self, x, mask):
         out = self.stage1(x, mask)
         outputs = out.unsqueeze(0)
         for s in self.stages:
             out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
+        
+        outputs = F.interpolate(
+            input=outputs,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
         return outputs
 
 @HEADS.register()
