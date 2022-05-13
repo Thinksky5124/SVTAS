@@ -2,11 +2,10 @@
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 14:09:39
+LastEditTime : 2022-05-13 22:48:46
 Description: 3D TCN model
 FilePath     : /ETESVS/model/heads/tcn_3d_head.py
 '''
-from dataclasses import dataclass
 import torch
 import copy
 import torch.nn as nn
@@ -34,7 +33,7 @@ class TCN3DHead(nn.Module):
             raise NotImplementedError
 
         self.conv_1x1 = nn.Conv3d(seg_in_channels, num_f_maps, (1, 1, 1))
-        self.layers = nn.ModuleList([copy.deepcopy(DilatedResidual3DLayer(2 ** i, num_f_maps, num_f_maps)) for i in range(num_layers)])
+        self.layers = nn.ModuleList([DilatedResidual3DLayer(2 ** i, num_f_maps, num_f_maps) for i in range(num_layers)])
         self.head_avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
 
@@ -51,7 +50,7 @@ class TCN3DHead(nn.Module):
 
     def forward(self, seg_feature, mask):
         # segmentation branch
-        # seg_feature [N, num_segs, 1280, 7, 7]
+        # seg_feature [N, seg_in_channels, num_segs, 7, 7]
         out = self.conv_1x1(seg_feature)
         for layer in self.layers:
             out = layer(out, mask[:, :, ::self.sample_rate])

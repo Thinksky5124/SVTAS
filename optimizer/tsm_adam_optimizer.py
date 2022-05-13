@@ -2,25 +2,25 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:19:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 21:10:46
-Description  : TSM SGD optimizer
-FilePath     : /ETESVS/optimizer/tsm_sgd_optimizer.py
+LastEditTime : 2022-05-13 21:10:52
+Description  : TSM Adam optimizer
+FilePath     : /ETESVS/optimizer/tsm_adam_optimizer.py
 '''
 from .builder import OPTIMIZER
 import torch
 from mmcv.utils import SyncBatchNorm, _BatchNorm
 
 @OPTIMIZER.register()
-class TSMSGDOptimizer(torch.optim.SGD):
+class TSMAdamOptimizer(torch.optim.Adam):
     def __init__(self,
                  model,
                  fc_lr5=True,
                  learning_rate=0.01,
-                 momentum=0.9,
+                 betas=(0.9, 0.999),
                  weight_decay=1e-4) -> None:
         self.paramwise_cfg = dict(fc_lr5=fc_lr5)
         params = self.get_optim_policies(model)
-        super().__init__(params=params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
+        super().__init__(params=params, lr=learning_rate, betas=betas, weight_decay=weight_decay)
     
     def get_optim_policies(self, model):
         # use fc_lr5 to determine whether to specify higher multi-factor

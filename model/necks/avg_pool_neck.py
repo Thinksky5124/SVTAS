@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 20:57:19
+LastEditTime : 2022-05-13 22:52:17
 Description: avg pooling 3d to 2d neck
 FilePath     : /ETESVS/model/necks/avg_pool_neck.py
 '''
@@ -75,8 +75,8 @@ class AvgPoolNeck(nn.Module):
             # [N, in_channels, num_segs]
             seg_feature = backbone_feature
         else:
-            # [N, num_segs, in_channels, 7, 7]
+            # [N, in_channels, num_segs, 7, 7]
             feature = torch.reshape(feature, shape=[-1, self.clip_seg_num] + list(feature.shape[-3:])).transpose(1, 2)
-            seg_feature = feature * masks.transpose(1, 2)[:, :, 0:1].unsqueeze(-1).unsqueeze(-1)
+            seg_feature = feature * masks[:, 0:1, :].unsqueeze(-1).unsqueeze(-1)
 
         return seg_feature, backbone_score
