@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-07 20:19:24
+LastEditTime : 2022-05-15 12:15:33
 Description: recorder construct function
 FilePath     : /ETESVS/utils/recorder.py
 '''

@@ -20,7 +20,7 @@ MODEL:
         num_classes: 11
         sample_rate: 4
         hidden_channels: 64
-        num_layers: 3
+        num_layers: 1
         batch_first: True
         dropout: 0.5
         bidirectional: True
@@ -79,7 +79,7 @@ PIPELINE: #PIPELINE field
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             - Resize:
-                size: 256
+                size: [256, 320]
             - RandomCrop:
                 size: 224
             - RandomHorizontalFlip:
@@ -100,7 +100,7 @@ PIPELINE: #PIPELINE field
             sample_mode: "uniform"
         transform:
             - Resize:
-                size: 256
+                size: [256, 320]
             - CenterCrop:
                 size: 224
             - ToTensor:
@@ -110,7 +110,7 @@ PIPELINE: #PIPELINE field
 
 OPTIMIZER:
     name: "AdamOptimizer"
-    learning_rate: 0.0005
+    learning_rate: 0.00005
     weight_decay: 1e-4
     betas: (0.9, 0.999)
 

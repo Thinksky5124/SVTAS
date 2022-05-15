@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-18 16:33:13
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-15 12:17:22
 Description: main script
-FilePath: /ETESVS/main.py
+FilePath     : /ETESVS/main.py
 '''
 import argparse
 import random
@@ -82,11 +82,8 @@ def main():
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
         nprocs = 1
-        torch.backends.cudnn.benchmark = True
     else:
         nprocs = torch.cuda.device_count()
-        # weather accelerate conv op
-        torch.backends.cudnn.benchmark = True
     # set seed if specified
     seed = args.seed
     if seed is not None:
@@ -99,6 +96,8 @@ def main():
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
         torch.backends.cudnn.deterministic = True
+        # weather accelerate conv op
+        torch.backends.cudnn.benchmark = False
 
 
     if args.test:

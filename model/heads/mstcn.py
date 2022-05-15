@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 20:39:40
+LastEditTime : 2022-05-15 12:12:00
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath     : /ETESVS/model/heads/mstcn.py
 '''
@@ -40,6 +40,8 @@ class MultiStageModel(nn.Module):
         pass
 
     def forward(self, x, mask):
+        mask = mask[:, :, ::self.sample_rate]
+        
         out = self.stage1(x, mask)
         outputs = out.unsqueeze(0)
         for s in self.stages:

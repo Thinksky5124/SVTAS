@@ -1,8 +1,9 @@
+
 '''
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 21:01:18
+LastEditTime : 2022-05-15 15:24:12
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /ETESVS/model/backbones/i3d.py
 '''

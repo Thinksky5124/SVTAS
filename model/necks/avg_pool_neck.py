@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 22:52:17
+LastEditTime : 2022-05-15 12:15:44
 Description: avg pooling 3d to 2d neck
 FilePath     : /ETESVS/model/necks/avg_pool_neck.py
 '''

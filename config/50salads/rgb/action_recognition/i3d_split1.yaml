@@ -69,7 +69,7 @@ PIPELINE: #PIPELINE field
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             - Resize:
-                size: 256
+                size: [256, 320]
             - RandomCrop:
                 size: 224
             - RandomHorizontalFlip:
@@ -90,7 +90,7 @@ PIPELINE: #PIPELINE field
             sample_mode: "uniform"
         transform:
             - Resize:
-                size: 256
+                size: [256, 320]
             - CenterCrop:
                 size: 224
             - ToTensor:

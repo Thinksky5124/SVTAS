@@ -1,38 +1,30 @@
 MODEL:
-    architecture: "StreamSegmentation3D"
+    architecture: "Recognition3D"
     backbone:
-        name: "ResNet3d"
-        depth: 50
-        pretrained: "./data/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth"
-        in_channels: 3
-        with_pool2: False
-        pretrained2d: False
+        name: "TimeSformer"
+        num_frames: 32
+        img_size: 224
+        patch_size: 32
+        embed_dims: 768
+        pretrained: "data/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth"
     neck:
-        name: "AvgPoolNeck"
-        num_classes: 11
-        in_channels: 2048
-        clip_seg_num: 32
-        drop_ratio: 0.5
-        need_pool: False
     head:
-        name: "TCN3DHead"
+        name: "TimeSformerHead"
         num_classes: 11
-        num_layers: 4
+        clip_seg_num: 32
         sample_rate: 4
-        sliding_window: 128
-        seg_in_channels: 2048
-        num_f_maps: 64
+        in_channels: 768
     loss:
-        name: "StreamSegmentationLoss"
+        name: "RecognitionSegmentationLoss"
+        label_mode: "hard"
         num_classes: 11
         sample_rate: 4
-        backone_loss_weight: 1.0
-        head_loss_weight: 1.0
+        loss_weight: 1.0
         ignore_index: -100
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
+    to_tensor_keys: ["imgs", "labels", "masks" , "precise_sliding_num"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
@@ -122,7 +114,7 @@ METRIC:
     file_output: True
 
 
-model_name: "I3DTCN_gtea_split1"
+model_name: "TimeSformer_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

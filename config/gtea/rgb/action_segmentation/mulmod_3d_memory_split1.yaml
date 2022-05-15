@@ -87,7 +87,7 @@ PIPELINE: #PIPELINE field
         transform: #Mandotary, image transform operator.
             rgb:
                 - Resize:
-                    size: 256
+                    size: [256, 320]
                 - RandomCrop:
                     size: 224
                 - RandomHorizontalFlip:
@@ -97,7 +97,7 @@ PIPELINE: #PIPELINE field
                     std: [0.133, 0.141, 0.124]
             flow:
                 - Resize:
-                    size: 256
+                    size: [256, 320]
                 - RandomCrop:
                     size: 224
                 - RandomHorizontalFlip:
@@ -119,7 +119,7 @@ PIPELINE: #PIPELINE field
         transform:
             rgb:
                 - Resize:
-                    size: 256
+                    size: [256, 320]
                 - CenterCrop:
                     size: 224
                 - ToTensor:
@@ -128,7 +128,7 @@ PIPELINE: #PIPELINE field
                     std: [0.133, 0.141, 0.124]
             flow:
                 - Resize:
-                    size: 256
+                    size: [256, 320]
                 - CenterCrop:
                     size: 224
                 - ToTensor:

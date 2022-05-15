@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:21:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 19:41:53
+LastEditTime : 2022-05-15 14:37:40
 Description  : Timesformer backbone ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/timesformer.py
 FilePath     : /ETESVS/model/backbones/timesfromer.py
 '''
@@ -14,7 +14,7 @@ from mmcv import ConfigDict
 from mmcv.cnn import build_conv_layer, build_norm_layer, kaiming_init
 from mmcv.cnn.bricks.transformer import build_transformer_layer_sequence
 from mmcv.cnn.utils.weight_init import trunc_normal_
-from mmcv.runner import _load_checkpoint, load_state_dict
+from mmcv.runner import _load_checkpoint, load_checkpoint
 from torch.nn.modules.utils import _pair
 
 from utils.logger import get_logger
@@ -233,32 +233,8 @@ class TimeSformer(nn.Module):
 
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger()
-                logger.info(f'load model from: {self.pretrained}')
-
-                state_dict = _load_checkpoint(self.pretrained)
-                if 'state_dict' in state_dict:
-                    state_dict = state_dict['state_dict']
-
-                if self.attention_type == 'divided_space_time':
-                    # modify the key names of norm layers
-                    old_state_dict_keys = list(state_dict.keys())
-                    for old_key in old_state_dict_keys:
-                        if 'norms' in old_key:
-                            new_key = old_key.replace('norms.0',
-                                                    'attentions.0.norm')
-                            new_key = new_key.replace('norms.1', 'ffns.0.norm')
-                            state_dict[new_key] = state_dict.pop(old_key)
-
-                    # copy the parameters of space attention to time attention
-                    old_state_dict_keys = list(state_dict.keys())
-                    for old_key in old_state_dict_keys:
-                        if 'attentions.0' in old_key:
-                            new_key = old_key.replace('attentions.0',
-                                                    'attentions.1')
-                            state_dict[new_key] = state_dict[old_key].clone()
-
-                load_state_dict(self, state_dict, strict=False, logger=logger, revise_keys=revise_keys)
+                logger = get_logger("ETESVS")
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):
         """Defines the computation performed at every call."""
