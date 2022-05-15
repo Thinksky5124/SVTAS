@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-15 14:48:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 15:37:03
+LastEditTime : 2022-05-15 15:47:45
 Description  : ResNet 2 plus 1d
 FilePath     : /ETESVS/model/backbones/resnet2plus1d.py
 '''
@@ -105,6 +105,6 @@ class ResNet2Plus1d(ResNet3d):
         for layer_name in self.res_layers:
             res_layer = getattr(self, layer_name)
             # no pool2 in R(2+1)d
-            x = res_layer(x) * masks
+            x = res_layer(x)
 
-        return x
+        return x * masks
