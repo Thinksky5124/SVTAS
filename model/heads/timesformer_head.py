@@ -2,13 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:25:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 16:10:28
+LastEditTime : 2022-05-16 21:03:38
 Description  : Timesformer Head ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/heads/timesformer_head.py
 FilePath     : /ETESVS/model/heads/timesformer_head.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 import torch
+import torch.nn.functional as F
 from mmcv.cnn import trunc_normal_init
 
 from ..builder import HEADS
@@ -55,5 +56,11 @@ class TimeSformerHead(nn.Module):
         # [N, num_class, num_seg]
         score = torch.reshape(
             score, [-1, self.clip_seg_num, self.num_classes]).permute([0, 2, 1])
-        score = score * masks[: ,0:1, :]
+        score = score * masks[:, 0:1, ::self.sample_rate]
+        # [stage_num, N, C, T]
+        score = score.unsqueeze(0)
+        score = F.interpolate(
+            input=score,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
         return score

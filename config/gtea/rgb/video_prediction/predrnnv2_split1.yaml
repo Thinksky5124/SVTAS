@@ -1,35 +1,33 @@
 MODEL:
-    architecture: "StreamSegmentation2D"
+    architecture: "Recognition3D"
     backbone:
-        name: "MobileNetV2"
-        pretrained: "./data/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth"
-        out_indices: (7, )
-    neck:
-        name: "AvgPoolNeck"
-        num_classes: 11
-        in_channels: 1280
-        clip_seg_num: 32
-        drop_ratio: 0.5
-        need_pool: True
-    head:
-        name: "MultiStageModel"
-        num_stages: 1
+        name: "PredRNNV2"
         num_layers: 4
-        num_f_maps: 64
-        dim: 1280
+        num_hidden: [128, 128, 128, 128]
+        img_width: 64
+        img_channel: 3
+        filter_size: 5
+        stride: 1
+        layer_norm: False
+    neck:
+    head:
+        name: "I3DHead"
         num_classes: 11
+        clip_seg_num: 32
         sample_rate: 4
+        drop_ratio: 0.5
+        in_channels: 128
     loss:
-        name: "StreamSegmentationLoss"
+        name: "RecognitionSegmentationLoss"
+        label_mode: "hard"
         num_classes: 11
         sample_rate: 4
-        backone_loss_weight: 1.0
-        head_loss_weight: 1.0
+        loss_weight: 1.0
         ignore_index: -100
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
+    to_tensor_keys: ["imgs", "labels", "masks" , "precise_sliding_num"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
@@ -73,9 +71,9 @@ PIPELINE: #PIPELINE field
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             - Resize:
-                size: [256, 320]
+                size: [64, 64]
             - RandomCrop:
-                size: 224
+                size: 64
             - RandomHorizontalFlip:
             - ToTensor:
             - Normalize:
@@ -94,9 +92,9 @@ PIPELINE: #PIPELINE field
             sample_mode: "uniform"
         transform:
             - Resize:
-                size: [256, 320]
+                size: [64, 64]
             - CenterCrop:
-                size: 224
+                size: 64
             - ToTensor:
             - Normalize:
                 mean: [0.551, 0.424, 0.179]
@@ -117,10 +115,9 @@ METRIC:
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
     file_output: True
-    score_output: True
 
 
-model_name: "MobileNetV2_MSTCN_gtea_split1"
+model_name: "PredRNNV2_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

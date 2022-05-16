@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 15:20:12
+LastEditTime : 2022-05-16 15:43:10
 Description: file content
 FilePath     : /ETESVS/model/backbones/__init__.py
 '''
@@ -19,6 +19,7 @@ from .mobilevit import MobileViT
 from .vit import ViT
 from .timesfromer import TimeSformer
 from .resnet2plus1d import ResNet2Plus1d
+from .predrnn_v2 import PredRNNV2
 
 __all__ = [
     'ResNet', 'ResNetTSM',
@@ -26,5 +27,6 @@ __all__ = [
     'ResNet3d', 'FastFlowNet', 'RAFT',
     'MoViNet',
     'MobileViT', 'ViT', 'TimeSformer',
-    'ResNet3d', 'ResNet2Plus1d'
+    'ResNet3d', 'ResNet2Plus1d',
+    'PredRNNV2'
 ]

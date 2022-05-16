@@ -1,106 +1,80 @@
 MODEL:
-    architecture: "StreamSegmentation2D"
+    architecture: "FeatureSegmentation"
     backbone:
-        name: "MobileNetV2"
-        pretrained: "./data/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth"
-        out_indices: (7, )
     neck:
-        name: "AvgPoolNeck"
-        num_classes: 11
-        in_channels: 1280
-        clip_seg_num: 32
-        drop_ratio: 0.5
-        need_pool: True
     head:
-        name: "MultiStageModel"
-        num_stages: 1
-        num_layers: 4
-        num_f_maps: 64
-        dim: 1280
+        name: "FCHead"
         num_classes: 11
-        sample_rate: 4
+        clip_seg_num: 128
+        sample_rate: 1
+        drop_ratio: 0.5
+        in_channels: 2048
     loss:
-        name: "StreamSegmentationLoss"
+        name: "SegmentationLoss"
         num_classes: 11
-        sample_rate: 4
-        backone_loss_weight: 1.0
-        head_loss_weight: 1.0
+        sample_rate: 1
+        smooth_weight: 0.5
         ignore_index: -100
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
+    to_tensor_keys: ["faeture", "labels", "masks", "precise_sliding_num"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "RawFrameSegmentationDataset"
+        name: "FeatureSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
+        videos_path: "./data/gtea/features"
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: True
         sliding_window: 128
-        clip_seg_num: 32
-        sample_rate: 4
+        clip_seg_num: 128
+        sample_rate: 1
     test:
-        name: "RawFrameSegmentationDataset"
+        name: "FeatureSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
+        videos_path: "./data/gtea/features"
         gt_path: "./data/gtea/groundTruth"
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: False
         sliding_window: 128
-        clip_seg_num: 32
-        sample_rate: 4
+        clip_seg_num: 128
+        sample_rate: 1
 
 PIPELINE: #PIPELINE field
     train: 
-        name: "RawFramePipeline"
+        name: "FeaturePipline"
         decode:
-            backend: "decord"
+            backend: "numpy"
         sample:
             is_train: True
-            sample_rate: 4
-            clip_seg_num: 32
-            sliding_window: 128
-            sample_mode: "uniform"
-        transform: #Mandotary, image transform operator.
-            - Resize:
-                size: [256, 320]
-            - RandomCrop:
-                size: 224
-            - RandomHorizontalFlip:
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
-
-    test:
-        name: "RawFramePipeline"
-        decode:
-            backend: "decord"
-        sample:
-            is_train: False
-            sample_rate: 4
-            clip_seg_num: 32
+            sample_rate: 1
+            clip_seg_num: 128
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            - Resize:
-                size: [256, 320]
-            - CenterCrop:
-                size: 224
             - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+
+    test:
+        name: "FeaturePipline"
+        decode:
+            backend: "numpy"
+        sample:
+            is_train: False
+            sample_rate: 1
+            clip_seg_num: 128
+            sliding_window: 128
+            sample_mode: "uniform"
+        transform:
+            - ToTensor:
 
 OPTIMIZER:
     name: "AdamOptimizer"
@@ -120,7 +94,7 @@ METRIC:
     score_output: True
 
 
-model_name: "MobileNetV2_MSTCN_gtea_split1"
+model_name: "Sliding_FC_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

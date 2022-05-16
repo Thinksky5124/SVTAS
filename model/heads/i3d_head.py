@@ -1,14 +1,15 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-30 14:27:47
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-30 15:49:42
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-16 21:22:23
 Description: I3D head ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/heads/i3d_head.py
-FilePath: /ETESVS/model/heads/i3d_head.py
+FilePath     : /ETESVS/model/heads/i3d_head.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from mmcv.cnn import normal_init
 
 from ..builder import HEADS
@@ -85,5 +86,11 @@ class I3DHead(nn.Module):
         # [N, num_class, clip_seg_num]
         score = torch.reshape(
             score, [-1, self.clip_seg_num, self.num_classes]).permute([0, 2, 1])
-        score = score * masks[: , 0:1, :]
+        score = score * masks[:, 0:1, ::self.sample_rate]
+        # [stage_num, N, C, T]
+        score = score.unsqueeze(0)
+        score = F.interpolate(
+            input=score,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
         return score

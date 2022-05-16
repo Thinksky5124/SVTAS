@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-22 21:05:07
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-28 14:56:38
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-16 15:31:27
 Description: ConvLSTM script ref:https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py
-FilePath: /ETESVS/model/necks/convlstm.py
+FilePath     : /ETESVS/model/necks/convlstm.py
 '''
 import torch.nn as nn
 import torch
@@ -12,7 +12,12 @@ from mmcv.cnn import ConvModule
 
 class ConvLSTMCell(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, bias):
+    def __init__(self,
+                 input_dim,
+                 hidden_dim,
+                 kernel_size,
+                 bias,
+                 is_deep_wise_conv=True):
         """
         Initialize ConvLSTM cell.
         Parameters
@@ -37,37 +42,38 @@ class ConvLSTMCell(nn.Module):
         self.bias = bias
 
         # tranditional conv
-        # self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
-        #                       out_channels=4 * self.hidden_dim,
-        #                       kernel_size=self.kernel_size,
-        #                       padding=self.padding,
-        #                       bias=self.bias)
-
-        # deepwise conv
-        conv_cfg=dict(type='Conv2d')
-        norm_cfg=dict(type='BN2d')
-        act_cfg=dict(type='ReLU6')
-        self.conv = nn.Sequential(
-            ConvModule(
-                in_channels=self.input_dim + self.hidden_dim,
-                out_channels=self.input_dim + self.hidden_dim,
-                kernel_size=self.kernel_size,
-                padding=self.padding,
-                bias=self.bias,
-                groups=self.input_dim + self.hidden_dim,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg,
-                act_cfg=act_cfg),
-            ConvModule(
-                in_channels=self.input_dim + self.hidden_dim,
-                out_channels=4 * self.hidden_dim,
-                kernel_size=1,
-                padding=0,
-                bias=self.bias,
-                groups=1,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg,
-                act_cfg=None))
+        if is_deep_wise_conv is False:
+            self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
+                                out_channels=4 * self.hidden_dim,
+                                kernel_size=self.kernel_size,
+                                padding=self.padding,
+                                bias=self.bias)
+        else:
+            # deepwise conv
+            conv_cfg=dict(type='Conv2d')
+            norm_cfg=dict(type='BN2d')
+            act_cfg=dict(type='ReLU6')
+            self.conv = nn.Sequential(
+                ConvModule(
+                    in_channels=self.input_dim + self.hidden_dim,
+                    out_channels=self.input_dim + self.hidden_dim,
+                    kernel_size=self.kernel_size,
+                    padding=self.padding,
+                    bias=self.bias,
+                    groups=self.input_dim + self.hidden_dim,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg),
+                ConvModule(
+                    in_channels=self.input_dim + self.hidden_dim,
+                    out_channels=4 * self.hidden_dim,
+                    kernel_size=1,
+                    padding=0,
+                    bias=self.bias,
+                    groups=1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=None))
 
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state

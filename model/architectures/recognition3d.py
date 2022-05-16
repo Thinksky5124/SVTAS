@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:35:23
+LastEditTime : 2022-05-16 21:03:09
 Description: Action Recognition 3D framework
 FilePath     : /ETESVS/model/architectures/recognition3d.py
 '''
@@ -91,14 +91,7 @@ class Recognition3D(nn.Module):
         # seg_feature [N, H_dim, T]
         # cls_feature [N, F_dim, T]
         if self.head is not None:
-            head_score = self.head(seg_feature, masks[:, :, ::self.sample_rate])
+            head_score = self.head(seg_feature, masks)
         else:
             head_score = None
-        # head_score [stage_num, N, C, T // sample_rate]
-        head_score = head_score.unsqueeze(0)
-        # head_score [stage_num, N, C, T]
-        head_score = F.interpolate(
-            input=head_score,
-            scale_factor=[1, self.sample_rate],
-            mode="nearest")
         return head_score

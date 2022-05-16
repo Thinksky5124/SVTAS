@@ -7,6 +7,7 @@ MODEL:
         in_channels: 3
         with_pool2: False
         pretrained2d: False
+        inflate: [[1, 1, 1], [1, 0, 1, 0], [1, 0, 1, 0, 1, 0], [0, 1, 0]]
     neck:
         name: "AvgPoolNeck"
         num_classes: 48
