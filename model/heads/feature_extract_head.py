@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 19:20:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 20:23:37
+LastEditTime : 2022-05-17 23:28:19
 Description  : Feature Extract Head
 FilePath     : /ETESVS/model/heads/feature_extract_head.py
 '''
@@ -63,9 +63,9 @@ class FeatureExtractHead(nn.Module):
         feature = F.interpolate(
             input=feature,
             scale_factor=[1, self.sample_rate],
-            mode="nearest").squeeze(0)
+            mode="nearest")
             
         if self.out_format in ["NTC"]:
-            feature = torch.permute(feature, dims=[0, 2, 1])
+            feature = torch.permute(feature, dims=[0, 1, 3, 2])
 
         return feature

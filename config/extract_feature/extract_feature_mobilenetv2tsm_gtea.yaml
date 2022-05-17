@@ -2,7 +2,7 @@ MODEL:
     architecture: "Recognition2D"
     backbone:
         name: "MobileNetV2TSM"
-        # pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
+        pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
         clip_seg_num: 32
         shift_div: 8
         out_indices: (7, )
@@ -13,7 +13,7 @@ MODEL:
         clip_seg_num: 32
         sample_rate: 2
         pool_space: True
-        in_format: "N,C,T,H,W"
+        in_format: "N*T,C,H,W"
         out_format: "NCT"
     loss:
 
@@ -38,11 +38,11 @@ DATASET: #DATASET field
     config:
         name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/thumos14/test_list.txt" #Mandatory, train data index file path
-        videos_path: "./data/thumos14/Videos"
-        gt_path: "./data/thumos14/groundTruth"
-        actions_map_file_path: "./data/thumos14/mapping.txt"
-        dataset_type: "thumos14"
+        file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/gtea/Videos"
+        gt_path: "./data/gtea/groundTruth"
+        actions_map_file_path: "./data/gtea/mapping.txt"
+        dataset_type: "gtea"
         train_mode: False
         sliding_window: 64
         clip_seg_num: 32
@@ -65,5 +65,5 @@ PIPELINE: #PIPELINE field
             size: 224
         - ToTensor:
         - Normalize:
-            mean: [0.385, 0.383, 0.353]
-            std: [0.258, 0.254, 0.248]
+            mean: [0.551, 0.424, 0.179]
+            std: [0.133, 0.141, 0.124]

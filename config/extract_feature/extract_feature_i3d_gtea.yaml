@@ -20,7 +20,7 @@ MODEL:
         out_format: "NCT"
     loss:
 
-PRETRAINED: "./output/I3D_MSTCN_gtea_split1/I3D_MSTCN_gtea_split1_best.pkl"
+PRETRAINED: "./output/I3DTCN_50salads_split1/I3DTCN_50salads_split1_best.pkl"
 
 POSTPRECESSING:
     name: "FeaturePostProcessing"
