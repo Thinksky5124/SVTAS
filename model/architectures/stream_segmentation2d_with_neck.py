@@ -29,7 +29,7 @@ class StreamSegmentation2DWithNeck(nn.Module):
 
         self.init_weights()
         
-        self.sample_rate = loss.sample_rate
+        self.sample_rate = head.sample_rate
 
     def init_weights(self):
         self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])

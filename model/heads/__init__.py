@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-16 21:07:57
+LastEditTime : 2022-05-17 19:38:41
 Description: Head init
 FilePath     : /ETESVS/model/heads/__init__.py
 '''
@@ -17,9 +17,12 @@ from .movinet_head import MoViNetHead
 from .timesformer_head import TimeSformerHead
 from .lstm_head import LSTMSegmentationHead
 from .fc_head import FCHead
+from .oadtr import OadTRHead
+from .feature_extract_head import FeatureExtractHead
 
 __all__ = [
     'MultiStageModel', 'ETESVSHead', 'ASFormer', 'MultiStageModel',
     'SingleStageModel', 'TCN3DHead', 'TSMHead', 'I3DHead', 'MoViNetHead',
-    'TimeSformerHead', 'LSTMSegmentationHead', 'FCHead'
+    'TimeSformerHead', 'LSTMSegmentationHead', 'FCHead', 'OadTRHead',
+    'FeatureExtractHead'
 ]

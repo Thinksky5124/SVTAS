@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-16 21:03:09
+LastEditTime : 2022-05-17 19:56:12
 Description: Action Recognition 3D framework
 FilePath     : /ETESVS/model/architectures/recognition3d.py
 '''
@@ -41,7 +41,7 @@ class Recognition3D(nn.Module):
 
         self.init_weights()
         
-        self.sample_rate = loss.sample_rate
+        self.sample_rate = head.sample_rate
 
     def init_weights(self):
         if self.backbone is not None:
@@ -76,7 +76,7 @@ class Recognition3D(nn.Module):
         else:
             feature = imgs
 
-        # feature [N * T , F_dim, 7, 7]
+        # feature [N, F_dim, T , 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
             seg_feature, backbone_score, neck_score = self.neck(
@@ -93,5 +93,5 @@ class Recognition3D(nn.Module):
         if self.head is not None:
             head_score = self.head(seg_feature, masks)
         else:
-            head_score = None
+            head_score = seg_feature
         return head_score

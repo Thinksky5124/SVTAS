@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-04-14 16:16:56
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-27 15:31:13
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-17 19:39:32
 Description: registry and builder model
-FilePath: /ETESVS/model/builder.py
+FilePath     : /ETESVS/model/builder.py
 '''
 from utils.build import Registry
 from utils.build import build
@@ -14,7 +14,7 @@ NECKS = Registry('neck')
 HEADS = Registry('head')
 ARCHITECTURE = Registry('architecture')
 LOSSES = Registry('loss')
-    
+POSTPRECESSING = Registry('post_precessing')
 
 def build_backbone(cfg):
     """Build backbone."""
@@ -27,6 +27,10 @@ def build_head(cfg):
 def build_neck(cfg):
     """Build neck."""
     return build(cfg, NECKS)
+
+def build_post_precessing(cfg):
+    """Build loss."""
+    return build(cfg, POSTPRECESSING)
 
 def build_loss(cfg):
     """Build loss."""

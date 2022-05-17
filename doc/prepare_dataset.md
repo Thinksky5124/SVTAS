@@ -64,6 +64,11 @@ python tools/extract_flow.py -c config/extract_flow/extract_optical_flow_fastflo
 python tools/extract_flow.py -c config/extract_flow/extract_optical_flow_raft.yaml -o data/gtea
 ```
 
+## Extract Feature(Optional)
+```bash
+python tools/extract_features.py -c config/extract_feature/extract_feature_thumos14.yaml -o data/thumos14
+```
+
 ## Dataset Normalization
 ```bash
 # count mean and std from video

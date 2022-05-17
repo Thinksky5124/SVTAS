@@ -1,47 +1,52 @@
 MODEL:
-    architecture: "ETESVS"
+    architecture: "StreamSegmentation2D"
     backbone:
         name: "MobileNetV2TSM"
-        pretrained: "./data/tsm_mobilenetv2_kinetics400.pth"
+        pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
         clip_seg_num: 32
         shift_div: 8
-        out_indices: (6, 7, )
+        out_indices: (7, )
     neck:
-        name: "ETESVSNeck"
+        name: "AvgPoolNeck"
         num_classes: 21
-        num_layers: 1
-        cls_in_channel: 1280
-        cls_hidden_channel: 1280
-        seg_in_channel: 320
-        seg_hidden_channel: 320
+        in_channels: 1280
         clip_seg_num: 32
         drop_ratio: 0.5
-        bidirectional: False
+        need_pool: True
     head:
-        name: "ETESVSHead"
-        num_classes: 21
+        name: "MultiStageModel"
+        num_stages: 1
         num_layers: 4
-        sliding_window: 256
-        seg_in_channels: 320
-        sample_rate: 8
         num_f_maps: 64
-    loss:
-        name: "ETESVSLoss"
+        dim: 1280
         num_classes: 21
-        sample_rate: 8
+        sample_rate: 4
+    loss:
+        name: "StreamSegmentationLoss"
+        num_classes: 21
+        sample_rate: 4
         backone_loss_weight: 1.0
-        neck_loss_weight: 1.0
         head_loss_weight: 1.0
         ignore_index: -100
 
+POSTPRECESSING:
+    name: "ScorePostProcessing"
+    num_classes: 21
+    clip_seg_num: 32
+    sliding_window: 128
+    sample_rate: 4
+    ignore_index: -100
+
 COLLATE:
-    to_tensor_idx: 3
+    name: "BatchCompose"
+    to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 2
+    video_batch_size: 4
     num_workers: 2
     train:
+        name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/thumos14/val_list.txt" #Mandatory, train data index file path
         videos_path: "./data/thumos14/Videos"
@@ -49,10 +54,11 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/thumos14/mapping.txt"
         dataset_type: "thumos14"
         train_mode: True
-        sliding_window: 256
+        sliding_window: 128
         clip_seg_num: 32
-        sample_rate: 8
+        sample_rate: 4
     test:
+        name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/thumos14/test_list.txt" #Mandatory, train data index file path
         videos_path: "./data/thumos14/Videos"
@@ -60,19 +66,20 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/thumos14/mapping.txt"
         dataset_type: "thumos14"
         train_mode: False
-        sliding_window: 256
+        sliding_window: 128
         clip_seg_num: 32
-        sample_rate: 8
+        sample_rate: 4
 
 PIPELINE: #PIPELINE field
-    train: 
+    train:
+        name: "RawFramePipeline"
         decode:
             backend: "decord"
         sample:
-            seg_len: 1
-            sample_rate: 8
+            is_train: True
+            sample_rate: 4
             clip_seg_num: 32
-            sliding_window: 256
+            sliding_window: 128
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             - Resize:
@@ -86,13 +93,14 @@ PIPELINE: #PIPELINE field
                 std: [0.258, 0.254, 0.248]
 
     test:
+        name: "RawFramePipeline"
         decode:
             backend: "decord"
         sample:
-            seg_len: 1
-            sample_rate: 8
+            is_train: False
+            sample_rate: 4
             clip_seg_num: 32
-            sliding_window: 256
+            sliding_window: 128
             sample_mode: "uniform"
         transform:
             - Resize:
@@ -104,10 +112,16 @@ PIPELINE: #PIPELINE field
                 mean: [0.385, 0.383, 0.353]
                 std: [0.258, 0.254, 0.248]
 
-OPTIMIZER: #OPTIMIZER field
-    learning_rate: 0.0005 # 2 gpus * 2 batch size = 4
+OPTIMIZER:
+    name: "TSMAdamOptimizer"
+    learning_rate: 0.001
+    weight_decay: 1e-4
+    betas: (0.9, 0.999)
+
+LRSCHEDULER:
+    name: "MultiStepLR"
     step_size: [50]
-    gamma: 0.5
+    gamma: 0.1
 
 METRIC:
     overlap: [.1, .25, .5]
@@ -115,7 +129,7 @@ METRIC:
     file_output: True
 
 
-model_name: "ETESVS_thumos14"
+model_name: "MobileNetV2TSM_MSTCN_thumos14"
 log_interval: 5 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

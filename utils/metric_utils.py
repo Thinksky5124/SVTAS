@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-12 10:17:08
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-05-17 14:54:57
 Description: metric evaluate utils function
-FilePath: /ETESVS/utils/metric_utils.py
+FilePath     : /ETESVS/utils/metric_utils.py
 '''
 import numpy as np
 import pandas as pd
@@ -93,7 +93,7 @@ def levenstein(p, y, norm=False):
                               D[i - 1, j - 1] + 1)
 
     if norm:
-        score = (1 - D[-1, -1] / max(m_row, n_col)) * 100
+        score = (1 - D[-1, -1] / (max(m_row, n_col) + 1e-6)) * 100
     else:
         score = D[-1, -1]
 

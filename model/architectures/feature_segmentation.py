@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 20:38:27
+LastEditTime : 2022-05-17 19:36:11
 Description: feaeture segmentation model framework
 FilePath     : /ETESVS/model/architectures/feature_segmentation.py
 '''
@@ -41,7 +41,7 @@ class FeatureSegmentation(nn.Module):
 
         self.init_weights()
 
-        self.sample_rate = loss.sample_rate
+        self.sample_rate = head.sample_rate
 
     def init_weights(self):
         if self.backbone is not None:

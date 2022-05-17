@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 20:32:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:28:39
+LastEditTime : 2022-05-17 19:35:06
 Description  : MoViNet Head
 FilePath     : /ETESVS/model/heads/movinet_head.py
 '''
@@ -90,4 +90,10 @@ class MoViNetHead(nn.Module):
         score = torch.reshape(
             score, [-1, self.clip_seg_num, self.num_classes]).permute([0, 2, 1])
         score = score * masks[: ,0:1, :]
+
+        score = score.unsqueeze(0)
+        score = F.interpolate(
+            input=score,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
         return score

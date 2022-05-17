@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-16 14:00:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-16 21:16:36
+LastEditTime : 2022-05-16 21:37:40
 Description  : PredRNN v2 model ref:https://github.com/thuml/predrnn-pytorch/blob/master/core/models/predrnn_v2.py
 FilePath     : /ETESVS/model/backbones/predrnn_v2.py
 '''

@@ -2,8 +2,8 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 23:09:34
-Description  : file content
+LastEditTime : 2022-05-17 20:30:12
+Description  : Extract flow script
 FilePath     : /ETESVS/tools/extract_flow.py
 '''
 
@@ -16,6 +16,7 @@ import numpy as np
 import cv2
 import model.builder as model_builder
 import argparse
+from utils.logger import get_logger, setup_logger
 from utils.config import parse_config
 from tqdm import tqdm
 import decord
@@ -118,7 +119,7 @@ def extractor(cfg, file_list, outpath):
         
 
 def parse_args():
-    parser = argparse.ArgumentParser("ETESVS train script")
+    parser = argparse.ArgumentParser("ETESVS extract optical flow script")
     parser.add_argument('-c',
                         '--config',
                         type=str,
@@ -160,6 +161,7 @@ def parse_file_paths(input_path, dataset_type):
 def main():
     args = parse_args()
     cfg = parse_config(args.config)
+    setup_logger(f"./output/etract_flow", name="ETESVS", level="INFO", tensorboard=False)
     file_list = parse_file_paths(cfg.DATASET.file_list, cfg.DATASET.dataset_type)
     extractor(cfg, file_list, args.out_path)
 

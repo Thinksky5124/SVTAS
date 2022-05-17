@@ -1,0 +1,101 @@
+MODEL:
+    architecture: "FeatureSegmentation"
+    backbone:
+    neck:
+    head:
+        name: "FCHead"
+        num_classes: 21
+        clip_seg_num: 128
+        sample_rate: 1
+        drop_ratio: 0.5
+        in_channels: 2048
+    loss:
+        name: "SegmentationLoss"
+        num_classes: 21
+        sample_rate: 1
+        smooth_weight: 0.5
+        ignore_index: -100
+
+COLLATE:
+    name: "BatchCompose"
+    to_tensor_keys: ["faeture", "labels", "masks", "precise_sliding_num"]
+
+DATASET: #DATASET field
+    temporal_clip_batch_size: 3
+    video_batch_size: 4
+    num_workers: 2
+    train:
+        name: "FeatureSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/thumos14/val_list.txt" #Mandatory, train data index file path
+        videos_path: "./data/thumos14/features"
+        gt_path: "./data/thumos14/groundTruth"
+        actions_map_file_path: "./data/thumos14/mapping.txt"
+        dataset_type: "thumos14"
+        train_mode: True
+        sliding_window: 128
+        clip_seg_num: 128
+        sample_rate: 1
+    test:
+        name: "FeatureSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/thumos14/test_list.txt" #Mandatory, train data index file path
+        videos_path: "./data/thumos14/features"
+        gt_path: "./data/thumos14/groundTruth"
+        actions_map_file_path: "./data/thumos14/mapping.txt"
+        dataset_type: "thumos14"
+        train_mode: False
+        sliding_window: 128
+        clip_seg_num: 128
+        sample_rate: 1
+
+PIPELINE: #PIPELINE field
+    train: 
+        name: "FeaturePipline"
+        decode:
+            backend: "numpy"
+            is_transpose: True
+        sample:
+            is_train: True
+            sample_rate: 1
+            clip_seg_num: 128
+            sliding_window: 128
+            sample_mode: "uniform"
+        transform:
+            - ToTensor:
+
+    test:
+        name: "FeaturePipline"
+        decode:
+            backend: "numpy"
+            is_transpose: True
+        sample:
+            is_train: False
+            sample_rate: 1
+            clip_seg_num: 128
+            sliding_window: 128
+            sample_mode: "uniform"
+        transform:
+            - ToTensor:
+
+OPTIMIZER:
+    name: "AdamOptimizer"
+    learning_rate: 0.001
+    weight_decay: 1e-4
+    betas: (0.9, 0.999)
+
+LRSCHEDULER:
+    name: "MultiStepLR"
+    step_size: [50]
+    gamma: 0.1
+
+METRIC:
+    overlap: [.1, .25, .5]
+    actions_map_file_path: "./data/thumos14/mapping.txt"
+    file_output: True
+
+
+model_name: "Sliding_FC_thumos14"
+log_interval: 5 #Optional, the interal of logger, default:10
+epochs: 50 #Mandatory, total epoch
+save_interval: 10

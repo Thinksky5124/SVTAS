@@ -3,11 +3,12 @@ MODEL:
     backbone:
         name: "ResNet3d"
         depth: 50
-        pretrained: "./data/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth"
+        # pretrained: "./data/i3d_r50_video_32x2x1_100e_kinetics400_rgb_20200826-e31c6f52.pth"
         in_channels: 3
         with_pool2: False
         pretrained2d: False
         inflate: [[1, 1, 1], [1, 0, 1, 0], [1, 0, 1, 0, 1, 0], [0, 1, 0]]
+        zero_init_residual: False
     neck:
         name: "AvgPoolNeck"
         num_classes: 11
@@ -30,6 +31,14 @@ MODEL:
         backone_loss_weight: 1.0
         head_loss_weight: 1.0
         ignore_index: -100
+
+POSTPRECESSING:
+    name: "ScorePostProcessing"
+    num_classes: 11
+    clip_seg_num: 32
+    sliding_window: 128
+    sample_rate: 4
+    ignore_index: -100
 
 COLLATE:
     name: "BatchCompose"

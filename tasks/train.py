@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 10:13:39
+LastEditTime : 2022-05-17 19:42:47
 Description: train script api
 FilePath     : /ETESVS/tasks/train.py
 '''
@@ -19,7 +19,6 @@ import dataset.builder as dataset_builder
 import optimizer.builder as optimizer_builder
 
 from utils.metric import SegmentationMetric
-from model.post_precessings.etesvs_post_processing import PostProcessing
 from .runner import Runner
 
 try:
@@ -163,11 +162,7 @@ def train(cfg,
     record_dict = build_recod(cfg.MODEL.architecture, mode="train")
 
     # 7. Construct post precesing
-    post_processing = PostProcessing(
-        num_classes=cfg.MODEL.loss.num_classes,
-        clip_seg_num=cfg.DATASET.train.clip_seg_num,
-        sliding_window=cfg.DATASET.train.sliding_window,
-        sample_rate=cfg.DATASET.train.sample_rate)
+    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
 
     # construct train runner
     runner = Runner(optimizer=optimizer,

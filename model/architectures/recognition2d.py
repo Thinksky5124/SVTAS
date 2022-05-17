@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-16 21:03:17
+LastEditTime : 2022-05-17 19:35:46
 Description: Action Recognition 2D framework
 FilePath     : /ETESVS/model/architectures/recognition2d.py
 '''
@@ -41,7 +41,7 @@ class Recognition2D(nn.Module):
     
         self.init_weights()
 
-        self.sample_rate = loss.sample_rate
+        self.sample_rate = head.sample_rate
 
     def init_weights(self):
         if self.backbone is not None:
@@ -93,5 +93,5 @@ class Recognition2D(nn.Module):
         if self.head is not None:
             head_score = self.head(seg_feature, masks)
         else:
-            head_score = None
+            head_score = seg_feature
         return head_score

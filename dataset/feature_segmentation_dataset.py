@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:13:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 10:49:15
+LastEditTime : 2022-05-17 16:38:00
 Description: feature dataset class
 FilePath     : /ETESVS/dataset/feature_segmentation_dataset.py
 '''
@@ -22,7 +22,7 @@ class FeatureSegmentationDataset(RawFrameSegmentationDataset):
         super().__init__(**kwargs)
     
     def parse_file_paths(self, input_path):
-        if self.dataset_type in ['gtea', '50salads', 'breakfast']:
+        if self.dataset_type in ['gtea', '50salads', 'breakfast', 'thumos14']:
             file_ptr = open(input_path, 'r')
             info = file_ptr.read().split('\n')[:-1]
             file_ptr.close()
@@ -47,7 +47,7 @@ class FeatureSegmentationDataset(RawFrameSegmentationDataset):
                 # convert sample
                 info = []
                 for video_segment in video_sample_segment_lists[proces_idx]:
-                    if self.dataset_type in ['gtea', '50salads', 'breakfast']:
+                    if self.dataset_type in ['gtea', '50salads', 'breakfast', 'thumos14']:
                         video_name = video_segment.split('.')[0]
                         label_path = os.path.join(self.gt_path, video_name + '.txt')
 

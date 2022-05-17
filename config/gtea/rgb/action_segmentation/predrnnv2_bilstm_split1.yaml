@@ -1,5 +1,5 @@
 MODEL:
-    architecture: "Recognition3D"
+    architecture: "StreamSegmentation3D"
     backbone:
         name: "PredRNNV2"
         num_layers: 4
@@ -10,19 +10,29 @@ MODEL:
         stride: 1
         layer_norm: False
     neck:
-    head:
-        name: "I3DHead"
+        name: "AvgPoolNeck"
         num_classes: 11
-        clip_seg_num: 32
-        sample_rate: 4
-        drop_ratio: 0.5
         in_channels: 128
-    loss:
-        name: "RecognitionSegmentationLoss"
-        label_mode: "hard"
+        clip_seg_num: 32
+        drop_ratio: 0.5
+        need_pool: True
+    head:
+        name: "LSTMSegmentationHead"
+        in_channels: 128
         num_classes: 11
         sample_rate: 4
-        loss_weight: 1.0
+        hidden_channels: 64
+        num_layers: 1
+        batch_first: True
+        dropout: 0.5
+        bidirectional: True
+        is_memory_sliding: True
+    loss:
+        name: "StreamSegmentationLoss"
+        num_classes: 11
+        sample_rate: 4
+        backone_loss_weight: 1.0
+        head_loss_weight: 1.0
         ignore_index: -100
 
 COLLATE:
@@ -117,7 +127,7 @@ METRIC:
     file_output: True
 
 
-model_name: "PredRNNV2_gtea_split1"
+model_name: "PredRNNV2_BiLSTM_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

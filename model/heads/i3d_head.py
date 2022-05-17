@@ -2,8 +2,8 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:27:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-16 21:22:23
-Description: I3D head ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/heads/i3d_head.py
+LastEditTime : 2022-05-17 20:24:20
+Description: I3D head ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/heads/i3d_head.py
 FilePath     : /ETESVS/model/heads/i3d_head.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
@@ -71,6 +71,8 @@ class I3DHead(nn.Module):
         Returns:
             torch.Tensor: The classification scores for input samples.
         """
+        # [N, in_channels, clip_seg_num, 7, 7] -> [N * clip_seg_num, in_channels, 7, 7]
+        feature = torch.reshape(feature.transpose(1, 2), [-1, self.in_channels] + list(feature.shape[-2:]))
         # [N, in_channels, clip_seg_num, 7, 7]
         if self.avg_pool is not None:
             feature = self.avg_pool(feature)

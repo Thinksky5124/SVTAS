@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 14:06:12
+LastEditTime : 2022-05-17 19:42:43
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -16,7 +16,6 @@ import numpy as np
 import model.builder as model_builder
 import dataset.builder as dataset_builder
 from utils.metric import SegmentationMetric
-from model.post_precessings import PostProcessing
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
@@ -119,11 +118,7 @@ def test(cfg,
     
     record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
 
-    post_processing = PostProcessing(
-        num_classes=cfg.MODEL.loss.num_classes,
-        clip_seg_num=cfg.DATASET.test.clip_seg_num,
-        sliding_window=cfg.DATASET.test.sliding_window,
-        sample_rate=cfg.DATASET.test.sample_rate)
+    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
 
     runner = Runner(logger=logger,
                 video_batch_size=video_batch_size,

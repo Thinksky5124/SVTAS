@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:12:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 16:07:30
+LastEditTime : 2022-05-17 16:43:13
 Description: file content
 FilePath     : /ETESVS/dataset/feature_pipline.py
 '''
@@ -39,9 +39,11 @@ class FeatureDecoder():
         filepath: the file path of mp4 file
     """
     def __init__(self,
-                 backend='numpy'):
+                 backend='numpy',
+                 is_transpose=False):
 
         self.backend = backend
+        self.is_transpose = is_transpose
 
     def __call__(self, results):
         """
@@ -53,6 +55,8 @@ class FeatureDecoder():
         results['format'] = 'feature'
 
         feature = np.load(file_path)
+        if self.is_transpose is True:
+            feature = feature.T
         feature_len = feature.shape[-1]
         results['frames'] = feature
         results['frames_len'] = results['raw_labels'].shape[0]
