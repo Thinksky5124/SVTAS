@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:24:56
+LastEditTime : 2022-05-18 16:42:41
 Description: Action recognition model loss
 FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
 '''
@@ -36,8 +36,9 @@ class RecognitionSegmentationLoss(nn.Module):
         else:
             raise NotImplementedError
 
-    def forward(self, model_output, masks, labels, precise_sliding_num):
+    def forward(self, model_output, input_data):
         score = model_output
+        masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
         # labels [N, T]
@@ -52,7 +53,8 @@ class RecognitionSegmentationLoss(nn.Module):
             masks = masks[:, ::self.sample_rate]
             masks = torch.repeat_interleave(masks, self.sample_rate, dim=-1)
 
-        loss = self.criteria(score, masks, labels, precise_sliding_num)['loss']
+        loss_info = {"masks": masks, "labels": labels, "precise_sliding_num": precise_sliding_num}
+        loss = self.criteria(score, loss_info)['loss']
 
         loss = self.loss_weight * loss
 
@@ -71,7 +73,8 @@ class SoftLabelRocgnitionLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.elps = 1e-10
     
-    def forward(self, score, gt, gt_mask, precise_sliding_num):
+    def forward(self, score, input_data):
+        gt_mask, gt, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # gt_mask [N, T]
         score = torch.sum(score * gt_mask.unsqueeze(1), axis=-1) / (torch.sum(gt_mask.unsqueeze(1), dim=-1) + self.elps)  # [N, num_class]
         cls_score = torch.reshape(score, shape=[-1, self.num_classes])  # [N, num_class]

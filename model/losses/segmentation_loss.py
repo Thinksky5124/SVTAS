@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 13:46:26
+LastEditTime : 2022-05-18 16:38:46
 Description: MS-TCN loss model
 FilePath     : /ETESVS/model/losses/segmentation_loss.py
 '''
@@ -29,10 +29,12 @@ class SegmentationLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.mse = nn.MSELoss(reduction='none')
     
-    def forward(self, model_output, masks, labels, precise_sliding_num):
+    def forward(self, model_output, input_data):
         # score shape [stage_num N C T]
         # masks shape [N T]
         head_score = model_output
+        masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
+        
         _, b, _, t = head_score.shape
 
         loss = 0.

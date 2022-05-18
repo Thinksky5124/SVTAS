@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 18:56:14
+LastEditTime : 2022-05-18 16:38:21
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -198,7 +198,7 @@ class Runner():
                 input_data[key] = value.cuda()
 
         outputs = self.model(input_data)
-        loss_dict = self.criterion(outputs, input_data["masks"], input_data["labels"], input_data['precise_sliding_num'])
+        loss_dict = self.criterion(outputs, input_data)
 
         loss = loss_dict["loss"]
         if self.runner_mode in ['train']:

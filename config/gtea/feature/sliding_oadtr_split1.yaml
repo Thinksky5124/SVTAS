@@ -27,14 +27,14 @@ POSTPRECESSING:
 
 COLLATE:
     name: "BatchCompose"
-    to_tensor_keys: ["faeture", "labels", "masks", "precise_sliding_num"]
+    to_tensor_keys: ["faeture", "labels", "masks", "pred_labels", "precise_sliding_num"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "FeatureSegmentationDataset"
+        name: "FeatureVideoPredictionDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/features"
@@ -46,7 +46,7 @@ DATASET: #DATASET field
         clip_seg_num: 128
         sample_rate: 1
     test:
-        name: "FeatureSegmentationDataset"
+        name: "FeatureVideoPredictionDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/features"
@@ -65,8 +65,9 @@ PIPELINE: #PIPELINE field
             name: "FeatureDecoder"
             backend: "numpy"
         sample:
-            name: "FeatureStreamSampler"
+            name: "VideoPredictionFeatureStreamSampler"
             is_train: True
+            pred_clip_seg_num: 8
             sample_rate: 1
             clip_seg_num: 128
             sliding_window: 128
@@ -82,8 +83,9 @@ PIPELINE: #PIPELINE field
             name: "FeatureDecoder"
             backend: "numpy"
         sample:
-            name: "FeatureStreamSampler"
+            name: "VideoPredictionFeatureStreamSampler"
             is_train: False
+            pred_clip_seg_num: 8
             sample_rate: 1
             clip_seg_num: 128
             sliding_window: 128

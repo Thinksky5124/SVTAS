@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 10:43:19
+LastEditTime : 2022-05-18 16:38:58
 Description: loss function
 FilePath     : /ETESVS/model/losses/steam_segmentation_loss.py
 '''
@@ -35,8 +35,9 @@ class StreamSegmentationLoss(nn.Module):
         self.backbone_clip_loss = SoftLabelRocgnitionLoss(self.num_classes, ignore_index=self.ignore_index)
         self.segmentation_loss = SegmentationLoss(self.num_classes, sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
 
-    def forward(self, model_output, masks, labels, precise_sliding_num):
+    def forward(self, model_output, input_data):
         backbone_score, head_score = model_output
+        masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
         # labels [N, T]
@@ -45,10 +46,12 @@ class StreamSegmentationLoss(nn.Module):
         # backbone smooth label learning
 
         # backbone label learning
-        backbone_cls_score_loss = self.backbone_clip_loss(backbone_score, labels[:, ::self.sample_rate], masks[:, ::self.sample_rate], precise_sliding_num)['loss']
+        backbone_loss_info = {"masks": masks[:, ::self.sample_rate], "labels": labels[:, ::self.sample_rate], "precise_sliding_num": precise_sliding_num}
+        backbone_cls_score_loss = self.backbone_clip_loss(backbone_score, backbone_loss_info)['loss']
 
         # segmentation branch loss
-        seg_loss = self.segmentation_loss(head_score, masks, labels, precise_sliding_num)['loss']
+        head_loss_info = {"masks": masks, "labels": labels, "precise_sliding_num": precise_sliding_num}
+        seg_loss = self.segmentation_loss(head_score, head_loss_info)['loss']
 
         backbone_loss = self.backone_loss_weight * backbone_cls_score_loss
         head_loss = self.head_loss_weight * seg_loss

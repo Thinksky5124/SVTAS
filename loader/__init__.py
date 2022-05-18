@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:57:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:49:08
+LastEditTime : 2022-05-18 16:12:21
 Description: file content
 FilePath     : /ETESVS/loader/__init__.py
 '''
@@ -10,7 +10,8 @@ from .decode import (VideoDecoder, FeatureDecoder, RGBFlowVideoDecoder)
 from .dataset import (RawFrameSegmentationDataset, FeatureSegmentationDataset,
                     RGBFlowFrameSegmentationDataset)
 from .pipline import (BasePipline, BatchCompose)
-from .sampler import (VideoStreamSampler, FeatureStreamSampler, RGBFlowVideoStreamSampler)
+from .sampler import (VideoStreamSampler, FeatureStreamSampler, RGBFlowVideoStreamSampler,
+                    VideoPredictionVideoStreamSampler, VideoPredictionFeatureStreamSampler)
 from .transform import (RGBFlowVideoStreamTransform, FeatureStreamTransform,
                         VideoStreamTransform)
 
@@ -21,5 +22,6 @@ __all__ = [
     'RGBFlowFrameSegmentationDataset',
     'VideoDecoder', 'FeatureDecoder', 'RGBFlowVideoDecoder',
     'VideoStreamSampler', 'FeatureStreamSampler', 'RGBFlowVideoStreamSampler',
+    'VideoPredictionFeatureStreamSampler', 'VideoPredictionVideoStreamSampler',
     'RGBFlowVideoStreamTransform', 'FeatureStreamTransform', 'VideoStreamTransform'
 ]

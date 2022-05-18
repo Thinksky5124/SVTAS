@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 10:44:50
+LastEditTime : 2022-05-18 16:45:09
 Description: loss function
 FilePath     : /ETESVS/model/losses/etesvs_loss.py
 '''
@@ -41,8 +41,9 @@ class ETESVSLoss(nn.Module):
         # self.neck_frame_num_loss = TemporalClassNumMSELoss(self.num_classes, ignore_index=self.ignore_index)
         self.head_loss = SegmentationLoss(self.num_classes, sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
 
-    def forward(self, model_output, masks, labels, precise_sliding_num):
+    def forward(self, model_output, input_data):
         backbone_score, neck_score, head_score = model_output
+        masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
         # labels [N, T]
@@ -51,7 +52,8 @@ class ETESVSLoss(nn.Module):
         # backbone smooth label learning
 
         # backbone label learning
-        backbone_cls_score_loss = self.backbone_clip_loss(backbone_score, labels[:, ::self.sample_rate], masks[:, ::self.sample_rate])['loss']
+        backbone_loss_info = {"masks": masks[:, ::self.sample_rate], "labels": labels[:, ::self.sample_rate], "precise_sliding_num": precise_sliding_num}
+        backbone_cls_score_loss = self.backbone_clip_loss(backbone_score, backbone_loss_info)['loss']
 
         # neck label learning
         neck_cls_loss = self.neck_ce(neck_score.transpose(2, 1).contiguous().view(-1, self.num_classes), labels[:, ::self.sample_rate].view(-1))
@@ -60,7 +62,8 @@ class ETESVSLoss(nn.Module):
         # neck_cls_score_loss = torch.tensor(0.).cuda()
 
         # segmentation branch loss
-        seg_loss = self.head_loss(head_score, masks, labels, precise_sliding_num)['loss']
+        head_loss_info = {"masks": masks, "labels": labels, "precise_sliding_num": precise_sliding_num}
+        seg_loss = self.head_loss(head_score, head_loss_info)['loss']
 
         backbone_loss = self.backone_loss_weight * backbone_cls_score_loss
         neck_loss = self.neck_loss_weight * neck_cls_score_loss
