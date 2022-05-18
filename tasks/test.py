@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 19:42:43
+LastEditTime : 2022-05-18 15:14:36
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -14,8 +14,8 @@ import time
 import numpy as np
 
 import model.builder as model_builder
-import dataset.builder as dataset_builder
-from utils.metric import SegmentationMetric
+import loader.builder as dataset_builder
+import metric.builder as metric_builder
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
@@ -114,7 +114,7 @@ def test(cfg,
         amp.load_state_dict(checkpoint['amp'])
 
     # add params to metrics
-    Metric = SegmentationMetric(**cfg.METRIC)
+    Metric = metric_builder.build_metric(cfg.METRIC)
     
     record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
 

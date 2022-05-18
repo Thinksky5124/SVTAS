@@ -1,53 +1,35 @@
 '''
-Author       : Thyssen Wen
-Date         : 2022-05-04 20:11:18
+Author: Thyssen Wen
+Date: 2022-04-27 16:13:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 10:48:00
-Description  : file content
-FilePath     : /ETESVS/dataset/rgb_flow_frame_segmentation_dataset.py
+LastEditTime : 2022-05-17 16:38:00
+Description: feature dataset class
+FilePath     : /ETESVS/dataset/feature_segmentation_dataset.py
 '''
-import os.path as osp
+
 import numpy as np
+import os.path as osp
 import os
 import copy
 import torch
 from .raw_frame_segmentation_dataset import RawFrameSegmentationDataset
-from .builder import DATASET
+from ..builder import DATASET
 
 @DATASET.register()
-class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
+class FeatureSegmentationDataset(RawFrameSegmentationDataset):
     def __init__(self,
-                 flows_path,
                  **kwargs):
-        self.flows_path = flows_path
         super().__init__(**kwargs)
     
     def parse_file_paths(self, input_path):
-        if self.dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:
+        if self.dataset_type in ['gtea', '50salads', 'breakfast', 'thumos14']:
             file_ptr = open(input_path, 'r')
             info = file_ptr.read().split('\n')[:-1]
             file_ptr.close()
-        elif self.dataset_type in ['breakfast']:
-            file_ptr = open(input_path, 'r')
-            info = file_ptr.read().split('\n')[:-1]
-            file_ptr.close()
-            refine_info = []
-            for info_name in info:
-                video_ptr = info_name.split('.')[0].split('_')
-                file_name = ''
-                for j in range(2):
-                    if video_ptr[j] == 'stereo01':
-                        video_ptr[j] = 'stereo'
-                    file_name = file_name + video_ptr[j] + '/'
-                file_name = file_name + video_ptr[2] + '_' + video_ptr[3]
-                if 'stereo' in file_name:
-                    file_name = file_name + '_ch0'
-                refine_info.append([info_name, file_name])
-            info = refine_info
         return info
-
+    
     def load_file(self, sample_videos_list):
-        """Load index file to get video information."""
+        """Load index file to get video feature information."""
         video_segment_lists = self.parse_file_paths(self.file_path)
         info_list = [[] for i in range(self.nprocs)]
         # sample step
@@ -65,36 +47,20 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
                 # convert sample
                 info = []
                 for video_segment in video_sample_segment_lists[proces_idx]:
-                    if self.dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:
+                    if self.dataset_type in ['gtea', '50salads', 'breakfast', 'thumos14']:
                         video_name = video_segment.split('.')[0]
                         label_path = os.path.join(self.gt_path, video_name + '.txt')
 
-                        video_path = os.path.join(self.videos_path, video_name + '.mp4')
+                        video_path = os.path.join(self.videos_path, video_name + '.npy')
                         if not osp.isfile(video_path):
-                            video_path = os.path.join(self.videos_path, video_name + '.avi')
-                            if not osp.isfile(video_path):
-                                raise NotImplementedError
-                        flow_path = os.path.join(self.flows_path, video_name + '.mp4')
-
-                    elif self.dataset_type in ['breakfast']:
-                        video_segment_name, video_segment_path = video_segment
-                        video_name = video_segment_name.split('.')[0]
-                        label_path = os.path.join(self.gt_path, video_name + '.txt')
-
-                        video_path = os.path.join(self.videos_path, video_segment_path + '.mp4')
-                        if not osp.isfile(video_path):
-                            video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
-                            if not osp.isfile(video_path):
-                                raise NotImplementedError
-                        flow_path = os.path.join(self.flows_path, video_segment_name + '.mp4')
-
+                            raise NotImplementedError
                     file_ptr = open(label_path, 'r')
                     content = file_ptr.read().split('\n')[:-1]
                     classes = np.zeros(len(content), dtype='int64')
                     for i in range(len(content)):
                         classes[i] = self.actions_dict[content[i]]
 
-                     # caculate sliding num
+                    # caculate sliding num
                     if max_len < len(content):
                         max_len = len(content)
                     precise_sliding_num = len(content) // self.sliding_window
@@ -106,7 +72,7 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
                             raw_labels=classes,
                             video_name=video_name,
                             precise_sliding_num=precise_sliding_num))
-
+                        
                 info_proc[proces_idx] = info
 
             # construct sliding num
@@ -120,8 +86,7 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
         return info_list
     
     def _get_one_videos_clip(self, idx, info):
-        imgs_list = []
-        flow_imgs_list = []
+        feature_list = []
         labels_list = []
         masks_list = []
         vid_list = []
@@ -132,23 +97,20 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
             sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
             # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
-            imgs_list.append(copy.deepcopy(sample_segment['imgs'].unsqueeze(0)))
-            flow_imgs_list.append(copy.deepcopy(sample_segment['flows'].unsqueeze(0)))
+            feature_list.append(copy.deepcopy(sample_segment['feature'].unsqueeze(0)))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
             masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
             precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 
-        imgs = copy.deepcopy(torch.concat(imgs_list, dim=0))
-        flow_imgs = copy.deepcopy(torch.concat(flow_imgs_list, dim=0))
+        feature = copy.deepcopy(torch.concat(feature_list, dim=0))
         labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
         precise_sliding_num = copy.deepcopy(np.concatenate(precise_sliding_num_list, axis=0).astype(np.float32))
-        
+
         # compose result
         data_dict = {}
-        data_dict['imgs'] = imgs
-        data_dict['flows'] = flow_imgs
+        data_dict['feature'] = feature
         data_dict['labels'] = labels
         data_dict['masks'] = masks
         data_dict['precise_sliding_num'] = precise_sliding_num
@@ -158,8 +120,7 @@ class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
     def _get_end_videos_clip(self):
         # compose result
         data_dict = {}
-        data_dict['imgs'] = 0
-        data_dict['flows'] = 0
+        data_dict['feature'] = 0
         data_dict['labels'] = 0
         data_dict['masks'] = 0
         data_dict['vid_list'] = []

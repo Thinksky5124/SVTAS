@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 22:54:20
+LastEditTime : 2022-05-18 14:57:48
 Description  : Extract video feature script
 FilePath     : /ETESVS/tools/extract_features.py
 '''
@@ -14,7 +14,7 @@ sys.path.append(path)
 import torch
 import numpy as np
 import model.builder as model_builder
-import dataset.builder as dataset_builder
+import loader.builder as dataset_builder
 import argparse
 from utils.config import parse_config
 from utils.logger import get_logger, setup_logger

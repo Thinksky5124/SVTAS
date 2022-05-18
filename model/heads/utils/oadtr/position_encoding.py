@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 15:18:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 15:18:02
+LastEditTime : 2022-05-18 14:18:12
 Description  : PositionEncoding utils ref:https://github.com/wangxiang1230/OadTR/blob/main/transformer_models/PositionalEncoding.py
 FilePath     : /ETESVS/model/heads/utils/oadtr/position_encoding.py
 '''
@@ -43,7 +43,7 @@ class LearnedPositionalEncoding(nn.Module):
 
     def forward(self, x, position_ids=None):
         if position_ids is None:
-            position_ids = self.position_ids[:, : self.seq_length]
+            position_ids = self.position_ids[:, :self.seq_length]
 
         position_embeddings = self.pe(position_ids)
         return x + position_embeddings

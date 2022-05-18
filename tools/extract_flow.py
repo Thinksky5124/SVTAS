@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 20:30:12
+LastEditTime : 2022-05-18 14:57:32
 Description  : Extract flow script
 FilePath     : /ETESVS/tools/extract_flow.py
 '''
@@ -20,7 +20,7 @@ from utils.logger import get_logger, setup_logger
 from utils.config import parse_config
 from tqdm import tqdm
 import decord
-from dataset.raw_frame_pipline import VideoStreamTransform
+from loader.pipline.raw_frame_pipline import VideoStreamTransform
 from PIL import Image
 from utils.flow_vis import make_colorwheel
 

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 14:57:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 16:54:28
+LastEditTime : 2022-05-18 14:54:27
 Description  : OADTR model ref:https://github.com/wangxiang1230/OadTR
 FilePath     : /ETESVS/model/heads/oadtr.py
 '''
@@ -19,14 +19,15 @@ class OadTRHead(nn.Module):
     def __init__(self,
                  clip_seg_num,
                  num_classes,
+                 pred_clip_seg_num=8,
                  sample_rate=1,
                  patch_dim=1,
+                 in_channels=2048,
                  embedding_dim=1024,
                  num_heads=8,
                  num_layers=3,
                  hidden_dim=1024,
                  decoder_embedding_dim=1024,
-                 query_num=8,
                  decoder_attn_dropout_rate=0.1,
                  decoder_num_heads=4,
                  decoder_layers=5,
@@ -35,8 +36,7 @@ class OadTRHead(nn.Module):
                  dropout_rate=0.1,
                  attn_dropout_rate=0.1,
                  conv_patch_representation=False,
-                 positional_encoding_type="learned",
-                 num_channels=3072):
+                 positional_encoding_type="learned"):
         super(OadTRHead, self).__init__()
 
         assert embedding_dim % num_heads == 0
@@ -45,19 +45,15 @@ class OadTRHead(nn.Module):
         self.embedding_dim = embedding_dim
         self.num_heads = num_heads
         self.patch_dim = patch_dim
-        # num_channels = clip_seg_num
-        self.num_channels = num_channels
+        self.in_channels = in_channels
         self.dropout_rate = dropout_rate
         self.attn_dropout_rate = attn_dropout_rate
         self.conv_patch_representation = conv_patch_representation
+        self.clip_seg_num = clip_seg_num
+        self.seq_length = self.clip_seg_num * 2
 
-        # self.num_patches = int((clip_seg_num // patch_dim) ** 2)
-        self.num_patches = int(clip_seg_num // patch_dim)
-        self.seq_length = self.num_patches + 1
-        self.flatten_dim = patch_dim * patch_dim * num_channels
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embedding_dim))
 
-        self.linear_encoding = nn.Linear(self.flatten_dim, embedding_dim)
         if positional_encoding_type == "learned":
             self.position_encoding = LearnedPositionalEncoding(
                 self.seq_length, self.embedding_dim, self.seq_length
@@ -66,7 +62,6 @@ class OadTRHead(nn.Module):
             self.position_encoding = FixedPositionalEncoding(
                 self.embedding_dim,
             )
-        print('position encoding :', positional_encoding_type)
 
         self.pe_dropout = nn.Dropout(p=self.dropout_rate)
 
@@ -84,7 +79,7 @@ class OadTRHead(nn.Module):
 
         if self.conv_patch_representation:
             # self.conv_x = nn.Conv2d(
-            #     self.num_channels,
+            #     self.in_channels,
             #     self.embedding_dim,
             #     kernel_size=(self.patch_dim, self.patch_dim),
             #     stride=(self.patch_dim, self.patch_dim),
@@ -93,7 +88,7 @@ class OadTRHead(nn.Module):
             #     ),
             # )
             self.conv_x = nn.Conv1d(
-                self.num_channels,
+                self.in_channels,
                 self.embedding_dim,
                 kernel_size=self.patch_dim,
                 stride=self.patch_dim,
@@ -102,7 +97,10 @@ class OadTRHead(nn.Module):
                 ),
             )
         else:
-            self.conv_x = None
+            self.conv_x = nn.Conv1d(
+                self.in_channels,
+                self.embedding_dim,
+                kernel_size=1)
 
         self.to_cls_token = nn.Identity()
 
@@ -122,59 +120,71 @@ class OadTRHead(nn.Module):
             ],
             norm_layer=torch.nn.LayerNorm(decoder_embedding_dim)
         )
-        self.decoder_cls_token = nn.Parameter(torch.zeros(1, query_num, decoder_embedding_dim))
+        self.decoder_cls_token = nn.Parameter(torch.zeros(1, pred_clip_seg_num, decoder_embedding_dim))
         if positional_encoding_type == "learned":
             self.decoder_position_encoding = LearnedPositionalEncoding(
-                query_num, self.embedding_dim, query_num
+                pred_clip_seg_num, self.embedding_dim, pred_clip_seg_num
             )
         elif positional_encoding_type == "fixed":
             self.decoder_position_encoding = FixedPositionalEncoding(
                 self.embedding_dim,
             )
-        print('position decoding :', positional_encoding_type)
         self.classifier = nn.Linear(decoder_embedding_dim, num_classes)
         self.after_dropout = nn.Dropout(p=self.dropout_rate)
-        # self.merge_fc = nn.Linear(d_model, 1)
-        # self.merge_sigmoid = nn.Sigmoid()
+    
+    def init_weights(self):
+        pass
+
+    def _clear_memory_buffer(self):
+        pass
 
     def forward(self, x, masks):
         # x.shape     [N C T]
         # masks.shape [N C T]
-        x = self.linear_encoding(x)
-        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
-        # x = torch.cat((cls_tokens, x), dim=1)
+
+        # reducing channels
+        x = self.conv_x(x) * masks[:, 0:1, ::self.sample_rate]
+        # reshape 
+        x = x.transpose(-1, -2).contiguous()
+        # x.shape     [N T C]
+        # masks.shape [N T C]
+        cls_tokens = self.cls_token.expand(x.shape[0], x.shape[1], -1)
         x = torch.cat((x, cls_tokens), dim=1)
         x = self.position_encoding(x)
         x = self.pe_dropout(x)   # not delete
 
         # apply transformer
         x = self.encoder(x)
-        x = self.pre_head_ln(x)  # [128, 33, 1024]
-        # x = self.after_dropout(x)  # add
-        # decoder
+        x = self.pre_head_ln(x)  # [N, T, C]
+
+        # decoder prediction layer
+        # [N, pred_clip_seg_num, C]
         decoder_cls_token = self.decoder_cls_token.expand(x.shape[0], -1, -1)
-        # decoder_cls_token = self.after_dropout(decoder_cls_token)  # add
-        # decoder_cls_token = self.decoder_position_encoding(decoder_cls_token)  # [128, 8, 1024]
-        dec = self.decoder(decoder_cls_token, x)   # [128, 8, 1024]
-        dec = self.after_dropout(dec)  # add
-        # merge_atte = self.merge_sigmoid(self.merge_fc(dec))  # [128, 8, 1]
-        # dec_for_token = (merge_atte*dec).sum(dim=1)  # [128, 1024]
-        # dec_for_token = (merge_atte*dec).sum(dim=1)/(merge_atte.sum(dim=-2) + 0.0001)
-        dec_for_token = dec.mean(dim=1)
-        # dec_for_token = dec.max(dim=1)[0]
-        frame_score = self.classifier(dec)
-        # x = self.to_cls_token(x[:, 0])
-        x = torch.cat((self.to_cls_token(x[:, -1]), dec_for_token), dim=1)
-        chunck_action = self.mlp_head(x)
-        # x = F.log_softmax(x, dim=-1)
+
+        pred_frames_feature = self.decoder(decoder_cls_token, x)   # [N, pred_clip_seg_num, C]
+        pred_frames_feature = self.after_dropout(pred_frames_feature)
+        pred_frames_for_token = pred_frames_feature.mean(dim=1).unsqueeze(1).expand(-1, self.clip_seg_num, -1)
+        # [N, pred_clip_seg_num, C]
+        pred_frames_score = self.classifier(pred_frames_feature)
+
+        # classification layer
+        # [N, T, C]
+        x = torch.cat((self.to_cls_token(x[:, self.clip_seg_num:]), pred_frames_for_token), dim=-1)
+        frames_score = self.mlp_head(x)
 
         # x: current chunck action
         # dec_cls_out: frame level action
-        frame_score = F.interpolate(
-            input=frame_score,
+        # [N, C, pred_clip_seg_num]
+        pred_frames_score = pred_frames_score.transpose(-1, -2)
+        # [N, C, T]
+        frames_score = frames_score.transpose(-1, -2) * masks[:, 0:1, ::self.sample_rate]
+        # [stage_num, N, C, T]
+        frames_score = frames_score.unsqueeze(0)
+        frames_score = F.interpolate(
+            input=frames_score,
             scale_factor=[1, self.sample_rate],
             mode="nearest")
-        outputs = frame_score, chunck_action
+        outputs = frames_score, pred_frames_score
         return outputs
 
     def _get_padding(self, padding_type, kernel_size):

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 19:42:47
+LastEditTime : 2022-05-18 15:53:57
 Description: train script api
 FilePath     : /ETESVS/tasks/train.py
 '''
@@ -15,10 +15,10 @@ from utils.logger import get_logger, log_epoch, tenorboard_log_epoch
 from utils.save_load import mkdir
 from utils.recorder import build_recod
 import model.builder as model_builder
-import dataset.builder as dataset_builder
+import loader.builder as dataset_builder
 import optimizer.builder as optimizer_builder
 
-from utils.metric import SegmentationMetric
+import metric.builder as metric_builder
 from .runner import Runner
 
 try:
@@ -99,7 +99,7 @@ def train(cfg,
     # 3. build metirc
     metric_cfg = cfg.METRIC
     metric_cfg['train_mode'] = True
-    Metric = SegmentationMetric(**metric_cfg)
+    Metric = metric_builder.build_metric(metric_cfg)
 
     # Resume
     resume_epoch = cfg.get("resume_epoch", 0)

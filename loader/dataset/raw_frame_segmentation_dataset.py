@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-11 09:46:53
+LastEditTime : 2022-05-18 15:02:08
 Description: dataset class
-FilePath     : /ETESVS/dataset/raw_frame_segmentation_dataset.py
+FilePath     : /ETESVS/loader/dataset/raw_frame_segmentation_dataset.py
 '''
 import os.path as osp
 from unittest import result
@@ -13,7 +13,7 @@ import os
 import copy
 import torch
 import torch.utils.data as data
-from .builder import DATASET
+from ..builder import DATASET
 
 @DATASET.register()
 class RawFrameSegmentationDataset(data.IterableDataset):

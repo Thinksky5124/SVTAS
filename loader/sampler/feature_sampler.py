@@ -1,68 +1,15 @@
 '''
-Author: Thyssen Wen
-Date: 2022-04-27 16:12:40
+Author       : Thyssen Wen
+Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 16:43:13
-Description: file content
-FilePath     : /ETESVS/dataset/feature_pipline.py
+LastEditTime : 2022-05-18 15:31:45
+Description  : feature sampler
+FilePath     : /ETESVS/loader/sampler/feature_sampler.py
 '''
 import numpy as np
 import random
-import torch
-import copy
-import torchvision.transforms as transforms
-from .builder import PIPLINE
+from ..builder import SAMPLER
 
-@PIPLINE.register()
-class FeaturePipline():
-    def __init__(self,
-                 decode=None,
-                 sample=None,
-                 transform=None):
-        self.decode = FeatureDecoder(**decode)
-        self.sample = FeatureStreamSampler(**sample)
-        self.transform = FeatureStreamTransform(transform)
-
-    def __call__(self, results):
-        # decode
-        results = self.decode(results)
-        # sample
-        results = self.sample(results)
-        # transform
-        results = self.transform(results)
-        return results
-
-class FeatureDecoder():
-    """
-    Decode mp4 file to frames.
-    Args:
-        filepath: the file path of mp4 file
-    """
-    def __init__(self,
-                 backend='numpy',
-                 is_transpose=False):
-
-        self.backend = backend
-        self.is_transpose = is_transpose
-
-    def __call__(self, results):
-        """
-        Perform mp4 decode operations.
-        return:
-            List where each item is a numpy array after decoder.
-        """
-        file_path = results['filename']
-        results['format'] = 'feature'
-
-        feature = np.load(file_path)
-        if self.is_transpose is True:
-            feature = feature.T
-        feature_len = feature.shape[-1]
-        results['frames'] = feature
-        results['frames_len'] = results['raw_labels'].shape[0]
-        results['feature_len'] = feature_len
-        
-        return results
 
 class FeatureFrameSample():
     def __init__(self, mode='random'):
@@ -87,6 +34,7 @@ class FeatureFrameSample():
         else:
             raise NotImplementedError
 
+@SAMPLER.register()
 class FeatureStreamSampler():
     """
     Sample frames id.
@@ -171,22 +119,4 @@ class FeatureStreamSampler():
         results['feature'] = frames_feature[:, :self.clip_seg_num].copy()
         results['labels'] = labels.copy()
         results['mask'] = mask.copy()
-        return results
-
-class FeatureStreamTransform():
-    def __init__(self, transform_list):
-        transform_op_list = []
-        for transforms_op in transform_list:
-            name = list(transforms_op.keys())[0]
-            if list(transforms_op.values())[0] is None:
-                op = getattr(transforms, name)()
-            else:
-                op = getattr(transforms, name)(**list(transforms_op.values())[0])
-            transform_op_list.append(op)
-        self.imgs_transforms_pipeline = transforms.Compose(transform_op_list)
-
-    def __call__(self, results):
-        feature = results['feature'].astype(np.float32)
-        feature = self.imgs_transforms_pipeline(feature).squeeze(0)
-        results['feature'] = copy.deepcopy(feature)
         return results

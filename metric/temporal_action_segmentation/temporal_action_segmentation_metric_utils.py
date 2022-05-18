@@ -2,16 +2,15 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 14:54:57
+LastEditTime : 2022-05-18 15:07:51
 Description: metric evaluate utils function
-FilePath     : /ETESVS/utils/metric_utils.py
+FilePath     : /ETESVS/metric/temporal_action_segmentation/temporal_action_segmentation_metric_utils.py
 '''
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
 ignore_bg_class = ["background", "None"]
-
 
 def get_labels_scores_start_end_time(input_np,
                                      frame_wise_labels,
