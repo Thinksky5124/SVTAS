@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-05-15 14:48:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 15:47:45
+LastEditTime : 2022-05-18 21:34:43
 Description  : ResNet 2 plus 1d
-FilePath     : /ETESVS/model/backbones/resnet2plus1d.py
+FilePath     : /ETESVS/model/backbones/video/resnet2plus1d.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
-from ..builder import BACKBONES
-from .i3d import ResNet3d, BasicBlock3d, Bottleneck3d
+from ...builder import BACKBONES
+from .resnet_3d import ResNet3d, BasicBlock3d, Bottleneck3d
 import torch.nn as nn
 
 from mmcv.runner import load_checkpoint

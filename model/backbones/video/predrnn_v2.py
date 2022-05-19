@@ -2,17 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-05-16 14:00:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-16 21:37:40
+LastEditTime : 2022-05-18 21:34:28
 Description  : PredRNN v2 model ref:https://github.com/thuml/predrnn-pytorch/blob/master/core/models/predrnn_v2.py
-FilePath     : /ETESVS/model/backbones/predrnn_v2.py
+FilePath     : /ETESVS/model/backbones/video/predrnn_v2.py
 '''
 import torch
 import torch.nn as nn
-from .utils.stlstm import SpatioTemporalLSTMCell
+from ..utils.stlstm import SpatioTemporalLSTMCell
 import torch.nn.functional as F
 from utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 @BACKBONES.register()
 class PredRNNV2(nn.Module):

@@ -3,9 +3,9 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 21:35:53
+LastEditTime : 2022-05-18 21:34:31
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
-FilePath     : /ETESVS/model/backbones/i3d.py
+FilePath     : /ETESVS/model/backbones/video/resnet_3d.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
@@ -19,7 +19,7 @@ from mmcv.utils import _BatchNorm
 from torch.nn.modules.utils import _ntuple, _triple
 
 from utils.logger import get_logger
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 
 class BasicBlock3d(nn.Module):

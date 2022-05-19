@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 20:32:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 19:35:06
+LastEditTime : 2022-05-19 16:00:14
 Description  : MoViNet Head
 FilePath     : /ETESVS/model/heads/movinet_head.py
 '''
@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import constant_init, kaiming_init
-from ..backbones.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
+from ..backbones.video.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
 
 from ..builder import HEADS
 

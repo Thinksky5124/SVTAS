@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:02:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 16:08:07
+LastEditTime : 2022-05-18 21:33:30
 Description  : ViT backbone ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
-FilePath     : /ETESVS/model/backbones/vit.py
+FilePath     : /ETESVS/model/backbones/image/vit.py
 '''
 
 import torch
 from torch import nn
 from utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange

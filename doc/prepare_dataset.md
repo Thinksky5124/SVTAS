@@ -62,11 +62,12 @@ To download I3D feature from [ms-tcn](https://github.com/yabufarha/ms-tcn) repo.
 ```bash
 python tools/extract_flow.py -c config/extract_flow/extract_optical_flow_fastflownet.yaml -o data/gtea
 python tools/extract_flow.py -c config/extract_flow/extract_optical_flow_raft.yaml -o data/gtea
+python tools/extract_flow.py -c config/extract_flow/extract_optical_flow_liteflownetv3.yaml -o data/gtea
 ```
 
 ## Extract Feature(Optional)
 ```bash
-python tools/extract_features.py -c config/extract_feature/extract_feature_thumos14.yaml -o data/thumos14
+python tools/extract_features.py -c config/extract_feature/extract_feature_i3d_thumos14.yaml -o data/thumos14
 ```
 
 ## Dataset Normalization

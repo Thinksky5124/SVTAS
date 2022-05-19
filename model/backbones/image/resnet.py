@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:37:42
+LastEditTime : 2022-05-18 21:33:25
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
-FilePath     : /ETESVS/model/backbones/resnet.py
+FilePath     : /ETESVS/model/backbones/image/resnet.py
 '''
 
 # form neckwork
@@ -24,7 +24,7 @@ from mmcv.utils import _BatchNorm
 from torch.utils import checkpoint as cp
 from utils.logger import get_logger
 
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 class BasicBlock(nn.Module):
     """Basic block for ResNet.

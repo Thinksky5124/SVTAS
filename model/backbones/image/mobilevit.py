@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 from einops import rearrange
 from einops.layers.torch import Reduce

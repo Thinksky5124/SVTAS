@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 19:04:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 13:33:20
+LastEditTime : 2022-05-18 21:34:24
 Description  : MoViNet model ref:https://github.com/Atze00/MoViNet-pytorch/blob/main/movinets/models.py
-FilePath     : /ETESVS/model/backbones/movinet.py
+FilePath     : /ETESVS/model/backbones/video/movinet.py
 '''
 from ast import List
 from collections import OrderedDict
@@ -16,7 +16,7 @@ from typing import Any, Callable, Optional, Tuple, Union
 from einops import rearrange
 from torch import nn, Tensor
 from utils.logger import get_logger
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 class ObjectDict(dict):
     def __getattr__(self, item):

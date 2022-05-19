@@ -106,7 +106,7 @@ def extractor(cfg, outpath):
     isExists = os.path.exists(out_path)
     if not isExists:
         os.makedirs(out_path)
-        print(out_path + ' 创建成功')
+        print(out_path + ' created successful')
     logger = get_logger("ETESVS")
     
     # construct model

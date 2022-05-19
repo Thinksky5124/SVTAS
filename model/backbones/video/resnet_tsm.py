@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 14:37:33
+LastEditTime : 2022-05-18 21:34:34
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
-FilePath     : /ETESVS/model/backbones/resnet_tsm.py
+FilePath     : /ETESVS/model/backbones/video/resnet_tsm.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
@@ -15,9 +15,9 @@ from mmcv.cnn import constant_init, kaiming_init
 from mmcv.runner import load_checkpoint
 from utils.logger import get_logger
 
-from .resnet import ResNet
+from ..image.resnet import ResNet
 
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 
 class NL3DWrapper(nn.Module):

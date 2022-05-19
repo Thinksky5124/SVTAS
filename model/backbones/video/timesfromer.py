@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:21:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 14:37:40
+LastEditTime : 2022-05-18 21:34:46
 Description  : Timesformer backbone ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/timesformer.py
-FilePath     : /ETESVS/model/backbones/timesfromer.py
+FilePath     : /ETESVS/model/backbones/video/timesfromer.py
 '''
 import numpy as np
 import torch
@@ -18,7 +18,7 @@ from mmcv.runner import _load_checkpoint, load_checkpoint
 from torch.nn.modules.utils import _pair
 
 from utils.logger import get_logger
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 
 class PatchEmbed(nn.Module):

@@ -111,9 +111,7 @@ def localization_convert_segmentation_label(label, prefix_data_path, out_path, f
     isExists = os.path.exists(path)
     if not isExists:
         os.makedirs(path)
-        print(path + ' 创建成功')
-    else:
-        print(path + ' 目录已存在')
+        print(path + ' created successful')
 
     # fps = float(label["fps"])
     video_val_list = []

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 14:57:32
+LastEditTime : 2022-05-19 16:00:42
 Description  : Extract flow script
 FilePath     : /ETESVS/tools/extract_flow.py
 '''
@@ -20,7 +20,7 @@ from utils.logger import get_logger, setup_logger
 from utils.config import parse_config
 from tqdm import tqdm
 import decord
-from loader.pipline.raw_frame_pipline import VideoStreamTransform
+from loader.transform import VideoStreamTransform
 from PIL import Image
 from utils.flow_vis import make_colorwheel
 
@@ -35,7 +35,7 @@ def extractor(cfg, file_list, outpath):
     isExists = os.path.exists(out_path)
     if not isExists:
         os.makedirs(out_path)
-        print(out_path + ' 创建成功')
+        print(out_path + ' created successful')
 
 
     for file in tqdm(file_list, desc="extract optical flow"):

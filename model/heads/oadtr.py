@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 14:57:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 14:54:27
+LastEditTime : 2022-05-18 19:21:10
 Description  : OADTR model ref:https://github.com/wangxiang1230/OadTR
 FilePath     : /ETESVS/model/heads/oadtr.py
 '''
@@ -184,7 +184,13 @@ class OadTRHead(nn.Module):
             input=frames_score,
             scale_factor=[1, self.sample_rate],
             mode="nearest")
-        outputs = frames_score, pred_frames_score
+        # [stage_num， N, C, pred_clip_seg_num]
+        pred_frames_score = pred_frames_score.unsqueeze(0)
+        pred_frames_score = F.interpolate(
+            input=pred_frames_score,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
+        outputs = pred_frames_score, frames_score
         return outputs
 
     def _get_padding(self, padding_type, kernel_size):

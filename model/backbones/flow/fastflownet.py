@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-05-03 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 13:55:59
+LastEditTime : 2022-05-19 16:12:36
 Description: flow net
-FilePath     : /ETESVS/model/backbones/fastflownet.py
+FilePath     : /ETESVS/model/backbones/flow/fastflownet.py
 '''
 import torch
 import torch.nn as nn
@@ -13,7 +13,7 @@ import numpy as np
 from mmcv.runner import load_checkpoint
 from spatial_correlation_sampler import SpatialCorrelationSampler
 from utils.logger import get_logger
-from ..builder import BACKBONES
+from ...builder import BACKBONES
 
 class Correlation(nn.Module):
     def __init__(self, max_displacement):
@@ -84,9 +84,9 @@ class FastFlowNet(nn.Module):
         super(FastFlowNet, self).__init__()
         self.groups = groups
         self.pretrained = pretrained
-        self.extract_mode = extract_mode
         self.div_size = div_size
         self.div_flow = div_flow
+        self.extract_mode = extract_mode
         self.freeze = freeze
         
         # memory
