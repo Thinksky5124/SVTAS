@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 16:38:21
+LastEditTime : 2022-05-19 19:48:35
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -249,7 +249,7 @@ class Runner():
             sliding_num = sliding_seg['sliding_num']
             idx = sliding_seg['current_sliding_cnt']
             # wheather next step
-            if self.current_step != step and not (self.current_step == 0 and len(vid_list) <= 0):
+            if self.current_step != step or (len(vid_list) <= 0 and step >= 1):
                 self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
 
             if idx >= 0: 

@@ -32,12 +32,12 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 4
+    video_batch_size: 1
     num_workers: 2
     config:
         name: "RawFrameSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/thumos14/test_list.txt" #Mandatory, train data index file path
+        file_path: "./data/thumos14/tiny.txt" #Mandatory, train data index file path
         videos_path: "./data/thumos14/Videos"
         gt_path: "./data/thumos14/groundTruth"
         actions_map_file_path: "./data/thumos14/mapping.txt"

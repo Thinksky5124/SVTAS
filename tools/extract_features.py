@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 14:57:48
+LastEditTime : 2022-05-19 19:42:26
 Description  : Extract video feature script
 FilePath     : /ETESVS/tools/extract_features.py
 '''
@@ -94,7 +94,7 @@ class ExtractRunner():
             sliding_num = sliding_seg['sliding_num']
             idx = sliding_seg['current_sliding_cnt']
             # wheather next step
-            if self.current_step != step and not (self.current_step == 0 and len(vid_list) <= 0):
+            if self.current_step != step or (len(vid_list) <= 0 and step >= 1):
                 self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step)
 
             if idx >= 0: 
