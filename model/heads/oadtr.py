@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 14:57:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 19:21:10
+LastEditTime : 2022-05-19 20:21:54
 Description  : OADTR model ref:https://github.com/wangxiang1230/OadTR
 FilePath     : /ETESVS/model/heads/oadtr.py
 '''
@@ -50,7 +50,7 @@ class OadTRHead(nn.Module):
         self.attn_dropout_rate = attn_dropout_rate
         self.conv_patch_representation = conv_patch_representation
         self.clip_seg_num = clip_seg_num
-        self.seq_length = self.clip_seg_num * 2
+        self.seq_length = self.clip_seg_num
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embedding_dim))
 
@@ -148,8 +148,8 @@ class OadTRHead(nn.Module):
         x = x.transpose(-1, -2).contiguous()
         # x.shape     [N T C]
         # masks.shape [N T C]
-        cls_tokens = self.cls_token.expand(x.shape[0], x.shape[1], -1)
-        x = torch.cat((x, cls_tokens), dim=1)
+        # cls_tokens = self.cls_token.expand(x.shape[0], x.shape[1], -1)
+        # x = torch.cat((x, cls_tokens), dim=1)
         x = self.position_encoding(x)
         x = self.pe_dropout(x)   # not delete
 
@@ -169,7 +169,7 @@ class OadTRHead(nn.Module):
 
         # classification layer
         # [N, T, C]
-        x = torch.cat((self.to_cls_token(x[:, self.clip_seg_num:]), pred_frames_for_token), dim=-1)
+        x = torch.cat((self.to_cls_token(x[:, :self.clip_seg_num]), pred_frames_for_token), dim=-1)
         frames_score = self.mlp_head(x)
 
         # x: current chunck action

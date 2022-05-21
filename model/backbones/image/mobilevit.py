@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:04:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 16:21:05
+LastEditTime : 2022-05-20 14:24:46
 Description  : MobileViT backbone ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/mobile_vit.py
-FilePath     : /ETESVS/model/backbones/mobilevit.py
+FilePath     : /ETESVS/model/backbones/image/mobilevit.py
 '''
 import torch
 import torch.nn as nn
@@ -24,9 +24,11 @@ def conv_1x1_bn(inp, oup):
         nn.SiLU()
     )
 
-def conv_nxn_bn(inp, oup, kernal_size=3, stride=1):
+def conv_nxn_bn(inp, oup, kernel_size=3, stride=1, padding=None, dilation=1):
+    if padding is None:
+        padding = (kernel_size - 1) // 2 * dilation
     return nn.Sequential(
-        nn.Conv2d(inp, oup, kernal_size, stride, 1, bias=False),
+        nn.Conv2d(inp, oup, kernel_size, stride, padding=padding, dilation=dilation, bias=False),
         nn.BatchNorm2d(oup),
         nn.SiLU()
     )
@@ -109,7 +111,7 @@ class Transformer(nn.Module):
             x = ff(x) + x
         return x
 
-@BACKBONES.register()
+
 class MV2Block(nn.Module):
     """MV2 block described in MobileNetV2.
     Paper: https://arxiv.org/pdf/1801.04381
@@ -168,7 +170,7 @@ class MobileViTBlock(nn.Module):
         self.transformer = Transformer(dim, depth, 4, 8, mlp_dim, dropout)
 
         self.conv3 = conv_1x1_bn(dim, channel)
-        self.conv4 = conv_nxn_bn(2 * channel, channel, kernel_size)
+        self.conv4 = conv_nxn_bn(2 * channel, channel, kernel_size, padding=1)
 
     def forward(self, x):
         y = x.clone()
@@ -200,7 +202,7 @@ class MobileViT(nn.Module):
 
     def __init__(
         self,
-        image_size=(224, 224),
+        image_size=(256, 256),
         dims=[96, 120, 144],
         channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384],
         expansion=4,
@@ -220,7 +222,7 @@ class MobileViT(nn.Module):
 
         init_dim, *_, last_dim = channels
 
-        self.conv1 = conv_nxn_bn(3, init_dim, stride=2)
+        self.conv1 = conv_nxn_bn(3, init_dim, stride=ph)
 
         self.stem = nn.ModuleList([])
         self.stem.append(MV2Block(channels[0], channels[1], 1, expansion))

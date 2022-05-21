@@ -1,17 +1,17 @@
 MODEL:
     architecture: "Recognition2D"
     backbone:
-        name: "ViT"
-        image_size: 224
-        patch_size: 32
-        dim: 1024
+        name: "MobileViT"
+        image_size: [256, 256]
+        patch_size: [2, 2]
+        expansion: 4
     neck:
     head:
         name: "TimeSformerHead"
         num_classes: 11
         clip_seg_num: 32
         sample_rate: 4
-        in_channels: 1024
+        in_channels: 384
     loss:
         name: "RecognitionSegmentationLoss"
         label_mode: "hard"
@@ -80,7 +80,7 @@ PIPELINE: #PIPELINE field
                 - Resize:
                     size: [256, 320]
                 - RandomCrop:
-                    size: 224
+                    size: 256
                 - RandomHorizontalFlip:
                 - ToTensor:
                 - Normalize:
@@ -105,7 +105,7 @@ PIPELINE: #PIPELINE field
                 - Resize:
                     size: [256, 320]
                 - CenterCrop:
-                    size: 224
+                    size: 256
                 - ToTensor:
                 - Normalize:
                     mean: [0.551, 0.424, 0.179]
@@ -129,7 +129,7 @@ METRIC:
     file_output: True
 
 
-model_name: "ViT_gtea_split1"
+model_name: "MobileViT_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10
