@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 15:43:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 22:30:49
+LastEditTime : 2022-05-26 22:42:46
 Description  : feature dataset class
 FilePath     : /ETESVS/loader/dataset/feature_segmentation_dataset.py
 '''
@@ -37,7 +37,6 @@ class FeatureSegmentationDataset(data.Dataset):
         self.actions_map_file_path = actions_map_file_path
         self.dataset_type = dataset_type
         self.sample_rate = sample_rate
-        self.temporal_clip_batch_size = temporal_clip_batch_size
         
         self.file_path = file_path
         self.data_prefix = osp.realpath(data_prefix) if \

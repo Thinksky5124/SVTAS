@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 18:41:48
+LastEditTime : 2022-05-26 23:16:57
 Description  : Raw frame sampler
 FilePath     : /ETESVS/loader/sampler/frame_sampler.py
 '''
@@ -13,7 +13,7 @@ from ..builder import SAMPLER
 
 class VideoFrameSample():
     def __init__(self, mode='random'):
-        assert mode in ['random', 'uniform'], 'not support mode'
+        assert mode in ['random', 'uniform', 'linspace', 'random_choice'], 'not support mode'
         self.mode = mode
     
     def random_sample(self, start_idx, end_idx, sample_rate):
@@ -25,12 +25,22 @@ class VideoFrameSample():
 
     def uniform_sample(self, start_idx, end_idx, sample_rate):
         return list(range(start_idx, end_idx, sample_rate))
-        
+    
+    def linspace_sample(self, start_idx, end_idx, sample_num):
+        return list(np.ceil(np.linspace(start_idx, end_idx, num=sample_num)).astype(np.int64))
+    
+    def random_choice_sample(self, start_idx, end_idx, sample_num):
+        return list(random.sample(range(start_idx, end_idx), sample_num))
+
     def __call__(self, start_idx, end_idx, sample_rate):
         if self.mode == 'random':
             return self.random_sample(start_idx, end_idx, sample_rate)
         elif self.mode == 'uniform':
             return self.uniform_sample(start_idx, end_idx, sample_rate)
+        elif self.mode == 'linspace':
+            return self.linspace_sample(start_idx, end_idx, sample_rate)
+        elif self.mode == 'random_choice':
+            return self.random_choice_sample(start_idx, end_idx, sample_rate)
         else:
             raise NotImplementedError
 
@@ -292,4 +302,70 @@ class RGBFlowVideoStreamSampler():
         results['flows'] = flows[:self.clip_seg_num].copy()
         results['labels'] = labels.copy()
         results['mask'] = mask.copy()
+        return results
+
+@SAMPLER.register()
+class VideoSampler():
+    """
+    Sample frames id.
+    Returns:
+        frames_idx: the index of sampled #frames.
+    """
+
+    def __init__(self,
+                 is_train=False,
+                 clip_seg_num=15,
+                 ignore_index=-100,
+                 channel_mode="RGB",
+                 sample_mode='linspace'
+                 ):
+        self.is_train = is_train
+        self.clip_seg_num = clip_seg_num
+        self.ignore_index = ignore_index
+        self.channel_mode = channel_mode
+        self.sample = VideoFrameSample(mode = sample_mode)
+        
+    
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[]):
+        if self.is_train:
+            sample_labels = labels[samples_idx]
+        else:
+            sample_labels = labels[start_frame:end_frame]
+        return sample_labels
+
+    def __call__(self, results):
+        """
+        Args:
+            frames_len: length of frames.
+        return:
+            sampling id.
+        """
+        frames_len = int(results['frames_len'])
+        video_len = int(results['video_len'])
+        results['frames_len'] = frames_len
+        container = results['frames']
+        labels = results['raw_labels']
+
+        # generate sample index
+        imgs = []
+        frames_idx = self.sample(0, video_len, self.clip_seg_num)
+        labels = self._labels_sample(labels, start_frame=0, end_frame=frames_len, samples_idx=frames_idx).copy()
+        frames_select = container.get_batch(frames_idx)
+        # dearray_to_img
+        np_frames = frames_select.asnumpy()
+        for i in range(np_frames.shape[0]):
+            imgbuf = np_frames[i].copy()
+            imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
+
+        if len(imgs) < self.clip_seg_num:
+            np_frames = np_frames[-1].asnumpy().copy()
+            pad_len = self.clip_seg_num - len(imgs)
+            for i in range(pad_len):
+                imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
+                
+        mask = np.ones((labels.shape[0]))
+
+        results['imgs'] = imgs[:self.clip_seg_num].copy()
+        results['labels'] = labels.copy()
+        results['masks'] = mask.copy()
         return results
