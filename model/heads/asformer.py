@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 20:38:41
+LastEditTime : 2022-05-23 09:52:28
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
 FilePath     : /ETESVS/model/heads/asformer.py
 '''
@@ -134,15 +134,14 @@ class AttLayer(nn.Module):
         output = output[:, :, 0:L]
         return output * mask[:, 0:1, :]  
     
-    def _sliding_window_self_att(self, q,k,v, mask):
+    def _sliding_window_self_att(self, q, k, v, mask):
         m_batchsize, c1, L = q.size()
         _, c2, _ = k.size()
         _, c3, _ = v.size()
         
-        
-        assert m_batchsize == 1  # currently, we only accept input with batch size 1
+        # assert m_batchsize == 1  # currently, we only accept input with batch size 1
         # padding zeros for the last segment
-        nb = L // self.bl 
+        nb = L // self.bl
         if L % self.bl != 0:
             q = torch.cat([q, torch.zeros((m_batchsize, c1, self.bl - L % self.bl)).to(q.device)], dim=-1)
             k = torch.cat([k, torch.zeros((m_batchsize, c2, self.bl - L % self.bl)).to(q.device)], dim=-1)
@@ -173,21 +172,6 @@ class AttLayer(nn.Module):
         output = output.reshape(m_batchsize, nb, -1, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize, -1, nb * self.bl)
         output = output[:, :, 0:L]
         return output * mask[:, 0:1, :]
-
-
-class MultiHeadAttLayer(nn.Module):
-    def __init__(self, q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type, num_head):
-        super(MultiHeadAttLayer, self).__init__()
-#         assert v_dim % num_head == 0
-        self.conv_out = nn.Conv1d(v_dim * num_head, v_dim, 1)
-        self.layers = nn.ModuleList(
-            [copy.deepcopy(AttLayer(q_dim, k_dim, v_dim, r1, r2, r3, bl, stage, att_type)) for i in range(num_head)])
-        self.dropout = nn.Dropout(p=0.5)
-        
-    def forward(self, x1, x2, mask):
-        out = torch.cat([layer(x1, x2, mask) for layer in self.layers], dim=1)
-        out = self.conv_out(self.dropout(out))
-        return out
             
 
 class ConvFeedForward(nn.Module):
@@ -248,7 +232,7 @@ class PositionalEncoding(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).permute(0,2,1) # of shape (1, d_model, l)
         self.pe = nn.Parameter(pe, requires_grad=True)
-#         self.register_buffer('pe', pe)
+#       self.register_buffer('pe', pe)
 
     def forward(self, x):
         return x + self.pe[:, :, 0:x.shape[2]]
@@ -278,6 +262,7 @@ class Encoder(nn.Module):
             x = x.squeeze(2)
 
         feature = self.conv_1x1(x)
+        # feature = self.position_en(feature)
         for layer in self.layers:
             feature = layer(feature, None, mask)
         
@@ -288,8 +273,9 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(self, num_layers, r1, r2, num_f_maps, input_dim, num_classes, att_type, alpha):
-        super(Decoder, self).__init__()#         self.position_en = PositionalEncoding(d_model=num_f_maps)
+        super(Decoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(input_dim, num_f_maps, 1)
+        # self.position_en = PositionalEncoding(d_model=num_f_maps)
         self.layers = nn.ModuleList(
             [AttModule(2 ** i, num_f_maps, num_f_maps, r1, r2, att_type, 'decoder', alpha) for i in # 2 ** i
              range(num_layers)])
@@ -329,11 +315,14 @@ class ASFormer(nn.Module):
         pass
                 
     def forward(self, x, mask):
-        out, feature = self.encoder(x, mask)
+        # x.shape [N C T]
+        # mask.shape [N C T]
+        
+        out, feature = self.encoder(x, mask[:, 0:1, ::self.sample_rate])
         outputs = out.unsqueeze(0)
         
         for decoder in self.decoders:
-            out, feature = decoder(F.softmax(out, dim=1) * mask[:, 0:1, :], feature* mask[:, 0:1, :], mask)
+            out, feature = decoder(F.softmax(out, dim=1) * mask[:, 0:1, ::self.sample_rate], feature* mask[:, 0:1, ::self.sample_rate], mask[:, 0:1, ::self.sample_rate])
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
         
         outputs = F.interpolate(

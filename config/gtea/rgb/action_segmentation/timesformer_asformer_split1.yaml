@@ -1,29 +1,36 @@
 MODEL:
-    architecture: "Transeger3D"
-    image_backbone:
+    architecture: "StreamSegmentation3D"
+    backbone:
         name: "TimeSformer"
         num_frames: 32
         img_size: 224
         patch_size: 32
         embed_dims: 768
         pretrained: "data/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth"
-    text_backbone:
-        name: "MobileViT"
-        image_size: [256, 256]
-        patch_size: [2, 2]
-        expansion: 4
-    joint:
-        name: "TimeSformerHead"
+    neck:
+        name: "AvgPoolNeck"
         num_classes: 11
+        in_channels: 768
         clip_seg_num: 32
-        sample_rate: 4
-        in_channels: 384
-    loss:
-        name: "RecognitionSegmentationLoss"
-        label_mode: "hard"
+        drop_ratio: 0.5
+        need_pool: True
+    head:
+        name: "ASFormer"
+        num_decoders: 0
+        num_layers: 4
+        r1: 2
+        r2: 2
+        num_f_maps: 64
+        input_dim: 768
         num_classes: 11
         sample_rate: 4
-        loss_weight: 1.0
+        channel_masking_rate: 0.5
+    loss:
+        name: "StreamSegmentationLoss"
+        num_classes: 11
+        sample_rate: 4
+        backone_loss_weight: 1.0
+        head_loss_weight: 1.0
         ignore_index: -100
 
 POSTPRECESSING:
@@ -86,7 +93,7 @@ PIPELINE: #PIPELINE field
                 - Resize:
                     size: [256, 320]
                 - RandomCrop:
-                    size: 256
+                    size: 224
                 - RandomHorizontalFlip:
                 - ToTensor:
                 - Normalize:
@@ -111,7 +118,7 @@ PIPELINE: #PIPELINE field
                 - Resize:
                     size: [256, 320]
                 - CenterCrop:
-                    size: 256
+                    size: 224
                 - ToTensor:
                 - Normalize:
                     mean: [0.551, 0.424, 0.179]
@@ -135,7 +142,7 @@ METRIC:
     file_output: True
 
 
-model_name: "Transeger_gtea_split1"
+model_name: "TimeSformer_ASformer_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

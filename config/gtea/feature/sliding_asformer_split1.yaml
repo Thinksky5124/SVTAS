@@ -4,13 +4,14 @@ MODEL:
     neck:
     head:
         name: "ASFormer"
-        num_decoders: 3
-        num_layers: 10
+        num_decoders: 0
+        num_layers: 4
         r1: 2
         r2: 2
         num_f_maps: 64
         input_dim: 2048
         num_classes: 11
+        sample_rate: 1
         channel_masking_rate: 0.5
     loss:
         name: "SegmentationLoss"
@@ -25,8 +26,8 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 1
-    num_workers: 1
+    video_batch_size: 2
+    num_workers: 2
     train:
         name: "FeatureSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
@@ -52,32 +53,48 @@ DATASET: #DATASET field
         clip_seg_num: 128
         sample_rate: 1
 
+POSTPRECESSING:
+    name: "ScorePostProcessing"
+    num_classes: 11
+    clip_seg_num: 128
+    sliding_window: 128
+    sample_rate: 1
+    ignore_index: -100
+
 PIPELINE: #PIPELINE field
     train: 
-        name: "FeaturePipline"
+        name: "BasePipline"
         decode:
+            name: "FeatureDecoder"
             backend: "numpy"
         sample:
+            name: "FeatureStreamSampler"
             is_train: True
             sample_rate: 1
             clip_seg_num: 128
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            - ToTensor:
+            name: "FeatureStreamTransform"
+            transform_list:
+                - ToTensor:
 
     test:
-        name: "FeaturePipline"
+        name: "BasePipline"
         decode:
+            name: "FeatureDecoder"
             backend: "numpy"
         sample:
+            name: "FeatureStreamSampler"
             is_train: False
             sample_rate: 1
             clip_seg_num: 128
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            - ToTensor:
+            name: "FeatureStreamTransform"
+            transform_list:
+                - ToTensor:
 
 OPTIMIZER:
     name: "AdamOptimizer"
@@ -91,7 +108,7 @@ LRSCHEDULER:
     gamma: 0.1
 
 METRIC:
-    name: ""
+    name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
     file_output: True
