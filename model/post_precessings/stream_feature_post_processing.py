@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 19:31:25
+LastEditTime : 2022-05-26 18:49:49
 Description: model postprecessing
 FilePath     : /ETESVS/model/post_precessings/feature_post_processing.py
 '''
@@ -11,7 +11,7 @@ import torch
 from ..builder import POSTPRECESSING
 
 @POSTPRECESSING.register()
-class FeaturePostProcessing():
+class StreamFeaturePostProcessing():
     def __init__(self,
                  feature_dim,
                  clip_seg_num,

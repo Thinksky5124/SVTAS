@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-19 20:25:31
+LastEditTime : 2022-05-26 22:31:43
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -207,8 +207,11 @@ class Runner():
                     scaled_loss.backward()
             else:
                 loss.backward()
+        
+        if not torch.is_tensor(outputs):
+            outputs = outputs[-1]
             
-        return outputs[-1], loss_dict
+        return outputs, loss_dict
 
     def run_one_clip(self, data_dict):
         vid_list = data_dict['vid_list']
@@ -254,3 +257,18 @@ class Runner():
 
             if idx >= 0: 
                 self.run_one_clip(sliding_seg)
+    
+    def run_one_batch(self, data, r_tic=None, epoch=None):
+        # videos batch train
+        self.record_dict['reader_time'].update(time.time() - r_tic)
+
+        for sliding_seg in data:
+            step = self.current_step
+            vid_list = sliding_seg['vid_list']
+            sliding_num = sliding_seg['sliding_num']
+            idx = sliding_seg['current_sliding_cnt']
+
+            # run one batch
+            self.run_one_clip(sliding_seg)
+            self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
+            self.current_step = self.current_step + 1

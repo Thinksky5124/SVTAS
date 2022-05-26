@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-22 17:11:11
+LastEditTime : 2022-05-26 19:52:02
 Description  :Transgemnter3D framework
 FilePath     : /ETESVS/model/architectures/transeger3d.py
 '''

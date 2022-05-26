@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:11:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:02:12
+LastEditTime : 2022-05-26 15:42:17
 Description  : file content
 FilePath     : /ETESVS/loader/dataset/rgb_flow_frame_segmentation_dataset.py
 '''
@@ -11,11 +11,11 @@ import numpy as np
 import os
 import copy
 import torch
-from .raw_frame_segmentation_dataset import RawFrameSegmentationDataset
+from .raw_frame_stream_segmentation_dataset import RawFrameStreamSegmentationDataset
 from ..builder import DATASET
 
 @DATASET.register()
-class RGBFlowFrameSegmentationDataset(RawFrameSegmentationDataset):
+class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
     def __init__(self,
                  flows_path,
                  **kwargs):

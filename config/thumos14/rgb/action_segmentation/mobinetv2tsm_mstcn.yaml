@@ -30,7 +30,7 @@ MODEL:
         ignore_index: -100
 
 POSTPRECESSING:
-    name: "ScorePostProcessing"
+    name: "StreamScorePostProcessing"
     num_classes: 21
     clip_seg_num: 32
     sliding_window: 128
@@ -38,7 +38,7 @@ POSTPRECESSING:
     ignore_index: -100
 
 COLLATE:
-    name: "BatchCompose"
+    name: "StreamBatchCompose"
     to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
 
 DATASET: #DATASET field

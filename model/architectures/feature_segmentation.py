@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 19:36:11
+LastEditTime : 2022-05-26 19:51:40
 Description: feaeture segmentation model framework
 FilePath     : /ETESVS/model/architectures/feature_segmentation.py
 '''
@@ -66,15 +66,17 @@ class FeatureSegmentation(nn.Module):
         masks = masks.unsqueeze(1)
 
         # feature.shape=[N,T,C], for most commonly case
+        feature = torch.permute(feature, dims=[0, 2, 1]).contiguous()
+        # feature.shape=[N C T]
 
         if self.backbone is not None:
-             # masks.shape [N * T, 1, 1, 1]
+             # masks.shape [N C T]
             backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1)
             feature = self.backbone(feature, backbone_masks)
         else:
             feature = feature
 
-        # feature [N * T , F_dim, 7, 7]
+        # feature [N, F_dim, T]
         # step 3 extract memory feature
         if self.neck is not None:
             seg_feature, backbone_score, neck_score = self.neck(

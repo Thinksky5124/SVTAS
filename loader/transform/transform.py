@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:51:26
+LastEditTime : 2022-05-26 16:32:19
 Description  : Transform module
 FilePath     : /ETESVS/loader/transform/transform.py
 '''
@@ -23,11 +23,11 @@ class FeatureStreamTransform():
             else:
                 op = getattr(transforms, name)(**list(transforms_op.values())[0])
             transform_op_list.append(op)
-        self.imgs_transforms_pipeline = transforms.Compose(transform_op_list)
+        self.feature_transforms_pipeline = transforms.Compose(transform_op_list)
 
     def __call__(self, results):
         feature = results['feature'].astype(np.float32)
-        feature = self.imgs_transforms_pipeline(feature).squeeze(0)
+        feature = self.feature_transforms_pipeline(feature).squeeze(0)
         results['feature'] = copy.deepcopy(feature)
         return results
 

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-19 20:25:45
+LastEditTime : 2022-05-26 19:53:01
 Description  : Extract video feature script
 FilePath     : /ETESVS/tools/extract_features.py
 '''
@@ -67,6 +67,9 @@ class ExtractRunner():
                 input_data[key] = value.cuda()
 
         outputs = self.model(input_data)
+        
+        if not torch.is_tensor(outputs):
+            outputs = outputs[-1]
             
         return outputs[-1]
     

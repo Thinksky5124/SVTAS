@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 19:35:55
+LastEditTime : 2022-05-26 19:51:56
 Description: etesvs model framework
 FilePath     : /ETESVS/model/architectures/stream_segmentation2d.py
 '''

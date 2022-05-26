@@ -35,7 +35,7 @@ MODEL:
         ignore_index: -100
 
 COLLATE:
-    name: "BatchCompose"
+    name: "StreamBatchCompose"
     to_tensor_idx: 3
 
 DATASET: #DATASET field

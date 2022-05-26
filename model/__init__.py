@@ -11,12 +11,12 @@ from .architectures import (StreamSegmentation2D)
 from .heads import (ETESVSHead)
 from .necks import (ETESVSNeck, ConvLSTMResidualLayer)
 from .losses import (ETESVSLoss)
-from .post_precessings import (ScorePostProcessing)
+from .post_precessings import (StreamScorePostProcessing)
 
 __all__ = [
     'StreamSegmentation2D',
     'ResNet', 'ResNetTSM',
     'ETESVSNeck', 'ConvLSTMResidualLayer',
     'ETESVSHead',
-    'ETESVSLoss', 'ScorePostProcessing'
+    'ETESVSLoss', 'StreamScorePostProcessing'
 ]

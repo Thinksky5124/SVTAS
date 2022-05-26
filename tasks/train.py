@@ -2,10 +2,11 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:53:57
+LastEditTime : 2022-05-26 20:14:13
 Description: train script api
 FilePath     : /ETESVS/tasks/train.py
 '''
+from cProfile import run
 import os.path as osp
 import time
 
@@ -131,6 +132,11 @@ def train(cfg,
     scheduler_cfg['optimizer'] = optimizer
     scheduler = optimizer_builder.build_lr_scheduler(scheduler_cfg)
 
+    # wheather batch train
+    batch_train = False
+    if cfg.COLLATE.name in ["BatchCompose"]:
+        batch_train = True
+
     # 5. Construct Dataset
     sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
     train_dataset_config = cfg.DATASET.train
@@ -191,7 +197,10 @@ def train(cfg,
         train_dataloader.dataset._viodeo_sample_shuffle()
         r_tic = time.time()
         for i, data in enumerate(train_dataloader):
-            runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+            if batch_train is True:
+                runner.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
+            else:
+                runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
             r_tic = time.time()
             
         if local_rank <= 0:
@@ -229,8 +238,10 @@ def train(cfg,
             runner.epoch_init()
             r_tic = time.time()
             for i, data in enumerate(val_dataloader):
-                # videos sliding stream train
-                runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+                if batch_train is True:
+                    runner.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
+                else:
+                    runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
                 r_tic = time.time()
 
             best_flag = False

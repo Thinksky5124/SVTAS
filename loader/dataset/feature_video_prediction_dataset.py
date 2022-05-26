@@ -2,19 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 16:14:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 16:16:46
+LastEditTime : 2022-05-26 15:41:59
 Description  : Feature Video Prediction dataset
 FilePath     : /ETESVS/loader/dataset/feature_video_prediction_dataset.py
 '''
 import numpy as np
 import copy
 import torch
-from .feature_segmentation_dataset import FeatureSegmentationDataset
+from .feature_stream_segmentation_dataset import FeatureStreamSegmentationDataset
 from ..builder import DATASET
 
 
 @DATASET.register()
-class FeatureVideoPredictionDataset(FeatureSegmentationDataset):
+class FeatureVideoPredictionDataset(FeatureStreamSegmentationDataset):
     def __init__(self,
                  **kwargs):
         super().__init__(**kwargs)

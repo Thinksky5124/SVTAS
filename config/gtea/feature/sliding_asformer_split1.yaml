@@ -21,7 +21,7 @@ MODEL:
         ignore_index: -100
 
 COLLATE:
-    name: "BatchCompose"
+    name: "StreamBatchCompose"
     to_tensor_keys: ["faeture", "labels", "masks", "precise_sliding_num"]
 
 DATASET: #DATASET field
@@ -54,7 +54,7 @@ DATASET: #DATASET field
         sample_rate: 1
 
 POSTPRECESSING:
-    name: "ScorePostProcessing"
+    name: "StreamScorePostProcessing"
     num_classes: 11
     clip_seg_num: 128
     sliding_window: 128

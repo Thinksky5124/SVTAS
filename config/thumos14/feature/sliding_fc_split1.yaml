@@ -17,7 +17,7 @@ MODEL:
         ignore_index: -100
 
 COLLATE:
-    name: "BatchCompose"
+    name: "StreamBatchCompose"
     to_tensor_keys: ["faeture", "labels", "masks", "precise_sliding_num"]
 
 DATASET: #DATASET field

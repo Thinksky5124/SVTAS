@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-17 19:56:12
+LastEditTime : 2022-05-26 19:51:51
 Description: Action Recognition 3D framework
 FilePath     : /ETESVS/model/architectures/recognition3d.py
 '''

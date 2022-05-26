@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 16:38:46
+LastEditTime : 2022-05-26 19:49:46
 Description: MS-TCN loss model
 FilePath     : /ETESVS/model/losses/segmentation_loss.py
 '''

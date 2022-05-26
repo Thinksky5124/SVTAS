@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:31:45
+LastEditTime : 2022-05-26 18:48:45
 Description  : feature sampler
 FilePath     : /ETESVS/loader/sampler/feature_sampler.py
 '''
@@ -48,13 +48,14 @@ class FeatureStreamSampler():
                  clip_seg_num=15,
                  sliding_window=60,
                  ignore_index=-100,
-                 sample_mode='random'
-                 ):
+                 sample_mode='random',
+                 format="NTC"):
         self.sample_rate = sample_rate
         self.is_train = is_train
         self.clip_seg_num = clip_seg_num
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
+        self.format = format
         self.sample = FeatureFrameSample(mode = sample_mode)
     
     def _all_valid_frames(self, start_frame, end_frame, feature_len, feature, labels):
@@ -115,8 +116,69 @@ class FeatureStreamSampler():
             frames_feature = np.zeros((2048, self.clip_seg_num))
             mask = np.zeros((self.clip_seg_num * self.sample_rate))
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
+        
+        if self.format in ["NTC"]:
+            frames_feature = frames_feature[:, :self.clip_seg_num].T
+        else:
+            frames_feature = frames_feature[:, :self.clip_seg_num]
 
-        results['feature'] = frames_feature[:, :self.clip_seg_num].copy()
+        results['feature'] = frames_feature.copy()
         results['labels'] = labels.copy()
         results['mask'] = mask.copy()
+        return results
+
+@SAMPLER.register()
+class FeatureSampler():
+    """
+    Sample frames id.
+    Returns:
+        frames_idx: the index of sampled #frames.
+    """
+
+    def __init__(self,
+                 is_train=False,
+                 sample_rate=1,
+                 ignore_index=-100,
+                 sample_mode='random',
+                 format="NTC"
+                 ):
+        self.sample_rate = sample_rate
+        self.is_train = is_train
+        self.ignore_index = ignore_index
+        self.format = format
+        self.sample = FeatureFrameSample(mode = sample_mode)
+
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[]):
+        if self.is_train:
+            sample_labels = labels[samples_idx]
+            sample_labels = np.repeat(sample_labels, repeats=self.sample_rate, axis=-1)
+        else:
+            sample_labels = labels[start_frame:end_frame]
+        return sample_labels
+
+    def __call__(self, results):
+        """
+        Args:
+            frames_len: length of frames.
+        return:
+            sampling id.
+        """
+        frames_len = int(results['frames_len'])
+        feature_len = int(results['feature_len'])
+        results['frames_len'] = frames_len
+        feature = results['frames']
+        labels = results['raw_labels']
+
+        # generate sample index
+        frames_idx = self.sample(0, feature_len, self.sample_rate)
+        labels = self._labels_sample(labels, start_frame=0, end_frame=frames_len, samples_idx=frames_idx).copy()
+        frames_feature = feature[:, frames_idx]
+        mask = np.ones((labels.shape[0]), dtype=np.float32)
+
+        if self.format in ["NTC"]:
+            frames_feature = frames_feature.T
+
+        results['feature'] = frames_feature.copy()
+        results['labels'] = labels.copy()
+        results['masks'] = mask.copy()
         return results

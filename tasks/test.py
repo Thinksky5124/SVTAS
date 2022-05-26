@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-19 22:22:20
+LastEditTime : 2022-05-26 20:15:03
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -74,7 +74,10 @@ def test(cfg,
         else:
             model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
-    
+    # wheather batch train
+    batch_train = False
+    if cfg.COLLATE.name in ["BatchCompose"]:
+        batch_train = True
 
     # 2. Construct dataset and dataloader.
     # default num worker: 0, which means no subprocess will be created
@@ -136,7 +139,10 @@ def test(cfg,
     runner.epoch_init()
     r_tic = time.time()
     for i, data in enumerate(test_dataloader):
-        runner.run_one_iter(data=data, r_tic=r_tic)
+        if batch_train is True:
+            runner.run_one_batch(data=data, r_tic=r_tic)
+        else:
+            runner.run_one_iter(data=data, r_tic=r_tic)
         r_tic = time.time()
 
     if local_rank <= 0:
