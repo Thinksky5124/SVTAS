@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:52:02
-Description  :Transgemnter3D framework
+LastEditTime : 2022-05-27 15:43:36
+Description  : Transgemnter3D framework
 FilePath     : /ETESVS/model/architectures/transeger3d.py
 '''
 import torch
 import torch.nn as nn
 
-from ..builder import build_backbone
+from ..builder import build_architecture
 from ..builder import build_neck
 from ..builder import build_head
 
@@ -23,8 +23,8 @@ class Transeger3D(nn.Module):
                  joint=None,
                  loss=None):
         super().__init__()
-        self.image_backbone = build_backbone(image_backbone)
-        self.text_backbone = build_backbone(text_backbone)
+        self.image_backbone = build_architecture(image_backbone)
+        self.text_backbone = build_architecture(text_backbone)
         self.joint = build_head(joint)
 
         self.init_weights()

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 13:47:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-21 13:49:19
+LastEditTime : 2022-05-27 21:02:50
 Description  : Transudcer JointNet ref:https://github.com/upskyy/Transformer-Transducer/blob/main/transformer_transducer/model.py
 FilePath     : /ETESVS/model/heads/transducer_joint_head.py
 '''
@@ -30,14 +30,14 @@ class TransudcerJointNet(nn.Module):
     """
     def __init__(
             self,
-            num_vocabs: int,
-            output_size: int = 1024,
-            inner_size: int = 512,
+            num_classes: int,
+            in_channels: int = 1024,
+            hidden_channels: int = 512,
     ) -> None:
         super(TransudcerJointNet, self).__init__()
-        self.fc1 = nn.Linear(output_size, inner_size)
+        self.fc1 = nn.Linear(in_channels, hidden_channels)
         self.tanh = nn.Tanh()
-        self.fc2 = nn.Linear(inner_size, num_vocabs)
+        self.fc2 = nn.Linear(hidden_channels, num_classes)
     
     def init_weights(self):
         pass

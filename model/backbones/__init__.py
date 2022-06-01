@@ -10,7 +10,7 @@ from .image import ResNet, MobileNetV2, MobileViT, ViT
 from .flow import FastFlowNet, RAFT, LiteFlowNetV3
 from .video import (ResNet2Plus1d, ResNet3d, PredRNNV2, I3D,
                     MobileNetV2TSM, MoViNet, TimeSformer, ResNetTSM)
-from .text import TransducerTextEncoder
+from .language import TransducerTextEncoder
 from .audio import TransducerAudioEncoder
 
 __all__ = [

@@ -2,40 +2,89 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 19:53:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-22 15:20:38
+LastEditTime : 2022-05-27 15:38:06
 Description  : COCOOP Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/cocoop.py
-FilePath     : /ETESVS/model/backbones/text/cocoop_prompt.py
+FilePath     : /ETESVS/model/backbones/language/cocoop_prompt.py
 '''
 from collections import OrderedDict
 
 import torch
 import torch.nn as nn
+import numpy as np
 from torch.nn import functional as F
+from utils.logger import get_logger
+from mmcv.runner import load_checkpoint
+from ...builder import BACKBONES
+
 
 # from clip import clip
-from..utils.clip import SimpleTokenizer as _Tokenizer
+from ..utils.clip import SimpleTokenizer as _Tokenizer
+from ..utils.clip import Transformer, LayerNorm
+from ..utils.transducer import get_attn_pad_mask
 
-class TextEncoder(nn.Module):
-    def __init__(self, clip_model):
+@BACKBONES.register()
+class COCOOPTextEncoder(nn.Module):
+    def __init__(self,
+                 actions_map_file_path,
+                 vocab_size,
+                 transformer_width,
+                 encoder_layers_num,
+                 encoder_heads_num,
+                 text_embed_dim,
+                 vis_dim=2048,
+                 ctx_dim=77,
+                 n_ctx=8,
+                 ctx_init=""):
         super().__init__()
-        self.transformer = clip_model.transformer
-        self.positional_embedding = clip_model.positional_embedding
-        self.ln_final = clip_model.ln_final
-        self.text_projection = clip_model.text_projection
-        self.dtype = clip_model.dtype
+        attn_mask = None
+        file_ptr = open(actions_map_file_path, 'r')
+        actions = file_ptr.read().split('\n')[:-1]
+        file_ptr.close()
+        classnames = [a.split()[1] for a in actions]
+        
+        self.prompt_learner = PromptLearner(classnames, vocab_size, transformer_width, vis_dim=vis_dim, ctx_dim=ctx_dim, n_ctx=n_ctx, ctx_init=ctx_init)
+        self.transformer = Transformer(width=transformer_width, layers=encoder_layers_num, heads=encoder_heads_num, attn_mask=attn_mask)
+        self.positional_embedding = nn.Parameter(torch.empty(self.context_length, transformer_width))
+        self.ln_final = LayerNorm(transformer_width)
+        self.text_projection = nn.Parameter(torch.empty(transformer_width, text_embed_dim))
+        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+    
+    def _clear_memory_buffer(self):
+        pass
+    
+    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                logger = logger = get_logger("ETESVS")
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
-    def forward(self, prompts, tokenized_prompts):
-        x = prompts + self.positional_embedding.type(self.dtype)
-        x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.transformer(x)
-        x = x.permute(1, 0, 2)  # LND -> NLD
-        x = self.ln_final(x).type(self.dtype)
+    def forward(self, img_features, label):
+        tokenized_prompts = self.prompt_learner.tokenized_prompts
+        prompts = self.prompt_learner(img_features)
+        logit_scale = self.logit_scale.exp()
 
-        # x.shape = [batch_size, n_ctx, transformer.width]
-        # take features from the eot embedding (eot_token is the highest number in each sequence)
-        x = x[torch.arange(x.shape[0]), tokenized_prompts.argmax(dim=-1)] @ self.text_projection
+        logits = []
+        for pts_i, imf_i in zip(prompts, img_features):
+            x = pts_i + self.positional_embedding
+            x = x.permute(1, 0, 2)  # NLD -> LND
+            x = self.transformer(x)
+            x = x.permute(1, 0, 2)  # LND -> NLD
+            x = self.ln_final(x)
 
-        return x
+            # x.shape = [batch_size, n_ctx, transformer.width]
+            # take features from the eot embedding (eot_token is the highest number in each sequence)
+            x = x[torch.arange(x.shape[0]), tokenized_prompts.argmax(dim=-1)] @ self.text_projection
+
+            text_features = x / x.norm(dim=-1, keepdim=True)
+            l_i = logit_scale * imf_i @ text_features.t()
+            logits.append(l_i)
+
+        logits = torch.stack(logits)
+        
+        if self.prompt_learner.training:
+            return F.cross_entropy(logits, label)
+
+        return l_i
 
 
 class PromptLearner(nn.Module):
@@ -129,36 +178,3 @@ class PromptLearner(nn.Module):
         prompts = torch.stack(prompts)
         
         return prompts
-
-
-class CustomCLIP(nn.Module):
-    def __init__(self, cfg, classnames, clip_model):
-        super().__init__()
-        self.prompt_learner = PromptLearner(cfg, classnames, clip_model)
-        self.tokenized_prompts = self.prompt_learner.tokenized_prompts
-        self.image_encoder = clip_model.visual
-        self.text_encoder = TextEncoder(clip_model)
-        self.logit_scale = clip_model.logit_scale
-        self.dtype = clip_model.dtype
-
-    def forward(self, image, label=None):
-        tokenized_prompts = self.tokenized_prompts
-        logit_scale = self.logit_scale.exp()
-
-        image_features = self.image_encoder(image.type(self.dtype))
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-
-        prompts = self.prompt_learner(image_features)
-        
-        logits = []
-        for pts_i, imf_i in zip(prompts, image_features):
-            text_features = self.text_encoder(pts_i, tokenized_prompts)
-            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-            l_i = logit_scale * imf_i @ text_features.t()
-            logits.append(l_i)
-        logits = torch.stack(logits)
-        
-        if self.prompt_learner.training:
-            return F.cross_entropy(logits, label)
-        
-        return logits

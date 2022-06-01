@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-21 13:43:37
+LastEditTime : 2022-05-27 15:56:38
 Description: file content
 FilePath     : /ETESVS/model/architectures/__init__.py
 '''
@@ -15,6 +15,7 @@ from .stream_segmentation3d import StreamSegmentation3D
 from .multi_modality_stream_segmentation import MulModStreamSegmentation
 from .optical_flow_estimator import OpticalFlowEstimation
 from .transeger3d import Transeger3D
+from .encoder_2_decoder import Encoder2Decoder
 
 __all__ = [
     'StreamSegmentation2DWithNeck', 'FeatureSegmentation',
@@ -22,5 +23,5 @@ __all__ = [
     'StreamSegmentation2D', 'StreamSegmentation3D',
     'MulModStreamSegmentation',
     'OpticalFlowEstimation',
-    'Transeger3D'
+    'Transeger3D', 'Encoder2Decoder'
 ]
