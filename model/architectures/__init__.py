@@ -6,16 +6,16 @@ LastEditTime : 2022-05-27 15:56:38
 Description: file content
 FilePath     : /ETESVS/model/architectures/__init__.py
 '''
-from .stream_segmentation2d_with_neck import StreamSegmentation2DWithNeck
-from .feature_segmentation import FeatureSegmentation
-from .recognition2d import Recognition2D
-from .recognition3d import Recognition3D
-from .stream_segmentation2d import StreamSegmentation2D
-from .stream_segmentation3d import StreamSegmentation3D
-from .multi_modality_stream_segmentation import MulModStreamSegmentation
-from .optical_flow_estimator import OpticalFlowEstimation
-from .transeger3d import Transeger3D
-from .encoder_2_decoder import Encoder2Decoder
+from .segmentation.stream_segmentation2d_with_neck import StreamSegmentation2DWithNeck
+from .segmentation.feature_segmentation import FeatureSegmentation
+from .recognition.recognition2d import Recognition2D
+from .recognition.recognition3d import Recognition3D
+from .segmentation.stream_segmentation2d import StreamSegmentation2D
+from .segmentation.stream_segmentation3d import StreamSegmentation3D
+from .segmentation.multi_modality_stream_segmentation import MulModStreamSegmentation
+from .optical_flow.optical_flow_estimator import OpticalFlowEstimation
+from .segmentation.transeger3d import Transeger3D
+from .general.encoder_2_decoder import Encoder2Decoder
 
 __all__ = [
     'StreamSegmentation2DWithNeck', 'FeatureSegmentation',

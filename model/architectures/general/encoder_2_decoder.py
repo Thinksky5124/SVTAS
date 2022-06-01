@@ -9,11 +9,11 @@ FilePath     : /ETESVS/model/architectures/encoder_2_decoder.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..builder import ARCHITECTURE
+from ...builder import ARCHITECTURE
 
-from ..builder import build_backbone
-from ..builder import build_neck
-from ..builder import build_head
+from ...builder import build_backbone
+from ...builder import build_neck
+from ...builder import build_head
 
 @ARCHITECTURE.register()
 class Encoder2Decoder(nn.Module):

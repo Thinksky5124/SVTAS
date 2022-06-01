@@ -13,7 +13,7 @@ from mmcv.cnn import constant_init, kaiming_init
 import copy
 from .mstcn import SingleStageModel
 
-from ..builder import HEADS
+from ...builder import HEADS
 
 @HEADS.register()
 class ETESVSHead(nn.Module):

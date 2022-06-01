@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import constant_init, kaiming_init
 
-from ..builder import HEADS
+from ...builder import HEADS
 
 @HEADS.register()
 class MultiStageModel(nn.Module):

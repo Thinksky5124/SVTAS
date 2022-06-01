@@ -13,7 +13,7 @@ import torch.nn.functional as F
 import copy
 import numpy as np
 import math
-from ..builder import HEADS
+from ...builder import HEADS
 
 
 def exponential_descrease(idx_decoder, p=3):

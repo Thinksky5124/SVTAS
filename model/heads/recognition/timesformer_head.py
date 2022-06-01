@@ -12,7 +12,7 @@ import torch
 import torch.nn.functional as F
 from mmcv.cnn import trunc_normal_init
 
-from ..builder import HEADS
+from ...builder import HEADS
 
 @HEADS.register()
 class TimeSformerHead(nn.Module):

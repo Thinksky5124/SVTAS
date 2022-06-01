@@ -9,9 +9,9 @@ FilePath     : /ETESVS/model/heads/oadtr.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .utils import (Decoder, DecoderLayer, FullAttention, ProbAttention, AttentionLayer,
+from ..utils import (Decoder, DecoderLayer, FullAttention, ProbAttention, AttentionLayer,
                     TransformerModel, FixedPositionalEncoding, LearnedPositionalEncoding)
-from ..builder import HEADS
+from ...builder import HEADS
 
 
 @HEADS.register()

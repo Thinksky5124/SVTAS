@@ -12,11 +12,11 @@ from mmcv.runner import load_checkpoint
 
 from utils.logger import get_logger
 
-from ..builder import build_backbone
-from ..builder import build_neck
-from ..builder import build_head
+from ...builder import build_backbone
+from ...builder import build_neck
+from ...builder import build_head
 
-from ..builder import ARCHITECTURE
+from ...builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
 class MulModStreamSegmentation(nn.Module):

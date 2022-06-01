@@ -1,10 +1,10 @@
 '''
 Author: Thyssen Wen
-Date: 2022-04-27 17:01:33
+Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:51:40
-Description: feaeture segmentation model framework
-FilePath     : /ETESVS/model/architectures/feature_segmentation.py
+LastEditTime : 2022-05-26 19:51:51
+Description: Action Recognition 3D framework
+FilePath     : /ETESVS/model/architectures/recognition3d.py
 '''
 import torch
 import torch.nn as nn
@@ -13,14 +13,14 @@ from mmcv.runner import load_checkpoint
 
 from utils.logger import get_logger
 
-from ..builder import build_backbone
-from ..builder import build_neck
-from ..builder import build_head
+from ...builder import build_backbone
+from ...builder import build_neck
+from ...builder import build_head
 
-from ..builder import ARCHITECTURE
+from ...builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class FeatureSegmentation(nn.Module):
+class Recognition3D(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -40,12 +40,12 @@ class FeatureSegmentation(nn.Module):
         self.head = build_head(head)
 
         self.init_weights()
-
+        
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
         if self.backbone is not None:
-            self.backbone.init_weights(child_model=True)
+            self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         if self.neck is not None:
             self.neck.init_weights()
         self.head.init_weights()
@@ -60,23 +60,23 @@ class FeatureSegmentation(nn.Module):
 
     def forward(self, input_data):
         masks = input_data['masks']
-        feature = input_data['feature']
+        imgs = input_data['imgs']
         
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 
-        # feature.shape=[N,T,C], for most commonly case
-        feature = torch.permute(feature, dims=[0, 2, 1]).contiguous()
-        # feature.shape=[N C T]
+        # x.shape=[N,T,C,H,W], for most commonly case
+        imgs = torch.permute(imgs, dims=[0, 2, 1, 3, 4]).contiguous()
+        # imgs.shape=[N,C,T,H,W]
 
         if self.backbone is not None:
-             # masks.shape [N C T]
-            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1)
-            feature = self.backbone(feature, backbone_masks)
+             # masks.shape [N, 1, T, 1, 1]
+            backbone_masks = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
+            feature = self.backbone(imgs, backbone_masks)
         else:
-            feature = feature
+            feature = imgs
 
-        # feature [N, F_dim, T]
+        # feature [N, F_dim, T , 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
             seg_feature, backbone_score, neck_score = self.neck(
@@ -91,9 +91,7 @@ class FeatureSegmentation(nn.Module):
         # seg_feature [N, H_dim, T]
         # cls_feature [N, F_dim, T]
         if self.head is not None:
-            head_score = self.head(seg_feature, masks[:, :, ::self.sample_rate])
+            head_score = self.head(seg_feature, masks)
         else:
-            head_score = None
-        # seg_score [stage_num, N, C, T]
-        # cls_score [N, C, T]
+            head_score = seg_feature
         return head_score

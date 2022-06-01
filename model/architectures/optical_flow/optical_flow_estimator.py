@@ -11,9 +11,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..builder import build_backbone
+from ...builder import build_backbone
 
-from ..builder import ARCHITECTURE
+from ...builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
 class OpticalFlowEstimation(nn.Module):

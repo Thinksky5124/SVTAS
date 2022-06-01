@@ -10,9 +10,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import constant_init, kaiming_init
-from ..backbones.video.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
+from ...backbones.video.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
 
-from ..builder import HEADS
+from ...builder import HEADS
 
 @HEADS.register()
 class MoViNetHead(nn.Module):

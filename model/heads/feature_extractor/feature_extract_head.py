@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..builder import HEADS
+from ...builder import HEADS
 
 @HEADS.register()
 class FeatureExtractHead(nn.Module):

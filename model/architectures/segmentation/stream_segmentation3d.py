@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:51:56
+LastEditTime : 2022-05-22 17:10:03
 Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/stream_segmentation2d.py
+FilePath     : /ETESVS/model/architectures/stream_segmentation3d.py
 '''
 import torch
 import torch.nn as nn
@@ -12,14 +12,14 @@ from mmcv.runner import load_checkpoint
 
 from utils.logger import get_logger
 
-from ..builder import build_backbone
-from ..builder import build_neck
-from ..builder import build_head
+from ...builder import build_backbone
+from ...builder import build_neck
+from ...builder import build_head
 
-from ..builder import ARCHITECTURE
+from ...builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class StreamSegmentation2D(nn.Module):
+class StreamSegmentation3D(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -55,17 +55,27 @@ class StreamSegmentation2D(nn.Module):
         masks = masks.unsqueeze(1)
 
         # x.shape=[N,T,C,H,W], for most commonly case
-        imgs = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
+        imgs = imgs.transpose(1, 2).contiguous()
         # x [N * T, C, H, W]
 
         if self.backbone is not None:
-             # masks.shape [N * T, 1, 1, 1]
-            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            # masks.shape [N, 1, T, 1, 1]
+            backbone_masks = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
+            # [N, C, T, H, W] or [N T D]
             feature = self.backbone(imgs, backbone_masks)
+
+            if len(feature.shape) == 5:
+                out_channels = feature.shape[1]
+                # [N, T, C, H, W]
+                feature = feature.transpose(1, 2)
+                # [N * T, C, H, W]
+                feature = torch.reshape(feature, shape=[-1, out_channels] + list(feature.shape[-2:]))
+            elif len(feature.shape) == 3:
+                feature = torch.reshape(feature, shape=[-1, feature.shape[-1]])
         else:
             feature = imgs
 
-        # feature [N * T , F_dim, 7, 7]
+        # feature [N * T , F_dim, 7, 7] or [N * T, D]
         # step 3 extract memory feature
         if self.neck is not None:
             seg_feature, backbone_score = self.neck(

@@ -9,11 +9,11 @@ FilePath     : /ETESVS/model/architectures/transeger3d.py
 import torch
 import torch.nn as nn
 
-from ..builder import build_architecture
-from ..builder import build_neck
-from ..builder import build_head
+from ...builder import build_architecture
+from ...builder import build_neck
+from ...builder import build_head
 
-from ..builder import ARCHITECTURE
+from ...builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
 class Transeger3D(nn.Module):
