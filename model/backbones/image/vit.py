@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:02:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:33:30
+LastEditTime : 2022-06-03 13:28:53
 Description  : ViT backbone ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
 FilePath     : /ETESVS/model/backbones/image/vit.py
 '''
@@ -138,7 +138,7 @@ class ViT(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = logger = get_logger("ETESVS")
+                logger  = get_logger("ETESVS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(self, img, masks):

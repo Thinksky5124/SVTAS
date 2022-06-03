@@ -702,7 +702,7 @@ class MoViNet(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = logger = get_logger("ETESVS")
+                logger = get_logger("ETESVS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             else:
                 self.apply(self._weight_init)

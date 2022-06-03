@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-05-21 19:53:44
+Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-03 13:57:19
-Description  : COCOOP Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/cocoop.py
-FilePath     : /ETESVS/model/backbones/language/cocoop_prompt.py
+LastEditTime : 2022-06-03 13:57:22
+Description  : COOP Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
+FilePath     : /ETESVS/model/backbones/language/coop_prompt.py
 '''
 from collections import OrderedDict
 
@@ -23,7 +23,7 @@ from ..utils.clip import Transformer, LayerNorm
 from ..utils.transducer import get_attn_pad_mask
 
 @BACKBONES.register()
-class COCOOPTextEncoder(nn.Module):
+class COOPTextEncoder(nn.Module):
     def __init__(self,
                  actions_map_file_path,
                  vocab_size,
@@ -35,6 +35,7 @@ class COCOOPTextEncoder(nn.Module):
                  ctx_dim=77,
                  n_ctx=8,
                  ctx_init="",
+                 class_token_position="end",
                  pretrained=None):
         super().__init__()
         attn_mask = None
@@ -44,50 +45,38 @@ class COCOOPTextEncoder(nn.Module):
         classnames = [a.split()[1] for a in actions]
 
         self.pretrained = pretrained
-        
-        self.prompt_learner = PromptLearner(classnames, vocab_size, transformer_width, vis_dim=vis_dim, ctx_dim=ctx_dim, n_ctx=n_ctx, ctx_init=ctx_init)
+
+        self.prompt_learner = PromptLearner(classnames, vocab_size, transformer_width, vis_dim=vis_dim, ctx_dim=ctx_dim,
+            n_ctx=n_ctx, ctx_init=ctx_init, class_token_position=class_token_position)
         self.transformer = Transformer(width=transformer_width, layers=encoder_layers_num, heads=encoder_heads_num, attn_mask=attn_mask)
         self.positional_embedding = nn.Parameter(torch.empty(ctx_dim, transformer_width))
         self.ln_final = LayerNorm(transformer_width)
         self.text_projection = nn.Parameter(torch.empty(transformer_width, text_embed_dim))
-        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
-    
+
     def _clear_memory_buffer(self):
         pass
     
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger  = get_logger("ETESVS")
+                logger = get_logger("ETESVS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(self, img_features, label):
         tokenized_prompts = self.prompt_learner.tokenized_prompts
-        prompts = self.prompt_learner(img_features)
-        logit_scale = self.logit_scale.exp()
+        prompts = self.prompt_learner()
 
-        logits = []
-        for pts_i, imf_i in zip(prompts, img_features):
-            x = pts_i + self.positional_embedding
-            x = x.permute(1, 0, 2)  # NLD -> LND
-            x = self.transformer(x)
-            x = x.permute(1, 0, 2)  # LND -> NLD
-            x = self.ln_final(x)
+        x = prompts + self.positional_embedding
+        x = x.permute(1, 0, 2)  # NLD -> LND
+        x = self.transformer(x)
+        x = x.permute(1, 0, 2)  # LND -> NLD
+        x = self.ln_final(x)
 
-            # x.shape = [batch_size, n_ctx, transformer.width]
-            # take features from the eot embedding (eot_token is the highest number in each sequence)
-            x = x[torch.arange(x.shape[0]), tokenized_prompts.argmax(dim=-1)] @ self.text_projection
+        # x.shape = [batch_size, n_ctx, transformer.width]
+        # take features from the eot embedding (eot_token is the highest number in each sequence)
+        x = x[torch.arange(x.shape[0]), tokenized_prompts.argmax(dim=-1)] @ self.text_projection
 
-            text_features = x / x.norm(dim=-1, keepdim=True)
-            l_i = logit_scale * imf_i @ text_features.t()
-            logits.append(l_i)
-
-        logits = torch.stack(logits)
-        
-        if self.prompt_learner.training:
-            return F.cross_entropy(logits, label)
-
-        return l_i
+        return x
 
 
 class PromptLearner(nn.Module):
@@ -98,7 +87,8 @@ class PromptLearner(nn.Module):
                  vis_dim=2048,
                  ctx_dim=77,
                  n_ctx=8,
-                 ctx_init=""):
+                 ctx_init="",
+                 class_token_position="end"):
         super().__init__()
         self._tokenizer = _Tokenizer(ctx_dim)
         n_cls = len(classnames)
@@ -123,13 +113,7 @@ class PromptLearner(nn.Module):
         logger.info(f'Initial context: "{prompt_prefix}"')
         logger.info(f"Number of context words (tokens): {n_ctx}")
 
-        self.ctx = nn.Parameter(ctx_vectors)
-
-        self.meta_net = nn.Sequential(OrderedDict([
-            ("linear1", nn.Linear(vis_dim, vis_dim // 16)),
-            ("relu", nn.ReLU(inplace=True)),
-            ("linear2", nn.Linear(vis_dim // 16, ctx_dim))
-        ]))
+        self.ctx = nn.Parameter(ctx_vectors)  # to be optimized
 
         classnames = [name.replace("_", " ") for name in classnames]
         name_lens = [len(self._tokenizer.encode(name)) for name in classnames]
@@ -150,43 +134,70 @@ class PromptLearner(nn.Module):
         self.n_ctx = n_ctx
         self.tokenized_prompts = tokenized_prompts  # torch.Tensor
         self.name_lens = name_lens
-    
-    def construct_prompts(self, ctx, prefix, suffix, label=None):
-        # dim0 is either batch_size (during training) or n_cls (during testing)
-        # ctx: context tokens, with shape of (dim0, n_ctx, ctx_dim)
-        # prefix: the sos token, with shape of (n_cls, 1, ctx_dim)
-        # suffix: remaining tokens, with shape of (n_cls, *, ctx_dim)
+        self.class_token_position = class_token_position
 
-        if label is not None:
-            prefix = prefix[label]
-            suffix = suffix[label]
+    def forward(self):
+        ctx = self.ctx
+        if ctx.dim() == 2:
+            ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
 
-        prompts = torch.cat(
-            [
-                prefix,  # (dim0, 1, dim)
-                ctx,     # (dim0, n_ctx, dim)
-                suffix,  # (dim0, *, dim)
-            ],
-            dim=1,
-        )
-
-        return prompts
-
-    def forward(self, im_features):
         prefix = self.token_prefix
         suffix = self.token_suffix
-        ctx = self.ctx                     # (n_ctx, ctx_dim)
-        bias = self.meta_net(im_features)  # (batch, ctx_dim)
-        bias = bias.unsqueeze(1)           # (batch, 1, ctx_dim)
-        ctx = ctx.unsqueeze(0)             # (1, n_ctx, ctx_dim)
-        ctx_shifted = ctx + bias           # (batch, n_ctx, ctx_dim)
-        
-        # Use instance-conditioned context tokens for all classes
-        prompts = []
-        for ctx_shifted_i in ctx_shifted:
-            ctx_i = ctx_shifted_i.unsqueeze(0).expand(self.n_cls, -1, -1)
-            pts_i = self.construct_prompts(ctx_i, prefix, suffix)  # (n_cls, n_tkn, ctx_dim)
-            prompts.append(pts_i)
-        prompts = torch.stack(prompts)
-        
+
+        if self.class_token_position == "end":
+            prompts = torch.cat(
+                [
+                    prefix,  # (n_cls, 1, dim)
+                    ctx,     # (n_cls, n_ctx, dim)
+                    suffix,  # (n_cls, *, dim)
+                ],
+                dim=1,
+            )
+
+        elif self.class_token_position == "middle":
+            half_n_ctx = self.n_ctx // 2
+            prompts = []
+            for i in range(self.n_cls):
+                name_len = self.name_lens[i]
+                prefix_i = prefix[i : i + 1, :, :]
+                class_i = suffix[i : i + 1, :name_len, :]
+                suffix_i = suffix[i : i + 1, name_len:, :]
+                ctx_i_half1 = ctx[i : i + 1, :half_n_ctx, :]
+                ctx_i_half2 = ctx[i : i + 1, half_n_ctx:, :]
+                prompt = torch.cat(
+                    [
+                        prefix_i,     # (1, 1, dim)
+                        ctx_i_half1,  # (1, n_ctx//2, dim)
+                        class_i,      # (1, name_len, dim)
+                        ctx_i_half2,  # (1, n_ctx//2, dim)
+                        suffix_i,     # (1, *, dim)
+                    ],
+                    dim=1,
+                )
+                prompts.append(prompt)
+            prompts = torch.cat(prompts, dim=0)
+
+        elif self.class_token_position == "front":
+            prompts = []
+            for i in range(self.n_cls):
+                name_len = self.name_lens[i]
+                prefix_i = prefix[i : i + 1, :, :]
+                class_i = suffix[i : i + 1, :name_len, :]
+                suffix_i = suffix[i : i + 1, name_len:, :]
+                ctx_i = ctx[i : i + 1, :, :]
+                prompt = torch.cat(
+                    [
+                        prefix_i,  # (1, 1, dim)
+                        class_i,   # (1, name_len, dim)
+                        ctx_i,     # (1, n_ctx, dim)
+                        suffix_i,  # (1, *, dim)
+                    ],
+                    dim=1,
+                )
+                prompts.append(prompt)
+            prompts = torch.cat(prompts, dim=0)
+
+        else:
+            raise ValueError
+
         return prompts

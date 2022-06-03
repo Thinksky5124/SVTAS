@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 19:47:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:29:32
+LastEditTime : 2022-06-03 13:29:10
 Description  : file content
-FilePath     : /ETESVS/model/backbones/i3d.py
+FilePath     : /ETESVS/model/backbones/video/i3d.py
 '''
 import torch
 import torch.nn as nn
@@ -229,7 +229,7 @@ class I3D(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = logger = get_logger("ETESVS")
+                logger = get_logger("ETESVS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     # (v-iashin) adding features arg to have an ability to output features

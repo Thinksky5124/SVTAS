@@ -51,8 +51,8 @@ pandas==1.4.1
 parso==0.8.3
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==9.1.0
-Pillow-SIMD==9.0.0.post1
+Pillow==9.1.1
+# Pillow-SIMD==9.0.0.post1
 platformdirs==2.5.1
 portalocker==2.4.0
 prompt-toolkit==3.0.29

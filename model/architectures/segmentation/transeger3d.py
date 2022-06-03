@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-27 15:43:36
+LastEditTime : 2022-06-03 14:14:57
 Description  : Transgemnter3D framework
-FilePath     : /ETESVS/model/architectures/transeger3d.py
+FilePath     : /ETESVS/model/architectures/segmentation/transeger3d.py
 '''
 import torch
 import torch.nn as nn
@@ -29,11 +29,11 @@ class Transeger3D(nn.Module):
 
         self.init_weights()
         
-        self.sample_rate = joint.sample_rate
+        self.sample_rate = image_backbone.head.sample_rate
+        # memory last clip labels
+        self.last_clip_labels = None
     
     def init_weights(self):
-        self.image_backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
-        self.text_backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         self.joint.init_weights()
     
     def _clear_memory_buffer(self):
@@ -43,6 +43,7 @@ class Transeger3D(nn.Module):
             self.text_backbone._clear_memory_buffer()
         if self.joint is not None:
             self.joint._clear_memory_buffer()
+        self.last_clip_labels = None
     
     def forward(self, input_data):
         if self.training:
@@ -52,6 +53,13 @@ class Transeger3D(nn.Module):
         else:
             masks = input_data['masks']
             imgs = input_data['imgs']
+        
+        if self.last_clip_labels is None:
+            self.last_clip_labels = labels.detach().clone()
+            last_clip_labels = torch.full_like(labels, )
+        else:
+            last_clip_labels = self.last_clip_labels.detach().clone()
+            self.last_clip_labels = labels.detach().clone()
 
         ### image encoder
         # masks.shape=[N,T]

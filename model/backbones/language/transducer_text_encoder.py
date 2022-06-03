@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:03:04
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-21 11:05:30
+LastEditTime : 2022-06-03 13:29:02
 Description  : Transducer TextEncoder ref:https://github.com/upskyy/Transformer-Transducer/blob/main/transformer_transducer/label_encoder.py
-FilePath     : /ETESVS/model/backbones/text/transducer_text_encoder.py
+FilePath     : /ETESVS/model/backbones/language/transducer_text_encoder.py
 '''
 from typing import Tuple
 from torch import Tensor
@@ -72,7 +72,7 @@ class TransducerTextEncoder(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = logger = get_logger("ETESVS")
+                logger  = get_logger("ETESVS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(
