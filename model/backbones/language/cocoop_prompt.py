@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 19:53:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-03 13:57:19
+LastEditTime : 2022-06-04 10:48:11
 Description  : COCOOP Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/cocoop.py
 FilePath     : /ETESVS/model/backbones/language/cocoop_prompt.py
 '''
@@ -81,11 +81,6 @@ class COCOOPTextEncoder(nn.Module):
             text_features = x / x.norm(dim=-1, keepdim=True)
             l_i = logit_scale * imf_i @ text_features.t()
             logits.append(l_i)
-
-        logits = torch.stack(logits)
-        
-        if self.prompt_learner.training:
-            return F.cross_entropy(logits, label)
 
         return l_i
 

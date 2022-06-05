@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:51:56
+LastEditTime : 2022-06-04 15:17:40
 Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/stream_segmentation2d.py
+FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation2d.py
 '''
 import torch
 import torch.nn as nn
@@ -81,7 +81,7 @@ class StreamSegmentation2D(nn.Module):
         if self.head is not None:
             head_score = self.head(seg_feature, masks)
         else:
-            head_score = None
+            head_score = seg_feature
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
         return backbone_score, head_score

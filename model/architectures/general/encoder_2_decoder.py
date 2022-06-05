@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-27 15:46:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-28 15:29:56
+LastEditTime : 2022-06-04 14:24:59
 Description  : Text Translation framework
-FilePath     : /ETESVS/model/architectures/encoder_2_decoder.py
+FilePath     : /ETESVS/model/architectures/general/encoder_2_decoder.py
 '''
 import torch
 import torch.nn as nn
@@ -58,13 +58,21 @@ class Encoder2Decoder(nn.Module):
     
     def forward(self, input_data):
         masks = input_data['masks']
-        text = input_data['text']
+        x = input_data['x']
         
-        # masks.shape=[N,T]
-        masks = masks.unsqueeze(1)
+        if self.encoder is not None:
+            x = self.encoder(x, masks)
+        else:
+            x = x
 
-        # x.shape=[N,T,C,H,W], for most commonly case
-        text = torch.reshape(text, [-1] + list(text.shape[2:]))
-        # x [N * T, C, H, W]
+        if self.decoder is not None:
+            x = self.decoder(x, masks)
+        else:
+            x = x
+        
+        if self.head is not None:
+            x = self.head(x, masks)
+        else:
+            x = x
 
-        return text
+        return x

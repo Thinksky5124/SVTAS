@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:51:51
+LastEditTime : 2022-06-04 15:20:11
 Description: Action Recognition 3D framework
-FilePath     : /ETESVS/model/architectures/recognition3d.py
+FilePath     : /ETESVS/model/architectures/recognition/recognition3d.py
 '''
 import torch
 import torch.nn as nn
@@ -37,18 +37,21 @@ class Recognition3D(nn.Module):
         else:
             self.neck = None
 
-        self.head = build_head(head)
+        if head is not None:
+            self.head = build_head(head)
+            self.sample_rate = head.sample_rate
+        else:
+            self.head = None
 
         self.init_weights()
-        
-        self.sample_rate = head.sample_rate
 
     def init_weights(self):
         if self.backbone is not None:
             self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         if self.neck is not None:
             self.neck.init_weights()
-        self.head.init_weights()
+        if self.head is not None:
+            self.head.init_weights()
     
     def _clear_memory_buffer(self):
         if self.backbone is not None:

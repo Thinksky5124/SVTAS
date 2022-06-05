@@ -1,5 +1,5 @@
 MODEL:
-    architecture: "Transeger3D"
+    architecture: "Transeger"
     image_backbone:
         architecture: "StreamSegmentation2D"
         backbone:
@@ -19,15 +19,15 @@ MODEL:
             num_layers: 4
             num_f_maps: 64
             dim: 1280
-            num_classes: 11
+            num_classes: 64
             sample_rate: 4
     text_backbone:
         architecture: "Encoder2Decoder"
         encoder:
-            name: "COOPTextEncoder"
+            name: "LearnerTextEncoder"
             actions_map_file_path: "./data/gtea/mapping.txt"
             vocab_size: 49408
-            transformer_width: 512
+            embedding_dim: 512
             encoder_layers_num: 3
             encoder_heads_num: 8
             text_embed_dim: 1280
@@ -155,7 +155,7 @@ METRIC:
     file_output: True
 
 
-model_name: "Transeger3D_gtea_split1"
+model_name: "Transeger_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10
