@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:49:42
+LastEditTime : 2022-06-05 16:35:23
 Description: Action recognition model loss
 FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
 '''
@@ -74,6 +74,7 @@ class SoftLabelRocgnitionLoss(nn.Module):
         self.elps = 1e-10
     
     def forward(self, score, input_data):
+        # score [N C T]
         gt_mask, gt, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # gt_mask [N, T]
         score = torch.sum(score * gt_mask.unsqueeze(1), axis=-1) / (torch.sum(gt_mask.unsqueeze(1), dim=-1) + self.elps)  # [N, num_class]

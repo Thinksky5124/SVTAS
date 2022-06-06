@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-04 21:30:09
+LastEditTime : 2022-06-06 16:49:11
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
-FilePath     : /ETESVS/model/backbones/language/prompt.py
+FilePath     : /ETESVS/model/backbones/language/learner_prompt.py
 '''
 from collections import OrderedDict
 
@@ -25,7 +25,7 @@ from ..utils.transducer import get_attn_pad_mask
 
 
 @BACKBONES.register()
-class LearnerTextEncoder(nn.Module):
+class LearnerPromptTextEncoder(nn.Module):
     def __init__(self,
                  actions_map_file_path,
                  vocab_size,
@@ -33,8 +33,8 @@ class LearnerTextEncoder(nn.Module):
                  encoder_layers_num,
                  encoder_heads_num,
                  text_embed_dim,
-                 max_seg_action_num=12,
-                 max_len=256,
+                 sample_rate=4,
+                 max_len=50,
                  n_ctx=8,
                  ctx_init="",
                  class_token_position="end",
@@ -51,9 +51,9 @@ class LearnerTextEncoder(nn.Module):
 
         self.pretrained = pretrained
 
-        self.prompt_learner = PromptLearner(classnames, vocab_size, embedding_dim, max_seg_action_num=max_seg_action_num,
-            n_ctx=n_ctx, ctx_init=ctx_init, class_token_position=class_token_position, labels_id2classesname=id2classes,
-            ignore_index=ignore_index, context_init_method=context_init_method, max_len=max_len)
+        self.prompt_learner = PromptLearner(classnames, vocab_size, embedding_dim, n_ctx=n_ctx, ctx_init=ctx_init,
+            class_token_position=class_token_position, labels_id2classesname=id2classes, ignore_index=ignore_index,
+            context_init_method=context_init_method, max_len=max_len, sample_rate=sample_rate)
         self.transformer = Transformer(width=embedding_dim, layers=encoder_layers_num, heads=encoder_heads_num, attn_mask=attn_mask)
         self.positional_embedding = nn.Parameter(torch.empty(max_len, embedding_dim))
         self.ln_final = LayerNorm(embedding_dim)
@@ -97,8 +97,8 @@ class PromptLearner(nn.Module):
                  classnames,
                  vocab_size,
                  embedding_dim,
-                 max_seg_action_num=12,
-                 max_len=256,
+                 max_len=50,
+                 sample_rate=4,
                  n_ctx=8,
                  ctx_init="",
                  class_token_position="end",
@@ -107,8 +107,8 @@ class PromptLearner(nn.Module):
                  context_init_method="class_specific"):
         super().__init__()
         self._tokenizer = _Tokenizer(50)
-        self.max_seg_action_num = max_seg_action_num
         self.max_len = max_len
+        self.sample_rate = sample_rate
         n_cls = len(classnames)
         self.id2classes = labels_id2classesname
         self.ignore_index = ignore_index
@@ -136,12 +136,17 @@ class PromptLearner(nn.Module):
             prompt_prefix = " ".join(["X"] * n_ctx)
 
         self.prompt_prefix = prompt_prefix
-        self.order_prefix = [f"Firstly, We have watch {{}} frames, ", f"Secondly, We have watch {{}} frames, ",
-                             f"Thirdly, We have watch {{}} frames, ", f"Fourthly, We have watch {{}} frames, ",
-                             f"Fifthly, We have watch {{}} frames, ", f"Sixthly, We have watch {{}} frames, ",
-                             f"Seventhly, We have watch {{}} frames, ", f"Eighthly, We have watch {{}} frames, ",
-                             f"Ninthly, We have watch {{}} frames, ", f"Tenthly, We have watch {{}} frames, ",
-                             f"Eleventhly, We have watch {{}} frames, ", f"Twelfthly, We have watch {{}} frames, "]
+        self.ordinal_prefix = {
+            1 : "Firstly, ", 2 : "Secondly, ", 3 : "Thirdly, ", 4 : "Fourthly, ", 5 : "Fifthly, ",
+            6 : "Sixthly, ", 7 : "Seventhly, ", 8 : "Eighthly, ", 9 : "Ninthly, ", 10 : "Tenthly, ",
+            11 : "Eleventhly, ", 12 : "Twelfthly, ", 13 : "Thirteenthly, ", 14 : "Fourteenthly, ", 15 : "Fifteenthly, ",
+            16 : "Sixteenth, ", 17 : "Seventeenth, ", 18 : "Eighteenth, ", 19 : "Nineteenth, ", 20 : "Twentieth, ", 
+            21 : "Twenty-firstly, ", 22 : "Twenty-secondly, ", 23 : "Twenty-thirdly, ", 24 : "Twenty-fourthly, ", 25 : "Twenty-fifthly, ", 
+            26 : "Twenty-sixthly, ", 27 : "Twenty-seventhly, ", 28 : "Twenty-eighthly, ", 29 : "Twenty-ninthly, ", 30 : "Thirtiethly, ",
+            31 : "Thirty-firstly, ", 32 : "Thirty-secondly, ", 33 : "Thirty-thirdly, ", 34 : "Thirty-fourthly, ", 35 : "Thirty-fifthly, ",
+        }
+        self.seg_len_prefix = f"This action lasted {{}} frames in current windows, "
+        self.frames_position_prefix = f"This is frame {{}} of the action, "
         logger.info(f'Initial context: "{prompt_prefix}"')
         logger.info(f"Number of context words (tokens): {n_ctx}")
 
@@ -166,41 +171,32 @@ class PromptLearner(nn.Module):
         # label_idx_tensor [T]
         # promot [ctx_len D]
 
-        labels_idx_order, counts = torch.unique_consecutive(label_idx_tensor, return_counts=True)
+        # get seg_len_prefix number
+        labels_idx_order, inverse_indices, counts = torch.unique_consecutive(label_idx_tensor, return_counts=True, return_inverse=True)
         labels_idx_order = list(labels_idx_order.detach().cpu().numpy())
         counts = list(counts.detach().cpu().numpy())
+
         promot_embedding = [self.token_prefix.to(label_idx_tensor.device)]
-        for idx in range(self.max_seg_action_num):
-            if idx < len(labels_idx_order):
-                label_idx = labels_idx_order[idx]
-                label_name = self.id2classes[label_idx]
-                
-                promot_prefix = self._tokenizer.tokenize(self.order_prefix[idx].format(str(counts[idx])))[:, 1:11].to(label_idx_tensor.device)
-                # [N 10 D]
-                promot_prefix_embedding = self.token_embedding(promot_prefix)
-                # [N 8 D]
-                learner_promot = self.ctx
-                if learner_promot.dim() == 2:
-                    learner_promot = learner_promot.unsqueeze(0).expand(self.n_cls, -1, -1)
+        for frame_idx in range(label_idx_tensor.shape[0]):
+            order_idx = inverse_indices[frame_idx]
+            label_idx = labels_idx_order[order_idx]
+            label_name = self.id2classes[label_idx]
+            promot_prefix_str = self.ordinal_prefix[order_idx + 1] + self.seg_len_prefix.format(str(counts(order_idx))) + \
+                                self.frames_position_prefix.format(str(frame_idx + 1))
+            
+            token_promot_prefix_len = len(self._tokenizer.encode(promot_prefix_str))
+            promot_prefix = self._tokenizer.tokenize(promot_prefix_str)[:, 1:(1 + token_promot_prefix_len)].to(label_idx_tensor.device)
+            # [N 10 D]
+            promot_prefix_embedding = self.token_embedding(promot_prefix)
+            # [N 8 D]
+            learner_promot = self.ctx
+            if learner_promot.dim() == 2:
+                learner_promot = learner_promot.unsqueeze(0).expand(self.n_cls, -1, -1)
 
-                token_labels_len = len(self._tokenizer.encode(label_name))
-                # [N (token_labels_len + 1) D]
-                label_promot = self._tokenizer.tokenize(label_name + ".")[:, 1:(2 + token_labels_len)].to(label_idx_tensor.device)
-                label_promot_embedding = self.token_embedding(label_promot)
-            else:
-                label_name = "No action"
-                promot_prefix = self._tokenizer.tokenize(self.order_prefix[idx].format(str(0)))[:, 1:11].to(label_idx_tensor.device)
-                # [N 10 D]
-                promot_prefix_embedding = self.token_embedding(promot_prefix)
-                # [N 8 D]
-                learner_promot = self.ctx
-                if learner_promot.dim() == 2:
-                    learner_promot = learner_promot.unsqueeze(0).expand(self.n_cls, -1, -1)
-
-                token_labels_len = len(self._tokenizer.encode(label_name))
-                # [N (token_labels_len + 1) D]
-                label_promot = self._tokenizer.tokenize(label_name + ".")[:, 1:(2 + token_labels_len)].to(label_idx_tensor.device)
-                label_promot_embedding = self.token_embedding(label_promot)
+            token_labels_len = len(self._tokenizer.encode(label_name))
+            # [N (token_labels_len + 1) D]
+            label_promot = self._tokenizer.tokenize(label_name + ".")[:, 1:(2 + token_labels_len)].to(label_idx_tensor.device)
+            label_promot_embedding = self.token_embedding(label_promot)
 
             if self.class_token_position == "end":
                 token_embedding = torch.cat([
@@ -227,6 +223,8 @@ class PromptLearner(nn.Module):
                     dot_vector], dim=1)
             else:
                 raise ValueError
+            
+            prompts = pad_sequence(text_list, batch_first=True)
             promot_embedding.append(token_embedding)
         
         promot_embedding = torch.cat(promot_embedding, dim=1)

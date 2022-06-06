@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 12:12:00
+LastEditTime : 2022-06-06 10:52:38
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
-FilePath     : /ETESVS/model/heads/mstcn.py
+FilePath     : /ETESVS/model/heads/segmentation/mstcn.py
 '''
 import torch
 import copy
@@ -22,10 +22,12 @@ class MultiStageModel(nn.Module):
                  num_f_maps,
                  dim,
                  num_classes,
-                 sample_rate=1):
+                 sample_rate=1,
+                 out_feature=False):
         super(MultiStageModel, self).__init__()
         self.sample_rate = sample_rate
-        self.stage1 = SingleStageModel(num_layers, num_f_maps, dim, num_classes)
+        self.out_feature = out_feature
+        self.stage1 = SingleStageModel(num_layers, num_f_maps, dim, num_classes, out_feature=out_feature)
         self.stages = nn.ModuleList([copy.deepcopy(SingleStageModel(num_layers, num_f_maps, num_classes, num_classes)) for s in range(num_stages-1)])
 
     def init_weights(self):
@@ -42,7 +44,13 @@ class MultiStageModel(nn.Module):
     def forward(self, x, mask):
         mask = mask[:, :, ::self.sample_rate]
         
-        out = self.stage1(x, mask)
+        output = self.stage1(x, mask)
+
+        if self.out_feature is True:
+            out, feature = output
+        else:
+            out - output
+
         outputs = out.unsqueeze(0)
         for s in self.stages:
             out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
@@ -52,21 +60,28 @@ class MultiStageModel(nn.Module):
             input=outputs,
             scale_factor=[1, self.sample_rate],
             mode="nearest")
+        
+        if self.out_feature is True:
+            return outputs, feature
         return outputs
 
 @HEADS.register()
 class SingleStageModel(nn.Module):
-    def __init__(self, num_layers, num_f_maps, dim, num_classes):
+    def __init__(self, num_layers, num_f_maps, dim, num_classes, out_feature=False):
         super(SingleStageModel, self).__init__()
+        self.out_feature = out_feature
         self.conv_1x1 = nn.Conv1d(dim, num_f_maps, 1)
         self.layers = nn.ModuleList([copy.deepcopy(DilatedResidualLayer(2 ** i, num_f_maps, num_f_maps)) for i in range(num_layers)])
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
 
     def forward(self, x, mask):
-        out = self.conv_1x1(x)
+        feature = self.conv_1x1(x)
         for layer in self.layers:
-            out = layer(out, mask)
-        out = self.conv_out(out) * mask[:, 0:1, :]
+            feature = layer(feature, mask)
+        out = self.conv_out(feature) * mask[:, 0:1, :]
+        if self.out_feature is True:
+            return out, feature * mask[:, 0:1, :]
+
         return out
 
 

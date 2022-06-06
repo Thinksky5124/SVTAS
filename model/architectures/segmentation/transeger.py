@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-05 16:03:44
+LastEditTime : 2022-06-06 16:50:01
 Description  : Transeger framework
 FilePath     : /ETESVS/model/architectures/segmentation/transeger.py
 '''
@@ -62,12 +62,12 @@ class Transeger(nn.Module):
             self.last_clip_labels = labels.detach().clone()
 
         ### image encoder
-        if self.image_backbone is not None:
-            img_input = {"imgs": imgs, "masks": masks}
-            img_extract_score, head_feature = self.image_backbone(img_input)
-        else:
-            img_extract_score = None
-            head_feature = imgs
+        # if self.image_backbone is not None:
+        #     img_input = {"imgs": imgs, "masks": masks}
+        #     img_extract_score, head_feature = self.image_backbone(img_input)
+        # else:
+        #     img_extract_score = None
+        #     head_feature = imgs
         
         ### text encoder
         if self.training and self.text_backbone is not None:
@@ -82,6 +82,7 @@ class Transeger(nn.Module):
         else:
             img_seg_score = None
             joint_score = None
-        # seg_score [stage_num, N, C, T]
-        # cls_score [N, C, T]
+        # img_seg_score [stage_num, N, C, T]
+        # img_extract_score [N, C, T]
+        # joint_score [N U T C]
         return img_extract_score, img_seg_score, joint_score

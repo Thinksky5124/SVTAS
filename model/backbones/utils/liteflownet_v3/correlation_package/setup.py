@@ -1,3 +1,11 @@
+'''
+Author       : Thyssen Wen
+Date         : 2022-06-03 19:26:55
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-06-05 16:16:55
+Description  : Step Up script
+FilePath     : /ETESVS/model/backbones/utils/liteflownet_v3/correlation_package/setup.py
+'''
 #!/usr/bin/env python3
 import os
 import torch

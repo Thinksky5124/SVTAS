@@ -19,31 +19,34 @@ MODEL:
             num_layers: 4
             num_f_maps: 64
             dim: 1280
-            num_classes: 64
+            num_classes: 11
             sample_rate: 4
+            out_feature: True
     text_backbone:
         architecture: "Encoder2Decoder"
         encoder:
-            name: "LearnerTextEncoder"
+            name: "LearnerPromptTextEncoder"
             actions_map_file_path: "./data/gtea/mapping.txt"
             vocab_size: 49408
             embedding_dim: 512
+            sample_rate: 4
             encoder_layers_num: 3
             encoder_heads_num: 8
-            text_embed_dim: 1280
+            text_embed_dim: 64
         decoder:
         head:
     joint:
-        name: "TransudcerJointNet"
+        name: "TransegerJointNet"
         num_classes: 11
-        in_channels: 2048
-        hidden_channels: 512
+        in_channels: 64
+        hidden_channels: 128
     loss:
-        name: "RecognitionSegmentationLoss"
-        label_mode: "hard"
+        name: "TransegerLoss"
         num_classes: 11
         sample_rate: 4
-        loss_weight: 1.0
+        img_seg_loss_weights: 1.0
+        img_extract_loss_weights: 1.0
+        joint_network_loss_weights: 1.0
         ignore_index: -100
 
 POSTPRECESSING:
