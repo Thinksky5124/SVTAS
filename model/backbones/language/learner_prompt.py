@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 16:49:11
+LastEditTime : 2022-06-06 20:51:52
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
 FilePath     : /ETESVS/model/backbones/language/learner_prompt.py
 '''
@@ -34,7 +34,8 @@ class LearnerPromptTextEncoder(nn.Module):
                  encoder_heads_num,
                  text_embed_dim,
                  sample_rate=4,
-                 max_len=50,
+                 clip_seg_num=32,
+                 max_len=40,
                  n_ctx=8,
                  ctx_init="",
                  class_token_position="end",
@@ -50,14 +51,16 @@ class LearnerPromptTextEncoder(nn.Module):
         id2classes = {int(a.split()[0]): a.split()[1] for a in actions}
 
         self.pretrained = pretrained
+        self.sample_rate = sample_rate
 
         self.prompt_learner = PromptLearner(classnames, vocab_size, embedding_dim, n_ctx=n_ctx, ctx_init=ctx_init,
             class_token_position=class_token_position, labels_id2classesname=id2classes, ignore_index=ignore_index,
             context_init_method=context_init_method, max_len=max_len, sample_rate=sample_rate)
         self.transformer = Transformer(width=embedding_dim, layers=encoder_layers_num, heads=encoder_heads_num, attn_mask=attn_mask)
-        self.positional_embedding = nn.Parameter(torch.empty(max_len, embedding_dim))
+        self.positional_embedding = nn.Parameter(torch.empty(clip_seg_num, max_len, embedding_dim))
         self.ln_final = LayerNorm(embedding_dim)
         self.text_projection = nn.Linear(embedding_dim, text_embed_dim)
+        self.squeeze_sentence = nn.Linear(max_len * text_embed_dim, text_embed_dim)
 
     def _clear_memory_buffer(self):
         pass
@@ -75,12 +78,16 @@ class LearnerPromptTextEncoder(nn.Module):
             nn.init.normal_(self.prompt_learner.token_embedding.weight, std=0.02)
 
     def forward(self, last_clip_labels, masks):
-        b, _ = masks.shape
-        prompts, pad_masks = self.prompt_learner(last_clip_labels, b)
+        b, temporal_len = masks.shape
+        prompts, pad_masks = self.prompt_learner(last_clip_labels, b, temporal_len)
+        # [N T U D]
         prompts = prompts.to(masks.device)
-        pad_masks = pad_masks.to(masks.device)
+        # [N T U 1] -> [N*T U 1]
+        pad_masks = pad_masks.reshape([-1] + list(pad_masks.shape[2:])).to(masks.device)
 
         x = prompts + self.positional_embedding
+        # [N T U D] -> [N*T U D]
+        x = torch.reshape(x, [-1] + list(prompts.shape[2:]))
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
@@ -88,7 +95,12 @@ class LearnerPromptTextEncoder(nn.Module):
 
         # x.shape = [batch_size, n_ctx, transformer.width]
         x = self.text_projection(x)
-
+        # [N*T U D] -> [N T U D]
+        x = torch.reshape(x, [-1, temporal_len // self.sample_rate] + list(x.shape[1:]))
+        # [N T U D] -> [N T U*D] -> [N T D] -> [N D T]
+        x = torch.reshape(x, list(x.shape[:2]) + [-1])
+        x = self.squeeze_sentence(x)
+        x = torch.permute(x, [0, 2, 1])
         return x
 
 
@@ -97,7 +109,7 @@ class PromptLearner(nn.Module):
                  classnames,
                  vocab_size,
                  embedding_dim,
-                 max_len=50,
+                 max_len=40,
                  sample_rate=4,
                  n_ctx=8,
                  ctx_init="",
@@ -106,7 +118,7 @@ class PromptLearner(nn.Module):
                  ignore_index=-100,
                  context_init_method="class_specific"):
         super().__init__()
-        self._tokenizer = _Tokenizer(50)
+        self._tokenizer = _Tokenizer(max_len)
         self.max_len = max_len
         self.sample_rate = sample_rate
         n_cls = len(classnames)
@@ -129,10 +141,10 @@ class PromptLearner(nn.Module):
             # random initialization
             if context_init_method == "class_specific":
                 logger.info("Initializing class-specific contexts")
-                ctx_vectors = torch.empty(n_cls, n_ctx, embedding_dim)
+                ctx_vectors = torch.normal(mean=0, std=0.2, size=(n_cls, n_ctx, embedding_dim))
             else:
                 logger.info("Initializing a generic context")
-                ctx_vectors = torch.empty(n_ctx, embedding_dim)
+                ctx_vectors = torch.normal(mean=0, std=0.2, size=(n_ctx, embedding_dim))
             prompt_prefix = " ".join(["X"] * n_ctx)
 
         self.prompt_prefix = prompt_prefix
@@ -157,18 +169,13 @@ class PromptLearner(nn.Module):
         with torch.no_grad():
             embedding = self.token_embedding(tokenized_prompt_prefix)
 
-        # SOS
-        self.token_prefix = embedding[:, :1, :]
-        # EOS
-        self.token_suffix = embedding[:, -1:, :]
-
         self.n_cls = n_cls
         self.n_ctx = n_ctx
         self.max_len = max_len
         self.class_token_position = class_token_position
     
     def convert_id_to_promot(self, label_idx_tensor):
-        # label_idx_tensor [T]
+        # label_idx_tensor [T // sample_rate]
         # promot [ctx_len D]
 
         # get seg_len_prefix number
@@ -176,18 +183,21 @@ class PromptLearner(nn.Module):
         labels_idx_order = list(labels_idx_order.detach().cpu().numpy())
         counts = list(counts.detach().cpu().numpy())
 
-        promot_embedding = [self.token_prefix.to(label_idx_tensor.device)]
+        promot_embedding = []
         for frame_idx in range(label_idx_tensor.shape[0]):
             order_idx = inverse_indices[frame_idx]
             label_idx = labels_idx_order[order_idx]
             label_name = self.id2classes[label_idx]
-            promot_prefix_str = self.ordinal_prefix[order_idx + 1] + self.seg_len_prefix.format(str(counts(order_idx))) + \
+            promot_prefix_str = self.ordinal_prefix[int(order_idx) + 1] + self.seg_len_prefix.format(str(counts[int(order_idx)])) + \
                                 self.frames_position_prefix.format(str(frame_idx + 1))
             
             token_promot_prefix_len = len(self._tokenizer.encode(promot_prefix_str))
-            promot_prefix = self._tokenizer.tokenize(promot_prefix_str)[:, 1:(1 + token_promot_prefix_len)].to(label_idx_tensor.device)
-            # [N 10 D]
-            promot_prefix_embedding = self.token_embedding(promot_prefix)
+            promot_prefix = self._tokenizer.tokenize(promot_prefix_str).to(label_idx_tensor.device)
+            promot_prefix_embedding_sos_eos = self.token_embedding(promot_prefix)
+            # [N token_promot_prefix_len D]
+            promot_prefix_embedding = promot_prefix_embedding_sos_eos[:, 1:(1 + token_promot_prefix_len)]
+            token_prefix = promot_prefix_embedding_sos_eos[:, :1]
+            token_suffix = promot_prefix_embedding_sos_eos[:, (1 + token_promot_prefix_len):(2 + token_promot_prefix_len)]
             # [N 8 D]
             learner_promot = self.ctx
             if learner_promot.dim() == 2:
@@ -200,53 +210,61 @@ class PromptLearner(nn.Module):
 
             if self.class_token_position == "end":
                 token_embedding = torch.cat([
+                    token_prefix,
                     promot_prefix_embedding,
                     learner_promot[label_idx:(label_idx + 1)],
-                    label_promot_embedding], dim=1)
+                    label_promot_embedding,
+                    token_suffix], dim=1)
             elif self.class_token_position == "middle":
                 half_n_ctx = learner_promot // 2
                 dot_vector = label_promot_embedding[:, -1:]
                 ctx_i_half1 = learner_promot[label_idx:(label_idx + 1), :half_n_ctx, :]
                 ctx_i_half2 = learner_promot[label_idx:(label_idx + 1), half_n_ctx:, :]
                 token_embedding = torch.cat([
+                    token_prefix,
                     promot_prefix_embedding,
                     ctx_i_half1,
                     label_promot_embedding[:, :-1],
                     ctx_i_half2,
-                    dot_vector], dim=1)
+                    dot_vector,
+                    token_suffix], dim=1)
             elif self.class_token_position == "front":
                 dot_vector = label_promot_embedding[:, -1:]
                 token_embedding = torch.cat([
+                    token_prefix,
                     label_promot_embedding[:, :-1],
                     learner_promot[label_idx:(label_idx + 1)],
                     promot_prefix_embedding,
-                    dot_vector], dim=1)
+                    dot_vector,
+                    token_suffix], dim=1)
             else:
                 raise ValueError
-            
-            prompts = pad_sequence(text_list, batch_first=True)
+            if token_embedding.shape[-2] < self.max_len:
+                token_embedding = F.pad(token_embedding, pad=[0, 0, 0, self.max_len - token_embedding.shape[-2], 0, 0], mode='constant', value=0.0)
+            else:
+                token_embedding = token_embedding[:, :self.max_len, :]
             promot_embedding.append(token_embedding)
         
-        promot_embedding = torch.cat(promot_embedding, dim=1)
+        promot_embedding = torch.cat(promot_embedding, dim=0)
         return promot_embedding
 
-    def forward(self, last_clip_labels, batch_size):
+    def forward(self, last_clip_labels, batch_size, temporal_len):
         if last_clip_labels is None:
-            prompts = self.token_prefix.expand(batch_size, self.max_len, -1)
+            start_promot = self._tokenizer.tokenize("")
+            start_promot_embedding = self.token_embedding(start_promot)
+            prompts = start_promot_embedding[:, :1].expand(batch_size, temporal_len // self.sample_rate, -1)
         else:
             text_list = []
             for b in range(batch_size):
                 if torch.any(last_clip_labels[b,:] == self.ignore_index):
-                    embedding = self.token_suffix.expand(-1, self.max_len, -1)
+                    end_promot = self._tokenizer.tokenize("")
+                    end_promot_embedding = self.token_embedding(end_promot)
+                    embedding = end_promot_embedding[:, 1:].expand(batch_size, temporal_len // self.sample_rate, -1)
                 else:
-                    embedding = self.convert_id_to_promot(last_clip_labels[b, :])
-                text_list.append(embedding.squeeze(0))
+                    embedding = self.convert_id_to_promot(last_clip_labels[b, ::self.sample_rate])
+                text_list.append(embedding.unsqueeze(0))
             
-            # [N U D]
-            prompts = pad_sequence(text_list, batch_first=True)
-        if prompts.shape[-2] < self.max_len:
-            prompts = F.pad(prompts, pad=[0, 0, 0, self.max_len - prompts.shape[-2], 0, 0], mode='constant', value=0.0)
-        else:
-            prompts = prompts[:, :self.max_len, :]
-        pad_masks = torch.where(prompts != 0., torch.ones_like(prompts), torch.zeros_like(prompts))
+            # [N T U D]
+            prompts = torch.cat(text_list, dim=0)
+        pad_masks = torch.where(prompts != 0., torch.ones_like(prompts), torch.zeros_like(prompts))[:, :, :, 0:1]
         return prompts, pad_masks

@@ -30,11 +30,20 @@ MODEL:
             vocab_size: 49408
             embedding_dim: 512
             sample_rate: 4
+            max_len: 40
+            clip_seg_num: 32
             encoder_layers_num: 3
             encoder_heads_num: 8
             text_embed_dim: 64
         decoder:
         head:
+            name: "TextPredFCHead"
+            num_classes: 11
+            clip_seg_num: 32
+            sample_rate: 4
+            drop_ratio: 0.5
+            in_channels: 64
+            out_feature: True
     joint:
         name: "TransegerJointNet"
         num_classes: 11

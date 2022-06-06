@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 16:50:01
+LastEditTime : 2022-06-06 20:57:06
 Description  : Transeger framework
 FilePath     : /ETESVS/model/architectures/segmentation/transeger.py
 '''
@@ -56,33 +56,38 @@ class Transeger(nn.Module):
         
         if self.last_clip_labels is None:
             self.last_clip_labels = labels.detach().clone()
-            last_clip_labels = None
+            last_clip_labels = labels.detach().clone()
         else:
             last_clip_labels = self.last_clip_labels.detach().clone()
             self.last_clip_labels = labels.detach().clone()
 
-        ### image encoder
-        # if self.image_backbone is not None:
-        #     img_input = {"imgs": imgs, "masks": masks}
-        #     img_extract_score, head_feature = self.image_backbone(img_input)
-        # else:
-        #     img_extract_score = None
-        #     head_feature = imgs
+        ## image encoder
+        if self.image_backbone is not None:
+            img_input = {"imgs": imgs, "masks": masks}
+            img_output = self.image_backbone(img_input)
+            img_extract_score, head_output = img_output
+            img_seg_score, img_feature = head_output
+        else:
+            img_extract_score = None
+            img_seg_score = None
+            img_feature = imgs
         
         ### text encoder
         if self.training and self.text_backbone is not None:
             text_input = {"x": last_clip_labels, "masks": masks}
             text_output = self.text_backbone(text_input)
+            text_pred_score, text_feature = text_output
         else:
-            text_output = None
+            text_feature = labels
+            text_pred_score = None
 
         ### joint img and text
         if self.joint is not None:
-            img_seg_score, joint_score = self.joint(head_feature, text_output, masks)
+            joint_score = self.joint(img_feature, text_feature, masks)
         else:
-            img_seg_score = None
             joint_score = None
         # img_seg_score [stage_num, N, C, T]
+        # text_pred_score [stage_num, N, C, T]
         # img_extract_score [N, C, T]
-        # joint_score [N U T C]
-        return img_extract_score, img_seg_score, joint_score
+        # joint_score [num_satge N C T]
+        return img_extract_score, img_seg_score, text_pred_score, joint_score

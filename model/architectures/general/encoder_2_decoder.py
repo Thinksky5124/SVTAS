@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-27 15:46:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-04 14:24:59
+LastEditTime : 2022-06-06 20:42:42
 Description  : Text Translation framework
 FilePath     : /ETESVS/model/architectures/general/encoder_2_decoder.py
 '''
@@ -46,7 +46,7 @@ class Encoder2Decoder(nn.Module):
         if self.decoder is not None:
             self.decoder.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         if self.head is not None:
-            self.head.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
+            self.head.init_weights()
     
     def _clear_memory_buffer(self):
         if self.encoder is not None:
