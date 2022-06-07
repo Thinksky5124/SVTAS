@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 20:51:52
+LastEditTime : 2022-06-07 11:40:14
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
 FilePath     : /ETESVS/model/backbones/language/learner_prompt.py
 '''
@@ -79,7 +79,7 @@ class LearnerPromptTextEncoder(nn.Module):
 
     def forward(self, last_clip_labels, masks):
         b, temporal_len = masks.shape
-        prompts, pad_masks = self.prompt_learner(last_clip_labels, b, temporal_len)
+        prompts, pad_masks = self.prompt_learner(last_clip_labels, b, temporal_len, masks.device)
         # [N T U D]
         prompts = prompts.to(masks.device)
         # [N T U 1] -> [N*T U 1]
@@ -248,21 +248,22 @@ class PromptLearner(nn.Module):
         promot_embedding = torch.cat(promot_embedding, dim=0)
         return promot_embedding
 
-    def forward(self, last_clip_labels, batch_size, temporal_len):
+    def forward(self, last_clip_labels, batch_size, temporal_len, device):
         if last_clip_labels is None:
-            start_promot = self._tokenizer.tokenize("")
+            start_promot = self._tokenizer.tokenize("").to(device)
             start_promot_embedding = self.token_embedding(start_promot)
-            prompts = start_promot_embedding[:, :1].expand(batch_size, temporal_len // self.sample_rate, -1)
+            prompts = start_promot_embedding[:, :1].expand(batch_size, temporal_len // self.sample_rate, self.max_len, -1)
         else:
             text_list = []
             for b in range(batch_size):
                 if torch.any(last_clip_labels[b,:] == self.ignore_index):
-                    end_promot = self._tokenizer.tokenize("")
+                    end_promot = self._tokenizer.tokenize("").to(device)
                     end_promot_embedding = self.token_embedding(end_promot)
-                    embedding = end_promot_embedding[:, 1:].expand(batch_size, temporal_len // self.sample_rate, -1)
+                    embedding = end_promot_embedding[:, 1:2].expand(1, temporal_len // self.sample_rate, self.max_len, -1)
+                    text_list.append(embedding)
                 else:
                     embedding = self.convert_id_to_promot(last_clip_labels[b, ::self.sample_rate])
-                text_list.append(embedding.unsqueeze(0))
+                    text_list.append(embedding.unsqueeze(0))
             
             # [N T U D]
             prompts = torch.cat(text_list, dim=0)

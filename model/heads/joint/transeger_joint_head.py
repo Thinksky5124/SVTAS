@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-05 10:35:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 21:01:18
+LastEditTime : 2022-06-07 10:40:59
 Description  : Transeger joint network module
 FilePath     : /ETESVS/model/heads/joint/transeger_joint_head.py
 '''

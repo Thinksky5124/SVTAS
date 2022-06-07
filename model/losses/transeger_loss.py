@@ -2,12 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-06-05 10:47:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 21:06:37
+LastEditTime : 2022-06-07 11:32:31
 Description  : Transeger Loss module
 FilePath     : /ETESVS/model/losses/transeger_loss.py
 '''
 import torch
-import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from torchaudio.transforms import RNNTLoss
@@ -35,41 +34,34 @@ class TransegerLoss(nn.Module):
         self.text_pred_loss_weights = text_pred_loss_weights
         self.joint_network_loss_weights = joint_network_loss_weights
         self.sample_rate = sample_rate
-        self.joint_loss = nn.CTCLoss(blank=self.ignore_index, reduction="none")
+        self.joint_loss = SegmentationLoss(num_classes=num_classes, sample_rate=sample_rate, smooth_weight=smooth_weight, ignore_index=ignore_index)
         self.img_seg_loss = StreamSegmentationLoss(self.num_classes, ignore_index=self.ignore_index,
                                                 backone_loss_weight=img_extract_loss_weights, head_loss_weight=img_seg_loss_weights,
                                                 smooth_weight=smooth_weight, sample_rate=sample_rate)
         self.text_pred_loss = SegmentationLoss(num_classes=num_classes, sample_rate=sample_rate, smooth_weight=0.0, ignore_index=ignore_index)
         self.elps = 1e-10
 
-    
     def forward(self, model_output, input_data):
         # img_seg_score [stage_num, N, C, T]
         # text_pred_score [stage_num, N, C, T]
         # img_extract_score [N, C, T]
         # joint_score [num_satge N C T]
         img_extract_score, img_seg_score, text_pred_score, joint_score = model_output
-        masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
 
         # img backbone label learning
         img_seg_loss_dict = self.img_seg_loss([img_extract_score, img_seg_score], input_data)
         text_pred_loss = self.text_pred_loss(text_pred_score, input_data)["loss"] * self.text_pred_loss_weights
-
-        # joint network label learning
-        img_seq_len = torch.tensor([joint_score.shape[1]], dtype=torch.int).to(joint_score.device)
-        text_seq_len = torch.tensor([joint_score.shape[2]], dtype=torch.int).to(joint_score.device)
-        joint_loss = self.joint_loss(joint_score, labels.to(torch.int), text_seq_len, img_seq_len)
+        joint_loss = self.joint_loss(joint_score, input_data)["loss"] * self.joint_network_loss_weights
         
         img_extract_cls_score_loss = img_seg_loss_dict["backbone_loss"]
         img_seg_score_loss = img_seg_loss_dict["head_loss"]
-        joint_loss = self.joint_network_loss_weights * joint_loss
-        
+
         loss = img_extract_cls_score_loss + img_seg_score_loss + text_pred_loss + joint_loss
 
         loss_dict={}
         loss_dict["loss"] = loss
         loss_dict["img_extract_loss"] = img_extract_cls_score_loss
         loss_dict["img_seg_loss"] = img_seg_score_loss
+        loss_dict["text_pred_loss"] = text_pred_loss
         loss_dict["joint_loss"] = joint_loss
         return loss_dict
-

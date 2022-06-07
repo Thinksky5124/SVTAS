@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 20:57:06
+LastEditTime : 2022-06-07 21:29:24
 Description  : Transeger framework
 FilePath     : /ETESVS/model/architectures/segmentation/transeger.py
 '''
@@ -50,16 +50,19 @@ class Transeger(nn.Module):
             masks = input_data['masks']
             imgs = input_data['imgs']
             labels = input_data['labels']
+            if self.last_clip_labels is None:
+                self.last_clip_labels = labels.detach().clone()
+                last_clip_labels = None
+            else:
+                last_clip_labels = self.last_clip_labels.detach().clone()
+                self.last_clip_labels = labels.detach().clone()
         else:
             masks = input_data['masks']
             imgs = input_data['imgs']
-        
-        if self.last_clip_labels is None:
-            self.last_clip_labels = labels.detach().clone()
-            last_clip_labels = labels.detach().clone()
-        else:
-            last_clip_labels = self.last_clip_labels.detach().clone()
-            self.last_clip_labels = labels.detach().clone()
+            if self.last_clip_labels is None:
+                last_clip_labels = None
+            else:
+                last_clip_labels = self.last_clip_labels.detach().clone()
 
         ## image encoder
         if self.image_backbone is not None:
@@ -90,4 +93,6 @@ class Transeger(nn.Module):
         # text_pred_score [stage_num, N, C, T]
         # img_extract_score [N, C, T]
         # joint_score [num_satge N C T]
+        if not self.training:
+            self.last_clip_labels = torch.argmax(joint_score[-1], dim=-2).detach().clone()
         return img_extract_score, img_seg_score, text_pred_score, joint_score
