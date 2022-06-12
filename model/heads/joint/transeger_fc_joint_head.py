@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-05 10:35:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-07 10:40:59
-Description  : Transeger joint network module
-FilePath     : /ETESVS/model/heads/joint/transeger_joint_head.py
+LastEditTime : 2022-06-08 10:57:43
+Description  : Transeger Full connect joint network module
+FilePath     : /ETESVS/model/heads/joint/transeger_fc_joint_head.py
 '''
 import torch
 import torch.nn as nn
@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from ...builder import HEADS
 
 @HEADS.register()
-class TransegerJointNet(nn.Module):
+class TransegerFCJointNet(nn.Module):
     def __init__(self,
                  num_classes,
                  in_channels,
@@ -32,12 +32,9 @@ class TransegerJointNet(nn.Module):
         pass
 
     def forward(self, img_feature, text_feature, masks):
-        # img_feature [num_stage N D T]
+        # img_feature [N D T]
         # text_feature [N D T]
         # masks [N T]
-
-        # img_feature [N D T]
-        img_feature = img_feature.squeeze(0)
 
         # joint branch
         # [N D T] -> [N T D]
@@ -49,8 +46,6 @@ class TransegerJointNet(nn.Module):
         output = self.fc1(output)
         output = self.tanh(output)
         joint_score = self.fc2(output)
-
-        joint_score = F.log_softmax(joint_score, dim=-1)
 
         # [N T C] -> [N C T]
         joint_score = torch.permute(joint_score, [0, 2, 1]) * masks.unsqueeze(1)[:, 0:1, ::self.sample_rate]

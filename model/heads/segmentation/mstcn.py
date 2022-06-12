@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 20:34:35
+LastEditTime : 2022-06-12 16:53:54
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath     : /ETESVS/model/heads/segmentation/mstcn.py
 '''
@@ -49,7 +49,7 @@ class MultiStageModel(nn.Module):
         if self.out_feature is True:
             out, feature = output
         else:
-            out - output
+            out = output
 
         outputs = out.unsqueeze(0)
         for s in self.stages:
@@ -75,12 +75,13 @@ class SingleStageModel(nn.Module):
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
 
     def forward(self, x, mask):
-        feature = self.conv_1x1(x)
+        feature_embedding = self.conv_1x1(x)
+        feature = feature_embedding
         for layer in self.layers:
             feature = layer(feature, mask)
         out = self.conv_out(feature) * mask[:, 0:1, :]
         if self.out_feature is True:
-            return out, feature * mask[:, 0:1, :]
+            return out, feature_embedding * mask[:, 0:1, :]
 
         return out
 
@@ -90,8 +91,8 @@ class DilatedResidualLayer(nn.Module):
         super(DilatedResidualLayer, self).__init__()
         self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=dilation, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
-        # self.norm = nn.BatchNorm1d(out_channels)
-        self.norm = nn.Dropout()
+        self.norm = nn.BatchNorm1d(out_channels)
+        # self.norm = nn.Dropout()
 
     def forward(self, x, mask):
         out = F.relu(self.conv_dilated(x))

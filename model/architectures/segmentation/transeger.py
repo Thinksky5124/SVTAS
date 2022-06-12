@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-07 21:29:24
+LastEditTime : 2022-06-12 17:15:54
 Description  : Transeger framework
 FilePath     : /ETESVS/model/architectures/segmentation/transeger.py
 '''
@@ -76,13 +76,12 @@ class Transeger(nn.Module):
             img_feature = imgs
         
         ### text encoder
-        if self.training and self.text_backbone is not None:
+        if self.text_backbone is not None:
             text_input = {"x": last_clip_labels, "masks": masks}
             text_output = self.text_backbone(text_input)
-            text_pred_score, text_feature = text_output
+            text_feature = text_output
         else:
             text_feature = labels
-            text_pred_score = None
 
         ### joint img and text
         if self.joint is not None:
@@ -90,9 +89,8 @@ class Transeger(nn.Module):
         else:
             joint_score = None
         # img_seg_score [stage_num, N, C, T]
-        # text_pred_score [stage_num, N, C, T]
         # img_extract_score [N, C, T]
         # joint_score [num_satge N C T]
         if not self.training:
             self.last_clip_labels = torch.argmax(joint_score[-1], dim=-2).detach().clone()
-        return img_extract_score, img_seg_score, text_pred_score, joint_score
+        return img_extract_score, img_seg_score, joint_score

@@ -1,5 +1,5 @@
 MODEL:
-    architecture: "Transeger"
+    architecture: "SegmentationCLIP"
     image_backbone:
         architecture: "StreamSegmentation2D"
         backbone:
@@ -38,24 +38,13 @@ MODEL:
             text_embed_dim: 64
         decoder:
         head:
-    joint:
-        name: "TransegerTransformerJointNet"
-        num_classes: 11
-        in_channels: 64
-        hidden_channels: 128
-        clip_seg_num: 32
-        num_layers: 3
-        dropout_rate: 0.1
-        encoder_heads_num: 8
-        sample_rate: 4
-        positional_encoding_type: "fixed"
     loss:
-        name: "TransegerLoss"
+        name: "SgementationCLIPLoss"
         num_classes: 11
         sample_rate: 4
         img_seg_loss_weights: 1.0
         img_extract_loss_weights: 1.0
-        joint_network_loss_weights: 1.0
+        clip_loss_weight: 1.0
         ignore_index: -100
 
 POSTPRECESSING:
@@ -167,7 +156,7 @@ METRIC:
     file_output: True
 
 
-model_name: "Transeger_gtea_split1"
+model_name: "Segmentation_CLIP_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

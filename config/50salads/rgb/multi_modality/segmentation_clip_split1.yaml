@@ -1,5 +1,5 @@
 MODEL:
-    architecture: "Transeger"
+    architecture: "SegmentationCLIP"
     image_backbone:
         architecture: "StreamSegmentation2D"
         backbone:
@@ -10,7 +10,7 @@ MODEL:
             out_indices: (7, )
         neck:
             name: "AvgPoolNeck"
-            num_classes: 11
+            num_classes: 19
             in_channels: 1280
             clip_seg_num: 32
             drop_ratio: 0.5
@@ -21,16 +21,16 @@ MODEL:
             num_layers: 4
             num_f_maps: 64
             dim: 1280
-            num_classes: 11
-            sample_rate: 4
+            num_classes: 19
+            sample_rate: 20
             out_feature: True
     text_backbone:
         architecture: "Encoder2Decoder"
         encoder:
             name: "LearnerPromptTextEncoder"
-            actions_map_file_path: "./data/gtea/mapping.txt"
+            actions_map_file_path: "./data/50salads/mapping.txt"
             embedding_dim: 512
-            sample_rate: 4
+            sample_rate: 20
             max_len: 40
             clip_seg_num: 32
             encoder_layers_num: 3
@@ -38,32 +38,21 @@ MODEL:
             text_embed_dim: 64
         decoder:
         head:
-    joint:
-        name: "TransegerTransformerJointNet"
-        num_classes: 11
-        in_channels: 64
-        hidden_channels: 128
-        clip_seg_num: 32
-        num_layers: 3
-        dropout_rate: 0.1
-        encoder_heads_num: 8
-        sample_rate: 4
-        positional_encoding_type: "fixed"
     loss:
-        name: "TransegerLoss"
-        num_classes: 11
-        sample_rate: 4
+        name: "SgementationCLIPLoss"
+        num_classes: 19
+        sample_rate: 20
         img_seg_loss_weights: 1.0
         img_extract_loss_weights: 1.0
-        joint_network_loss_weights: 1.0
+        clip_loss_weight: 1.0
         ignore_index: -100
 
 POSTPRECESSING:
     name: "StreamScorePostProcessing"
-    num_classes: 11
+    num_classes: 19
     clip_seg_num: 32
-    sliding_window: 128
-    sample_rate: 4
+    sliding_window: 640
+    sample_rate: 20
     ignore_index: -100
 
 COLLATE:
@@ -73,31 +62,31 @@ COLLATE:
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
     video_batch_size: 2
-    num_workers: 2
+    num_workers: 4
     train:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
-        gt_path: "./data/gtea/groundTruth"
-        actions_map_file_path: "./data/gtea/mapping.txt"
-        dataset_type: "gtea"
+        file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
         train_mode: True
-        sliding_window: 128
+        sliding_window: 640
         clip_seg_num: 32
-        sample_rate: 4
+        sample_rate: 20
     test:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
-        gt_path: "./data/gtea/groundTruth"
-        actions_map_file_path: "./data/gtea/mapping.txt"
-        dataset_type: "gtea"
+        file_path: "./data/50salads/splits/test.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
         train_mode: False
-        sliding_window: 128
+        sliding_window: 640
         clip_seg_num: 32
-        sample_rate: 4
+        sample_rate: 20
 
 PIPELINE: #PIPELINE field
     train: 
@@ -108,9 +97,9 @@ PIPELINE: #PIPELINE field
         sample:
             name: "VideoStreamSampler"
             is_train: True
-            sample_rate: 4
+            sample_rate: 20
             clip_seg_num: 32
-            sliding_window: 128
+            sliding_window: 640
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             name: "VideoStreamTransform"
@@ -118,12 +107,13 @@ PIPELINE: #PIPELINE field
                 - Resize:
                     size: [256, 320]
                 - RandomCrop:
-                    size: 256
+                    size: 224
                 - RandomHorizontalFlip:
                 - ToTensor:
                 - Normalize:
-                    mean: [0.551, 0.424, 0.179]
-                    std: [0.133, 0.141, 0.124]
+                    mean: [0.513, 0.511, 0.479]
+                    std: [0.236, 0.233, 0.237]
+
 
     test:
         name: "BasePipline"
@@ -133,9 +123,9 @@ PIPELINE: #PIPELINE field
         sample:
             name: "VideoStreamSampler"
             is_train: False
-            sample_rate: 4
+            sample_rate: 20
             clip_seg_num: 32
-            sliding_window: 128
+            sliding_window: 640
             sample_mode: "uniform"
         transform:
             name: "VideoStreamTransform"
@@ -143,11 +133,11 @@ PIPELINE: #PIPELINE field
                 - Resize:
                     size: [256, 320]
                 - CenterCrop:
-                    size: 256
+                    size: 224
                 - ToTensor:
                 - Normalize:
-                    mean: [0.551, 0.424, 0.179]
-                    std: [0.133, 0.141, 0.124]
+                    mean: [0.513, 0.511, 0.479]
+                    std: [0.236, 0.233, 0.237]
 
 OPTIMIZER:
     name: "AdamOptimizer"
@@ -163,11 +153,11 @@ LRSCHEDULER:
 METRIC:
     name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/gtea/mapping.txt"
+    actions_map_file_path: "./data/50salads/mapping.txt"
     file_output: True
 
 
-model_name: "Transeger_gtea_split1"
-log_interval: 4 #Optional, the interal of logger, default:10
+model_name: "Segmentation_CLIP_50salads_split1"
+log_interval: 3 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

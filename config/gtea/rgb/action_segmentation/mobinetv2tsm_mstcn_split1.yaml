@@ -29,6 +29,14 @@ MODEL:
         head_loss_weight: 1.0
         ignore_index: -100
 
+POSTPRECESSING:
+    name: "StreamScorePostProcessing"
+    num_classes: 11
+    clip_seg_num: 32
+    sliding_window: 128
+    sample_rate: 4
+    ignore_index: -100
+
 COLLATE:
     name: "StreamBatchCompose"
     to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
@@ -38,7 +46,7 @@ DATASET: #DATASET field
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "RawFrameSegmentationDataset"
+        name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/Videos"
@@ -50,7 +58,7 @@ DATASET: #DATASET field
         clip_seg_num: 32
         sample_rate: 4
     test:
-        name: "RawFrameSegmentationDataset"
+        name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/Videos"
@@ -64,45 +72,53 @@ DATASET: #DATASET field
 
 PIPELINE: #PIPELINE field
     train: 
-        name: "RawFramePipeline"
+        name: "BasePipline"
         decode:
+            name: "VideoDecoder"
             backend: "decord"
         sample:
+            name: "VideoStreamSampler"
             is_train: True
             sample_rate: 4
             clip_seg_num: 32
             sliding_window: 128
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
-            - Resize:
-                size: [256, 320]
-            - RandomCrop:
-                size: 224
-            - RandomHorizontalFlip:
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - RandomCrop:
+                    size: 224
+                - RandomHorizontalFlip:
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
 
     test:
-        name: "RawFramePipeline"
+        name: "BasePipline"
         decode:
+            name: "VideoDecoder"
             backend: "decord"
         sample:
+            name: "VideoStreamSampler"
             is_train: False
             sample_rate: 4
             clip_seg_num: 32
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            - Resize:
-                size: [256, 320]
-            - CenterCrop:
-                size: 224
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - CenterCrop:
+                    size: 224
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
 
 OPTIMIZER:
     name: "TSMAdamOptimizer"
@@ -116,6 +132,7 @@ LRSCHEDULER:
     gamma: 0.1
 
 METRIC:
+    name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
     file_output: True
