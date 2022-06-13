@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-06 20:19:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 20:23:20
+LastEditTime : 2022-06-13 20:06:12
 Description  : Segmentation Head Modules
 FilePath     : /ETESVS/model/heads/segmentation/__init__.py
 '''

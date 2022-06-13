@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:55:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 21:02:50
+LastEditTime : 2022-06-12 21:12:51
 Description  : Swin Transformer V2 model ref:https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer_v2.py
 FilePath     : /ETESVS/model/backbones/image/swin_v2_transformer.py
 '''
@@ -603,7 +603,6 @@ class SwinTransformerV2(nn.Module):
             self.layers.append(layer)
 
         self.norm = norm_layer(self.num_features)
-        self.avgpool = nn.AdaptiveAvgPool1d(1)
     
     def _clear_memory_buffer(self):
         pass
@@ -661,6 +660,13 @@ class SwinTransformerV2(nn.Module):
             x = layer(x)
 
         x = self.norm(x)  # B L C
-        x = self.avgpool(x.transpose(1, 2))  # B C 1
-        x = torch.flatten(x, 1)
         return x
+    
+    def flops(self):
+        flops = 0
+        flops += self.patch_embed.flops()
+        for i, layer in enumerate(self.layers):
+            flops += layer.flops()
+        flops += self.num_features * self.patches_resolution[0] * self.patches_resolution[1] // (2 ** self.num_layers)
+        flops += self.num_features * self.num_classes
+        return flops

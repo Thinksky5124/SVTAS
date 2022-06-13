@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 20:15:03
+LastEditTime : 2022-06-13 16:09:08
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -161,7 +161,7 @@ def test(cfg,
                 return dict(input_data=dict(imgs=x, masks=mask))
             dummy_input = input_constructor(input_shape)
         else:
-            x_shape = [2048, cfg.DATASET.test.clip_seg_num]
+            x_shape = [cfg.DATASET.test.clip_seg_num, 2048]
             mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
             input_shape = (x_shape, mask_shape)
             def input_constructor(input_shape, optimal_batch_size=1):

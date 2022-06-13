@@ -179,7 +179,7 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
 
     if mode in ["train", "validation"]:
         logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
-            coloring(epoch_str, "HEADER") if batch_id == 0 else epoch_str,
+            coloring(epoch_str, "HEADER"),
             coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
             coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
     elif mode in ["test"]:

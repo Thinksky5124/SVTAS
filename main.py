@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 12:17:22
+LastEditTime : 2022-06-13 19:53:16
 Description: main script
 FilePath     : /ETESVS/main.py
 '''
@@ -52,7 +52,7 @@ def parse_args():
     parser.add_argument(
         '--use_tensorboard',
         type=bool,
-        default=True,
+        default=False,
         help='whether to use tensorboard to visualize train')
     parser.add_argument(
         '--seed',

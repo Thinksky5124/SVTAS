@@ -2,11 +2,10 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 20:14:13
+LastEditTime : 2022-06-13 10:11:27
 Description: train script api
 FilePath     : /ETESVS/tasks/train.py
 '''
-from cProfile import run
 import os.path as osp
 import time
 
@@ -249,8 +248,8 @@ def train(cfg,
                 # metric output
                 Metric_dict = runner.Metric.accumulate()
                 
-                if Metric_dict["F1@0.50"] > best:
-                    best = Metric_dict["F1@0.50"]
+                if Metric_dict["Acc"] > best:
+                    best = Metric_dict["Acc"]
                     best_flag = True
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
@@ -284,7 +283,7 @@ def train(cfg,
                 torch.save(checkpoint,
                     osp.join(output_dir, model_name + "_best.pkl"))
                 logger.info(
-                        f"Already save the best model (F1@0.50){int(best * 10000) / 10000}"
+                        f"Already save the best model (Acc){int(best * 10000) / 10000}"
                     )
 
         # 6. Save model and optimizer

@@ -1,10 +1,10 @@
 '''
-Author: Thyssen Wen
-Date: 2022-03-25 10:29:10
+Author       : Thyssen Wen
+Date         : 2022-06-13 16:22:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 16:32:12
-Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation3d.py
+LastEditTime : 2022-06-13 16:25:20
+Description  : Stream Segmentation 2D without backbone loss
+FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation2d_without_backbone.py
 '''
 import torch
 import torch.nn as nn
@@ -19,7 +19,7 @@ from ...builder import build_head
 from ...builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class StreamSegmentation3D(nn.Module):
+class StreamSegmentation2DWithoutBackbone(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -55,35 +55,24 @@ class StreamSegmentation3D(nn.Module):
         masks = masks.unsqueeze(1)
 
         # x.shape=[N,T,C,H,W], for most commonly case
-        imgs = imgs.transpose(1, 2).contiguous()
+        imgs = torch.reshape(imgs, [-1] + list(imgs.shape[2:]))
         # x [N * T, C, H, W]
 
         if self.backbone is not None:
-            # masks.shape [N, 1, T, 1, 1]
-            backbone_masks = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
-            # [N, C, T, H, W] or [N T D]
+             # masks.shape [N * T, 1, 1, 1]
+            backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             feature = self.backbone(imgs, backbone_masks)
-
-            if len(feature.shape) == 5:
-                out_channels = feature.shape[1]
-                # [N, T, C, H, W]
-                feature = feature.transpose(1, 2)
-                # [N * T, C, H, W]
-                feature = torch.reshape(feature, shape=[-1, out_channels] + list(feature.shape[-2:]))
-            elif len(feature.shape) == 3:
-                feature = torch.reshape(feature, shape=[-1, feature.shape[-1]])
         else:
             feature = imgs
 
-        # feature [N * T , F_dim, 7, 7] or [N * T, D]
+        # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, backbone_score = self.neck(
+            seg_feature = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
-            backbone_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
@@ -94,4 +83,4 @@ class StreamSegmentation3D(nn.Module):
             head_score = seg_feature
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return backbone_score, head_score
+        return head_score

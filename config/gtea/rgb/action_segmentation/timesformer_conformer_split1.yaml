@@ -15,16 +15,17 @@ MODEL:
         drop_ratio: 0.5
         need_pool: True
     head:
-        name: "ASFormer"
-        num_decoders: 1
-        num_layers: 4
-        r1: 2
-        r2: 2
-        num_f_maps: 64
-        input_dim: 768
+        name: "Conformer"
         num_classes: 11
         sample_rate: 4
-        channel_masking_rate: 0.5
+        input_dim: 768
+        encoder_dim: 64
+        num_encoder_layers: 2
+        num_attention_heads: 8
+        input_dropout_p: 0.5
+        feed_forward_dropout_p: 0.5
+        attention_dropout_p: 0.5
+        conv_dropout_p: 0.5
     loss:
         name: "StreamSegmentationLoss"
         num_classes: 11
@@ -142,7 +143,7 @@ METRIC:
     file_output: True
 
 
-model_name: "TimeSformer_ASformer_gtea_split1"
+model_name: "TimeSformer_Conformer_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

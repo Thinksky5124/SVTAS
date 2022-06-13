@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 20:53:10
+LastEditTime : 2022-06-13 10:31:49
 Description  : Swim Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
-FilePath     : /ETESVS/model/backbones/video/swim_transformer.py
+FilePath     : /ETESVS/model/backbones/video/swin_transformer.py
 '''
 import torch
 import torch.nn as nn
@@ -672,7 +672,7 @@ class SwinTransformer3D(nn.Module):
         x = self.norm(x)
         x = rearrange(x, 'n d h w c -> n c d h w')
 
-        return x
+        return x * masks
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""

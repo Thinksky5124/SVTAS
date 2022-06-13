@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:19:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 16:54:23
+LastEditTime : 2022-06-13 19:49:46
 Description  : TSM Adam optimizer
 FilePath     : /ETESVS/optimizer/tsm_adam_optimizer.py
 '''
@@ -73,7 +73,7 @@ class TSMAdamOptimizer(torch.optim.Adam):
                     else:
                         freeze_ops.append(m_params[1])
             elif isinstance(m, (_BatchNorm, SyncBatchNorm, torch.nn.GroupNorm, torch.nn.BatchNorm1d,
-                                torch.nn.BatchNorm2d, torch.nn.BatchNorm3d)):
+                                torch.nn.BatchNorm2d, torch.nn.BatchNorm3d, torch.nn.LayerNorm)):
                 for param in list(m.parameters()):
                     if param.requires_grad:
                         bn.append(param)

@@ -1,5 +1,5 @@
 MODEL:
-    architecture: "StreamSegmentation3D"
+    architecture: "StreamSegmentation3DWithoutBackbone"
     backbone:
         name: "TimeSformer"
         num_frames: 32
@@ -9,36 +9,32 @@ MODEL:
         pretrained: "data/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth"
     neck:
         name: "AvgPoolNeck"
-        num_classes: 11
+        num_classes: 19
         in_channels: 768
         clip_seg_num: 32
         drop_ratio: 0.5
         need_pool: True
+        need_pre_cls: False
     head:
-        name: "ASFormer"
-        num_decoders: 1
-        num_layers: 4
-        r1: 2
-        r2: 2
-        num_f_maps: 64
+        name: "Conformer"
+        num_classes: 19
+        sample_rate: 20
         input_dim: 768
-        num_classes: 11
-        sample_rate: 4
-        channel_masking_rate: 0.5
+        encoder_dim: 64
+        num_encoder_layers: 4
     loss:
-        name: "StreamSegmentationLoss"
-        num_classes: 11
-        sample_rate: 4
-        backone_loss_weight: 1.0
-        head_loss_weight: 1.0
+        name: "SegmentationLoss"
+        num_classes: 19
+        sample_rate: 20
+        smooth_weight: 0.15
         ignore_index: -100
 
 POSTPRECESSING:
     name: "StreamScorePostProcessing"
-    num_classes: 11
+    num_classes: 19
     clip_seg_num: 32
-    sliding_window: 128
-    sample_rate: 4
+    sliding_window: 640
+    sample_rate: 20
     ignore_index: -100
 
 COLLATE:
@@ -48,31 +44,31 @@ COLLATE:
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
     video_batch_size: 2
-    num_workers: 2
+    num_workers: 4
     train:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
-        gt_path: "./data/gtea/groundTruth"
-        actions_map_file_path: "./data/gtea/mapping.txt"
-        dataset_type: "gtea"
+        file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
         train_mode: True
-        sliding_window: 128
+        sliding_window: 640
         clip_seg_num: 32
-        sample_rate: 4
+        sample_rate: 20
     test:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/gtea/Videos"
-        gt_path: "./data/gtea/groundTruth"
-        actions_map_file_path: "./data/gtea/mapping.txt"
-        dataset_type: "gtea"
+        file_path: "./data/50salads/splits/test.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
         train_mode: False
-        sliding_window: 128
+        sliding_window: 640
         clip_seg_num: 32
-        sample_rate: 4
+        sample_rate: 20
 
 PIPELINE: #PIPELINE field
     train: 
@@ -83,9 +79,9 @@ PIPELINE: #PIPELINE field
         sample:
             name: "VideoStreamSampler"
             is_train: True
-            sample_rate: 4
+            sample_rate: 20
             clip_seg_num: 32
-            sliding_window: 128
+            sliding_window: 640
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             name: "VideoStreamTransform"
@@ -97,8 +93,9 @@ PIPELINE: #PIPELINE field
                 - RandomHorizontalFlip:
                 - ToTensor:
                 - Normalize:
-                    mean: [0.551, 0.424, 0.179]
-                    std: [0.133, 0.141, 0.124]
+                    mean: [0.513, 0.511, 0.479]
+                    std: [0.236, 0.233, 0.237]
+
 
     test:
         name: "BasePipline"
@@ -108,9 +105,9 @@ PIPELINE: #PIPELINE field
         sample:
             name: "VideoStreamSampler"
             is_train: False
-            sample_rate: 4
+            sample_rate: 20
             clip_seg_num: 32
-            sliding_window: 128
+            sliding_window: 640
             sample_mode: "uniform"
         transform:
             name: "VideoStreamTransform"
@@ -121,14 +118,14 @@ PIPELINE: #PIPELINE field
                     size: 224
                 - ToTensor:
                 - Normalize:
-                    mean: [0.551, 0.424, 0.179]
-                    std: [0.133, 0.141, 0.124]
+                    mean: [0.513, 0.511, 0.479]
+                    std: [0.236, 0.233, 0.237]
 
 OPTIMIZER:
-    name: "AdamOptimizer"
+    name: "SGDOptimizer"
     learning_rate: 0.0005
     weight_decay: 1e-4
-    betas: (0.9, 0.999)
+
 
 LRSCHEDULER:
     name: "MultiStepLR"
@@ -138,11 +135,11 @@ LRSCHEDULER:
 METRIC:
     name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/gtea/mapping.txt"
+    actions_map_file_path: "./data/50salads/mapping.txt"
     file_output: True
 
 
-model_name: "TimeSformer_ASformer_gtea_split1"
-log_interval: 4 #Optional, the interal of logger, default:10
+model_name: "TimeSformer_Conformer_50salads_split1"
+log_interval: 3 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

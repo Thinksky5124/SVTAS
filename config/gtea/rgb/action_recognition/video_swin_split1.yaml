@@ -1,36 +1,33 @@
 MODEL:
-    architecture: "StreamSegmentation3D"
+    architecture: "Recognition3D"
     backbone:
-        name: "TimeSformer"
-        num_frames: 32
-        img_size: 224
-        patch_size: 32
-        embed_dims: 768
-        pretrained: "data/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth"
+        name: "SwinTransformer3D"
+        patch_size: [1, 4, 4]
+        embed_dim: 96
+        depths: [2, 2, 6, 2]
+        num_heads: [3, 6, 12, 24]
+        window_size: [8,7,7]
+        mlp_ratio: 4.
+        qkv_bias: True
+        qk_scale: None
+        drop_rate: 0.
+        attn_drop_rate: 0.
+        drop_path_rate: 0.2
+        patch_norm: True
     neck:
-        name: "AvgPoolNeck"
-        num_classes: 11
-        in_channels: 768
-        clip_seg_num: 32
-        drop_ratio: 0.5
-        need_pool: True
     head:
-        name: "ASFormer"
-        num_decoders: 1
-        num_layers: 4
-        r1: 2
-        r2: 2
-        num_f_maps: 64
-        input_dim: 768
+        name: "I3DHead"
         num_classes: 11
+        clip_seg_num: 32
         sample_rate: 4
-        channel_masking_rate: 0.5
+        drop_ratio: 0.5
+        in_channels: 768
     loss:
-        name: "StreamSegmentationLoss"
+        name: "RecognitionSegmentationLoss"
+        label_mode: "hard"
         num_classes: 11
         sample_rate: 4
-        backone_loss_weight: 1.0
-        head_loss_weight: 1.0
+        loss_weight: 1.0
         ignore_index: -100
 
 POSTPRECESSING:
@@ -142,7 +139,7 @@ METRIC:
     file_output: True
 
 
-model_name: "TimeSformer_ASformer_gtea_split1"
+model_name: "VideoSwin_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10
