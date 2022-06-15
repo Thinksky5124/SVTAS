@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:49:46
+LastEditTime : 2022-06-15 20:24:00
 Description: MS-TCN loss model
 FilePath     : /ETESVS/model/losses/segmentation_loss.py
 '''
@@ -17,6 +17,7 @@ from ..builder import LOSSES
 class SegmentationLoss(nn.Module):
     def __init__(self,
                  num_classes,
+                 loss_weight=1.0,
                  sample_rate=1,
                  smooth_weight=0.5,
                  ignore_index=-100):
@@ -26,6 +27,7 @@ class SegmentationLoss(nn.Module):
         self.num_classes = num_classes
         self.sample_rate = sample_rate
         self.elps = 1e-10
+        self.loss_weight = loss_weight
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.mse = nn.MSELoss(reduction='none')
     
@@ -47,5 +49,5 @@ class SegmentationLoss(nn.Module):
                     , min=0, max=16) * masks[:, 1:].unsqueeze(1), [b, -1]), dim=-1) / (precise_sliding_num + self.elps)))
         
         loss_dict={}
-        loss_dict["loss"] = loss
+        loss_dict["loss"] = loss * self.loss_weight
         return loss_dict

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-06 20:17:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 20:46:13
+LastEditTime : 2022-06-15 20:00:19
 Description  : Text Pred Head
 FilePath     : /ETESVS/model/heads/text_pred/text_pred_fc_head.py
 '''
@@ -65,6 +65,6 @@ class TextPredFCHead(nn.Module):
             mode="nearest")
         
         if self.out_feature is True:
-            return score, feature
+            return feature, score
 
         return score

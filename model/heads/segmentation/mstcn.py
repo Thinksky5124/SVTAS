@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 16:53:54
+LastEditTime : 2022-06-15 19:59:24
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath     : /ETESVS/model/heads/segmentation/mstcn.py
 '''
@@ -62,7 +62,7 @@ class MultiStageModel(nn.Module):
             mode="nearest")
         
         if self.out_feature is True:
-            return outputs, feature
+            return feature, outputs
         return outputs
 
 @HEADS.register()
@@ -81,7 +81,7 @@ class SingleStageModel(nn.Module):
             feature = layer(feature, mask)
         out = self.conv_out(feature) * mask[:, 0:1, :]
         if self.out_feature is True:
-            return out, feature_embedding * mask[:, 0:1, :]
+            return feature_embedding * mask[:, 0:1, :], out
 
         return out
 

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-05 16:35:23
+LastEditTime : 2022-06-15 20:26:57
 Description: Action recognition model loss
 FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
 '''
@@ -30,9 +30,10 @@ class RecognitionSegmentationLoss(nn.Module):
         self.elps = 1e-10
 
         if self.label_mode in ["soft"]:
-            self.criteria = SoftLabelRocgnitionLoss(self.num_classes, ignore_index=self.ignore_index)
+            self.criteria = SoftLabelRocgnitionLoss(num_classes=self.num_classes, loss_weight=self.loss_weight, ignore_index=self.ignore_index)
         elif self.label_mode in ['hard']:
-            self.criteria = SegmentationLoss(self.num_classes, sample_rate=self.sample_rate, ignore_index=self.ignore_index)
+            self.criteria = SegmentationLoss(num_classes=self.num_classes, loss_weight=self.loss_weight, 
+                sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
         else:
             raise NotImplementedError
 
@@ -56,8 +57,6 @@ class RecognitionSegmentationLoss(nn.Module):
         loss_info = {"masks": masks, "labels": labels, "precise_sliding_num": precise_sliding_num}
         loss = self.criteria(score, loss_info)['loss']
 
-        loss = self.loss_weight * loss
-
         loss_dict={}
         loss_dict["loss"] = loss
         return loss_dict
@@ -66,8 +65,10 @@ class RecognitionSegmentationLoss(nn.Module):
 class SoftLabelRocgnitionLoss(nn.Module):
     def __init__(self,
                  num_classes,
+                 loss_weight=1.0,
                  ignore_index=-100):
         super().__init__()
+        self.loss_weight = loss_weight
         self.num_classes = num_classes
         self.ignore_index = ignore_index
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
@@ -107,5 +108,5 @@ class SoftLabelRocgnitionLoss(nn.Module):
             ) / (torch.sum(mask) + self.elps)
 
         loss_dict={}
-        loss_dict["loss"] = loss
+        loss_dict["loss"] = loss * self.loss_weight
         return loss_dict

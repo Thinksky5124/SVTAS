@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 14:42:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 15:47:33
+LastEditTime : 2022-06-15 20:00:49
 Description  : ConFormer Head for Action Segmentation ref:https://github.com/sooftware/conformer/blob/main/conformer/model.py
-FilePath     : /ETESVS/model/heads/segmentation/conformer.py
+FilePath     : /ETESVS/model/heads/automatic_speech_recognition/conformer.py
 '''
 import torch
 import torch.nn as nn
@@ -126,5 +126,5 @@ class Conformer(nn.Module):
             mode="nearest")
             
         if self.out_feature is True:
-            return outputs, inputs
+            return inputs, outputs
         return outputs

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 16:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 19:21:20
+LastEditTime : 2022-06-15 20:28:29
 Description  : Video prediction loss
 FilePath     : /ETESVS/model/losses/video_prediction_loss.py
 '''
@@ -30,8 +30,10 @@ class VideoPredictionLoss(nn.Module):
         self.pred_loss_weight = pred_loss_weight
         self.segment_loss_weight = segment_loss_weight
         self.elps = 1e-10
-        self.segmentation_loss = SegmentationLoss(self.num_classes, sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
-        self.pred_loss = SegmentationLoss(self.num_classes, sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
+        self.segmentation_loss = SegmentationLoss(num_classes=self.num_classes, loss_weight=self.segment_loss_weight, 
+                sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
+        self.pred_loss = SegmentationLoss(num_classes=self.num_classes, loss_weight=self.pred_loss_weight, 
+                sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
     
     def forward(self, model_output, input_data):
         pred_frames_score, frames_score = model_output
@@ -51,7 +53,7 @@ class VideoPredictionLoss(nn.Module):
         pred_loss_info = {"masks": pred_masks, "labels": pred_labels, "precise_sliding_num": precise_sliding_num}
         pred_loss = self.pred_loss(pred_frames_score, pred_loss_info)['loss']
 
-        loss = self.segment_loss_weight * seg_loss + self.pred_loss_weight * pred_loss
+        loss = seg_loss + pred_loss
 
         loss_dict={}
         loss_dict["loss"] = loss

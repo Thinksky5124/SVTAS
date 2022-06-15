@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-11 11:34:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 21:08:59
+LastEditTime : 2022-06-15 20:16:10
 Description  : Segmentation CLIP loss
 FilePath     : /ETESVS/model/losses/segmentation_clip_loss.py
 '''

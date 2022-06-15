@@ -95,5 +95,4 @@ class FeatureSegmentation(nn.Module):
         else:
             head_score = None
         # seg_score [stage_num, N, C, T]
-        # cls_score [N, C, T]
         return head_score

@@ -27,7 +27,7 @@ MODEL:
     text_backbone:
         architecture: "Encoder2Decoder"
         encoder:
-            name: "LearnerPromptTextEncoder"
+            name: "FixPromptTextEncoder"
             actions_map_file_path: "./data/gtea/mapping.txt"
             embedding_dim: 512
             sample_rate: 4

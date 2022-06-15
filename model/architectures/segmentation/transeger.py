@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 17:15:54
+LastEditTime : 2022-06-15 20:01:32
 Description  : Transeger framework
 FilePath     : /ETESVS/model/architectures/segmentation/transeger.py
 '''
@@ -69,7 +69,7 @@ class Transeger(nn.Module):
             img_input = {"imgs": imgs, "masks": masks}
             img_output = self.image_backbone(img_input)
             img_extract_score, head_output = img_output
-            img_seg_score, img_feature = head_output
+            img_feature, img_seg_score = head_output
         else:
             img_extract_score = None
             img_seg_score = None
