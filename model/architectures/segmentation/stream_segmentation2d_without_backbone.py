@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:22:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 16:25:20
+LastEditTime : 2022-06-15 21:10:53
 Description  : Stream Segmentation 2D without backbone loss
 FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation2d_without_backbone.py
 '''
@@ -35,9 +35,12 @@ class StreamSegmentation2DWithoutBackbone(nn.Module):
         self.sample_rate = head.sample_rate
 
     def init_weights(self):
-        self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
-        self.neck.init_weights()
-        self.head.init_weights()
+        if self.backbone is not None:
+            self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
+        if self.neck is not None:
+            self.neck.init_weights()
+        if self.head is not None:
+            self.head.init_weights()
     
     def _clear_memory_buffer(self):
         if self.backbone is not None:

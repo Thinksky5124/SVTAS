@@ -9,6 +9,9 @@ FilePath: /ETESVS/utils/build.py
 # Refence:https://github.com/open-mmlab/mmaction2/blob/f3d4817d781b45fa02447a2181db5c87eccc3335/mmaction/models/builder.py
 # Refence:https://github.com/Thinksky5124/PaddleVideo/blob/develop/paddlevideo/utils/registry.py
 
+from pyparsing import NoMatch
+
+
 class Registry(object):
     """
     The registry that provides name -> object mapping, to support third-party users' custom modules.
@@ -91,7 +94,8 @@ def build(cfg, registry, key='name'):
     Returns:
         obj: The constructed object.
     """
-
+    if cfg is None:
+        return None
     assert isinstance(cfg, dict) and key in cfg
 
     cfg_copy = cfg.copy()

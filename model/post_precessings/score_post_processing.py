@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 18:50:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 21:16:23
+LastEditTime : 2022-06-15 21:04:26
 Description  : Score Post precessing Module
 FilePath     : /ETESVS/model/post_precessings/score_post_processing.py
 '''
@@ -26,6 +26,8 @@ class ScorePostProcessing():
         self.init_flag = True
 
     def update(self, seg_scores, gt, idx):
+        # seg_scores [stage_num N C T]
+        # gt [N C T]
         with torch.no_grad():
             self.pred_scores = seg_scores[-1, :].detach().cpu().numpy().copy()
             self.video_gt = gt.detach().cpu().numpy().copy()

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 16:13:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:22:34
+LastEditTime : 2022-06-16 11:16:05
 Description  : Bridge-Prompt Fusion Model ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/modules/fusion_module.py
 FilePath     : /ETESVS/model/heads/joint/bridge_fusion_earlyhyp.py
 '''
@@ -123,15 +123,15 @@ class BridgePromptFusionEarlyhyp(nn.Module):
         # img_feature [N C T]
         # masks [N T]
         ### text_inputs [text_all_embedding, text_cnt_embedding, text_acts_embedding, text_pos_embedding]
-        # text_all_embedding [NUM D]
-        # text_cnt_embedding [NUM D]
-        # text_acts_embedding [B NUM D]
-        # text_pos_embedding [B NUM D]
-        img_feature = img_inputs 
+        # text_all_embedding [B D]
+        # text_cnt_embedding [B D]
+        # text_acts_embedding [B cnt_max D]
+        # text_pos_embedding [B pos_cnt D]
+        img_seg_feature = img_inputs 
         text_all_embedding, text_cnt_embedding, text_acts_embedding, text_pos_embedding = text_inputs
         
         # [N C T] -> [N cnt_max C T] -> [N cnt_max T C]
-        img_feature = img_feature.unsqueeze(1).repeat(1, self.cnt_max, 1, 1)
+        img_feature = img_seg_feature.unsqueeze(1).repeat(1, self.cnt_max, 1, 1)
         img_feature = torch.permute(img_feature, dims=[0, 1, 3, 2])
         b, n, t, c = img_feature.size()
         x = img_feature.contiguous()
@@ -143,7 +143,7 @@ class BridgePromptFusionEarlyhyp(nn.Module):
 
         seg_feature = x.mean(dim=2, keepdim=False)
         # segmentation
-        seg_score = self.seg_model(seg_feature, masks)
+        seg_score = self.seg_model(img_seg_feature, masks.unsqueeze(1))
         
         return text_all_embedding, text_cnt_embedding, text_acts_embedding, \
                     cnt_emb.mean(dim=1, keepdim=False), seg_feature, seg_score

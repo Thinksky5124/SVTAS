@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 18:49:49
+LastEditTime : 2022-06-15 21:04:30
 Description: model postprecessing
-FilePath     : /ETESVS/model/post_precessings/feature_post_processing.py
+FilePath     : /ETESVS/model/post_precessings/stream_feature_post_processing.py
 '''
 import numpy as np
 import torch
@@ -38,6 +38,8 @@ class StreamFeaturePostProcessing():
         self.init_flag = True
 
     def update(self, seg_scores, gt, idx):
+        # seg_scores [stage_num N C T]
+        # gt [N C T]
         with torch.no_grad():
             start_frame = idx * self.sliding_window
             if start_frame < 0:

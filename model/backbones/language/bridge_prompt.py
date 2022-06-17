@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-14 15:27:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 15:55:20
+LastEditTime : 2022-06-16 11:29:07
 Description  : Bridge-Prompt: Towards Ordinal Action Understanding in Instructional Videos ref:https://github.com/ttlmh/Bridge-Prompt
 FilePath     : /ETESVS/model/backbones/language/bridge_prompt.py
 '''
@@ -82,7 +82,7 @@ class BridgePromptTextEncoder(nn.Module):
 
         outputs = []
         # res_token_cnt [B 1 max_len]
-        # res_token_acts [B NUM max_len]
+        # res_token_acts [B cnt_max max_len]
         # res_token_all [B 1 max_len]
         # text_dict_pos [B pos_cnt max_len]
         for prompt in prompts:
@@ -104,11 +104,11 @@ class BridgePromptTextEncoder(nn.Module):
             x = x[torch.arange(x.shape[0]), prompt.argmax(dim=-1)] @ self.text_projection
 
             outputs.append(x)
-        # text_all_embedding [NUM D]
-        # text_cnt_embedding [NUM D]
-        # text_acts_embedding [B NUM D]
-        # text_pos_embedding [B NUM D]
-        text_all_embedding, text_cnt_embedding, text_acts_embedding, text_pos_embedding = outputs
+        # text_cnt_embedding [B D]
+        # text_acts_embedding [B cnt_max D]
+        # text_all_embedding [B D]
+        # text_pos_embedding [B pos_cnt D]
+        text_cnt_embedding, text_acts_embedding, text_all_embedding, text_pos_embedding = outputs
         text_acts_embedding = text_acts_embedding.view(b, -1, text_acts_embedding.shape[-1])
         text_pos_embedding = text_pos_embedding.view(b, -1, text_pos_embedding.shape[-1])
         return text_all_embedding, text_cnt_embedding, text_acts_embedding, text_pos_embedding
@@ -178,6 +178,12 @@ class BridgePrompt(nn.Module):
         num_long = len(self.text_long_temp)
         text_id = np.random.randint(num_temp, size=self.cnt_max)
         text_id_long = np.random.randint(num_long, size=self.cnt_max)
+        # labels_idx_order [NUM] -> [cnt_max]
+        if label_idx_tensor.shape[0] >= self.cnt_max:
+            label_idx_tensor = label_idx_tensor[:self.cnt_max]
+        else:
+            label_idx_tensor = torch.cat([label_idx_tensor,
+                torch.full_like(label_idx_tensor, fill_value=self.ignore_index)[:(self.cnt_max - label_idx_tensor.shape[0])]], dim=0)
         labels_idx_order_cnt = labels_idx_order >= 0
         labels_idx_order_cnt = torch.sum(labels_idx_order_cnt)
 
@@ -201,7 +207,7 @@ class BridgePrompt(nn.Module):
         for idx in range(labels_idx_order.shape[0], len(self.text_no_acts)):
             sentences.append(self._tokenizer.tokenize(self.text_no_acts[idx]))
         
-        # [labels_idx_order_cnt max_len]
+        # [cnt_max max_len]
         res_token_acts = torch.cat(sentences, dim=0)
 
         # [1 max_len]
@@ -220,8 +226,8 @@ class BridgePrompt(nn.Module):
             prompts = []
             # res_token_cnt [B 1 max_len]
             prompts.append(start_promot.unsqueeze(0).expand(batch_size, 1, 1))
-            # res_token_acts [B 1 max_len]
-            prompts.append(start_promot.unsqueeze(0).expand(batch_size, 1, 1))
+            # res_token_acts [B cnt_max max_len]
+            prompts.append(start_promot.unsqueeze(0).expand(batch_size, self.max_len, 1))
             # res_token_all [B 1 max_len]
             prompts.append(start_promot.unsqueeze(0).expand(batch_size, 1, 1))
             # text_dict_pos [B pos_cnt max_len]
@@ -242,7 +248,10 @@ class BridgePrompt(nn.Module):
                     res_token_acts_list.append(embedding[1])
                     res_token_all_list.append(embedding[2].unsqueeze(0))
             
-            # 4 * [N NUM max_len]
+            # res_token_cnt [B 1 max_len]
+            # res_token_acts [B cnt_max max_len]
+            # res_token_all [B 1 max_len]
+            # text_dict_pos [B pos_cnt max_len]
             prompts = [torch.cat(res_token_cnt_list, dim=0),
                        torch.cat(res_token_acts_list, dim=0).view(batch_size, -1 ,self.max_len),
                        torch.cat(res_token_all_list, dim=0),
