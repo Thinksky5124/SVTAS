@@ -13,20 +13,20 @@ MODEL:
         clip_seg_num: 32
         drop_ratio: 0.5
         need_pool: True
-        need_pre_cls: False
     head:
         name: "MultiStageModel"
-        num_stages: 4
-        num_layers: 10
+        num_stages: 1
+        num_layers: 4
         num_f_maps: 64
         dim: 1280
         num_classes: 11
         sample_rate: 4
     loss:
-        name: "SegmentationLoss"
+        name: "StreamSegmentationLoss"
         num_classes: 11
         sample_rate: 4
-        smooth_weight: 0.15
+        backone_loss_weight: 1.0
+        head_loss_weight: 1.0
         ignore_index: -100
 
 POSTPRECESSING:

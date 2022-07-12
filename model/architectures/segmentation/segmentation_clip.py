@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-11 11:05:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:05:00
+LastEditTime : 2022-06-29 14:48:18
 Description  : Segmentation model clip way to train
 FilePath     : /ETESVS/model/architectures/segmentation/segmentation_clip.py
 '''
@@ -50,7 +50,6 @@ class SegmentationCLIP(nn.Module):
         masks = input_data['masks']
         imgs = input_data['imgs']
         labels = input_data['labels']
-
         ### text encoder
         if self.text_backbone is not None:
             text_input = {"x": labels, "masks": masks}

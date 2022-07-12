@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 11:20:28
+LastEditTime : 2022-07-06 16:43:17
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
 FilePath     : /ETESVS/model/heads/segmentation/asformer.py
 '''
@@ -302,9 +302,11 @@ class ASFormer(nn.Module):
                  input_dim=2048,
                  num_classes=11,
                  channel_masking_rate=0.5,
-                 sample_rate=1):
+                 sample_rate=1,
+                 out_feature=False):
         super(ASFormer, self).__init__()
         self.sample_rate = sample_rate
+        self.out_feature = out_feature
         self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='sliding_att', alpha=1)
         self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='sliding_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
         
@@ -330,4 +332,6 @@ class ASFormer(nn.Module):
             scale_factor=[1, self.sample_rate],
             mode="nearest")
 
+        if self.out_feature is True:
+            return feature, outputs
         return outputs

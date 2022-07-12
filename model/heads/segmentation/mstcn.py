@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 19:59:24
+LastEditTime : 2022-07-06 16:21:01
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
 FilePath     : /ETESVS/model/heads/segmentation/mstcn.py
 '''
@@ -47,13 +47,16 @@ class MultiStageModel(nn.Module):
         output = self.stage1(x, mask)
 
         if self.out_feature is True:
-            out, feature = output
+            feature, out = output
         else:
             out = output
 
         outputs = out.unsqueeze(0)
         for s in self.stages:
-            out, feature = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+            if self.out_feature is True:
+                out, feature = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+            else:
+                out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
         
         outputs = F.interpolate(

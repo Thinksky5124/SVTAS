@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 19:43:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-17 15:24:16
+LastEditTime : 2022-06-29 10:10:56
 Description  : Bridge Prompt CLIP Loss ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/train.py
 FilePath     : /ETESVS/model/losses/bridge_prompt_clip_loss.py
 '''
@@ -48,7 +48,9 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
                 labels_idx_order = labels_idx_order[:self.cnt_max]
             else:
                 labels_idx_order = torch.cat([labels_idx_order,
-                    torch.full_like(labels_idx_order, fill_value=self.ignore_index)[:(self.cnt_max - labels_idx_order.shape[0])]], dim=0)
+                    torch.full([self.cnt_max], fill_value=self.ignore_index,
+                    dtype=labels_idx_order.dtype,
+                    device=labels_idx_order.device)[:(self.cnt_max - labels_idx_order.shape[0])]], dim=0)
             labels_idx_order_cnt = labels_idx_order >= 0
             labels_idx_order_cnt = torch.sum(labels_idx_order_cnt).unsqueeze(0)
 
@@ -60,14 +62,14 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         # [N 1]
         labels_idx_order_sum = torch.concat(labels_order_sum_list, dim=0)
 
-        labels_idx_order = list(labels_idx_order.detach().cpu().numpy())
+        labels_idx_order_list = list(labels_idx_order.detach().cpu().numpy())
         labels_idx_order_sum = list(labels_idx_order_sum.detach().cpu().numpy())
         
-        all_num = len(labels_idx_order)
+        all_num = len(labels_idx_order_list)
         all_gt = np.zeros(shape=(all_num, all_num))
-        for i, label in enumerate(labels_idx_order):
+        for i, label in enumerate(labels_idx_order_list):
             for k in range(all_num):
-                if labels_idx_order[k].equal(label):
+                if np.all(np.equal(labels_idx_order_list[k], label)):
                     all_gt[i, k] = 1
         # [N N]
         all_ground_truth = torch.tensor(all_gt, dtype=dtype, device=labels.device)
@@ -83,12 +85,12 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         
         # act gt
         act_gt_list = []
-        for same_batch_position_labels in labels_idx_order:
-            act_num = len(same_batch_position_labels)
+        for act_pos_idx in range(labels_idx_order.shape[-1]):
+            act_num = len(labels_idx_order[:, act_pos_idx])
             act_gt = np.zeros(shape=(act_num, act_num))
-            for i, label in enumerate(same_batch_position_labels):
+            for i, label in enumerate(labels_idx_order):
                 for k in range(act_num):
-                    if same_batch_position_labels[k] == label:
+                    if labels_idx_order[k][act_pos_idx] == label[act_pos_idx]:
                         act_gt[i, k] = 1
             act_gt = torch.tensor(act_gt, dtype=dtype, device=labels.device).unsqueeze(-1)
             act_gt_list.append(act_gt)
@@ -109,19 +111,26 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         # img backbone label learning
         img_seg_loss = self.img_seg_loss(img_seg_score, input_data)['loss']
 
+        all_ground_truth, cnt_ground_truth, act_ground_truth = self.gen_label(input_data["labels"], dtype=image_embedding.dtype)
+
+        # generate bridge-prompt clip mask
+        if torch.any(input_data["labels"] == self.ignore_index):
+            bridge_prompt_mask = torch.zeros_like(all_ground_truth)
+        else:
+            bridge_prompt_mask = torch.ones_like(all_ground_truth)
+
         # all loss
         # [N NUM D] -> [N D]
         image_embedding_mean = torch.mean(image_embedding, dim=1)
-        all_ground_truth, cnt_ground_truth, act_ground_truth = self.gen_label(input_data["labels"], dtype=image_embedding.dtype)
-        input_data_all = {"masks": input_data["masks"], "labels": all_ground_truth, "precise_sliding_num": input_data["precise_sliding_num"]}
+        input_data_all = {"masks": bridge_prompt_mask, "labels": all_ground_truth, "precise_sliding_num": input_data["precise_sliding_num"]}
         all_loss = self.clip_loss([image_embedding_mean, text_all_embedding], input_data_all)['loss']
         # cnt loss
-        input_data_cnt = {"masks": input_data["masks"], "labels": cnt_ground_truth, "precise_sliding_num": input_data["precise_sliding_num"]}
+        input_data_cnt = {"masks": bridge_prompt_mask, "labels": cnt_ground_truth, "precise_sliding_num": input_data["precise_sliding_num"]}
         cnt_loss = self.clip_loss([cnt_emb, text_cnt_embedding], input_data_cnt)['loss']
         # act loss
         act_loss = 0.
         for dd in range(text_acts_embedding.shape[1]):
-            input_data_act = {"masks": input_data["masks"], "labels": act_ground_truth[:, :, dd], "precise_sliding_num": input_data["precise_sliding_num"]}
+            input_data_act = {"masks": bridge_prompt_mask, "labels": act_ground_truth[:, :, dd], "precise_sliding_num": input_data["precise_sliding_num"]}
             act_loss += self.clip_loss([image_embedding[:, dd, :], text_acts_embedding[:, dd, :]], input_data_act)['loss']
 
         loss = img_seg_loss + all_loss + cnt_loss + act_loss
@@ -172,7 +181,7 @@ class BridgePromptCLIPLoss(nn.Module):
         logits_per_image, logits_per_text = self.create_logits(image_embedding, text_embedding, logit_scale)
         loss_imgs = self.klloss(logits_per_image, ground_truth)
         loss_texts = self.klloss(logits_per_text, ground_truth)
-        loss = (loss_imgs + loss_texts) / 2
+        loss = torch.mean(torch.mean((loss_imgs + loss_texts) / 2 * masks, dim=-1) / precise_sliding_num)
         
         loss_dict={}
         loss_dict["loss"] = loss * self.loss_weight

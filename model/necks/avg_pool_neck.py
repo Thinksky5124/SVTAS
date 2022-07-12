@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 16:27:42
+LastEditTime : 2022-07-12 09:47:28
 Description: avg pooling 3d to 2d neck
 FilePath     : /ETESVS/model/necks/avg_pool_neck.py
 '''
@@ -22,7 +22,7 @@ class AvgPoolNeck(nn.Module):
                  clip_seg_num=30,
                  drop_ratio=0.5,
                  need_pool=True,
-                 need_pre_cls=True):
+                 need_pre_cls=False):
         super().__init__()
         self.clip_seg_num = clip_seg_num
         self.in_channels = in_channels

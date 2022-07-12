@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 16:09:08
+LastEditTime : 2022-06-29 14:58:21
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -153,22 +153,26 @@ def test(cfg,
         if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
             x_shape = [cfg.DATASET.test.clip_seg_num, 3, 224, 224]
             mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-            input_shape = (x_shape, mask_shape)
+            labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+            input_shape = (x_shape, mask_shape, labels_shape)
             def input_constructor(input_shape, optimal_batch_size=1):
-                x_shape, mask_shape = input_shape
+                x_shape, mask_shape, labels_shape = input_shape
                 x = torch.randn([optimal_batch_size] + x_shape).cuda()
                 mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
-                return dict(input_data=dict(imgs=x, masks=mask))
+                label = torch.ones([optimal_batch_size] + labels_shape).cuda()
+                return dict(input_data=dict(imgs=x, masks=mask, labels=label))
             dummy_input = input_constructor(input_shape)
         else:
             x_shape = [cfg.DATASET.test.clip_seg_num, 2048]
             mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-            input_shape = (x_shape, mask_shape)
+            labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+            input_shape = (x_shape, mask_shape, labels_shape)
             def input_constructor(input_shape, optimal_batch_size=1):
-                x_shape, mask_shape = input_shape
+                x_shape, mask_shape, labels_shape = input_shape
                 x = torch.randn([optimal_batch_size] + x_shape).cuda()
                 mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
-                return dict(input_data=dict(feature=x, masks=mask))
+                label = torch.ones([optimal_batch_size] + labels_shape).cuda()
+                return dict(input_data=dict(feature=x, masks=mask, labels=label))
             dummy_input = input_constructor(input_shape)
         # print(model)
         # tensorboard_writer.add_graph(model, input_to_model=[x, mask, torch.ones(1).cuda()])

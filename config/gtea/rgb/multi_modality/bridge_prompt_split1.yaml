@@ -28,7 +28,8 @@ MODEL:
             actions_map_file_path: "./data/gtea/mapping.txt"
             embedding_dim: 512
             sample_rate: 4
-            max_len: 77
+            cnt_max: 11
+            max_len: 100
             encoder_layers_num: 3
             encoder_heads_num: 8
             text_embed_dim: 64
@@ -39,7 +40,7 @@ MODEL:
         embedding_dim: 64
         clip_seg_num: 32
         num_layers: 6
-        cnt_max: 7
+        cnt_max: 11
         seg_model:
             name: "MultiStageModel"
             num_stages: 1
@@ -53,6 +54,7 @@ MODEL:
         name: "BridgePromptCLIPSegmentationLoss"
         num_classes: 11
         sample_rate: 4
+        cnt_max: 11
         img_seg_loss_weights: 1.0
         clip_loss_weight: 1.0
         ignore_index: -100
@@ -166,7 +168,7 @@ METRIC:
     file_output: True
 
 
-model_name: "Bridge_Prompt_gtea_split1"
+model_name: "Bridge_Prompt_Memory_tcn_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
 save_interval: 10

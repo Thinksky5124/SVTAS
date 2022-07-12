@@ -1,19 +1,78 @@
 '''
-Author: Thyssen Wen
-Date: 2022-04-18 17:14:41
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-18 17:17:16
-Description: file content
-FilePath: /ETESVS/model/heads/memory_tcn.py
+Author       : Thyssen Wen
+Date         : 2022-06-18 12:11:25
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-07-07 11:45:28
+Description  : memory tcn
+FilePath     : /ETESVS/model/heads/segmentation/memory_tcn.py
 '''
 import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
+from mmcv.cnn import constant_init, kaiming_init
 
-class SlidingDilationResidualLyaer(nn.Module):
+from ...builder import HEADS
+
+@HEADS.register()
+class MemoryTCNHead(nn.Module):
+    def __init__(self,
+                 num_stages,
+                 num_layers,
+                 num_f_maps,
+                 dim,
+                 num_classes,
+                 sample_rate=1,
+                 out_feature=False):
+        super(MemoryTCNHead, self).__init__()
+        self.sample_rate = sample_rate
+        self.out_feature = out_feature
+        self.stage1 = MemoryTemporalConvolutionBlock(num_layers, num_f_maps, dim, num_classes, out_feature=out_feature)
+        self.stages = nn.ModuleList([copy.deepcopy(MemoryTemporalConvolutionBlock(num_layers, num_f_maps, num_classes, num_classes)) for s in range(num_stages-1)])
+
+    def init_weights(self):
+        # for m in self.modules():
+        #     if isinstance(m, nn.Conv1d):
+        #         kaiming_init(m)
+        #     elif isinstance(m, (nn.BatchNorm1d, nn.GroupNorm)):
+        #         constant_init(m, 1)
+        pass
+
+    def _clear_memory_buffer(self):
+        self.stage1._clear_memory_buffer()
+        for s in self.stages:
+            s._clear_memory_buffer()
+
+    def forward(self, x, mask):
+        mask = mask[:, :, ::self.sample_rate]
+        
+        output = self.stage1(x, mask)
+
+        if self.out_feature is True:
+            feature, out = output
+        else:
+            out = output
+
+        outputs = out.unsqueeze(0)
+        for s in self.stages:
+            if self.out_feature is True:
+                out, feature = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+            else:
+                out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+            outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
+        
+        outputs = F.interpolate(
+            input=outputs,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
+        
+        if self.out_feature is True:
+            return feature, outputs
+        return outputs
+        
+class MemoryDilationResidualLyaer(nn.Module):
     def __init__(self, dilation, in_channels, out_channels):
-        super(SlidingDilationResidualLyaer, self).__init__()
+        super(MemoryDilationResidualLyaer, self).__init__()
         self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=0, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
         self.dropout = nn.Dropout()
@@ -44,49 +103,34 @@ class SlidingDilationResidualLyaer(nn.Module):
         out = self.dropout(out)
         return (x + out) * mask[:, 0:1, :]
 
-class MemoryCausalConvolution(nn.Module):
-    def __init__(self, num_layers, num_f_maps, dim, num_classes):
-        super(MemoryCausalConvolution, self).__init__()
+class MemoryTemporalConvolutionBlock(nn.Module):
+    def __init__(self,
+                 num_layers,
+                 num_f_maps,
+                 dim,
+                 num_classes,
+                 out_feature=False):
+        super(MemoryTemporalConvolutionBlock, self).__init__()
+        self.out_feature = out_feature
         self.conv_1x1 = nn.Conv1d(dim, num_f_maps, 1)
-        self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2**(num_layers-1-i), num_f_maps, num_f_maps)) for i in range(num_layers)])
-        # self.layers = nn.ModuleList([copy.deepcopy(SlidingDilationResidualLyaer(2 ** i, num_f_maps, num_f_maps)) for i in range(num_layers)])
+        self.layers = nn.ModuleList([copy.deepcopy(MemoryDilationResidualLyaer(2**(num_layers-1-i), num_f_maps, num_f_maps)) for i in range(num_layers)])
+        # self.layers = nn.ModuleList([copy.deepcopy(MemoryDilationResidualLyaer(2 ** i, num_f_maps, num_f_maps)) for i in range(num_layers)])
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
-    
-    def forward(self, x, mask):
-        out = self.conv_1x1(x)
-        for layer in self.layers:
-            out = layer(out, mask)
-        out = self.conv_out(out) * mask[:, 0:1, :]
-        return out
     
     def _clear_memory_buffer(self):
         self.apply(self._clean_buffers)
 
     @staticmethod
     def _clean_buffers(m):
-        if issubclass(type(m), SlidingDilationResidualLyaer):
+        if issubclass(type(m), MemoryDilationResidualLyaer):
             m._resert_memory()
-
-class SuperSampleSingleStageModel(nn.Module):
-    def __init__(self,
-                 in_channels,
-                 hidden_channels):
-        super().__init__()
-        self.conv_1x1 = nn.Conv1d(in_channels, hidden_channels, 1)
-        self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
-        self.transpose_conv = nn.ConvTranspose1d(hidden_channels, hidden_channels, kernel_size=2, stride=2)
-        self.dialtion_conv_1 = nn.Conv1d(hidden_channels, in_channels, kernel_size=3, padding=1, dilation=1)
-        self.dialtion_conv_2 = nn.Sequential(
-            nn.Conv1d(in_channels, in_channels, kernel_size=3, padding=1, dilation=1),
-            nn.ReLU()
-        )
-        self.dropout = nn.Dropout()
     
-    def forward(self, x, masks):
-        up_x = self.upsample(x)
-        x = self.conv_1x1(x)
-        x = self.transpose_conv(x)
-        x = self.dialtion_conv_1(x)
-        x = self.dialtion_conv_2(x)
-        x = self.dropout(x)
-        return (x + up_x) * masks[:, 0:1, :]
+    def forward(self, x, mask):
+        feature_embedding = self.conv_1x1(x)
+        feature = feature_embedding
+        for layer in self.layers:
+            feature = layer(feature, mask)
+        out = self.conv_out(feature) * mask[:, 0:1, :]
+        if self.out_feature is True:
+            return feature_embedding * mask[:, 0:1, :], out
+        return out

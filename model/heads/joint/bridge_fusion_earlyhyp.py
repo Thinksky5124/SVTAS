@@ -127,7 +127,7 @@ class BridgePromptFusionEarlyhyp(nn.Module):
         # text_cnt_embedding [B D]
         # text_acts_embedding [B cnt_max D]
         # text_pos_embedding [B pos_cnt D]
-        img_seg_feature = img_inputs 
+        img_seg_feature = img_inputs
         text_all_embedding, text_cnt_embedding, text_acts_embedding, text_pos_embedding = text_inputs
         
         # [N C T] -> [N cnt_max C T] -> [N cnt_max T C]

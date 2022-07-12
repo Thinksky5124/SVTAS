@@ -90,7 +90,7 @@ OPTIMIZER:
 
 LRSCHEDULER:
     name: "MultiStepLR"
-    step_size: [20, 40]
+    step_size: [50]
     gamma: 0.1
 
 METRIC:

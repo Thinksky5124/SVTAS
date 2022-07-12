@@ -1,9 +1,9 @@
 '''
-Author: Thyssen Wen
-Date: 2022-03-25 10:29:10
+Author       : Thyssen Wen
+Date         : 2022-06-13 16:22:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 16:32:12
-Description: etesvs model framework
+LastEditTime : 2022-07-06 20:37:51
+Description  : Stream Segmentation 3D without backbone loss
 FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation3d.py
 '''
 import torch
@@ -81,12 +81,11 @@ class StreamSegmentation3D(nn.Module):
         # feature [N * T , F_dim, 7, 7] or [N * T, D]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, backbone_score = self.neck(
+            seg_feature = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
-            backbone_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
@@ -97,4 +96,4 @@ class StreamSegmentation3D(nn.Module):
             head_score = seg_feature
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return backbone_score, head_score
+        return head_score

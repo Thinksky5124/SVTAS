@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-14 15:27:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-16 11:29:07
+LastEditTime : 2022-06-29 10:26:19
 Description  : Bridge-Prompt: Towards Ordinal Action Understanding in Instructional Videos ref:https://github.com/ttlmh/Bridge-Prompt
 FilePath     : /ETESVS/model/backbones/language/bridge_prompt.py
 '''
@@ -135,9 +135,12 @@ class BridgePrompt(nn.Module):
                         f"This clip contains only one action,", f"This clip contains two actions,",
                         f"This clip contains three actions,", f"This clip contains four actions,",
                         f"This clip contains five actions,", f"This clip contains six actions,",
-                        f"This clip contains seven actions,", f"This clip contains eight actions,"]
+                        f"This clip contains seven actions,", f"This clip contains eight actions,",
+                        f"This clip contains nine actions,", f"This clip contains ten actions,",
+                        f"This clip contains eleven actions,", f"This clip contains twelve actions,"]
         text_aug_acts = [f"Firstly, ", f"Secondly, ", f"Thirdly, ", f"Fourthly, ",
-                        f"Fifthly, ", f"Sixthly, ", f"Seventhly, ", f"Eighthly, "]
+                        f"Fifthly, ", f"Sixthly, ", f"Seventhly, ", f"Eighthly, ",
+                        f"Ninthly", f"Tenthly", f"Eleventhly", f"Twelfthly"]
         self.text_aug_temp = [f"the person is {{}}.", f"the person is performing the action of {{}}.",
                         f"the character is {{}}.", f"he or she is {{}}.", f"the action {{}} is being played.",
                         f"it is the action of {{}}.", f"the human is {{}}.",
@@ -151,11 +154,15 @@ class BridgePrompt(nn.Module):
                         f"The second action does not exist.", f"The third action does not exist.",
                         f"The fourth action does not exist.", f"The fifth action does not exist.",
                         f"The sixth action does not exist.", f"The seventh action does not exist.",
-                        f"The eighth action does not exist."]
+                        f"The eighth action does not exist.", f"The nine action does not exist.",
+                        f"The ten action does not exist.", f"The eleven action does not exist.",
+                        f"The twelve action does not exist."]
         text_aug_acts = [f"this is the first action.", f"this is the second action.",
                         f"this is the third action.", f"this is the fourth action.",
                         f"this is the fifth action.", f"this is the sixth action.",
-                        f"this is the seventh action.", f"this is the eighth action."]
+                        f"this is the seventh action.", f"this is the eighth action.",
+                        f"this is the nine action.", f"this is the ten action.",
+                        f"this is the eleven action.", f"this is the twelve action."]
         
         self.text_aug_cnts = text_aug_cnts[:self.cnt_max + 1]
         self.text_aug_acts = text_aug_acts[:self.cnt_max]
@@ -211,7 +218,7 @@ class BridgePrompt(nn.Module):
         res_token_acts = torch.cat(sentences, dim=0)
 
         # [1 max_len]
-        sentences_all = sentences_all[1:]
+        sentences_all = sentences_all[1:self.max_len]
         res_token_all = self._tokenizer.tokenize(sentences_all)
         
         return res_token_cnt, res_token_acts, res_token_all
@@ -225,11 +232,11 @@ class BridgePrompt(nn.Module):
             start_promot = self._tokenizer.tokenize("").to(device)
             prompts = []
             # res_token_cnt [B 1 max_len]
-            prompts.append(start_promot.unsqueeze(0).expand(batch_size, 1, 1))
+            prompts.append(start_promot.unsqueeze(0).expand(batch_size, 1, self.max_len))
             # res_token_acts [B cnt_max max_len]
-            prompts.append(start_promot.unsqueeze(0).expand(batch_size, self.max_len, 1))
+            prompts.append(start_promot.unsqueeze(0).expand(batch_size, self.cnt_max, self.max_len))
             # res_token_all [B 1 max_len]
-            prompts.append(start_promot.unsqueeze(0).expand(batch_size, 1, 1))
+            prompts.append(start_promot.unsqueeze(0).expand(batch_size, 1, self.max_len))
             # text_dict_pos [B pos_cnt max_len]
             prompts.append(text_dict_pos)
         else:
@@ -239,14 +246,14 @@ class BridgePrompt(nn.Module):
             for b in range(batch_size):
                 if torch.any(last_clip_labels[b,:] == self.ignore_index):
                     end_promot = self._tokenizer.tokenize("").to(device)
-                    res_token_cnt_list.append(end_promot.unsqueeze(0).expand(batch_size, 1, 1))
-                    res_token_acts_list.append(end_promot.unsqueeze(0).expand(batch_size, 1, 1))
-                    res_token_all_list.append(end_promot.unsqueeze(0).expand(batch_size, 1, 1))
+                    res_token_cnt_list.append(end_promot.unsqueeze(0).expand(1, 1, self.max_len))
+                    res_token_acts_list.append(end_promot.unsqueeze(0).expand(1, self.cnt_max, self.max_len))
+                    res_token_all_list.append(end_promot.unsqueeze(0).expand(1, 1, self.max_len))
                 else:
                     embedding = self.convert_id_to_promot(last_clip_labels[b, ::self.sample_rate])
-                    res_token_cnt_list.append(embedding[0].unsqueeze(0))
-                    res_token_acts_list.append(embedding[1])
-                    res_token_all_list.append(embedding[2].unsqueeze(0))
+                    res_token_cnt_list.append(embedding[0].unsqueeze(0).to(device))
+                    res_token_acts_list.append(embedding[1].unsqueeze(0).to(device))
+                    res_token_all_list.append(embedding[2].unsqueeze(0).to(device))
             
             # res_token_cnt [B 1 max_len]
             # res_token_acts [B cnt_max max_len]

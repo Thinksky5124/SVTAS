@@ -6,7 +6,10 @@ MODEL:
         img_size: 224
         patch_size: 32
         embed_dims: 768
-        pretrained: "data/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth"
+        num_heads: 8
+        num_transformer_layers: 12
+        dropout_ratio: 0.
+        # pretrained: "data/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth"
     neck:
         name: "AvgPoolNeck"
         num_classes: 11

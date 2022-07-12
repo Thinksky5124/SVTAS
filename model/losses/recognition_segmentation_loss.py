@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:26:57
+LastEditTime : 2022-06-29 17:24:00
 Description: Action recognition model loss
 FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
 '''
@@ -20,6 +20,7 @@ class RecognitionSegmentationLoss(nn.Module):
                  label_mode='soft',
                  sample_rate=4,
                  loss_weight=1.0,
+                 smooth_weight=0.15,
                  ignore_index=-100):
         super().__init__()
         self.loss_weight = loss_weight
@@ -27,6 +28,7 @@ class RecognitionSegmentationLoss(nn.Module):
         self.num_classes = num_classes
         self.sample_rate = sample_rate
         self.label_mode = label_mode
+        self.smooth_weight = smooth_weight
         self.elps = 1e-10
 
         if self.label_mode in ["soft"]:

@@ -27,12 +27,19 @@ MODEL:
         bidirectional: True
         is_memory_sliding: False
     loss:
-        name: "StreamSegmentationLoss"
+        name: "SegmentationLoss"
         num_classes: 11
         sample_rate: 4
-        backone_loss_weight: 1.0
-        head_loss_weight: 1.0
+        smooth_weight: 0.5
         ignore_index: -100
+
+POSTPRECESSING:
+    name: "StreamScorePostProcessing"
+    num_classes: 11
+    clip_seg_num: 32
+    sliding_window: 128
+    sample_rate: 4
+    ignore_index: -100
 
 COLLATE:
     name: "StreamBatchCompose"
@@ -69,45 +76,53 @@ DATASET: #DATASET field
 
 PIPELINE: #PIPELINE field
     train: 
-        name: "RawFramePipeline"
+        name: "BasePipline"
         decode:
+            name: "VideoDecoder"
             backend: "decord"
         sample:
+            name: "VideoStreamSampler"
             is_train: True
             sample_rate: 4
             clip_seg_num: 32
             sliding_window: 128
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
-            - Resize:
-                size: [256, 320]
-            - RandomCrop:
-                size: 224
-            - RandomHorizontalFlip:
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - RandomCrop:
+                    size: 224
+                - RandomHorizontalFlip:
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
 
     test:
-        name: "RawFramePipeline"
+        name: "BasePipline"
         decode:
+            name: "VideoDecoder"
             backend: "decord"
         sample:
+            name: "VideoStreamSampler"
             is_train: False
             sample_rate: 4
             clip_seg_num: 32
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            - Resize:
-                size: [256, 320]
-            - CenterCrop:
-                size: 224
-            - ToTensor:
-            - Normalize:
-                mean: [0.551, 0.424, 0.179]
-                std: [0.133, 0.141, 0.124]
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - CenterCrop:
+                    size: 224
+                - ToTensor:
+                - Normalize:
+                    mean: [0.551, 0.424, 0.179]
+                    std: [0.133, 0.141, 0.124]
 
 OPTIMIZER:
     name: "AdamOptimizer"
@@ -121,6 +136,7 @@ LRSCHEDULER:
     gamma: 0.1
 
 METRIC:
+    name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
     file_output: True
