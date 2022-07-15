@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-11 11:34:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:16:10
+LastEditTime : 2022-07-12 14:43:16
 Description  : Segmentation CLIP loss
 FilePath     : /ETESVS/model/losses/segmentation_clip_loss.py
 '''
@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .steam_segmentation_loss import StreamSegmentationLoss
+from .segmentation_loss import SegmentationLoss
 
 from ..builder import LOSSES
 
@@ -20,19 +20,17 @@ class SgementationCLIPLoss(nn.Module):
                  num_classes,
                  sample_rate=4,
                  smooth_weight=0.15,
-                 img_seg_loss_weights=1.0,
-                 img_extract_loss_weights=1.0,
+                 seg_loss_weight=1.0,
                  clip_loss_weight=1.0,
                  ignore_index=-100):
         super().__init__()
         self.ignore_index = ignore_index
         self.num_classes = num_classes
-        self.img_extract_loss_weights = img_extract_loss_weights
-        self.img_seg_loss_weights = img_seg_loss_weights
+        self.seg_loss_weight = seg_loss_weight
         self.clip_loss_weight = clip_loss_weight
         self.sample_rate = sample_rate
-        self.img_seg_loss = StreamSegmentationLoss(self.num_classes, ignore_index=self.ignore_index,
-                                                backone_loss_weight=img_extract_loss_weights, head_loss_weight=img_seg_loss_weights,
+        self.img_seg_loss = SegmentationLoss(self.num_classes, ignore_index=self.ignore_index,
+                                                loss_weight=seg_loss_weight,
                                                 smooth_weight=smooth_weight, sample_rate=sample_rate)
         self.clip_loss = CLIPLoss(sample_rate=self.sample_rate, loss_weights=self.clip_loss_weight)
         self.elps = 1e-10
@@ -42,21 +40,17 @@ class SgementationCLIPLoss(nn.Module):
         # img_feature [N C T]
         # text_feature [N C T]
         # img_extract_score [N C T]
-        img_feature, text_feature, img_extract_score, img_seg_score = model_output
+        img_feature, text_feature, img_seg_score = model_output
 
         # img backbone label learning
-        img_seg_loss_dict = self.img_seg_loss([img_extract_score, img_seg_score], input_data)
+        img_seg_loss= self.img_seg_loss(img_seg_score, input_data)['loss']
         clip_loss = self.clip_loss([img_feature, text_feature], input_data)['loss']
-        
-        img_extract_cls_score_loss = img_seg_loss_dict["backbone_loss"]
-        img_seg_score_loss = img_seg_loss_dict["head_loss"]
 
-        loss = img_extract_cls_score_loss + img_seg_score_loss + clip_loss
+        loss = img_seg_loss + clip_loss
 
         loss_dict={}
         loss_dict["loss"] = loss
-        loss_dict["img_extract_loss"] = img_extract_cls_score_loss
-        loss_dict["img_seg_loss"] = img_seg_score_loss
+        loss_dict["img_seg_loss"] = img_seg_loss
         loss_dict["clip_loss"] = clip_loss
         return loss_dict
 

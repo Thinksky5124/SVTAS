@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-11 11:05:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-29 14:48:18
+LastEditTime : 2022-07-12 11:53:35
 Description  : Segmentation model clip way to train
 FilePath     : /ETESVS/model/architectures/segmentation/segmentation_clip.py
 '''
@@ -69,9 +69,8 @@ class SegmentationCLIP(nn.Module):
             fusion_output = self.fusion_model(img_output, text_output, masks)
         else:
             text_feature = text_output
-            img_extract_score, head_output = img_output
-            img_feature, img_seg_score = head_output
-            fusion_output = img_feature, text_feature, img_extract_score, img_seg_score
+            img_feature, img_seg_score = img_output
+            fusion_output = img_feature, text_feature, img_seg_score
         # img_seg_score [stage_num, N, C, T]
         # img_feature [N, C, T]
         # text_feature [N, C, T]

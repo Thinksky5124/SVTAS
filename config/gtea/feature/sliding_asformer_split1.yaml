@@ -4,8 +4,8 @@ MODEL:
     neck:
     head:
         name: "ASFormer"
-        num_decoders: 0
-        num_layers: 4
+        num_decoders: 3
+        num_layers: 10
         r1: 2
         r2: 2
         num_f_maps: 64
@@ -20,6 +20,14 @@ MODEL:
         smooth_weight: 0.15
         ignore_index: -100
 
+POSTPRECESSING:
+    name: "StreamScorePostProcessing"
+    num_classes: 11
+    clip_seg_num: 32
+    sliding_window: 32
+    sample_rate: 1
+    ignore_index: -100
+
 COLLATE:
     name: "StreamBatchCompose"
     to_tensor_keys: ["faeture", "labels", "masks", "precise_sliding_num"]
@@ -29,7 +37,7 @@ DATASET: #DATASET field
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "FeatureSegmentationDataset"
+        name: "FeatureStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/features"
@@ -37,11 +45,11 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: True
-        sliding_window: 128
-        clip_seg_num: 128
+        sliding_window: 32
+        clip_seg_num: 32
         sample_rate: 1
     test:
-        name: "FeatureSegmentationDataset"
+        name: "FeatureStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/features"
@@ -49,17 +57,9 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: False
-        sliding_window: 128
-        clip_seg_num: 128
+        sliding_window: 32
+        clip_seg_num: 32
         sample_rate: 1
-
-POSTPRECESSING:
-    name: "StreamScorePostProcessing"
-    num_classes: 11
-    clip_seg_num: 128
-    sliding_window: 128
-    sample_rate: 1
-    ignore_index: -100
 
 PIPELINE: #PIPELINE field
     train: 
@@ -71,8 +71,8 @@ PIPELINE: #PIPELINE field
             name: "FeatureStreamSampler"
             is_train: True
             sample_rate: 1
-            clip_seg_num: 128
-            sliding_window: 128
+            clip_seg_num: 32
+            sliding_window: 32
             sample_mode: "uniform"
         transform:
             name: "FeatureStreamTransform"
@@ -88,8 +88,8 @@ PIPELINE: #PIPELINE field
             name: "FeatureStreamSampler"
             is_train: False
             sample_rate: 1
-            clip_seg_num: 128
-            sliding_window: 128
+            clip_seg_num: 32
+            sliding_window: 32
             sample_mode: "uniform"
         transform:
             name: "FeatureStreamTransform"

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-15 14:48:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-03 13:29:24
+LastEditTime : 2022-07-13 10:31:20
 Description  : ResNet 2 plus 1d
 FilePath     : /ETESVS/model/backbones/video/resnet2plus1d.py
 '''
@@ -53,7 +53,6 @@ class ResNet2Plus1d(ResNet3d):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("ETESVS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
                 if self.pretrained2d:
                     # Inflate 2D model into 3D model.
                     self.inflate_weights(logger)
@@ -61,7 +60,7 @@ class ResNet2Plus1d(ResNet3d):
                 else:
                     # Directly load 3D model.
                     load_checkpoint(
-                        self, self.pretrained, strict=False, logger=logger)
+                        self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
             elif self.pretrained is None:
                 for m in self.modules():

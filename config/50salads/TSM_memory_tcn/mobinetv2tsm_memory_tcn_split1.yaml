@@ -1,0 +1,144 @@
+MODEL:
+    architecture: "StreamSegmentation2D"
+    backbone:
+        name: "MobileNetV2TSM"
+        pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
+        clip_seg_num: 32
+        shift_div: 8
+        out_indices: (7, )
+    neck:
+        name: "AvgPoolNeck"
+        num_classes: 19
+        in_channels: 1280
+        clip_seg_num: 32
+        drop_ratio: 0.5
+        need_pool: True
+    head:
+        name: "MemoryTCNHead"
+        num_stages: 1
+        num_layers: 4
+        num_f_maps: 64
+        dim: 1280
+        num_classes: 19
+        sample_rate: 20
+    loss:
+        name: "SegmentationLoss"
+        num_classes: 19
+        sample_rate: 20
+        smooth_weight: 0.15
+        ignore_index: -100
+
+POSTPRECESSING:
+    name: "StreamScorePostProcessing"
+    num_classes: 19
+    clip_seg_num: 32
+    sliding_window: 640
+    sample_rate: 20
+    ignore_index: -100
+
+COLLATE:
+    name: "StreamBatchCompose"
+    to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
+
+DATASET: #DATASET field
+    temporal_clip_batch_size: 3
+    video_batch_size: 2
+    num_workers: 2
+    train:
+        name: "RawFrameStreamSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
+        train_mode: True
+        sliding_window: 640
+        clip_seg_num: 32
+        sample_rate: 20
+    test:
+        name: "RawFrameStreamSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/50salads/splits/test.split1.bundle" #Mandatory, train data index file path
+        videos_path: "./data/50salads/Videos"
+        gt_path: "./data/50salads/groundTruth"
+        actions_map_file_path: "./data/50salads/mapping.txt"
+        dataset_type: "50salads"
+        train_mode: False
+        sliding_window: 640
+        clip_seg_num: 32
+        sample_rate: 20
+
+PIPELINE: #PIPELINE field
+    train: 
+        name: "BasePipline"
+        decode:
+            name: "VideoDecoder"
+            backend: "decord"
+        sample:
+            name: "VideoStreamSampler"
+            is_train: True
+            sample_rate: 20
+            clip_seg_num: 32
+            sliding_window: 640
+            sample_mode: "uniform"
+        transform: #Mandotary, image transform operator.
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - RandomCrop:
+                    size: 224
+                - RandomHorizontalFlip:
+                - ToTensor:
+                - Normalize:
+                    mean: [0.513, 0.511, 0.479]
+                    std: [0.236, 0.233, 0.237]
+
+    test:
+        name: "BasePipline"
+        decode:
+            name: "VideoDecoder"
+            backend: "decord"
+        sample:
+            name: "VideoStreamSampler"
+            is_train: False
+            sample_rate: 20
+            clip_seg_num: 32
+            sliding_window: 640
+            sample_mode: "uniform"
+        transform:
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - CenterCrop:
+                    size: 224
+                - ToTensor:
+                - Normalize:
+                    mean: [0.513, 0.511, 0.479]
+                    std: [0.236, 0.233, 0.237]
+
+OPTIMIZER:
+    name: "TSMAdamOptimizer"
+    learning_rate: 0.0005
+    weight_decay: 1e-4
+    betas: (0.9, 0.999)
+
+LRSCHEDULER:
+    name: "MultiStepLR"
+    step_size: [50]
+    gamma: 0.1
+
+METRIC:
+    name: "TASegmentationMetric"
+    overlap: [.1, .25, .5]
+    actions_map_file_path: "./data/50salads/mapping.txt"
+    file_output: True
+    score_output: True
+
+
+model_name: "MobileNetV2TSM_Memory_TCN_50salads_split1"
+log_interval: 4 #Optional, the interal of logger, default:10
+epochs: 50 #Mandatory, total epoch
+save_interval: 50

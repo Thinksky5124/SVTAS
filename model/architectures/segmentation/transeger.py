@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:01:32
+LastEditTime : 2022-07-12 15:36:34
 Description  : Transeger framework
 FilePath     : /ETESVS/model/architectures/segmentation/transeger.py
 '''
@@ -28,8 +28,7 @@ class Transeger(nn.Module):
         self.joint = build_head(joint)
 
         self.init_weights()
-        
-        self.sample_rate = image_backbone.head.sample_rate
+
         # memory last clip labels
         self.last_clip_labels = None
     
@@ -68,11 +67,8 @@ class Transeger(nn.Module):
         if self.image_backbone is not None:
             img_input = {"imgs": imgs, "masks": masks}
             img_output = self.image_backbone(img_input)
-            img_extract_score, head_output = img_output
-            img_feature, img_seg_score = head_output
+            img_feature = img_output
         else:
-            img_extract_score = None
-            img_seg_score = None
             img_feature = imgs
         
         ### text encoder
@@ -93,4 +89,4 @@ class Transeger(nn.Module):
         # joint_score [num_satge N C T]
         if not self.training:
             self.last_clip_labels = torch.argmax(joint_score[-1], dim=-2).detach().clone()
-        return img_extract_score, img_seg_score, joint_score
+        return joint_score

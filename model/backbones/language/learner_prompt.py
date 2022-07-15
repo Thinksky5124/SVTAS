@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-14 15:11:53
+LastEditTime : 2022-07-14 20:35:19
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
 FilePath     : /ETESVS/model/backbones/language/learner_prompt.py
 '''
@@ -155,13 +155,13 @@ class PromptLearner(nn.Module):
 
         self.prompt_prefix = prompt_prefix
         self.ordinal_prefix = {
-            1 : "Firstly, ", 2 : "Secondly, ", 3 : "Thirdly, ", 4 : "Fourthly, ", 5 : "Fifthly, ",
-            6 : "Sixthly, ", 7 : "Seventhly, ", 8 : "Eighthly, ", 9 : "Ninthly, ", 10 : "Tenthly, ",
-            11 : "Eleventhly, ", 12 : "Twelfthly, ", 13 : "Thirteenthly, ", 14 : "Fourteenthly, ", 15 : "Fifteenthly, ",
-            16 : "Sixteenth, ", 17 : "Seventeenth, ", 18 : "Eighteenth, ", 19 : "Nineteenth, ", 20 : "Twentieth, ", 
-            21 : "Twenty-firstly, ", 22 : "Twenty-secondly, ", 23 : "Twenty-thirdly, ", 24 : "Twenty-fourthly, ", 25 : "Twenty-fifthly, ", 
-            26 : "Twenty-sixthly, ", 27 : "Twenty-seventhly, ", 28 : "Twenty-eighthly, ", 29 : "Twenty-ninthly, ", 30 : "Thirtiethly, ",
-            31 : "Thirty-firstly, ", 32 : "Thirty-secondly, ", 33 : "Thirty-thirdly, ", 34 : "Thirty-fourthly, ", 35 : "Thirty-fifthly, ",
+            1 : "This is the first action, ", 2 : "This is the second action, ", 3 : "This is the third action, ", 4 : "This is the fourth action, ", 5 : "This is the fifth action, ",
+            6 : "This is the sixth action, ", 7 : "This is the seventh action, ", 8 : "This is the eighth action, ", 9 : "This is the ninth action, ", 10 : "This is the tenth action, ",
+            11 : "This is the eleventhly, ", 12 : "This is the twelfthly action, ", 13 : "This is the thirteenth action, ", 14 : "This is the fourteenth action, ", 15 : "This is the fifteenth action, ",
+            16 : "This is the sixteenth, ", 17 : "This is the seventeenth action, ", 18 : "This is the eighteenth action, ", 19 : "This is the nineteenth action, ", 20 : "This is the twentieth action, ", 
+            21 : "This is the twenty-first action, ", 22 : "This is the twenty-second action, ", 23 : "This is the twenty-third action, ", 24 : "This is the twenty-fourth action, ", 25 : "This is the twenty-fifth action, ", 
+            26 : "This is the twenty-sixth action, ", 27 : "This is the twenty-seventh action, ", 28 : "This is the twenty-eighth action, ", 29 : "This is the twenty-ninth action, ", 30 : "This is the thirtieth action, ",
+            31 : "This is the thirty-first action, ", 32 : "This is the thirty-second action, ", 33 : "This is the thirty-third action, ", 34 : "This is the thirty-fourth action, ", 35 : "This is the thirty-fifth action, ",
         }
         self.seg_len_prefix = f"This action lasted {{}} frames in current windows, "
         self.frames_position_prefix = f"This is frame {{}} of the action, "
@@ -189,9 +189,10 @@ class PromptLearner(nn.Module):
             order_idx = inverse_indices[frame_idx]
             label_idx = labels_idx_order[order_idx]
             label_name = self.id2classes[label_idx]
+
             promot_prefix_str = self.ordinal_prefix[int(order_idx) + 1] + self.seg_len_prefix.format(num2words(counts[int(order_idx)])) + \
                                 self.frames_position_prefix.format(num2words(frame_idx + 1))
-            
+                     
             token_promot_prefix_len = len(self._tokenizer.encode(promot_prefix_str))
             promot_prefix = self._tokenizer.tokenize(promot_prefix_str).to(label_idx_tensor.device)
             promot_prefix_embedding_sos_eos = self.token_embedding(promot_prefix)

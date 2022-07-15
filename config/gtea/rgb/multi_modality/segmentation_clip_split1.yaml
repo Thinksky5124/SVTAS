@@ -16,7 +16,7 @@ MODEL:
             drop_ratio: 0.5
             need_pool: True
         head:
-            name: "MultiStageModel"
+            name: "MemoryTCNHead"
             num_stages: 1
             num_layers: 4
             num_f_maps: 64
@@ -42,8 +42,7 @@ MODEL:
         name: "SgementationCLIPLoss"
         num_classes: 11
         sample_rate: 4
-        img_seg_loss_weights: 1.0
-        img_extract_loss_weights: 1.0
+        seg_loss_weight: 1.0
         clip_loss_weight: 1.0
         ignore_index: -100
 

@@ -5,7 +5,7 @@ MODEL:
     head:
         name: "OadTRHead"
         num_classes: 11
-        clip_seg_num: 128
+        clip_seg_num: 32
         sample_rate: 1
         dropout_rate: 0.1
         in_channels: 2048
@@ -20,13 +20,13 @@ MODEL:
 POSTPRECESSING:
     name: "StreamScorePostProcessing"
     num_classes: 11
-    clip_seg_num: 128
-    sliding_window: 128
+    clip_seg_num: 32
+    sliding_window: 32
     sample_rate: 1
     ignore_index: -100
 
 COLLATE:
-    name: "StreamStreamBatchCompose"
+    name: "StreamBatchCompose"
     to_tensor_keys: ["faeture", "labels", "masks", "pred_labels", "precise_sliding_num"]
 
 DATASET: #DATASET field
@@ -42,8 +42,8 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: True
-        sliding_window: 128
-        clip_seg_num: 128
+        sliding_window: 32
+        clip_seg_num: 32
         sample_rate: 1
     test:
         name: "FeatureVideoPredictionDataset"
@@ -54,8 +54,8 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: False
-        sliding_window: 128
-        clip_seg_num: 128
+        sliding_window: 32
+        clip_seg_num: 32
         sample_rate: 1
 
 PIPELINE: #PIPELINE field
@@ -69,8 +69,8 @@ PIPELINE: #PIPELINE field
             is_train: True
             pred_clip_seg_num: 8
             sample_rate: 1
-            clip_seg_num: 128
-            sliding_window: 128
+            clip_seg_num: 32
+            sliding_window: 32
             sample_mode: "uniform"
         transform:
             name: "FeatureStreamTransform"
@@ -87,8 +87,8 @@ PIPELINE: #PIPELINE field
             is_train: False
             pred_clip_seg_num: 8
             sample_rate: 1
-            clip_seg_num: 128
-            sliding_window: 128
+            clip_seg_num: 32
+            sliding_window: 32
             sample_mode: "uniform"
         transform:
             name: "FeatureStreamTransform"
@@ -117,4 +117,4 @@ METRIC:
 model_name: "Sliding_OADTR_gtea_split1"
 log_interval: 4 #Optional, the interal of logger, default:10
 epochs: 50 #Mandatory, total epoch
-save_interval: 10
+save_interval: 50

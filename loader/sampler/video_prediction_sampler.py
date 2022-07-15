@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:58:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 18:41:55
+LastEditTime : 2022-07-13 16:59:59
 Description  : Video Prediction Sampler
 FilePath     : /ETESVS/loader/sampler/video_prediction_sampler.py
 '''
@@ -62,7 +62,12 @@ class VideoPredictionFeatureStreamSampler(FeatureStreamSampler):
             mask = np.zeros((self.clip_seg_num * self.sample_rate))
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 
-        results['feature'] = frames_feature[:, :self.clip_seg_num].copy()
+        if self.format in ["NTC"]:
+            frames_feature = frames_feature[:, :self.clip_seg_num].T
+        else:
+            frames_feature = frames_feature[:, :self.clip_seg_num]
+            
+        results['feature'] = frames_feature.copy()
         results['labels'] = labels.copy()
         results['mask'] = mask.copy()
         results['pred_labels'] = pred_labels.copy()

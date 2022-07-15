@@ -1,5 +1,5 @@
-# ETESVS
-End to End Stream Video Segmentation Network for Action Segmentation and Action Localization——You do not need to extract feature
+# SVTAS
+Streaming Video Temporal Action Segmentation In Real Time
 
 ## Abstract
 

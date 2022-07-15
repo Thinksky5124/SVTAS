@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-04 15:19:16
+LastEditTime : 2022-07-12 15:50:30
 Description: Action Recognition 2D framework
 FilePath     : /ETESVS/model/architectures/recognition/recognition2d.py
 '''
@@ -42,6 +42,7 @@ class Recognition2D(nn.Module):
             self.sample_rate = head.sample_rate
         else:
             self.head = None
+            self.sample_rate = loss.sample_rate
     
         self.init_weights()
 
@@ -82,13 +83,11 @@ class Recognition2D(nn.Module):
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, backbone_score, neck_score = self.neck(
+            seg_feature = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
-            backbone_score = None
-            neck_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]

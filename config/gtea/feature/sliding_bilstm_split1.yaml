@@ -7,17 +7,26 @@ MODEL:
         in_channels: 2048
         num_classes: 11
         hidden_channels: 64
-        num_layers: 3
+        sample_rate: 1
+        num_layers: 1
         batch_first: True
         dropout: 0.5
         bidirectional: True
-        is_memory_sliding: True
+        is_memory_sliding: False
     loss:
         name: "SegmentationLoss"
         num_classes: 11
         sample_rate: 1
         smooth_weight: 0.15
         ignore_index: -100
+
+POSTPRECESSING:
+    name: "StreamScorePostProcessing"
+    num_classes: 11
+    clip_seg_num: 32
+    sliding_window: 32
+    sample_rate: 1
+    ignore_index: -100
 
 COLLATE:
     name: "StreamBatchCompose"
@@ -28,7 +37,7 @@ DATASET: #DATASET field
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "FeatureSegmentationDataset"
+        name: "FeatureStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/train.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/features"
@@ -36,11 +45,11 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: True
-        sliding_window: 128
-        clip_seg_num: 128
+        sliding_window: 32
+        clip_seg_num: 32
         sample_rate: 1
     test:
-        name: "FeatureSegmentationDataset"
+        name: "FeatureStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
         file_path: "./data/gtea/splits/test.split1.bundle" #Mandatory, train data index file path
         videos_path: "./data/gtea/features"
@@ -48,36 +57,44 @@ DATASET: #DATASET field
         actions_map_file_path: "./data/gtea/mapping.txt"
         dataset_type: "gtea"
         train_mode: False
-        sliding_window: 128
-        clip_seg_num: 128
+        sliding_window: 32
+        clip_seg_num: 32
         sample_rate: 1
 
 PIPELINE: #PIPELINE field
     train: 
-        name: "FeaturePipline"
+        name: "BasePipline"
         decode:
+            name: "FeatureDecoder"
             backend: "numpy"
         sample:
+            name: "FeatureStreamSampler"
             is_train: True
             sample_rate: 1
-            clip_seg_num: 128
-            sliding_window: 128
+            clip_seg_num: 32
+            sliding_window: 32
             sample_mode: "uniform"
         transform:
-            - ToTensor:
+            name: "FeatureStreamTransform"
+            transform_list:
+                - ToTensor:
 
     test:
-        name: "FeaturePipline"
+        name: "BasePipline"
         decode:
+            name: "FeatureDecoder"
             backend: "numpy"
         sample:
+            name: "FeatureStreamSampler"
             is_train: False
             sample_rate: 1
-            clip_seg_num: 128
-            sliding_window: 128
+            clip_seg_num: 32
+            sliding_window: 32
             sample_mode: "uniform"
         transform:
-            - ToTensor:
+            name: "FeatureStreamTransform"
+            transform_list:
+                - ToTensor:
 
 OPTIMIZER:
     name: "AdamOptimizer"
@@ -91,6 +108,7 @@ LRSCHEDULER:
     gamma: 0.1
 
 METRIC:
+    name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
     file_output: True

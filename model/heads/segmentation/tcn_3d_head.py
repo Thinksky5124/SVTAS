@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 22:48:46
+LastEditTime : 2022-07-13 20:48:57
 Description: 3D TCN model
-FilePath     : /ETESVS/model/heads/tcn_3d_head.py
+FilePath     : /ETESVS/model/heads/segmentation/tcn_3d_head.py
 '''
 import torch
 import copy
@@ -20,17 +20,16 @@ class TCN3DHead(nn.Module):
                  num_classes,
                  num_layers=4,
                  sample_rate=4,
-                 sliding_window=60,
                  seg_in_channels=2048,
-                 num_f_maps=64):
+                 num_f_maps=64,
+                 out_feature=False):
         super(TCN3DHead, self).__init__()
         self.seg_in_channels = seg_in_channels
+        self.out_feature = out_feature
         self.num_f_maps = num_f_maps
         self.num_classes = num_classes
         self.sample_rate = sample_rate
         self.num_layers = num_layers
-        if sample_rate % 2 != 0:
-            raise NotImplementedError
 
         self.conv_1x1 = nn.Conv3d(seg_in_channels, num_f_maps, (1, 1, 1))
         self.layers = nn.ModuleList([DilatedResidual3DLayer(2 ** i, num_f_maps, num_f_maps) for i in range(num_layers)])
@@ -51,7 +50,8 @@ class TCN3DHead(nn.Module):
     def forward(self, seg_feature, mask):
         # segmentation branch
         # seg_feature [N, seg_in_channels, num_segs, 7, 7]
-        out = self.conv_1x1(seg_feature)
+        feature_embedding = self.conv_1x1(seg_feature)
+        out = feature_embedding
         for layer in self.layers:
             out = layer(out, mask[:, :, ::self.sample_rate])
         
@@ -75,6 +75,9 @@ class TCN3DHead(nn.Module):
             input=outputs,
             scale_factor=[1, self.sample_rate],
             mode="nearest")
+            
+        if self.out_feature is True:
+            return feature_embedding * mask[:, 0:1, :], outputs
         return outputs
 
 
@@ -87,9 +90,9 @@ class DilatedResidual3DLayer(nn.Module):
 
     def forward(self, x, mask):
         # !
-        out = F.leaky_relu(self.conv_dilated(x))
+        # out = F.leaky_relu(self.conv_dilated(x))
         # !
-        # out = F.relu(self.conv_dilated(x))
+        out = F.relu(self.conv_dilated(x))
         out = self.conv_1x1(out)
         out = self.norm(out)
         return (x + out) * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1)
