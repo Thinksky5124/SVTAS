@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-03 13:29:14
+LastEditTime : 2022-07-16 09:59:09
 Description: Mobilenet V2 TSM model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2_tsm.py
 FilePath     : /ETESVS/model/backbones/video/mobilenet_v2_tsm.py
 '''
@@ -58,7 +58,7 @@ class MobileNetV2TSM(MobileNetV2):
             
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 for m in self.modules():

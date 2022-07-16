@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:11:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:52:21
+LastEditTime : 2022-07-16 10:01:05
 Description  : Temporal action segmentation base class
 FilePath     : /ETESVS/metric/temporal_action_segmentation/temporal_action_segmentation_base_class.py
 '''
@@ -36,7 +36,7 @@ class BaseTASegmentationMetric(BaseMetric):
         """prepare for metrics
         """
         super().__init__()
-        self.logger = get_logger("ETESVS")
+        self.logger = get_logger("SVTAS")
         self.elps = 1e-10
         self.file_output = file_output
         self.score_output = score_output

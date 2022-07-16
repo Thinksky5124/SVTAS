@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 10:11:27
+LastEditTime : 2022-07-16 09:57:03
 Description: train script api
 FilePath     : /ETESVS/tasks/train.py
 '''
@@ -38,9 +38,9 @@ def train(cfg,
     """Train model entry
     """
     
-    logger = get_logger("ETESVS")
+    logger = get_logger("SVTAS")
     if args.use_tensorboard and local_rank <= 0:
-        tensorboard_writer = get_logger("ETESVS", tensorboard=args.use_tensorboard)
+        tensorboard_writer = get_logger("SVTAS", tensorboard=args.use_tensorboard)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     weight_decay = cfg.OPTIMIZER.get('weight_decay', 1e-4)

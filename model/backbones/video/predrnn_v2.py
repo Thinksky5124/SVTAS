@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-16 14:00:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:34:28
+LastEditTime : 2022-07-16 09:59:00
 Description  : PredRNN v2 model ref:https://github.com/thuml/predrnn-pytorch/blob/master/core/models/predrnn_v2.py
 FilePath     : /ETESVS/model/backbones/video/predrnn_v2.py
 '''
@@ -49,7 +49,7 @@ class PredRNNV2(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(self, frames_tensor, mask_true):

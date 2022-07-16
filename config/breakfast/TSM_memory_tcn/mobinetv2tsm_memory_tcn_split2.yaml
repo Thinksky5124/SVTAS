@@ -1,78 +1,73 @@
 MODEL:
-    architecture: "StreamSegmentation3D"
+    architecture: "StreamSegmentation2D"
     backbone:
-        name: "TimeSformer"
-        num_frames: 32
-        img_size: 224
-        patch_size: 32
-        embed_dims: 768
-        pretrained: "data/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth"
+        name: "MobileNetV2TSM"
+        pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
+        clip_seg_num: 32
+        shift_div: 8
+        out_indices: (7, )
     neck:
         name: "AvgPoolNeck"
-        num_classes: 19
-        in_channels: 768
+        num_classes: 48
+        in_channels: 1280
         clip_seg_num: 32
         drop_ratio: 0.5
         need_pool: True
     head:
-        name: "ASFormer"
-        num_decoders: 0
+        name: "MemoryTCNHead"
+        num_stages: 1
         num_layers: 4
-        r1: 2
-        r2: 2
         num_f_maps: 64
-        input_dim: 768
-        num_classes: 19
-        sample_rate: 20
-        channel_masking_rate: 0.5
+        dim: 1280
+        num_classes: 48
+        sample_rate: 4
     loss:
-        name: "StreamSegmentationLoss"
-        num_classes: 19
-        sample_rate: 20
-        backone_loss_weight: 1.0
-        head_loss_weight: 1.0
+        name: "SegmentationLoss"
+        num_classes: 48
+        sample_rate: 4
+        smooth_weight: 0.15
         ignore_index: -100
 
 POSTPRECESSING:
     name: "StreamScorePostProcessing"
-    num_classes: 19
+    num_classes: 48
     clip_seg_num: 32
-    sliding_window: 640
-    sample_rate: 20
+    sliding_window: 128
+    sample_rate: 4
     ignore_index: -100
 
 COLLATE:
     name: "StreamBatchCompose"
-    to_tensor_keys: ["imgs", "labels", "masks" , "precise_sliding_num"]
+    to_tensor_keys: ["imgs", "labels", "masks", "precise_sliding_num"]
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
     video_batch_size: 2
     num_workers: 2
     train:
-        name: "RawFrameSegmentationDataset"
+        name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/train.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/50salads/Videos"
-        gt_path: "./data/50salads/groundTruth"
-        actions_map_file_path: "./data/50salads/mapping.txt"
-        dataset_type: "50salads"
+        file_path: "./data/breakfast/splits/train.split2.bundle" #Mandatory, train data index file path
+        videos_path: "./data/breakfast/Videos"
+        gt_path: "./data/breakfast/groundTruth"
+        actions_map_file_path: "./data/breakfast/mapping.txt"
+        dataset_type: "breakfast"
         train_mode: True
-        sliding_window: 640
+        sliding_window: 128
         clip_seg_num: 32
-        sample_rate: 20
+        sample_rate: 4
     test:
-        name: "RawFrameSegmentationDataset"
+        name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/50salads/splits/test.split1.bundle" #Mandatory, train data index file path
-        videos_path: "./data/50salads/Videos"
-        gt_path: "./data/50salads/groundTruth"
-        actions_map_file_path: "./data/50salads/mapping.txt"
-        dataset_type: "50salads"
+        file_path: "./data/breakfast/splits/test.split2.bundle" #Mandatory, train data index file path
+        videos_path: "./data/breakfast/Videos"
+        gt_path: "./data/breakfast/groundTruth"
+        actions_map_file_path: "./data/breakfast/mapping.txt"
+        dataset_type: "breakfast"
         train_mode: False
-        sliding_window: 640
+        sliding_window: 128
         clip_seg_num: 32
-        sample_rate: 20
+        sample_rate: 4
 
 PIPELINE: #PIPELINE field
     train: 
@@ -83,9 +78,9 @@ PIPELINE: #PIPELINE field
         sample:
             name: "VideoStreamSampler"
             is_train: True
-            sample_rate: 20
+            sample_rate: 4
             clip_seg_num: 32
-            sliding_window: 640
+            sliding_window: 128
             sample_mode: "uniform"
         transform: #Mandotary, image transform operator.
             name: "VideoStreamTransform"
@@ -97,8 +92,8 @@ PIPELINE: #PIPELINE field
                 - RandomHorizontalFlip:
                 - ToTensor:
                 - Normalize:
-                    mean: [0.513, 0.511, 0.479]
-                    std: [0.236, 0.233, 0.237]
+                    mean: [0.425, 0.390, 0.337]
+                    std: [0.262, 0.260, 0.246]
 
     test:
         name: "BasePipline"
@@ -108,9 +103,9 @@ PIPELINE: #PIPELINE field
         sample:
             name: "VideoStreamSampler"
             is_train: False
-            sample_rate: 20
+            sample_rate: 4
             clip_seg_num: 32
-            sliding_window: 640
+            sliding_window: 128
             sample_mode: "uniform"
         transform:
             name: "VideoStreamTransform"
@@ -121,11 +116,11 @@ PIPELINE: #PIPELINE field
                     size: 224
                 - ToTensor:
                 - Normalize:
-                    mean: [0.513, 0.511, 0.479]
-                    std: [0.236, 0.233, 0.237]
+                    mean: [0.425, 0.390, 0.337]
+                    std: [0.262, 0.260, 0.246]
 
 OPTIMIZER:
-    name: "AdamOptimizer"
+    name: "TSMAdamOptimizer"
     learning_rate: 0.0005
     weight_decay: 1e-4
     betas: (0.9, 0.999)
@@ -138,11 +133,12 @@ LRSCHEDULER:
 METRIC:
     name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/50salads/mapping.txt"
+    actions_map_file_path: "./data/breakfast/mapping.txt"
     file_output: True
+    score_output: True
 
 
-model_name: "TimeSformer_ASformer_50salads_split1"
-log_interval: 10 #Optional, the interal of logger, default:10
-epochs: 50 #Mandatory, total epoch
-save_interval: 10
+model_name: "MobileNetV2TSM_Memory_TCN_breakfast_split2"
+log_interval: 4 #Optional, the interal of logger, default:10
+epochs: 35 #Mandatory, total epoch
+save_interval: 35

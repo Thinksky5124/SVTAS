@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-03 13:28:49
+LastEditTime : 2022-07-16 10:00:26
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath     : /ETESVS/model/backbones/image/mobilenet_v2.py
 '''
@@ -267,7 +267,7 @@ class MobileNetV2(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger  = get_logger("ETESVS")
+                logger  = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 for m in self.modules():

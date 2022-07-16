@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-14 20:35:19
+LastEditTime : 2022-07-16 09:59:36
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
 FilePath     : /ETESVS/model/backbones/language/learner_prompt.py
 '''
@@ -70,7 +70,7 @@ class LearnerPromptTextEncoder(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             else:
                 nn.init.normal_(self.positional_embedding, std=0.01)
@@ -80,7 +80,7 @@ class LearnerPromptTextEncoder(nn.Module):
             nn.init.normal_(self.prompt_learner.token_embedding.weight, std=0.02)
         
         if isinstance(self.token_embedding_pretrained, str):
-            logger = get_logger("ETESVS")
+            logger = get_logger("SVTAS")
             load_checkpoint(self, self.token_embedding_pretrained, strict=False, logger=logger, revise_keys=[(r'token_embedding', r'prompt_learner.token_embedding')])
 
     def forward(self, labels, masks):
@@ -132,7 +132,7 @@ class PromptLearner(nn.Module):
         self.ignore_index = ignore_index
         self.token_embedding = nn.Embedding(vocab_size, embedding_dim)
 
-        logger = get_logger("ETESVS")
+        logger = get_logger("SVTAS")
 
         if ctx_init:
             # use given words to initialize context vectors

@@ -3,7 +3,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:34:31
+LastEditTime : 2022-07-16 09:58:56
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /ETESVS/model/backbones/video/resnet_3d.py
 '''
@@ -806,7 +806,7 @@ class ResNet3d(nn.Module):
         if pretrained:
             self.pretrained = pretrained
         if isinstance(self.pretrained, str):
-            logger = get_logger("ETESVS")
+            logger = get_logger("SVTAS")
             if self.pretrained2d:
                 # Inflate 2D model into 3D model.
                 self.inflate_weights(logger)

@@ -1,4 +1,12 @@
 '''
+Author       : Thyssen Wen
+Date         : 2022-06-18 12:11:25
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-07-16 09:57:43
+Description  : file content
+FilePath     : /ETESVS/model/necks/memory_layer.py
+'''
+'''
 Author: Thyssen Wen
 Date: 2022-04-13 14:01:12
 LastEditors: Thyssen Wen
@@ -30,7 +38,7 @@ class ConvLSTMResidualLayer(nn.Module):
         self.conv_lstm = ConvLSTM(in_channels, hidden_channels, (3, 3), num_layers, batch_first=True)
         self.fc_frames_cls = nn.Linear(hidden_channels, num_classes)
 
-        # self.writer = get_logger(name="ETESVS", tensorboard=True)
+        # self.writer = get_logger(name="SVTAS", tensorboard=True)
         # self.step = 0
 
         # init buffer

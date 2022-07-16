@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:15:30
+LastEditTime : 2022-07-16 09:57:23
 Description: runner script
 FilePath     : /ETESVS/tasks/runner.py
 '''
@@ -53,7 +53,7 @@ class Runner():
         self.local_rank = local_rank
         self.use_amp = use_amp
 
-        # self.writer = get_logger(name="ETESVS", tensorboard=True)
+        # self.writer = get_logger(name="SVTAS", tensorboard=True)
         # self.step = 1
         # self.cnt = 1
 

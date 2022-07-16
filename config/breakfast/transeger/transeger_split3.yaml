@@ -1,0 +1,163 @@
+MODEL:
+    architecture: "Transeger"
+    image_backbone:
+        architecture: "Recognition2D"
+        backbone:
+            name: "MobileNetV2TSM"
+            pretrained: "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth"
+            clip_seg_num: 32
+            shift_div: 8
+            out_indices: (7, )
+        neck:
+            name: "AvgPoolNeck"
+            num_classes: 48
+            in_channels: 1280
+            clip_seg_num: 32
+            drop_ratio: 0.5
+            need_pool: True
+        head:
+            name: "IdentityEmbeddingHead"
+            in_channels: 1280
+            out_channels: 64
+            sample_rate: 4
+    text_backbone:
+        architecture: "Encoder2Decoder"
+        encoder:
+            name: "LearnerPromptTextEncoder"
+            actions_map_file_path: "./data/breakfast/mapping.txt"
+            embedding_dim: 512
+            sample_rate: 4
+            max_len: 50
+            clip_seg_num: 32
+            encoder_layers_num: 3
+            encoder_heads_num: 8
+            text_embed_dim: 64
+        decoder:
+        head:
+    joint:
+        name: "TransegerMemoryTCNJointNet"
+        num_classes: 48
+        in_channels: 64
+        hidden_channels: 128
+        num_layers: 4
+        sample_rate: 4
+    loss:
+        name: "SegmentationLoss"
+        num_classes: 48
+        sample_rate: 4
+        smooth_weight: 0.5
+        ignore_index: -100
+
+POSTPRECESSING:
+    name: "StreamScorePostProcessing"
+    num_classes: 48
+    clip_seg_num: 32
+    sliding_window: 128
+    sample_rate: 4
+    ignore_index: -100
+
+COLLATE:
+    name: "StreamBatchCompose"
+    to_tensor_keys: ["imgs", "labels", "masks" ,"precise_sliding_num"]
+
+DATASET: #DATASET field
+    temporal_clip_batch_size: 3
+    video_batch_size: 2
+    num_workers: 2
+    train:
+        name: "RawFrameStreamSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/breakfast/splits/train.split3.bundle" #Mandatory, train data index file path
+        videos_path: "./data/breakfast/Videos"
+        gt_path: "./data/breakfast/groundTruth"
+        actions_map_file_path: "./data/breakfast/mapping.txt"
+        dataset_type: "breakfast"
+        train_mode: True
+        sliding_window: 128
+        clip_seg_num: 32
+        sample_rate: 4
+    test:
+        name: "RawFrameStreamSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/breakfast/splits/test.split3.bundle" #Mandatory, train data index file path
+        videos_path: "./data/breakfast/Videos"
+        gt_path: "./data/breakfast/groundTruth"
+        actions_map_file_path: "./data/breakfast/mapping.txt"
+        dataset_type: "breakfast"
+        train_mode: False
+        sliding_window: 128
+        clip_seg_num: 32
+        sample_rate: 4
+
+PIPELINE: #PIPELINE field
+    train: 
+        name: "BasePipline"
+        decode:
+            name: "VideoDecoder"
+            backend: "decord"
+        sample:
+            name: "VideoStreamSampler"
+            is_train: True
+            sample_rate: 4
+            clip_seg_num: 32
+            sliding_window: 128
+            sample_mode: "uniform"
+        transform: #Mandotary, image transform operator.
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - RandomCrop:
+                    size: 256
+                - RandomHorizontalFlip:
+                - ToTensor:
+                - Normalize:
+                    mean: [0.425, 0.390, 0.337]
+                    std: [0.262, 0.260, 0.246]
+
+    test:
+        name: "BasePipline"
+        decode:
+            name: "VideoDecoder"
+            backend: "decord"
+        sample:
+            name: "VideoStreamSampler"
+            is_train: False
+            sample_rate: 4
+            clip_seg_num: 32
+            sliding_window: 128
+            sample_mode: "uniform"
+        transform:
+            name: "VideoStreamTransform"
+            transform_list:
+                - Resize:
+                    size: [256, 320]
+                - CenterCrop:
+                    size: 256
+                - ToTensor:
+                - Normalize:
+                    mean: [0.425, 0.390, 0.337]
+                    std: [0.262, 0.260, 0.246]
+
+OPTIMIZER:
+    name: "AdamOptimizer"
+    learning_rate: 0.0005
+    weight_decay: 1e-4
+    betas: (0.9, 0.999)
+
+LRSCHEDULER:
+    name: "MultiStepLR"
+    step_size: [50]
+    gamma: 0.1
+
+METRIC:
+    name: "TASegmentationMetric"
+    overlap: [.1, .25, .5]
+    actions_map_file_path: "./data/breakfast/mapping.txt"
+    file_output: True
+
+
+model_name: "Transeger_breakfast_split3"
+log_interval: 4 #Optional, the interal of logger, default:10
+epochs: 35 #Mandatory, total epoch
+save_interval: 35

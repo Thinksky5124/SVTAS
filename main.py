@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 19:53:16
+LastEditTime : 2022-07-16 09:54:46
 Description: main script
 FilePath     : /ETESVS/main.py
 '''
@@ -18,7 +18,7 @@ from tasks.test import test
 from tasks.train import train
 
 def parse_args():
-    parser = argparse.ArgumentParser("ETESVS train script")
+    parser = argparse.ArgumentParser("SVTAS train script")
     parser.add_argument('-c',
                         '--config',
                         type=str,

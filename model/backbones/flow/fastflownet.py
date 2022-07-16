@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-03 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-19 16:12:36
+LastEditTime : 2022-07-16 10:00:41
 Description: flow net
 FilePath     : /ETESVS/model/backbones/flow/fastflownet.py
 '''
@@ -147,7 +147,7 @@ class FastFlowNet(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()

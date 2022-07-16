@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:53:01
+LastEditTime : 2022-07-16 09:56:48
 Description  : Extract video feature script
 FilePath     : /ETESVS/tools/extract_features.py
 '''
@@ -110,7 +110,7 @@ def extractor(cfg, outpath):
     if not isExists:
         os.makedirs(out_path)
         print(out_path + ' created successful')
-    logger = get_logger("ETESVS")
+    logger = get_logger("SVTAS")
     
     # construct model
     model = model_builder.build_model(cfg.MODEL).cuda()
@@ -150,7 +150,7 @@ def extractor(cfg, outpath):
     logger.info("Finish all extracting!")
 
 def parse_args():
-    parser = argparse.ArgumentParser("ETESVS extract video feature script")
+    parser = argparse.ArgumentParser("SVTAS extract video feature script")
     parser.add_argument('-c',
                         '--config',
                         type=str,
@@ -167,7 +167,7 @@ def parse_args():
         
 def main():
     args = parse_args()
-    setup_logger(f"./output/etract_feature", name="ETESVS", level="INFO", tensorboard=False)
+    setup_logger(f"./output/etract_feature", name="SVTAS", level="INFO", tensorboard=False)
     cfg = parse_config(args.config)
     extractor(cfg, args.out_path)
 

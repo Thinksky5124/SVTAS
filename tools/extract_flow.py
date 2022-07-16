@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:52:12
+LastEditTime : 2022-07-16 09:56:11
 Description  : Extract flow script
 FilePath     : /ETESVS/tools/extract_flow.py
 '''
@@ -119,7 +119,7 @@ def extractor(cfg, file_list, outpath):
         
 
 def parse_args():
-    parser = argparse.ArgumentParser("ETESVS extract optical flow script")
+    parser = argparse.ArgumentParser("SVTAS extract optical flow script")
     parser.add_argument('-c',
                         '--config',
                         type=str,
@@ -161,7 +161,7 @@ def parse_file_paths(input_path, dataset_type):
 def main():
     args = parse_args()
     cfg = parse_config(args.config)
-    setup_logger(f"./output/etract_flow", name="ETESVS", level="INFO", tensorboard=False)
+    setup_logger(f"./output/etract_flow", name="SVTAS", level="INFO", tensorboard=False)
     file_list = parse_file_paths(cfg.DATASET.file_list, cfg.DATASET.dataset_type)
     extractor(cfg, file_list, args.out_path)
 

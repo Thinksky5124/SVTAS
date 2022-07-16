@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:33:25
+LastEditTime : 2022-07-16 10:00:12
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
 FilePath     : /ETESVS/model/backbones/image/resnet.py
 '''
@@ -528,7 +528,7 @@ class ResNet(nn.Module):
         scratch."""
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 if self.torchvision_pretrain:
                     # torchvision's
                     self._load_torchvision_checkpoint(logger)
@@ -593,7 +593,7 @@ class ResNet(nn.Module):
                 param.requires_grad = False
 
     def _partial_bn(self):
-        logger = get_logger("ETESVS")
+        logger = get_logger("SVTAS")
         logger.info('Freezing BatchNorm2D except the first one.')
         count_bn = 0
         for m in self.modules():

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:21:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:34:46
+LastEditTime : 2022-07-16 09:58:35
 Description  : Timesformer backbone ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/timesformer.py
 FilePath     : /ETESVS/model/backbones/video/timesfromer.py
 '''
@@ -233,7 +233,7 @@ class TimeSformer(nn.Module):
 
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):

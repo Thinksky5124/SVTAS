@@ -45,7 +45,7 @@ def get_config(fname, overrides=None, show=True, tensorboard=False):
     """
     assert os.path.exists(fname), ('config file({}) is not exist'.format(fname))
     config = parse_config(fname)
-    logger = setup_logger(f"./output/{config.model_name}", name="ETESVS", level="INFO", tensorboard=tensorboard)
+    logger = setup_logger(f"./output/{config.model_name}", name="SVTAS", level="INFO", tensorboard=tensorboard)
     override_config(config, overrides)
     if show:
         print_config(config)
@@ -66,7 +66,7 @@ def override(dl, ks, v):
         ks(list): list of keys
         v(str): value to be replaced
     """
-    logger = get_logger("ETESVS")
+    logger = get_logger("SVTAS")
     def str2num(v):
         try:
             return eval(v)
@@ -135,7 +135,7 @@ def print_dict(d, delimiter=0):
     Recursively visualize a dict and
     indenting acrrording by the relationship of keys.
     """
-    logger = get_logger("ETESVS")
+    logger = get_logger("SVTAS")
     placeholder = "-" * 60
     for k, v in sorted(d.items()):
         if isinstance(v, dict):

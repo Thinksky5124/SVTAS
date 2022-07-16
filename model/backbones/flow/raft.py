@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 13:44:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:33:13
+LastEditTime : 2022-07-16 10:00:32
 Description  : RAFT ref:https://github.com/princeton-vl/RAFT
 FilePath     : /ETESVS/model/backbones/flow/raft.py
 '''
@@ -143,7 +143,7 @@ class RAFT(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()

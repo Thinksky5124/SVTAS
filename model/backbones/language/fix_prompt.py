@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-14 15:45:37
+LastEditTime : 2022-07-16 09:59:49
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
 FilePath     : /ETESVS/model/backbones/language/fix_prompt.py
 '''
@@ -67,7 +67,7 @@ class FixPromptTextEncoder(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             else:
                 nn.init.normal_(self.positional_embedding, std=0.01)
@@ -77,7 +77,7 @@ class FixPromptTextEncoder(nn.Module):
             nn.init.normal_(self.prompt.token_embedding.weight, std=0.02)
         
         if isinstance(self.token_embedding_pretrained, str):
-            logger = get_logger("ETESVS")
+            logger = get_logger("SVTAS")
             load_checkpoint(self, self.token_embedding_pretrained, strict=False, logger=logger, revise_keys=[(r'token_embedding', r'prompt.token_embedding')])
 
     def forward(self, labels, masks):

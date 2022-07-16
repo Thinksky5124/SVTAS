@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-29 14:58:21
+LastEditTime : 2022-07-16 09:57:14
 Description: test script api
 FilePath     : /ETESVS/tasks/test.py
 '''
@@ -35,9 +35,9 @@ def test(cfg,
          nprocs,
          use_amp=False,
          weights=None):
-    logger = get_logger("ETESVS")
+    logger = get_logger("SVTAS")
     if args.use_tensorboard and local_rank <= 0:
-        tensorboard_writer = get_logger("ETESVS", tensorboard=args.use_tensorboard)
+        tensorboard_writer = get_logger("SVTAS", tensorboard=args.use_tensorboard)
     # wheather use amp
     if use_amp is True:
         logger.info("use amp")

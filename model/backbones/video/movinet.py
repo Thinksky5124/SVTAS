@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 19:04:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:34:24
+LastEditTime : 2022-07-16 09:59:05
 Description  : MoViNet model ref:https://github.com/Atze00/MoViNet-pytorch/blob/main/movinets/models.py
 FilePath     : /ETESVS/model/backbones/video/movinet.py
 '''
@@ -702,7 +702,7 @@ class MoViNet(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             else:
                 self.apply(self._weight_init)

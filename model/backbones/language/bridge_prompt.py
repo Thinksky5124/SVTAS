@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-14 15:27:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-29 10:26:19
+LastEditTime : 2022-07-16 09:59:57
 Description  : Bridge-Prompt: Towards Ordinal Action Understanding in Instructional Videos ref:https://github.com/ttlmh/Bridge-Prompt
 FilePath     : /ETESVS/model/backbones/language/bridge_prompt.py
 '''
@@ -61,7 +61,7 @@ class BridgePromptTextEncoder(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             else:
                 nn.init.normal_(self.positional_embedding, std=0.01)
@@ -73,7 +73,7 @@ class BridgePromptTextEncoder(nn.Module):
             nn.init.normal_(self.text_projection, std=self.transformer.width ** -0.5)
         
         if isinstance(self.token_embedding_pretrained, str):
-            logger = get_logger("ETESVS")
+            logger = get_logger("SVTAS")
             load_checkpoint(self, self.token_embedding_pretrained, strict=False, logger=logger)
 
     def forward(self, labels, masks):

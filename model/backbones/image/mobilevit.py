@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:04:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-03 13:28:42
+LastEditTime : 2022-07-16 10:00:22
 Description  : MobileViT backbone ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/mobile_vit.py
 FilePath     : /ETESVS/model/backbones/image/mobilevit.py
 '''
@@ -260,7 +260,7 @@ class MobileViT(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger  = get_logger("ETESVS")
+                logger  = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):

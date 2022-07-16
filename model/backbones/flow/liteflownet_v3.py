@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 21:29:02
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-19 18:38:56
+LastEditTime : 2022-07-16 10:00:36
 Description  : LiteFlowNet V3 model ref:https://github.com/lhao0301/pytorch-liteflownet3/blob/main/run.py
 FilePath     : /ETESVS/model/backbones/flow/liteflownet_v3.py
 '''
@@ -45,7 +45,7 @@ class LiteFlowNetV3(nn.Module):
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()

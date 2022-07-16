@@ -36,9 +36,9 @@ def coloring(message, color="OKGREEN"):
 logger_initialized = {}
 
 
-def setup_logger(output=None, name="ETESVS", level="INFO", tensorboard=False):
+def setup_logger(output=None, name="SVTAS", level="INFO", tensorboard=False):
     """
-    Initialize the ETESVS logger and set its verbosity level to "INFO".
+    Initialize the SVTAS logger and set its verbosity level to "INFO".
     """
     def time_zone(sec, fmt):
         real_time = datetime.datetime.now()

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:02:02
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-03 13:29:07
+LastEditTime : 2022-07-16 09:59:13
 Description: MobileNet V2 temporal memory module
 FilePath     : /ETESVS/model/backbones/video/mobilenet_v2_tmm.py
 '''
@@ -260,7 +260,7 @@ class MobileNetV2TMM(MobileNetV2TSM):
         
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("ETESVS")
+                logger = get_logger("SVTAS")
                 load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 for m in self.modules():
