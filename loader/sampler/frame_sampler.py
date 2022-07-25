@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 23:16:57
+LastEditTime : 2022-07-18 22:41:25
 Description  : Raw frame sampler
 FilePath     : /ETESVS/loader/sampler/frame_sampler.py
 '''
@@ -84,7 +84,7 @@ class VideoStreamSampler():
             imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
 
         if len(imgs) < self.clip_seg_num:
-            np_frames = np_frames[-1].asnumpy().copy()
+            np_frames = np_frames[-1].copy()
             pad_len = self.clip_seg_num - len(imgs)
             for i in range(pad_len):
                 imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
@@ -95,16 +95,20 @@ class VideoStreamSampler():
     
     def _some_valid_frames(self, start_frame, end_frame, video_len, frames_len, container, labels):
         imgs = []
+        small_frames_video_len = min(frames_len, video_len)
         frames_idx = self.sample(start_frame, video_len, self.sample_rate)
-        label_frames_idx = self.sample(start_frame, frames_len, self.sample_rate)
-        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len, samples_idx=label_frames_idx).copy()
+        label_frames_idx = self.sample(start_frame, small_frames_video_len, self.sample_rate)
+        labels = self._labels_sample(labels, start_frame=start_frame, end_frame=small_frames_video_len, samples_idx=label_frames_idx).copy()
         frames_select = container.get_batch(frames_idx)
         # dearray_to_img
         np_frames = frames_select.asnumpy()
-        for i in range(np_frames.shape[0]):
-            imgbuf = np_frames[i].copy()
-            imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
-        np_frames = np.zeros_like(np_frames[0])
+        if np_frames.shape[0] > 0:
+            for i in range(np_frames.shape[0]):
+                imgbuf = np_frames[i].copy()
+                imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
+            np_frames = np.zeros_like(np_frames[0])
+        else:
+            np_frames = np.zeros((240, 320, 3))
         pad_len = self.clip_seg_num - len(imgs)
         for i in range(pad_len):
             imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
@@ -137,12 +141,14 @@ class VideoStreamSampler():
         container = results['frames']
         labels = results['raw_labels']
 
+        small_frames_video_len = min(frames_len, video_len)
+
         # generate sample index
         start_frame = results['sample_sliding_idx'] * self.sliding_window
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
-        if start_frame < frames_len and end_frame < frames_len:
+        if start_frame < small_frames_video_len and end_frame < small_frames_video_len:
             imgs, labels, mask = self._all_valid_frames(start_frame, end_frame, video_len, container, labels)
-        elif start_frame < frames_len and end_frame >= frames_len:
+        elif start_frame < small_frames_video_len and end_frame >= small_frames_video_len:
             imgs, labels, mask = self._some_valid_frames(start_frame, end_frame, video_len, frames_len, container, labels)
         else:
             imgs = []

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-28 19:46:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-13 20:48:57
+LastEditTime : 2022-07-18 09:18:00
 Description: 3D TCN model
 FilePath     : /ETESVS/model/heads/segmentation/tcn_3d_head.py
 '''
@@ -37,11 +37,12 @@ class TCN3DHead(nn.Module):
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
 
     def init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv3d):
-                xavier_init(m)
-            elif isinstance(m, (nn.BatchNorm3d, nn.GroupNorm)):
-                constant_init(m, 1)
+        pass
+        # for m in self.modules():
+        #     if isinstance(m, nn.Conv3d):
+        #         xavier_init(m)
+        #     elif isinstance(m, (nn.BatchNorm3d, nn.GroupNorm)):
+        #         constant_init(m, 1)
 
     def _clear_memory_buffer(self):
         # self.seg_conv._clear_memory_buffer()

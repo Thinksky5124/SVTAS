@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-18 12:11:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-07 11:45:28
+LastEditTime : 2022-07-19 10:31:40
 Description  : memory tcn
 FilePath     : /ETESVS/model/heads/segmentation/memory_tcn.py
 '''
@@ -75,7 +75,8 @@ class MemoryDilationResidualLyaer(nn.Module):
         super(MemoryDilationResidualLyaer, self).__init__()
         self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=0, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
-        self.dropout = nn.Dropout()
+        # self.norm = nn.Dropout()
+        self.norm = nn.BatchNorm1d(out_channels)
         self.dilation = dilation
         self.memory = None
     
@@ -100,7 +101,7 @@ class MemoryDilationResidualLyaer(nn.Module):
 
         out = F.relu(self.conv_dilated(pad_x))
         out = self.conv_1x1(out)
-        out = self.dropout(out)
+        out = self.norm(out)
         return (x + out) * mask[:, 0:1, :]
 
 class MemoryTemporalConvolutionBlock(nn.Module):

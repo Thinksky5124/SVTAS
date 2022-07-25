@@ -1,0 +1,72 @@
+MODEL:
+    architecture: "Recognition3D"
+    backbone:
+        name: "I3D"
+        pretrained: "./data/i3d_rgb.pt"
+        in_channels: 3
+    neck:
+    head:
+        name: "FeatureExtractHead"
+        in_channels: 1024
+        input_seg_num: 8
+        clip_seg_num: 64
+        sample_rate: 1
+        pool_space: True
+        in_format: "N,C,T,H,W"
+        out_format: "NCT"
+    loss:
+
+# PRETRAINED: ""
+
+POSTPRECESSING:
+    name: "StreamFeaturePostProcessing"
+    feature_dim: 1024
+    clip_seg_num: 64
+    sliding_window: 64
+    sample_rate: 1
+    ignore_index: -100
+
+COLLATE:
+    name: "StreamBatchCompose"
+    to_tensor_keys: ["imgs", "labels", "masks"]
+
+DATASET: #DATASET field
+    temporal_clip_batch_size: 3
+    video_batch_size: 1
+    num_workers: 2
+    config:
+        name: "RawFrameStreamSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/egtea/video_list.txt" #Mandatory, train data index file path
+        videos_path: "./data/egtea/Videos"
+        gt_path: "./data/egtea/groundTruth"
+        actions_map_file_path: "./data/egtea/mapping.txt"
+        dataset_type: "egtea"
+        train_mode: False
+        sliding_window: 64
+        clip_seg_num: 64
+        sample_rate: 1
+
+PIPELINE: #PIPELINE field
+    name: "BasePipline"
+    decode:
+        name: "VideoDecoder"
+        backend: "decord"
+    sample:
+        name: "VideoStreamSampler"
+        is_train: False
+        sample_rate: 1
+        clip_seg_num: 64
+        sliding_window: 64
+        sample_mode: "uniform"
+    transform:
+        name: "VideoStreamTransform"
+        transform_list:
+            - Resize:
+                size: [256, 320]
+            - CenterCrop:
+                size: 224
+            - ToTensor:
+            - Normalize:
+                mean: [0.479, 0.307, 0.176]
+                std: [0.264, 0.204, 0.163]

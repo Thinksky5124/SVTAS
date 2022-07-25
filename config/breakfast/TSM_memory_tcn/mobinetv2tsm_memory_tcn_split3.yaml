@@ -42,8 +42,8 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 2
-    num_workers: 2
+    video_batch_size: 4
+    num_workers: 4
     train:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path

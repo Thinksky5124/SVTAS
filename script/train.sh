@@ -2,11 +2,11 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-05-22 17:05:58
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2022-07-16 10:30:29
+ # @LastEditTime : 2022-07-20 20:30:25
  # @Description  : train script
  # @FilePath     : /ETESVS/script/train.sh
 ### 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 ### gtea ###
 
@@ -44,18 +44,15 @@ export CUDA_VISIBLE_DEVICES=0
 # python main.py --validate -c config/50salads/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split4.yaml --seed 0
 # python main.py --validate -c config/50salads/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split5.yaml --seed 0
 
-### breakfast ###
-python main.py --validate -c config/breakfast/transeger/transeger_split1.yaml --seed 0
-python main.py --validate -c config/breakfast/transeger/transeger_split2.yaml --seed 0
-python main.py --validate -c config/breakfast/transeger/transeger_split3.yaml --seed 0
-python main.py --validate -c config/breakfast/transeger/transeger_split4.yaml --seed 0
+### egtea ###
+# python main.py --validate -c config/egtea/I3D_mstcn/i3d_mstcn_split1.yaml --seed 0
+# python main.py --validate -c config/egtea/I3D_mstcn/i3d_mstcn_split2.yaml --seed 0
+# python main.py --validate -c config/egtea/I3D_mstcn/i3d_mstcn_split3.yaml --seed 0
 
-python main.py --validate -c config/breakfast/I3D_mstcn/i3d_mstcn_split1.yaml --seed 0
-python main.py --validate -c config/breakfast/I3D_mstcn/i3d_mstcn_split2.yaml --seed 0
-python main.py --validate -c config/breakfast/I3D_mstcn/i3d_mstcn_split3.yaml --seed 0
-python main.py --validate -c config/breakfast/I3D_mstcn/i3d_mstcn_split4.yaml --seed 0
+# python main.py --validate -c config/egtea/transeger/transeger_split1.yaml --seed 0
+# python main.py --validate -c config/egtea/transeger/transeger_split2.yaml --seed 0
+# python main.py --validate -c config/egtea/transeger/transeger_split3.yaml --seed 0
 
-python main.py --validate -c config/breakfast/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split1.yaml --seed 0
-python main.py --validate -c config/breakfast/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split2.yaml --seed 0
-python main.py --validate -c config/breakfast/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split3.yaml --seed 0
-python main.py --validate -c config/breakfast/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split4.yaml --seed 0
+python main.py --validate -c config/egtea/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split1.yaml --seed 0
+python main.py --validate -c config/egtea/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split2.yaml --seed 0
+python main.py --validate -c config/egtea/TSM_memory_tcn/mobinetv2tsm_memory_tcn_split3.yaml --seed 0

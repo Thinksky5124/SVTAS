@@ -62,8 +62,8 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 2
-    num_workers: 2
+    video_batch_size: 4
+    num_workers: 4
     train:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
@@ -158,6 +158,6 @@ METRIC:
 
 
 model_name: "Transeger_breakfast_split3"
-log_interval: 4 #Optional, the interal of logger, default:10
+log_interval: 10 #Optional, the interal of logger, default:10
 epochs: 35 #Mandatory, total epoch
 save_interval: 35

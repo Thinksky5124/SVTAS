@@ -10,7 +10,7 @@ MODEL:
             out_indices: (7, )
         neck:
             name: "AvgPoolNeck"
-            num_classes: 48
+            num_classes: 20
             in_channels: 1280
             clip_seg_num: 32
             drop_ratio: 0.5
@@ -24,7 +24,7 @@ MODEL:
         architecture: "Encoder2Decoder"
         encoder:
             name: "LearnerPromptTextEncoder"
-            actions_map_file_path: "./data/breakfast/mapping.txt"
+            actions_map_file_path: "./data/egtea/mapping.txt"
             embedding_dim: 512
             sample_rate: 4
             max_len: 50
@@ -36,21 +36,21 @@ MODEL:
         head:
     joint:
         name: "TransegerMemoryTCNJointNet"
-        num_classes: 48
+        num_classes: 20
         in_channels: 64
         hidden_channels: 128
         num_layers: 4
         sample_rate: 4
     loss:
         name: "SegmentationLoss"
-        num_classes: 48
+        num_classes: 20
         sample_rate: 4
         smooth_weight: 0.5
         ignore_index: -100
 
 POSTPRECESSING:
     name: "StreamScorePostProcessing"
-    num_classes: 48
+    num_classes: 20
     clip_seg_num: 32
     sliding_window: 128
     sample_rate: 4
@@ -62,16 +62,16 @@ COLLATE:
 
 DATASET: #DATASET field
     temporal_clip_batch_size: 3
-    video_batch_size: 4
-    num_workers: 4
+    video_batch_size: 2
+    num_workers: 2
     train:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/train.split2.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/egtea/splits/train_split3.txt" #Mandatory, train data index file path
+        videos_path: "./data/egtea/Videos"
+        gt_path: "./data/egtea/groundTruth"
+        actions_map_file_path: "./data/egtea/mapping.txt"
+        dataset_type: "egtea"
         train_mode: True
         sliding_window: 128
         clip_seg_num: 32
@@ -79,11 +79,11 @@ DATASET: #DATASET field
     test:
         name: "RawFrameStreamSegmentationDataset"
         data_prefix: "./" #Mandatory, train data root path
-        file_path: "./data/breakfast/splits/test.split2.bundle" #Mandatory, train data index file path
-        videos_path: "./data/breakfast/Videos"
-        gt_path: "./data/breakfast/groundTruth"
-        actions_map_file_path: "./data/breakfast/mapping.txt"
-        dataset_type: "breakfast"
+        file_path: "./data/egtea/splits/test_split3.txt" #Mandatory, train data index file path
+        videos_path: "./data/egtea/Videos"
+        gt_path: "./data/egtea/groundTruth"
+        actions_map_file_path: "./data/egtea/mapping.txt"
+        dataset_type: "egtea"
         train_mode: False
         sliding_window: 128
         clip_seg_num: 32
@@ -112,8 +112,8 @@ PIPELINE: #PIPELINE field
                 - RandomHorizontalFlip:
                 - ToTensor:
                 - Normalize:
-                    mean: [0.425, 0.390, 0.337]
-                    std: [0.262, 0.260, 0.246]
+                    mean: [0.479, 0.307, 0.176]
+                    std: [0.264, 0.204, 0.163]
 
     test:
         name: "BasePipline"
@@ -136,8 +136,8 @@ PIPELINE: #PIPELINE field
                     size: 256
                 - ToTensor:
                 - Normalize:
-                    mean: [0.425, 0.390, 0.337]
-                    std: [0.262, 0.260, 0.246]
+                    mean: [0.479, 0.307, 0.176]
+                    std: [0.264, 0.204, 0.163]
 
 OPTIMIZER:
     name: "AdamOptimizer"
@@ -153,11 +153,11 @@ LRSCHEDULER:
 METRIC:
     name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
-    actions_map_file_path: "./data/breakfast/mapping.txt"
+    actions_map_file_path: "./data/egtea/mapping.txt"
     file_output: True
 
 
-model_name: "Transeger_breakfast_split2"
+model_name: "Transeger_egtea_split3"
 log_interval: 10 #Optional, the interal of logger, default:10
-epochs: 35 #Mandatory, total epoch
-save_interval: 35
+epochs: 10 #Mandatory, total epoch
+save_interval: 10

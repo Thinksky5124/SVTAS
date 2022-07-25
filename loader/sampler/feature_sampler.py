@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 18:48:45
+LastEditTime : 2022-07-18 19:56:36
 Description  : feature sampler
 FilePath     : /ETESVS/loader/sampler/feature_sampler.py
 '''
@@ -170,10 +170,16 @@ class FeatureSampler():
         labels = results['raw_labels']
 
         # generate sample index
-        frames_idx = self.sample(0, feature_len, self.sample_rate)
-        labels = self._labels_sample(labels, start_frame=0, end_frame=frames_len, samples_idx=frames_idx).copy()
-        frames_feature = feature[:, frames_idx]
-        mask = np.ones((labels.shape[0]), dtype=np.float32)
+        if frames_len < feature_len:
+            frames_idx = self.sample(0, frames_len, self.sample_rate)
+            labels = self._labels_sample(labels, start_frame=0, end_frame=frames_len, samples_idx=frames_idx).copy()
+            frames_feature = feature[:, frames_idx]
+            mask = np.ones((labels.shape[0]), dtype=np.float32)
+        else:
+            frames_idx = self.sample(0, feature_len, self.sample_rate)
+            labels = self._labels_sample(labels, start_frame=0, end_frame=feature_len, samples_idx=frames_idx).copy()
+            frames_feature = feature[:, frames_idx]
+            mask = np.ones((labels.shape[0]), dtype=np.float32)
 
         if self.format in ["NTC"]:
             frames_feature = frames_feature.T

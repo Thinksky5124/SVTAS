@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:24:00
+LastEditTime : 2022-07-19 10:30:24
 Description: MS-TCN loss model
 FilePath     : /ETESVS/model/losses/segmentation_loss.py
 '''
@@ -20,7 +20,8 @@ class SegmentationLoss(nn.Module):
                  loss_weight=1.0,
                  sample_rate=1,
                  smooth_weight=0.5,
-                 ignore_index=-100):
+                 ignore_index=-100,
+                 class_weight=None):
         super().__init__()
         self.smooth_weight = smooth_weight
         self.ignore_index = ignore_index
@@ -28,7 +29,11 @@ class SegmentationLoss(nn.Module):
         self.sample_rate = sample_rate
         self.elps = 1e-10
         self.loss_weight = loss_weight
-        self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
+        if class_weight is not None:
+            class_weight = torch.tensor(class_weight)
+            self.ce = nn.CrossEntropyLoss(weight=class_weight, ignore_index=self.ignore_index, reduction='none')
+        else:
+            self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.mse = nn.MSELoss(reduction='none')
     
     def forward(self, model_output, input_data):
