@@ -3,7 +3,17 @@ Streaming Video Temporal Action Segmentation In Real Time
 
 ## Abstract
 
-Temporal action segmentation and localization is a challenge task which attracts many researchers’ attention recently. As a downstream tasks of action recognition, most studies focus on how to classify frames or regression boundary base on the video feature extracted by action recognition model. However, we claim that above approaches are two stage or three stage, which must train split two or three models, and hard to segment or localize video on real time, because previous model must work on the whole video feature extracted by action recognition model. In this paper, we introduce an end-to-end approach, which uses sliding windows method to classify every frame and end to end segment videos that means need to use action recognition model to extract feature. Our approach can deal with stream video and reduce the number of parameters by 10% and the number of calculation by 20% compared I3D with MS-TCN.
+Temporal action segmentation (TAS) is a critical step toward long-term video understanding. Recent studies follow a pattern that builds models based on features instead of raw video picture information. However, we claim those models are trained complicatedly and limit application scenarios. It is hard for them to segment human actions of video in real time because they must work after the full video features are extracted. As the real-time action segmentation task is different from TAS task, we define it as streaming video real-time temporal action segmentation (SVTAS) task. In this paper, we propose a real-time end-to-end multi-modality model for SVTAS task. More specifically, under the circumstances that we cannot get any future information, we segment the current human action of streaming video chunk in real time. Furthermore, the model we propose combines the last steaming video chunk feature extracted by language model with the current image feature extracted by image model to improve the quantity of real-time temporal action segmentation. To the best of our knowledge, it is the first multi-modality real-time temporal action segmentation model. Under the same evaluation criteria as full video temporal action segmentation, our model segments human action in real time with less than 40% of state-of-the-art model computation and achieves 90% of the accuracy of the full video state-of-the-art model.
+
+## Model Overview
+### Streaming End-to-End Train Framework(SETE)
+![SETE](doc/image/baseete.png)
+
+### Multi-modality End-to-End Train Framework(METE)
+![METE](doc/image/baseeteclip.png)
+
+### Transeger
+![SETE](doc/image/transeger.png)
 
 # Framework Feature
 - [x] Distribution train
@@ -42,22 +52,38 @@ pip freeze > requirements.txt
 ```
 
 # Baseline and Benckmark
-- FSF:  Flops of Single Frame(G)
-- FMSF: FLOPs of Model Single Forward(G)
+- **FPF** means Flops Per Frame (G)
+- **FPMF** means Flops Per Model  Forward (G)
+- **FPS** means Frames Per Second (Hz)
+- **No** means it can't be measured because this model is not real-time
+- We used RTX3090 platform to measure
 
-## other utils model
-| Model         | Param(M)  | FSF(G)        | FMSF(G)     | RES   | FRAMES | FPS |
-| -----         | -----     |   -----       | -----       | ----- | -----  | --- |
-| bmn           | 13.095319 | 28.6235698    | -           | 224   |  1x15  | -   |
-| two_stream-i3d| 24.575126 | 4.078423      | 261.01912   | 224   |  1x64  | -   |
-| ssd           | 12.298539 | 27.832209856  | -           | 224   |  1x15  | -   |
-| asrf          | 1.3       | 0.01283328    | 1.283328    | 100   |  1x100 | -   |
-| mstcn         | 0.796780  | 0.00791359944 | 0.791359944 | 100   |  1x100 | -   |
-| tsm           | 24.380752 | 4.0625        | 65          | 224   |  1x16  | -   |
-| asformer      | 1.13086   | -             | -           | 100   |  1x100 | -   |
-| mobiV2+ms     | 15.518241 | 0.01609396    | 0.402349    | 224   |  1x30  | -   |
+## GTEA
+|Dataset   | Model               | Param(M) | FPF(G) | FPMF(G) | FPS(Hz) | Acc | AUC | mAP@0.5 | F1@0.1 |
+| -----    | -----               |   -----  | -----  | -----   | -----   | --- | --- | ---     | ---    | 
+| GTEA      | ViT+asformer(two-stage train) | 54.645 | no    | **85.8432** | no   | **81.00%} | -       | -       | **94.10%**|
+| GTEA   | I3D+ms-tcn(two-stage train)   | **28.006** | no | 173.120 | no   | 79.20% | 82.92% | 64.45%| 87.5% |
+| GTEA   | I3D+ms-tcn(single stage train)| 28.006 | 5.4100 | 173.120 |  433 | 43.93% | 59.20% | 13.03% | 42.44% |
+| GTEA   | TSM+memory tcn+SETE(ours)     |  **2.372** | **0.3191** |  **10.017** | **3122** | 72.31% | **75.11%** | **49.50%** | 70.29% |
+| GTEA   | Transeger(ours)               | 38.444 | 0.7955 |  25.457 | 1199 | **72.66%** | 72.24% | 39.77% | **72.36%** |
 
-Read Doc [Bneckmark](doc/benckmark.md)
+## 50Salads
+|Dataset   | Model               | Param(M) | FPF(G) | FPMF(G) | FPS(Hz) | Acc | AUC | mAP@0.5 | F1@0.1 |
+| -----    | -----               |   -----  | -----  | -----   | -----   | --- | --- | ---     | ---    | 
+| 50Salads | ViT+asformer(two-stage train) | 54.645 | no   | **85.8432** | no   | **88.10%** | -   | -       | **89.20%** |
+| 50Salads  | I3D+ms-tcn(two-stage train)   | **28.006** | no  | 173.120 | no   | 80.70% | -   | -       | 76.30% |
+| 50Salads  | I3D+ms-tcn(single stage)      | 28.010 | 5.3995 | 172.786 |  433 | 30.31% | 48.00% | 7.13% | 12.36% |
+| 50Salads  | TSM+memory tcn+SETE(ours)     |  **2.373** | **0.3130** |  **10.017** | **3122** | 79.85% | 75.00% | 58.73% | 48.51% |
+| 50Salads  | Transeger(ours)               | 38.477 | 0.7955 |  25.457 |  1199 | **82.51%** | **75.68%** | **59.22%** | **54.99%** |
+
+## EGTEA
+|Dataset   | Model               | Param(M) | FPF(G) | FPMF(G) | FPS(Hz) | Acc | AUC | mAP@0.5 | F1@0.1 |
+| -----    | -----               |   -----  | -----  | -----   | -----   | --- | --- | ---     | ---    | 
+| EGTEA | I3D+m-GRU+GTRM(two-stage train) | - | no   | - | no   | **69.50%** | -   | -       | **41.60%** |
+| EGTEA | I3D+ms-tcn(two-stage train)   | 28.006 | no  | 173.120 | no   | 69.20% | -   | -       | 32.10% |
+| EGTEA | I3D+ms-tcn(single stage)      | 28.011 | 5.4100 | 173.120 | 433  | 59.43% |  2.94% | 0.60% |  2.76% |
+| EGTEA | TSM+memory tcn+SETE(ours)     |  **2.373** | **0.3191** |  **10.213** | **3122** | **63.19%** |  **8.42%** | **3.27%** | **12.26%** |
+| EGTEA | Transeger(ours)               | 38.482 | 0.7955 |  25.457 | 1199 | 60.89% |  7.01% |  1.90% | 11.52% |
 
 # Prepare Data
 
@@ -65,7 +91,11 @@ Read Doc [Prepare Datset](doc/prepare_dataset.md)
 
 # Model Train and Test
 
+## Pre-train weight
+- You can find some pre-train weight in [mmaction2](https://github.com/open-mmlab/mmaction2).
+
 ## Usage
+- There are some `.sh` example files in `script` dictory. 
 
 ### Train
 
@@ -183,22 +213,14 @@ python -m paddle.distributed.launch \
     --weights=./output/example/path_to_weights
 ```
 
-## RGB Base model train and test
-
-Read Doc [RGB Base Model Train](doc/rgb_base.md)
-
-## Feature Base model train and test
-
-Read Doc [Feature Base Model Train](doc/feature_base.md)
-
 # Visualization
 ```bash
 # gtea
 python tools/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 128
 # 50salads
 python tools/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
-# breakfast
-python tools/convert_pred2img.py output/results/pred_gt_list data/breakfast/mapping.txt output/results/imgs --sliding_windows 128
-# thumos14
-python tools/convert_pred2img.py output/results/pred_gt_list data/thumos14/mapping.txt output/results/imgs --sliding_windows 256
+```
+
+# Citation
+```bib
 ```
