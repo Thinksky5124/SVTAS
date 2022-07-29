@@ -61,7 +61,7 @@ pip freeze > requirements.txt
 ## GTEA
 |Dataset   | Model               | Param(M) | FPF(G) | FPMF(G) | FPS(Hz) | Acc | AUC | mAP@0.5 | F1@0.1 |
 | -----    | -----               |   -----  | -----  | -----   | -----   | --- | --- | ---     | ---    | 
-| GTEA      | ViT+asformer(two-stage train) | 54.645 | no    | **85.8432** | no   | **81.00%} | -       | -       | **94.10%**|
+| GTEA      | ViT+asformer(two-stage train) | 54.645 | no    | **85.8432** | no   | **81.00%** | -       | -       | **94.10%**|
 | GTEA   | I3D+ms-tcn(two-stage train)   | **28.006** | no | 173.120 | no   | 79.20% | 82.92% | 64.45%| 87.5% |
 | GTEA   | I3D+ms-tcn(single stage train)| 28.006 | 5.4100 | 173.120 |  433 | 43.93% | 59.20% | 13.03% | 42.44% |
 | GTEA   | TSM+memory tcn+SETE(ours)     |  **2.372** | **0.3191** |  **10.017** | **3122** | 72.31% | **75.11%** | **49.50%** | 70.29% |
