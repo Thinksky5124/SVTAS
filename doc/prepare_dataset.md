@@ -6,7 +6,7 @@ prepare data follow below instruction.
 ```txt
 ─── data
     ├── 50salads
-    ├── breakfast
+    ├── egtea
     ├── gtea
     └── ...
 ```
