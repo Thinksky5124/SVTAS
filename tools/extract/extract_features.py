@@ -2,13 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:56:48
+LastEditTime : 2022-09-03 15:28:01
 Description  : Extract video feature script
-FilePath     : /ETESVS/tools/extract_features.py
+FilePath     : /ETESVS/tools/extract/extract_features.py
 '''
 import os
 import sys
-from tkinter.messagebox import NO
 path = os.path.join(os.getcwd())
 sys.path.append(path)
 import torch

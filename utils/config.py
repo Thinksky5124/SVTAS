@@ -39,13 +39,13 @@ def create_attr_dict(yaml_config):
         else:
             yaml_config[key] = value
 
-def get_config(fname, overrides=None, show=True, tensorboard=False):
+def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path="output"):
     """
     Read config from file
     """
     assert os.path.exists(fname), ('config file({}) is not exist'.format(fname))
     config = parse_config(fname)
-    logger = setup_logger(f"./output/{config.model_name}", name="SVTAS", level="INFO", tensorboard=tensorboard)
+    logger = setup_logger(f"./"+ logger_path + f"/{config.model_name}", name="SVTAS", level="INFO", tensorboard=tensorboard)
     override_config(config, overrides)
     if show:
         print_config(config)

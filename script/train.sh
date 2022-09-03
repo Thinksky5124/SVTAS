@@ -2,9 +2,9 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-05-22 17:05:58
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2022-07-29 11:00:51
+ # @LastEditTime : 2022-08-30 21:25:39
  # @Description  : train script
- # @FilePath     : \SVTAS\script\train.sh
+ # @FilePath     : /ETESVS/script/train.sh
 ### 
 export CUDA_VISIBLE_DEVICES=0
 

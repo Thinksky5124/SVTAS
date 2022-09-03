@@ -13,7 +13,7 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 ![METE](doc/image/baseeteclip.png)
 
 ### Transeger
-![SETE](doc/image/transeger.png)
+![Transeger](doc/image/transeger.png)
 
 # Framework Feature
 - [x] Distribution train
