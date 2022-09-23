@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-03 15:02:22
+LastEditTime : 2022-09-23 21:01:08
 Description: main script
 FilePath     : /ETESVS/main.py
 '''
@@ -16,6 +16,7 @@ import os
 from utils.config import get_config
 from tasks.test import test
 from tasks.train import train
+from tasks.infer import infer
 
 def parse_args():
     parser = argparse.ArgumentParser("SVTAS train script")
@@ -24,9 +25,10 @@ def parse_args():
                         type=str,
                         default='configs/example.yaml',
                         help='config file path')
-    parser.add_argument('--test',
-                        action='store_true',
-                        help='whether to test a model')
+    parser.add_argument('--mode',
+                        '--m',
+                        choices=["train", "test", "infer"],
+                        help='run mode')
     parser.add_argument('-o',
                         '--override',
                         action='append',
@@ -100,14 +102,14 @@ def main():
         torch.backends.cudnn.benchmark = False
 
 
-    if args.test:
+    if args.mode in ["test"]:
         test(cfg,
              args=args,
              local_rank=args.local_rank,
              nprocs=nprocs,
              use_amp=args.use_amp,
              weights=args.weights)
-    else:
+    elif args.mode in ["train"]:
         train(cfg,
             args=args,
             local_rank=args.local_rank,
@@ -115,6 +117,15 @@ def main():
             use_amp=args.use_amp,
             weights=args.weights,
             validate=args.validate)
+    elif args.mode in ["infer"]:
+        infer(cfg,
+            args=args,
+            local_rank=args.local_rank,
+            nprocs=nprocs,
+            weights=args.weights,
+            validate=args.validate)
+    else:
+        raise NotImplementedError(args.mode + " mode not support!")
 
 
 if __name__ == '__main__':

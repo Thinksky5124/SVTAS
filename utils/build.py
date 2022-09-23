@@ -9,8 +9,6 @@ FilePath: /ETESVS/utils/build.py
 # Refence:https://github.com/open-mmlab/mmaction2/blob/f3d4817d781b45fa02447a2181db5c87eccc3335/mmaction/models/builder.py
 # Refence:https://github.com/Thinksky5124/PaddleVideo/blob/develop/paddlevideo/utils/registry.py
 
-from pyparsing import NoMatch
-
 
 class Registry(object):
     """
