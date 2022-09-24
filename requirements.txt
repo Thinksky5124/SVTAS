@@ -42,7 +42,7 @@ mmcv-full==1.5.0
 nest-asyncio==1.5.5
 networkx==2.5.1
 numpy==1.22.3
-oauthlib==3.2.0
+oauthlib==3.2.1
 opencv-contrib-python==4.5.2.54
 opencv-python==4.5.2.54
 onnx==1.12.0
