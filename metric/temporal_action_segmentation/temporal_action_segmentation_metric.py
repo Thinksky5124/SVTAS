@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:52:36
+LastEditTime : 2022-09-24 14:41:16
 Description: metric class
 FilePath     : /ETESVS/metric/temporal_action_segmentation/temporal_action_segmentation_metric.py
 '''
@@ -25,13 +25,15 @@ class TASegmentationMetric(BaseTASegmentationMetric):
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
                  score_output=False,
+                 gt_file_need=True,
+                 output_format="txt",
                  output_dir="output/results/pred_gt_list/",
                  score_output_dir="output/results/analysis/"):
         """prepare for metrics
         """
         super().__init__(overlap, actions_map_file_path, train_mode,
                          max_proposal, tiou_thresholds,
-                         file_output, score_output, output_dir, score_output_dir)
+                         file_output, score_output, gt_file_need, output_format, output_dir, score_output_dir)
     
     def update(self, vid, ground_truth_batch, outputs):
         """update metrics during each iter

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 13:14:02
+LastEditTime : 2022-09-24 15:35:16
 Description: test script api
-FilePath     : \ETESVS\tasks\test.py
+FilePath     : /ETESVS/tasks/test.py
 '''
 import torch
 from utils.logger import get_logger
@@ -64,11 +64,12 @@ def test(cfg,
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
         model = model_builder.build_model(cfg.MODEL).cuda(local_rank)
-        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
+        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda(local_rank)
+
+        device = torch.device('cuda:{}'.format(local_rank))
     
         # wheather to use amp
         if use_amp is True:
-            device = torch.device('cuda:{}'.format(local_rank))
             model = convert_syncbn_model(model).to(device)
             model = DDP(model, delay_allreduce=True)
         else:
@@ -151,15 +152,16 @@ def test(cfg,
 
         # model param flops caculate
         if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-            x_shape = [cfg.DATASET.test.clip_seg_num, 3, 224, 224]
+            image_size = cfg.PIPELINE.test.transform.transform_list[1]['CenterCrop']['size']
+            x_shape = [cfg.DATASET.test.clip_seg_num, 3, image_size, image_size]
             mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
             labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
             input_shape = (x_shape, mask_shape, labels_shape)
             def input_constructor(input_shape, optimal_batch_size=1):
                 x_shape, mask_shape, labels_shape = input_shape
-                x = torch.randn([optimal_batch_size] + x_shape).cuda()
-                mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
-                label = torch.ones([optimal_batch_size] + labels_shape).cuda()
+                x = torch.randn([optimal_batch_size] + x_shape).to(device)
+                mask = torch.randn([optimal_batch_size] + mask_shape).to(device)
+                label = torch.ones([optimal_batch_size] + labels_shape).to(device)
                 return dict(input_data=dict(imgs=x, masks=mask, labels=label))
             dummy_input = input_constructor(input_shape)
         else:
@@ -169,9 +171,9 @@ def test(cfg,
             input_shape = (x_shape, mask_shape, labels_shape)
             def input_constructor(input_shape, optimal_batch_size=1):
                 x_shape, mask_shape, labels_shape = input_shape
-                x = torch.randn([optimal_batch_size] + x_shape).cuda()
-                mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
-                label = torch.ones([optimal_batch_size] + labels_shape).cuda()
+                x = torch.randn([optimal_batch_size] + x_shape).to(device)
+                mask = torch.randn([optimal_batch_size] + mask_shape).to(device)
+                label = torch.ones([optimal_batch_size] + labels_shape).to(device)
                 return dict(input_data=dict(feature=x, masks=mask, labels=label))
             dummy_input = input_constructor(input_shape)
         # print(model)
@@ -203,7 +205,7 @@ def test(cfg,
 
         # model fps caculate
         dummy_input = dummy_input['input_data']
-        logger.info('Caculate model fps (single frame infer times)')
+        logger.info('Caculate model fps (single frame test times)')
         starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
         repetitions = 300
         timings = np.zeros((repetitions, 1))
@@ -226,7 +228,7 @@ def test(cfg,
         std_syn = np.std(timings)
         mean_fps = 1000. / mean_syn * cfg.DATASET.test.clip_seg_num
         logger.info('Mean@1 {mean_syn:.3f}ms, Std@5 {std_syn:.3f}ms, FPS@1 {mean_fps:.2f}'.format(mean_syn=mean_syn, std_syn=std_syn, mean_fps=mean_fps))
-        logger.info('Model single forward infer time(ms) {mean_syn:.3f}ms'.format(mean_syn=mean_syn))
+        logger.info('Model single forward test time(ms) {mean_syn:.3f}ms'.format(mean_syn=mean_syn))
         logger.info("="*20)
 
         # model latency time

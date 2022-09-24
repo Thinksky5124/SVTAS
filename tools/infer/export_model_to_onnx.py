@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-09-03 15:05:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 13:11:53
+LastEditTime : 2022-09-24 15:34:14
 Description  : Export torch model to ONNX
-FilePath     : \ETESVS\tools\infer\export_model_to_onnx.py
+FilePath     : /ETESVS/tools/infer/export_model_to_onnx.py
 '''
 import argparse
 import os
@@ -39,28 +39,25 @@ def export_model_to_onnx(cfg,
 
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        x_shape = [cfg.DATASET.test.clip_seg_num, 3, 224, 224]
-        mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-        labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-        input_shape = (x_shape, mask_shape, labels_shape)
+        image_size = cfg.PIPELINE.infer.transform.transform_list[1]['CenterCrop']['size']
+        x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]
+        mask_shape = [cfg.DATASET.infer.clip_seg_num * cfg.DATASET.infer.sample_rate]
+        input_shape = (x_shape, mask_shape)
         def input_constructor(input_shape, optimal_batch_size=1):
-            x_shape, mask_shape, labels_shape = input_shape
-            x = torch.randn([optimal_batch_size] + x_shape).cuda()
-            mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
-            label = torch.ones([optimal_batch_size] + labels_shape).cuda()
-            return dict(input_data=dict(imgs=x, masks=mask, labels=label))
+            x_shape, mask_shape = input_shape
+            x = torch.randn([optimal_batch_size] + x_shape).to(device)
+            mask = torch.randn([optimal_batch_size] + mask_shape).to(device)
+            return dict(input_data=dict(imgs=x, masks=mask))
         dummy_input = input_constructor(input_shape)
     else:
-        x_shape = [cfg.DATASET.test.clip_seg_num, 2048]
-        mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-        labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-        input_shape = (x_shape, mask_shape, labels_shape)
+        x_shape = [cfg.DATASET.infer.clip_seg_num, 2048]
+        mask_shape = [cfg.DATASET.infer.clip_seg_num * cfg.DATASET.infer.sample_rate]
+        input_shape = (x_shape, mask_shape)
         def input_constructor(input_shape, optimal_batch_size=1):
-            x_shape, mask_shape, labels_shape = input_shape
-            x = torch.randn([optimal_batch_size] + x_shape).cuda()
-            mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
-            label = torch.ones([optimal_batch_size] + labels_shape).cuda()
-            return dict(input_data=dict(feature=x, masks=mask, labels=label))
+            x_shape, mask_shape = input_shape
+            x = torch.randn([optimal_batch_size] + x_shape).to(device)
+            mask = torch.randn([optimal_batch_size] + mask_shape).to(device)
+            return dict(input_data=dict(feature=x, masks=mask))
         dummy_input = input_constructor(input_shape)
 
     logger.info("Start exporting ONNX model!")
@@ -119,7 +116,7 @@ def parse_args():
     parser.add_argument('-w',
                         '--weights',
                         type=str,
-                        help='weights for finetuning or testing')
+                        help='weights for finetuning or infering')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(0)

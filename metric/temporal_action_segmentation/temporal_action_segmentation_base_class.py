@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:11:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 10:01:05
+LastEditTime : 2022-09-24 14:48:36
 Description  : Temporal action segmentation base class
 FilePath     : /ETESVS/metric/temporal_action_segmentation/temporal_action_segmentation_base_class.py
 '''
@@ -31,6 +31,8 @@ class BaseTASegmentationMetric(BaseMetric):
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
                  score_output=False,
+                 gt_file_need=True,
+                 output_format="txt",
                  output_dir="output/results/pred_gt_list/",
                  score_output_dir="output/results/analysis/"):
         """prepare for metrics
@@ -40,9 +42,13 @@ class BaseTASegmentationMetric(BaseMetric):
         self.elps = 1e-10
         self.file_output = file_output
         self.score_output = score_output
+        self.gt_file_need = gt_file_need
+        self.output_format = output_format
         self.output_dir = output_dir
         self.score_output_dir = score_output_dir
         self.train_mode = train_mode
+
+        assert self.output_format in ["txt", "json"], "Unsupport output format: " + self.output_format + "!"
 
         if self.file_output is True and self.train_mode is False:
             isExists = os.path.exists(self.output_dir)
@@ -171,6 +177,17 @@ class BaseTASegmentationMetric(BaseMetric):
         return f1, acc
 
     def _write_seg_file(self, input_data, write_name, write_path):
+        if self.output_format in ['txt']:
+            self._write_txt_format(input_data, write_name, write_path)
+        elif self.output_format in ['json']:
+            self._write_json_format(input_data, write_name, write_path)
+        else:
+            raise NotImplementedError
+
+    def _write_json_format(self, input_data, write_name, write_path):
+        pass
+
+    def _write_txt_format(self, input_data, write_name, write_path):
         recog_content = [line + "\n" for line in input_data]
 
         write_path = os.path.join(write_path, write_name + ".txt")
@@ -196,7 +213,8 @@ class BaseTASegmentationMetric(BaseMetric):
         gt_content = list(gt_content)
 
         if self.file_output is True and self.train_mode is False:
-            self._write_seg_file(gt_content, vid + '-gt', self.output_dir)
+            if self.gt_file_need is True:
+                self._write_seg_file(gt_content, vid + '-gt', self.output_dir)
             self._write_seg_file(recog_content, vid + '-pred', self.output_dir)
 
         pred_detection = get_labels_scores_start_end_time(

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 18:50:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 21:04:26
+LastEditTime : 2022-09-24 15:55:43
 Description  : Score Post precessing Module
 FilePath     : /ETESVS/model/post_precessings/score_post_processing.py
 '''
@@ -27,12 +27,18 @@ class ScorePostProcessing():
 
     def update(self, seg_scores, gt, idx):
         # seg_scores [stage_num N C T]
-        # gt [N C T]
+        # gt [N T]
         with torch.no_grad():
-            self.pred_scores = seg_scores[-1, :].detach().cpu().numpy().copy()
-            self.video_gt = gt.detach().cpu().numpy().copy()
-            pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
-            acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+            if torch.is_tensor(seg_scores):
+                self.pred_scores = seg_scores[-1, :].detach().cpu().numpy().copy()
+                self.video_gt = gt.detach().cpu().numpy().copy()
+                pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
+                acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+            else:
+                self.pred_scores = seg_scores[-1, :].copy()
+                self.video_gt = gt.copy()
+                pred = np.argmax(seg_scores[-1, :], axis=-2)
+                acc = np.mean((np.sum(pred == gt, axis=1) / (np.sum(gt != self.ignore_index, axis=1) + self.epls)))
         return acc
 
     def output(self):

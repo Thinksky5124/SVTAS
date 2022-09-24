@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 21:04:30
+LastEditTime : 2022-09-24 15:50:55
 Description: model postprecessing
 FilePath     : /ETESVS/model/post_precessings/stream_feature_post_processing.py
 '''
@@ -39,14 +39,18 @@ class StreamFeaturePostProcessing():
 
     def update(self, seg_scores, gt, idx):
         # seg_scores [stage_num N C T]
-        # gt [N C T]
+        # gt [N T]
         with torch.no_grad():
             start_frame = idx * self.sliding_window
             if start_frame < 0:
                 start_frame = 0
             end_frame = start_frame + (self.clip_seg_num * self.sample_rate)
-            self.pred_feature[:, :, start_frame:end_frame] = seg_scores[-1, :].detach().cpu().numpy().copy()
-            self.video_gt[:, start_frame:end_frame] = gt.detach().cpu().numpy().copy()
+            if torch.is_tensor(seg_scores):
+                self.pred_feature[:, :, start_frame:end_frame] = seg_scores[-1, :].detach().cpu().numpy().copy()
+                self.video_gt[:, start_frame:end_frame] = gt.detach().cpu().numpy().copy()
+            else:
+                self.pred_feature[:, :, start_frame:end_frame] = seg_scores[-1, :].copy()
+                self.video_gt[:, start_frame:end_frame] = gt.copy()
 
     def output(self):
         pred_feature_list = []

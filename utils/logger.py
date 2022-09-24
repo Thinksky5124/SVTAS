@@ -186,6 +186,10 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
         logger.info("{:s} {:s} {:s} {:s} {}".format(
             coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
             coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+    elif mode in ["infer"]:
+        logger.info("{:s} {:s} {:s} {:s} {}".format(
+            coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
+            coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
 
 def log_epoch(metric_list, epoch, mode, ips, logger):
     batch_cost = 'avg_' + str(metric_list['batch_time'].value) + ' sec,'

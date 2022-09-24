@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:56:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 17:15:01
+LastEditTime : 2022-09-24 15:52:38
 Description  : Local Burr Suppression ref:https://github.com/lyhisme/ETSN
 FilePath     : /ETESVS/model/post_precessings/lbs.py
 '''
@@ -61,10 +61,16 @@ class StreamScorePostProcessingWithLBS():
             if start_frame < 0:
                 start_frame = 0
             end_frame = start_frame + (self.clip_seg_num * self.sample_rate)
-            self.pred_scores[:, :, start_frame:end_frame] = seg_scores[-1, :].detach().cpu().numpy().copy()
-            self.video_gt[:, start_frame:end_frame] = gt.detach().cpu().numpy().copy()
-            pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
-            acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+            if torch.is_tensor(seg_scores):
+                self.pred_scores[:, :, start_frame:end_frame] = seg_scores[-1, :].detach().cpu().numpy().copy()
+                self.video_gt[:, start_frame:end_frame] = gt.detach().cpu().numpy().copy()
+                pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
+                acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+            else:
+                self.pred_scores[:, :, start_frame:end_frame] = seg_scores[-1, :].copy()
+                self.video_gt[:, start_frame:end_frame] = gt.copy()
+                pred = np.argmax(seg_scores[-1, :], axis=-2)
+                acc = np.mean((np.sum(pred == gt, axis=1) / (np.sum(gt != self.ignore_index, axis=1) + self.epls)))
         return acc
 
     def output(self):
