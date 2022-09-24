@@ -2,23 +2,23 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-23 21:04:42
+LastEditTime : 2022-09-24 13:15:33
 Description  : infer script api
-FilePath     : /ETESVS/tasks/infer.py
+FilePath     : \ETESVS\tasks\infer.py
 '''
 import torch
 from utils.logger import get_logger
 from .runner import Runner
-from utils.recorder import build_recod
+from utils.logger import AverageMeter
 import time
 import numpy as np
+import onnx
+import onnxruntime
+import os
 
 import model.builder as model_builder
 import loader.builder as dataset_builder
 import metric.builder as metric_builder
-from mmcv.cnn.utils.flops_counter import get_model_complexity_info
-from fvcore.nn import FlopCountAnalysis, flop_count_table
-from thop import clever_format
 from utils.collect_env import collect_env
 
 def infer(cfg,
@@ -44,16 +44,12 @@ def infer(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = model_builder.build_model(cfg.MODEL).cuda()
-        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
-
+        model = model_builder.build_model(cfg.MODEL).to(device)
     else:
         torch.cuda.set_device(local_rank)
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
         model = model_builder.build_model(cfg.MODEL).cuda(local_rank)
-        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
-    
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
     # wheather batch train
@@ -94,12 +90,56 @@ def infer(cfg,
         model.module.load_state_dict(state_dicts)
     else:
         model.load_state_dict(state_dicts)
+    
+    # Export Model
+    # export path construct
+    export_path = os.path.join("output", cfg.model_name, cfg.model_name + ".onnx")
 
+    if os.path.exists(os.path.join("output", cfg.model_name)) is False:
+        os.mkdir(os.path.join("output", cfg.model_name))
+        
+    # model param flops caculate
+    if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
+        x_shape = [cfg.DATASET.test.clip_seg_num, 3, cfg.PIPELINE.test.transform.transform_list.Resize[0], cfg.PIPELINE.test.transform.transform_list.Resize[1]]
+        mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+        labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+        input_shape = (x_shape, mask_shape, labels_shape)
+        def input_constructor(input_shape, optimal_batch_size=1):
+            x_shape, mask_shape, labels_shape = input_shape
+            x = torch.randn([optimal_batch_size] + x_shape).cuda()
+            mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
+            label = torch.ones([optimal_batch_size] + labels_shape).cuda()
+            return dict(input_data=dict(imgs=x, masks=mask, labels=label))
+        dummy_input = input_constructor(input_shape)
+    else:
+        x_shape = [cfg.DATASET.test.clip_seg_num, 2048]
+        mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+        labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+        input_shape = (x_shape, mask_shape, labels_shape)
+        def input_constructor(input_shape, optimal_batch_size=1):
+            x_shape, mask_shape, labels_shape = input_shape
+            x = torch.randn([optimal_batch_size] + x_shape).cuda()
+            mask = torch.randn([optimal_batch_size] + mask_shape).cuda()
+            label = torch.ones([optimal_batch_size] + labels_shape).cuda()
+            return dict(input_data=dict(feature=x, masks=mask, labels=label))
+        dummy_input = input_constructor(input_shape)
+
+    logger.info("Start exporting ONNX model!")
+    torch.onnx.export(
+        model,
+        dummy_input['input_data'],
+        export_path,
+        opset_version=11,
+        input_names=['input_data', 'masks'],
+        output_names=['output'])
+    logger.info("Finish exporting ONNX model to " + export_path + " !")
+    ort_session = onnxruntime.InferenceSession(export_path)
 
     # add params to metrics
     Metric = metric_builder.build_metric(cfg.METRIC)
     
-    record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
+    record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
+                    'reader_time': AverageMeter('reader_time', '.5f')}
 
     post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
 
@@ -108,12 +148,10 @@ def infer(cfg,
                 Metric=Metric,
                 record_dict=record_dict,
                 cfg=cfg,
-                model=model,
-                criterion=criterion,
+                model=ort_session,
                 post_processing=post_processing,
                 nprocs=nprocs,
-                local_rank=local_rank,
-                runner_mode='test')
+                local_rank=local_rank)
 
     runner.epoch_init()
     r_tic = time.time()

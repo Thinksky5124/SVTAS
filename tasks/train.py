@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:57:03
+LastEditTime : 2022-09-24 13:14:48
 Description: train script api
-FilePath     : /ETESVS/tasks/train.py
+FilePath     : \ETESVS\tasks\train.py
 '''
 import os.path as osp
 import time
@@ -59,8 +59,8 @@ def train(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = model_builder.build_model(cfg.MODEL).cuda()
-        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
+        model = model_builder.build_model(cfg.MODEL).to(device)
+        criterion = model_builder.build_loss(cfg.MODEL.loss).to(device)
 
         # 2. Construct solver.
         optimizer_cfg = cfg.OPTIMIZER

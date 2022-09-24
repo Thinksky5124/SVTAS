@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-23 21:01:08
+LastEditTime : 2022-09-24 13:56:38
 Description: main script
-FilePath     : /ETESVS/main.py
+FilePath     : \ETESVS\main.py
 '''
 import argparse
 import random
@@ -100,7 +100,6 @@ def main():
         torch.backends.cudnn.deterministic = True
         # weather accelerate conv op
         torch.backends.cudnn.benchmark = False
-
 
     if args.mode in ["test"]:
         test(cfg,

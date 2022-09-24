@@ -2,14 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-06-05 10:47:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-12 15:33:13
+LastEditTime : 2022-09-24 13:39:45
 Description  : Transeger Loss module
-FilePath     : /ETESVS/model/losses/transeger_loss.py
+FilePath     : \ETESVS\model\losses\transeger_loss.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchaudio.transforms import RNNTLoss
 from .segmentation_loss import SegmentationLoss
 
 from ..builder import LOSSES

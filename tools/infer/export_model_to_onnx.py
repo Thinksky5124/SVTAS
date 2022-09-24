@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-09-03 15:05:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-03 17:00:24
+LastEditTime : 2022-09-24 13:11:53
 Description  : Export torch model to ONNX
-FilePath     : /ETESVS/tools/infer/export_model_to_onnx.py
+FilePath     : \ETESVS\tools\infer\export_model_to_onnx.py
 '''
 import argparse
 import os
@@ -69,7 +69,7 @@ def export_model_to_onnx(cfg,
         dummy_input['input_data'],
         export_path,
         opset_version=11,
-        input_names=['imgs', 'masks'],
+        input_names=['input_data', 'masks'],
         output_names=['output'])
     logger.info("Finish exporting ONNX model to " + export_path + " !")
     
@@ -85,7 +85,10 @@ def export_model_to_onnx(cfg,
     # precision alignment
     # onnx
     ort_session = onnxruntime.InferenceSession(export_path)
-    ort_inputs = {'imgs': dummy_input['input_data']['imgs'].cpu().numpy(), 'masks': dummy_input['input_data']['masks'].cpu().numpy()}
+    if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
+        ort_inputs = {'input_data': dummy_input['input_data']['imgs'].cpu().numpy(), 'masks': dummy_input['input_data']['masks'].cpu().numpy()}
+    else:
+        ort_inputs = {'input_data': dummy_input['input_data']['feature'].cpu().numpy(), 'masks': dummy_input['input_data']['masks'].cpu().numpy()}
     ort_output = ort_session.run(None, ort_inputs)
     # torch
     torch_output = model(dummy_input['input_data']).cpu().numpy()

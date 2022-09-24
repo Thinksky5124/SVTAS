@@ -1,7 +1,10 @@
 import torch
 from torch.nn.modules.module import Module
 from torch.autograd import Function
-import correlation_cuda
+try:
+    import correlation_cuda
+except:
+    print("Can't not use LiteFlowNetV3")
 
 class CorrelationFunction(Function):
 

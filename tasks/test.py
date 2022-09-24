@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-23 09:59:49
+LastEditTime : 2022-09-24 13:14:02
 Description: test script api
-FilePath     : /ETESVS/tasks/test.py
+FilePath     : \ETESVS\tasks\test.py
 '''
 import torch
 from utils.logger import get_logger
@@ -53,8 +53,8 @@ def test(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = model_builder.build_model(cfg.MODEL).cuda()
-        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda()
+        model = model_builder.build_model(cfg.MODEL).to(device)
+        criterion = model_builder.build_loss(cfg.MODEL.loss).to(device)
 
         # wheather to use amp
         if use_amp is True:

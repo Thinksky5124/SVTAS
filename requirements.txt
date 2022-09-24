@@ -7,7 +7,6 @@ backports.functools-lru-cache==1.6.4
 cachetools==5.0.0
 certifi==2021.10.8
 charset-normalizer==2.0.12
-cupy-cuda111==8.6.0
 cycler==0.10.0
 debugpy==1.5.1
 decorator==4.4.2
