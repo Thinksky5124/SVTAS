@@ -22,6 +22,7 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 - [x] Apex accelerate
 - [x] Apex ditributedd accelerate
 - [x] Pillow-SMID accelerate sample
+- [x] Onnxruntime Infer Suppport
 
 # Envirnment Prepare
 
@@ -109,6 +110,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
     main.py \
+    --m train \
     --launcher pytorch \
     --validate \
     -c CONFIG_PATH \
@@ -119,6 +121,7 @@ python -m paddle.distributed.launch \
 export CUDA_VISIBLE_DEVICES=0
 
 python main.py \
+    --mode train \
     --validate \
     -c CONFIG_PATH \
     --seed SEED
@@ -130,6 +133,7 @@ Indicating `-c` to set configuration, and one can flexible add `-o` in the scrip
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
     main.py \
+    --m train \
     --launcher pytorch \
     --validate \
     -c CONFIG_PATH \
@@ -168,6 +172,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
     main.py \
+    --m train \
     --launcher pytorch \
     --validate \
     -c CONFIG_PATH \
@@ -186,6 +191,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
     main.py \
+    --m train \
     --launcher pytorch \
     --validate \
     -c CONFIG_PATH \
@@ -205,6 +211,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
     main.py \
+    --m test \
     --launcher pytorch \
     --test \
     -c CONFIG_PATH \
