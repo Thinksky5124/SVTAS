@@ -1,5 +1,6 @@
 # SVTAS
 Streaming Video Temporal Action Segmentation In Real Time
+- [paper](https://arxiv.org/pdf/2209.13808.pdf)
 
 ## Abstract
 
