@@ -230,4 +230,10 @@ python tools/convert_pred2img.py output/results/pred_gt_list data/50salads/mappi
 
 # Citation
 ```bib
+@misc{2209.13808,
+Author = {Wujun Wen and Yunheng Li and Zhuben Dong and Lin Feng and Wanxiao Yang and Shenlan Liu},
+Title = {Streaming Video Temporal Action Segmentation In Real Time},
+Year = {2022},
+Eprint = {arXiv:2209.13808},
+}
 ```
