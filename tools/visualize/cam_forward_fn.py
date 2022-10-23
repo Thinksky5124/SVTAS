@@ -2,11 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 15:24:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-23 15:37:08
+LastEditTime : 2022-10-23 20:49:53
 Description  : CAM Forwardfunction override
 FilePath     : /SVTAS/tools/visualize/cam_forward_fn.py
 '''
 import torch
+#! modify clip_seg_num = 8
+
 def cam_forward(self, input_data):
     """
         Use Like 
@@ -15,7 +17,7 @@ def cam_forward(self, input_data):
         ```
         for Debug
     """
-    input_data = input_data.reshape([2, -1]+list(input_data.shape[-3:]))
+    input_data = input_data.reshape([-1, 8]+list(input_data.shape[-3:]))
     masks = torch.full([input_data.shape[0], input_data.shape[1] * self.sample_rate], 1.0).to(input_data.device)
     imgs = input_data
 
@@ -51,4 +53,5 @@ def cam_forward(self, input_data):
         head_score = seg_feature
     # seg_score [stage_num, N, C, T]
     # cls_score [N, C, T]
+    head_score = torch.reshape(head_score[-1].transpose(1, 2), [-1, head_score.shape[-2]])
     return head_score

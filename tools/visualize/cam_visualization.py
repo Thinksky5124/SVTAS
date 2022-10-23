@@ -2,10 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-23 16:48:28
+LastEditTime : 2022-10-23 20:57:03
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
+from asyncore import write
 import os
 import sys
 path = os.path.join(os.getcwd())
@@ -38,6 +39,16 @@ from pytorch_grad_cam.utils.image import show_cam_on_image, \
 from pytorch_grad_cam.ablation_layer import AblationLayerVit
 
 
+# class activation transform [N C T]
+# def reshape_transform(tensor, height=1, width=1):
+#     result = torch.reshape(tensor, [tensor.shape[0], tensor.shape[1], height, width])
+
+#     # Bring the channels to the first dimension,
+#     # like in CNNs.
+#     result = result.transpose(2, 3).transpose(1, 2)
+#     return result
+
+# feature activation transform [N P C]
 def reshape_transform(tensor, height=14, width=14):
     result = tensor[:, 1:, :].reshape(tensor.size(0),
                                       height, width, tensor.size(2))
@@ -46,48 +57,38 @@ def reshape_transform(tensor, height=14, width=14):
     # like in CNNs.
     result = result.transpose(2, 3).transpose(1, 2)
     return result
-    
+
 class CAMPostProcessing():
     def __init__(self,
-                 fps):
-        self.fps = fps
+                 sample_rate,
+                 ignore_index=-100):
         self.init_flag = False
-        self.epls = 1e-10
+        self.ignore_index = ignore_index
+        self.sample_rate = sample_rate
     
-    def init_scores(self, sliding_num, batch_size):
+    def init_scores(self):
+        self.imgs_list = []
+        self.labels_list = []
         self.init_flag = True
 
-    def update(self, seg_scores, gt, idx):
+    def update(self, cam_images, labels, idx):
         # seg_scores [stage_num N C T]
         # gt [N T]
-        with torch.no_grad():
-            if torch.is_tensor(seg_scores):
-                self.pred_scores = seg_scores[-1, :].detach().cpu().numpy().copy()
-                self.video_gt = gt.detach().cpu().numpy().copy()
-                pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
-                acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
-            else:
-                self.pred_scores = seg_scores[-1, :].copy()
-                self.video_gt = gt.copy()
-                pred = np.argmax(seg_scores[-1, :], axis=-2)
-                acc = np.mean((np.sum(pred == gt, axis=1) / (np.sum(gt != self.ignore_index, axis=1) + self.epls)))
-        return acc
+        self.labels_list.append(labels)
+        self.imgs_list.append(cam_images)
 
     def output(self):
-        pred_score_list = []
-        pred_cls_list = []
-        ground_truth_list = []
+        imags_list = []
 
-        for bs in range(self.pred_scores.shape[0]):
-            index = np.where(self.video_gt[bs, :] == self.ignore_index)
-            ignore_start = min(list(index[0]) + [self.pred_scores[bs].shape[-1]])
-            predicted = np.argmax(self.pred_scores[bs, :, :ignore_start], axis=0)
-            predicted = predicted.squeeze()
-            pred_cls_list.append(predicted.copy())
-            pred_score_list.append(self.pred_scores[bs, :, :ignore_start].copy())
-            ground_truth_list.append(self.video_gt[bs, :ignore_start].copy())
+        labels = np.concatenate(self.labels_list, axis=1)
+        imags = np.concatenate(self.imgs_list, axis=1)
 
-        return pred_score_list, pred_cls_list, ground_truth_list
+        for bs in range(imags.shape[0]):
+            index = np.where(labels[bs, :] == self.ignore_index)
+            ignore_start = min(list(index[0]) + [labels[bs].shape[-1]]) // self.sample_rate
+            imags_list.append(imags[bs, :ignore_start, :])
+
+        return imags_list
 
 class VisualRunner():
     def __init__(self,
@@ -99,12 +100,12 @@ class VisualRunner():
                  model,
                  visualize_cfg,
                  post_processing,
-                 feature_out_path):
+                 cam_imgs_out_path):
         self.model = model
         self.logger = logger
         self.visualize_cfg = visualize_cfg
         self.post_processing = post_processing
-        self.feature_out_path = feature_out_path
+        self.cam_imgs_out_path = cam_imgs_out_path
         self.cam_method = cam_method
         self.use_cuda = use_cuda
         self.eigen_smooth = eigen_smooth
@@ -141,27 +142,29 @@ class VisualRunner():
 
         self.model.eval()
     
-    @torch.no_grad()
     def batch_end_step(self, sliding_num, vid_list, step):
 
         # get extract feature
-        extract_feature_list = self.post_processing.output()
+        cam_imgs_list = self.post_processing.output()
         
         # save feature file
         current_vid_list = self.current_step_vid_list
-        for extract_feature, vid in zip(extract_feature_list, current_vid_list):
-            feature_save_path = os.path.join(self.feature_out_path, vid + ".npy")
-            np.save(feature_save_path, extract_feature)
+        for cam_imgs, vid in zip(cam_imgs_list, current_vid_list):
+            cam_imgs_save_path = os.path.join(self.cam_imgs_out_path, vid + ".mp4")
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            video = cv2.VideoWriter(cam_imgs_save_path, fourcc, self.visualize_cfg.fps, (self.visualize_cfg.output_frame_size[0], self.visualize_cfg.output_frame_size[0]))
+            for img in cam_imgs:
+                video.write(img)
+            video.release()
 
         self.logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(current_vid_list))
         self.current_step_vid_list = vid_list
         
         if len(self.current_step_vid_list) > 0:
-            self.post_processing.init_scores(sliding_num, len(vid_list))
+            self.post_processing.init_scores()
 
         self.current_step = step
     
-    @torch.no_grad()
     def _model_forward(self, data_dict):
         # move data
         input_data = {}
@@ -179,32 +182,34 @@ class VisualRunner():
 
         # Here grayscale_cam has only one image in the batch
         cam_image_list = []
-        for i in range(len(data_dict['raw_img'])):
-            rgb_img = cv2.cvtColor(np.asarray(data_dict['raw_img'][i]),cv2.COLOR_RGB2BGR)[:, :, ::-1]
-            rgb_img = np.float32(rgb_img) / 255
-            grayscale_cam = grayscale_cam[i, :]
+        for batch_id in range(len(data_dict['raw_imgs'])):
+            batch_image_list = []
+            for sample_id in range(len(data_dict['raw_imgs'][batch_id])):
+                rgb_img = cv2.cvtColor(np.asarray(data_dict['raw_imgs'][batch_id][sample_id]), cv2.COLOR_RGB2BGR)[:, :, ::-1]
+                rgb_img = np.float32(rgb_img) / 255
+                rgb_img = cv2.resize(rgb_img, (grayscale_cam.shape[-1], grayscale_cam.shape[-2]))
+                grayscale_cam_sample = grayscale_cam[batch_id * len(data_dict['raw_imgs'][batch_id]) + sample_id, :]
 
-            cam_image = show_cam_on_image(data_dict['raw_img'], grayscale_cam)
-            cam_image_list.append(cam_image)
-
-        return cam_image_list
+                cam_image = show_cam_on_image(rgb_img, grayscale_cam_sample)
+                batch_image_list.append(np.expand_dims(cam_image, 0))
+            batch_image = np.expand_dims(np.concatenate(batch_image_list, 0), 0)
+            cam_image_list.append(batch_image)
+        cam_images = np.concatenate(cam_image_list, 0)
+        return cam_images
     
-    @torch.no_grad()
     def run_one_clip(self, data_dict):
         vid_list = data_dict['vid_list']
-        sliding_num = data_dict['sliding_num']
         idx = data_dict['current_sliding_cnt']
         labels = data_dict['labels']
         # train segment
-        score = self._model_forward(data_dict)
+        cam_images = self._model_forward(data_dict)
             
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
-                self.post_processing.init_scores(sliding_num, len(vid_list))
+                self.post_processing.init_scores()
                 self.current_step_vid_list = vid_list
-            self.post_processing.update(score, labels, idx)
+            self.post_processing.update(cam_images, labels, idx)
 
-    @torch.no_grad()
     def run_one_iter(self, data):
         # videos sliding stream train
         for sliding_seg in data:
@@ -255,16 +260,6 @@ def get_args():
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(0)
     return args
-
-
-def reshape_transform(tensor, height=14, width=14):
-    result = tensor[:, 1:, :].reshape(tensor.size(0),
-                                      height, width, tensor.size(2))
-
-    # Bring the channels to the first dimension,
-    # like in CNNs.
-    result = result.transpose(2, 3).transpose(1, 2)
-    return result
 
 
 if __name__ == '__main__':
@@ -325,7 +320,8 @@ if __name__ == '__main__':
         collate_fn=sliding_concate_fn)
     
     visualize_cfg = cfg.VISUALIZE
-    post_processing = CAMPostProcessing(fps=visualize_cfg.fps)
+    post_processing = CAMPostProcessing(sample_rate=visualize_cfg.sample_rate,
+                                        ignore_index=visualize_cfg.ignore_index)
 
     if args.method not in methods:
         raise Exception(f"Method {args.method} not implemented")
@@ -338,7 +334,7 @@ if __name__ == '__main__':
                  model=model, 
                  visualize_cfg=visualize_cfg,
                  post_processing=post_processing,
-                 feature_out_path=out_path)
+                 cam_imgs_out_path=out_path)
 
     runner.epoch_init()
     for i, data in enumerate(dataloader):

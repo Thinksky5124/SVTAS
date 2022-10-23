@@ -14,7 +14,7 @@ MODEL:
         name: "TimeSformerHead"
         num_classes: 11
         clip_seg_num: 8
-        sample_rate: 4
+        sample_rate: 1
         in_channels: 1024
     loss:
         name: "RecognitionSegmentationLoss"
@@ -28,10 +28,14 @@ PRETRAINED: "output/ViT_gtea_split1/ViT_gtea_split1_best.pkl"
 
 VISUALIZE:
     layer_name:
+        # - "head.fc_cls"
         - "backbone.transformer.layers.11.1.fn"
     fps: 15
     batch_size: 2
+    sample_rate: 4
+    ignore_index: -100
     return_targets_name: None
+    output_frame_size: [224, 224]
 
 COLLATE:
     name: "StreamBatchCompose"
