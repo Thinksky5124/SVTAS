@@ -24,6 +24,7 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 - [x] Apex ditributedd accelerate
 - [x] Pillow-SMID accelerate sample
 - [x] Onnxruntime Infer Suppport
+- [x] Support CAM Visualization
 
 # Envirnment Prepare
 

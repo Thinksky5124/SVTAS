@@ -172,7 +172,7 @@ class OadTRHead(nn.Module):
         x = torch.cat((self.to_cls_token(x[:, :self.clip_seg_num]), pred_frames_for_token), dim=-1)
         frames_score = self.mlp_head(x)
 
-        # x: current chunck action
+        # x: current chunk action
         # dec_cls_out: frame level action
         # [N, C, pred_clip_seg_num]
         pred_frames_score = pred_frames_score.transpose(-1, -2)

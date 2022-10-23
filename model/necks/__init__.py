@@ -1,10 +1,10 @@
 '''
-Author: Thyssen Wen
-Date: 2022-04-14 15:30:00
-LastEditors: Thyssen Wen
-LastEditTime: 2022-05-03 10:02:13
-Description: file content
-FilePath: /ETESVS/model/necks/__init__.py
+Author       : Thyssen Wen
+Date         : 2022-10-17 13:15:41
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-10-21 15:47:59
+Description  : neck registration
+FilePath     : /SVTAS/model/necks/__init__.py
 '''
 from .etesvs_neck import ETESVSNeck
 from .memory_layer import ConvLSTMResidualLayer

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 15:35:16
+LastEditTime : 2022-10-23 10:21:23
 Description: test script api
-FilePath     : /ETESVS/tasks/test.py
+FilePath     : /SVTAS/tasks/test.py
 '''
 import torch
 from utils.logger import get_logger
@@ -26,7 +26,7 @@ try:
     from apex.parallel import convert_syncbn_model
     from apex.parallel import DistributedDataParallel as DDP
 except:
-    pass
+    print("Can't use apex to accelerate")
 
 @torch.no_grad()
 def test(cfg,

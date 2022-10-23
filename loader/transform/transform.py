@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 16:32:19
+LastEditTime : 2022-10-23 12:19:59
 Description  : Transform module
-FilePath     : /ETESVS/loader/transform/transform.py
+FilePath     : /SVTAS/loader/transform/transform.py
 '''
 import numpy as np
 import torch
@@ -94,4 +94,18 @@ class RGBFlowVideoStreamTransform():
         flows = torch.cat(flows, dim=0)
         results['flows'] = copy.deepcopy(flows)
         return results
-        
+
+@TRANSFORM.register()
+class VideoStreamRawFrameStoreTransform(VideoStreamTransform):
+    def __init__(self, transform_list):
+        super().__init__(transform_list)
+
+    def __call__(self, results):
+        imgs = []
+        results["raw_imgs"] = copy.deepcopy(results["imgs"])
+        for img in results['imgs']:
+            img = self.imgs_transforms_pipeline(img)
+            imgs.append(img.unsqueeze(0))
+        imgs = torch.cat(imgs, dim=0)
+        results['imgs'] = copy.deepcopy(imgs)
+        return results

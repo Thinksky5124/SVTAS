@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:58:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-13 16:59:59
+LastEditTime : 2022-10-22 19:57:17
 Description  : Video Prediction Sampler
-FilePath     : /ETESVS/loader/sampler/video_prediction_sampler.py
+FilePath     : /SVTAS/loader/sampler/video_prediction_sampler.py
 '''
 import numpy as np
 from ..builder import SAMPLER
@@ -58,7 +58,7 @@ class VideoPredictionFeatureStreamSampler(FeatureStreamSampler):
         elif start_frame < frames_len and end_frame >= frames_len:
             frames_feature, labels, mask = self._some_valid_frames(start_frame, end_frame, feature_len, frames_len, feature, labels)
         else:
-            frames_feature = np.zeros((2048, self.clip_seg_num))
+            frames_feature = np.zeros((self.feature_dim, self.clip_seg_num))
             mask = np.zeros((self.clip_seg_num * self.sample_rate))
             labels = np.full((self.clip_seg_num * self.sample_rate), self.ignore_index)
 

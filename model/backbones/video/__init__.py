@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 21:30:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 20:47:35
+LastEditTime : 2022-10-21 15:47:10
 Description  : Video Filed model zoom
-FilePath     : /ETESVS/model/backbones/video/__init__.py
+FilePath     : /SVTAS/model/backbones/video/__init__.py
 '''
 from .i3d import I3D
 from .mobilenet_v2_tsm import MobileNetV2TSM

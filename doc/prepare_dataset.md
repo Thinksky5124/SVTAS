@@ -38,6 +38,29 @@ To download I3D feature from [ms-tcn](https://github.com/yabufarha/ms-tcn) repo.
     └── mapping.txt
 ```
 
+### thumos14 and TVSerious
+
+You can download thumos14 dataset in [website](https://www.crcv.ucf.edu/THUMOS14/home.html) and TVSerious in [website](https://homes.esat.kuleuven.be/psi-archive/rdegeest/TVSeries.html)
+Thumos14 dataset is temporal action localization dataset.
+
+- Dataset tree
+```txt
+─── thumos14
+    ├── Videos
+    │   ├── video_test_0000896.mp4
+    │   ├── video_test_0000897.mp4
+    │   ├── video_validation_0000482.mp4
+    │   └── ...
+    ├── groundTruth
+    │   ├── video_test_0000897.txt
+    │   ├── video_test_0000897.txt
+    │   ├── video_validation_0000482.txt
+    │   └── ...
+    ├── val_list.txt
+    ├── test_list.txt
+    └── mapping.txt
+```
+
 ## Extract Optical Flow(Optional)
 ```bash
 python tools/extract/extract_flow.py -c config/extract_flow/extract_optical_flow_fastflownet.yaml -o data/gtea
@@ -64,6 +87,10 @@ python tools/dataset_transform/prepare_video_recognition_data.py data/egtea/egte
 # 50salads
 python tools/dataset_transform/transform_segmentation_label.py data/50salads data/50salads/groundTruth data/50salads --mode localization --fps 30
 python tools/dataset_transform/prepare_video_recognition_data.py data/50salads/label.json data/50salads/Videos data/50salads --negative_sample_num 1000 --only_norm True --fps 30 --dataset_type 50salads_rgb
+
+# thumos14
+python tools/dataset_transform/transform_segmentation_label.py data/thumos14/gt.json data/thumos14/Videos data/thumos14 --fps 30
+
 ```
 
 Here releases dataset mean and std config
@@ -87,7 +114,16 @@ std RGB :[0.26380785444954574, 0.20396220265286277, 0.16305419562005563]
 mean RGB ∶[0.5139909998345553, 0.5117725498677757，0.4798814301515671]
 std RGB :[0.23608918491478523, 0.23385714300069754, 0.23755006337414028]
 ```
-
+- breakfast:
+```txt
+mean RGB ∶[0.4245283568405083, 0.3904851168609079, 0.33709139617292494]
+std RGB :[0.26207845745959846, 0.26008439810422, 0.24623600365905168]
+```
+- thumos14:
+```txt
+mean RGB ∶[0.384953972862144, 0.38326867429930167, 0.3525199505706894]
+std RGB :[0.258450710004705, 0.2544892750057763, 0.24812118173426492]
+```
 ## Convert Localization Label to Segmentation Label
 ```bash
 # egtea

@@ -1,0 +1,84 @@
+MODEL:
+    architecture: "Recognition3D"
+    backbone:
+        name: "SwinTransformer3D"
+        pretrained: "data/swin_tiny_patch244_window877_kinetics400_1k.pth"
+        pretrained2d: False
+        patch_size: [1, 4, 4]
+        embed_dim: 96
+        depths: [2, 2, 6, 2]
+        num_heads: [3, 6, 12, 24]
+        window_size: [8,7,7]
+        mlp_ratio: 4.
+        qkv_bias: True
+        qk_scale: None
+        drop_rate: 0.
+        attn_drop_rate: 0.
+        drop_path_rate: 0.2
+        patch_norm: True
+    neck:
+    head:
+        name: "FeatureExtractHead"
+        in_channels: 768
+        input_seg_num: 16
+        clip_seg_num: 16
+        sample_rate: 2
+        pool_space: True
+        in_format: "N*T,C,H,W"
+        out_format: "NCT"
+    loss:
+
+# PRETRAINED: "./output/I3D_MSTCN_gtea_split1/I3D_MSTCN_gtea_split1_epoch_00001.pkl"
+
+POSTPRECESSING:
+    name: "StreamFeaturePostProcessing"
+    feature_dim: 768
+    clip_seg_num: 16
+    sliding_window: 32
+    sample_rate: 2
+    ignore_index: -100
+
+COLLATE:
+    name: "StreamBatchCompose"
+    to_tensor_keys: ["imgs", "labels", "masks"]
+
+DATASET: #DATASET field
+    temporal_clip_batch_size: 3
+    video_batch_size: 4
+    num_workers: 2
+    config:
+        name: "RawFrameStreamSegmentationDataset"
+        data_prefix: "./" #Mandatory, train data root path
+        file_path: "./data/gtea/splits/all_files.txt" #Mandatory, train data index file path
+        videos_path: "./data/gtea/Videos"
+        gt_path: "./data/gtea/groundTruth"
+        actions_map_file_path: "./data/gtea/mapping.txt"
+        dataset_type: "gtea"
+        train_mode: False
+        sliding_window: 32
+        clip_seg_num: 16
+        sample_rate: 2
+
+PIPELINE: #PIPELINE field
+    name: "BasePipline"
+    decode:
+        name: "VideoDecoder"
+        backend: "decord"
+    sample:
+        name: "VideoStreamSampler"
+        is_train: False
+        sample_rate: 2
+        clip_seg_num: 16
+        sliding_window: 32
+        sample_mode: "uniform"
+    transform:
+        name: "VideoStreamTransform"
+        transform_list:
+            - Resize:
+                size: [256, 320]
+            - CenterCrop:
+                size: 224
+            - ToTensor:
+            - Normalize:
+                mean: [0.551, 0.424, 0.179]
+                std: [0.133, 0.141, 0.124]

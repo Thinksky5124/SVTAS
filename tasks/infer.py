@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 21:07:03
+LastEditTime : 2022-10-21 19:41:22
 Description  : infer script api
-FilePath     : /ETESVS/tasks/infer.py
+FilePath     : /SVTAS/tasks/infer.py
 '''
 import torch
 from utils.logger import get_logger
@@ -135,7 +135,7 @@ def infer(cfg,
         logger.info("Start exporting ONNX model!")
         torch.onnx.export(
             model,
-            dummy_input['input_data'],
+            dummy_input,
             export_path,
             opset_version=cfg.INFER.infer_engine.opset_version,
             input_names=cfg.INFER.input_names,

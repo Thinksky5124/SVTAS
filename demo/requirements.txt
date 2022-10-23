@@ -1,0 +1,5 @@
+opencv-contrib-python==4.5.2.54
+opencv-python==4.5.2.54
+onnxruntime==1.12.1
+Pillow==9.1.1
+numpy==1.22.3

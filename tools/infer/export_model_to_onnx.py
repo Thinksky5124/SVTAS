@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-09-03 15:05:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 15:34:14
+LastEditTime : 2022-10-21 19:33:31
 Description  : Export torch model to ONNX
-FilePath     : /ETESVS/tools/infer/export_model_to_onnx.py
+FilePath     : /SVTAS/tools/infer/export_model_to_onnx.py
 '''
 import argparse
 import os
@@ -63,7 +63,7 @@ def export_model_to_onnx(cfg,
     logger.info("Start exporting ONNX model!")
     torch.onnx.export(
         model,
-        dummy_input['input_data'],
+        dummy_input,
         export_path,
         opset_version=11,
         input_names=['input_data', 'masks'],

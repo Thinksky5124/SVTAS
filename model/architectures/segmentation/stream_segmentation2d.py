@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:22:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-06 20:37:46
+LastEditTime : 2022-10-17 15:44:15
 Description  : Stream Segmentation 2D without backbone loss
-FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation2d.py
+FilePath     : /SVTAS/model/architectures/segmentation/stream_segmentation2d.py
 '''
 import torch
 import torch.nn as nn
@@ -62,7 +62,7 @@ class StreamSegmentation2D(nn.Module):
         # x [N * T, C, H, W]
 
         if self.backbone is not None:
-             # masks.shape [N * T, 1, 1, 1]
+            # masks.shape [N * T, 1, 1, 1]
             backbone_masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             feature = self.backbone(imgs, backbone_masks)
         else:

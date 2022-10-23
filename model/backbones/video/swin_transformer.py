@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 10:31:49
+LastEditTime : 2022-10-22 14:18:15
 Description  : Swim Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
-FilePath     : /ETESVS/model/backbones/video/swin_transformer.py
+FilePath     : /SVTAS/model/backbones/video/swin_transformer.py
 '''
 import torch
 import torch.nn as nn
@@ -643,7 +643,7 @@ class SwinTransformer3D(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 self.apply(_init_weights)
-                logger = get_logger()
+                logger = get_logger("SVTAS")
                 logger.info(f'load model from: {self.pretrained}')
 
                 if self.pretrained2d:
@@ -672,7 +672,9 @@ class SwinTransformer3D(nn.Module):
         x = self.norm(x)
         x = rearrange(x, 'n d h w c -> n c d h w')
 
-        return x * masks
+        x = x * masks
+        x = torch.reshape(x.transpose(1, 2), [-1, x.shape[1]] + list(x.shape[-2:]))
+        return x
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:49:43
+LastEditTime : 2022-10-21 15:47:45
 Description: file content
-FilePath     : /ETESVS/model/losses/__init__.py
+FilePath     : /SVTAS/model/losses/__init__.py
 '''
 from .etesvs_loss import ETESVSLoss
 from .segmentation_loss import SegmentationLoss

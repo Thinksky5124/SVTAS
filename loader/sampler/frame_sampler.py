@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-18 22:41:25
+LastEditTime : 2022-10-23 12:19:29
 Description  : Raw frame sampler
-FilePath     : /ETESVS/loader/sampler/frame_sampler.py
+FilePath     : /SVTAS/loader/sampler/frame_sampler.py
 '''
 import numpy as np
 import random

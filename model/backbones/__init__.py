@@ -2,23 +2,24 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-21 11:07:47
+LastEditTime : 2022-10-21 16:02:09
 Description: file content
-FilePath     : /ETESVS/model/backbones/__init__.py
+FilePath     : /SVTAS/model/backbones/__init__.py
 '''
-from .image import ResNet, MobileNetV2, MobileViT, ViT
+from .image import ResNet, MobileNetV2, MobileViT, ViT, SLViT
 from .flow import FastFlowNet, RAFT, LiteFlowNetV3
 from .video import (ResNet2Plus1d, ResNet3d, PredRNNV2, I3D,
-                    MobileNetV2TSM, MoViNet, TimeSformer, ResNetTSM)
+                    MobileNetV2TSM, MoViNet, TimeSformer, ResNetTSM,
+                    )
 from .language import TransducerTextEncoder
 from .audio import TransducerAudioEncoder
 
 __all__ = [
     'ResNet', 'ResNetTSM',
-    'MobileNetV2', 'MobileNetV2TSM', 'MobileNetV2TMM'
+    'MobileNetV2', 'MobileNetV2TSM', 'MobileNetV2TMM',
     'ResNet3d', 'FastFlowNet', 'RAFT', 'I3D'
     'MoViNet',
-    'MobileViT', 'ViT', 'TimeSformer',
+    'MobileViT', 'ViT', 'TimeSformer', 'SLViT',
     'ResNet3d', 'ResNet2Plus1d',
     'PredRNNV2',
     'TransducerTextEncoder', 'TransducerAudioEncoder'
