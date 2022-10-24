@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-21 16:30:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-22 10:24:54
+LastEditTime : 2022-10-24 13:21:35
 Description  : Multi Device Infer Script with visualize program
-FilePath     : \demo\infer.py
+FilePath     : /SVTAS/demo/infer.py
 '''
 import os
 import cv2
@@ -48,8 +48,8 @@ def draw_action_label(img, palette, action_dict, label):
     fix_buffer = 12
     for i in range(len(label)):
         k = label[i]
-        img = cv2.rectangle(img, (5, 15 + fix_buffer * i), (25, 5 + fix_buffer * i), (int(palette[k][0]), int(palette[k][1]), int(palette[k][2])), thickness=-1)
-        cv2.putText(img, action_dict[k], (30, 12 + fix_buffer * i), cv2.FONT_HERSHEY_COMPLEX, 0.25, (int(palette[k][0]), int(palette[k][1]), int(palette[k][2])), 1)
+        img = cv2.rectangle(img, (5, 15 + fix_buffer * i), (25, 5 + fix_buffer * i), (int(palette[k][2]), int(palette[k][1]), int(palette[k][0])), thickness=-1)
+        cv2.putText(img, action_dict[k], (30, 12 + fix_buffer * i), cv2.FONT_HERSHEY_COMPLEX, 0.25, (int(palette[k][2]), int(palette[k][1]), int(palette[k][0])), 1)
         
     return img
 

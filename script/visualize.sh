@@ -2,7 +2,7 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-07-17 10:38:57
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2022-10-23 12:35:08
+ # @LastEditTime : 2022-10-24 12:03:25
  # @Description  : Visualization Script
  # @FilePath     : /SVTAS/script/visualize.sh
 ### 
@@ -16,4 +16,4 @@ python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/50sa
 python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/breakfast/mapping_fine.txt output/results/imgs --sliding_windows 128
 
 # visualize cam image
-python tools/visualize/cam_visualization.py -c config/cam_visualize/vit_visualize.yaml -o output --method scorecam
+python tools/visualize/cam_visualization.py -c config/cam_visualize/mobinetv2tsm_3Dtcn_visualize.yaml -o output --method gradcam++

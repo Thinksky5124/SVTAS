@@ -2,19 +2,21 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-23 20:57:03
+LastEditTime : 2022-10-24 13:19:15
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
-from asyncore import write
 import os
 import sys
 path = os.path.join(os.getcwd())
 sys.path.append(path)
 import argparse
 import cv2
+import queue
 import numpy as np
 import torch
+import copy
+from PIL import Image
 from types import MethodType 
 from utils.config import parse_config
 import model.builder as model_builder
@@ -22,6 +24,7 @@ import loader.builder as dataset_builder
 from mmcv.runner import load_state_dict
 from utils.logger import get_logger, setup_logger
 from tools.visualize.cam_forward_fn import cam_forward
+from tools.infer.infer import make_palette, label_arr2img, draw_action_label
 
 from pytorch_grad_cam import GradCAM, \
     ScoreCAM, \
@@ -38,25 +41,45 @@ from pytorch_grad_cam.utils.image import show_cam_on_image, \
     preprocess_image
 from pytorch_grad_cam.ablation_layer import AblationLayerVit
 
+def reshape_transform(transform_form):
+# # class activation transform [N C T]
+    def reshape_transform_NCT(tensor, height=1, width=1):
+        result = torch.reshape(tensor, [tensor.shape[0], tensor.shape[1], height, width])
+        result = torch.permute(result, [0, 2, 3, 1])
 
-# class activation transform [N C T]
-# def reshape_transform(tensor, height=1, width=1):
-#     result = torch.reshape(tensor, [tensor.shape[0], tensor.shape[1], height, width])
+        # Bring the channels to the first dimension,
+        # like in CNNs.
+        result = result.transpose(2, 3).transpose(1, 2)
+        return result
 
-#     # Bring the channels to the first dimension,
-#     # like in CNNs.
-#     result = result.transpose(2, 3).transpose(1, 2)
-#     return result
+    # feature activation transform [N P C]
+    def reshape_transform_NPT(tensor, height=7, width=7):
+        result = tensor[:, 1:, :].reshape(tensor.size(0),
+                                        height, width, tensor.size(2))
 
-# feature activation transform [N P C]
-def reshape_transform(tensor, height=14, width=14):
-    result = tensor[:, 1:, :].reshape(tensor.size(0),
-                                      height, width, tensor.size(2))
+        # Bring the channels to the first dimension,
+        # like in CNNs.
+        result = result.transpose(2, 3).transpose(1, 2)
+        return result
 
-    # Bring the channels to the first dimension,
-    # like in CNNs.
-    result = result.transpose(2, 3).transpose(1, 2)
-    return result
+    # feature activation transform [N C T H W]
+    def reshape_transform_NCTHW(tensor, height=7, width=7):
+        result = torch.permute(tensor, [0, 2, 3, 4, 1])
+        result = torch.reshape(result, [-1, height, width, result.shape[-1]])
+
+        # Bring the channels to the first dimension,
+        # like in CNNs.
+        result = result.transpose(2, 3).transpose(1, 2)
+        return result
+    if transform_form == "NCT":
+        return reshape_transform_NCT
+    elif transform_form == "NPC":
+        return reshape_transform_NPT
+    elif transform_form == "NCTHW":
+        return reshape_transform_NCTHW
+    else:
+        print("Not support form!")
+        raise NotImplementedError
 
 class CAMPostProcessing():
     def __init__(self,
@@ -69,26 +92,35 @@ class CAMPostProcessing():
     def init_scores(self):
         self.imgs_list = []
         self.labels_list = []
+        self.score_lsit = []
         self.init_flag = True
 
-    def update(self, cam_images, labels, idx):
+    def update(self, cam_images, labels, score, idx):
         # seg_scores [stage_num N C T]
         # gt [N T]
         self.labels_list.append(labels)
         self.imgs_list.append(cam_images)
+        with torch.no_grad():
+            pred = np.argmax(score.reshape([labels.shape[0], labels.shape[1], -1]).detach().cpu().numpy(), axis=-1)
+            self.score_lsit.append(pred)
 
     def output(self):
         imags_list = []
+        labels_list = []
+        preds_list = []
 
         labels = np.concatenate(self.labels_list, axis=1)
         imags = np.concatenate(self.imgs_list, axis=1)
+        preds = np.concatenate(self.score_lsit, axis=1)
 
         for bs in range(imags.shape[0]):
             index = np.where(labels[bs, :] == self.ignore_index)
             ignore_start = min(list(index[0]) + [labels[bs].shape[-1]]) // self.sample_rate
             imags_list.append(imags[bs, :ignore_start, :])
+            labels_list.append(labels[bs, ::self.sample_rate][:ignore_start])
+            preds_list.append(preds[bs, ::self.sample_rate][:ignore_start])
 
-        return imags_list
+        return imags_list, labels_list, preds_list
 
 class VisualRunner():
     def __init__(self,
@@ -125,13 +157,13 @@ class VisualRunner():
             self.cam = methods[self.cam_method](model=self.model,
                                     target_layers=self.target_layers,
                                     use_cuda=self.use_cuda,
-                                    reshape_transform=reshape_transform,
+                                    reshape_transform=reshape_transform(self.visualize_cfg.reshape_transform),
                                     ablation_layer=AblationLayerVit())
         else:
             self.cam = methods[self.cam_method](model=self.model,
                                     target_layers=self.target_layers,
                                     use_cuda=self.use_cuda,
-                                    reshape_transform=reshape_transform)
+                                    reshape_transform=reshape_transform(self.visualize_cfg.reshape_transform))
         self.cam.batch_size = visualize_cfg.batch_size
         # If None, returns the map for the highest scoring category.
         # Otherwise, targets the requested category.
@@ -140,20 +172,67 @@ class VisualRunner():
         else:
             self.targets = visualize_cfg.return_targets_name
 
+        # load mapping label
+        file_ptr = open(visualize_cfg.label_path, 'r')
+        actions = file_ptr.read().split('\n')[:-1]
+        file_ptr.close()
+        actions_dict = dict()
+        for a in actions:
+            actions_dict[int(a.split()[0])] = a.split()[1]
+        self.palette = make_palette(len(actions_dict))
+        self.actions_dict = actions_dict
+    
         self.model.eval()
     
     def batch_end_step(self, sliding_num, vid_list, step):
 
         # get extract feature
-        cam_imgs_list = self.post_processing.output()
+        cam_imgs_list, labels_list, preds_list = self.post_processing.output()
         
         # save feature file
         current_vid_list = self.current_step_vid_list
-        for cam_imgs, vid in zip(cam_imgs_list, current_vid_list):
+        frame_height = self.visualize_cfg.output_frame_size[1]
+        frame_width = self.visualize_cfg.output_frame_size[0]
+        for cam_imgs, vid, labels, preds in zip(cam_imgs_list, current_vid_list, labels_list, preds_list):
             cam_imgs_save_path = os.path.join(self.cam_imgs_out_path, vid + ".mp4")
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            video = cv2.VideoWriter(cam_imgs_save_path, fourcc, self.visualize_cfg.fps, (self.visualize_cfg.output_frame_size[0], self.visualize_cfg.output_frame_size[0]))
-            for img in cam_imgs:
+            
+            video = cv2.VideoWriter(cam_imgs_save_path, fourcc, self.visualize_cfg.fps, (frame_width, frame_height))
+            pred_queue = queue.Queue(maxsize=32)
+            label_queue = queue.Queue(maxsize=32)
+            for idx in range(cam_imgs.shape[0]):
+                img = cam_imgs[idx]
+                img = cv2.resize(img, (frame_width, frame_height))
+                # add pred and gt info
+                cv2.putText(img, "Prediction: " + self.actions_dict[preds[idx]], (0, frame_height - 100), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 255, 0), 2)
+                cv2.putText(img, "Groundtruth: " + self.actions_dict[labels[idx]], (0, frame_height - 80), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 255, 0), 2)
+                if pred_queue.full():
+                    pred_queue.get()
+                    label_queue.get()
+                pred_queue.put([preds[idx]])
+                label_queue.put([labels[idx]])
+                pred_img = label_arr2img(pred_queue, self.palette).convert('RGB')
+                label_img = label_arr2img(label_queue, self.palette).convert('RGB')
+                past_width = int((label_img.size[0] / 32) * (frame_width - 40))
+                pred_img = cv2.cvtColor(np.asarray(pred_img),cv2.COLOR_RGB2BGR)
+                label_img = cv2.cvtColor(np.asarray(label_img),cv2.COLOR_RGB2BGR)
+                pred_img = cv2.resize(pred_img, (past_width, 20))
+                label_img = cv2.resize(label_img, (past_width, 20))
+                cv2.putText(img, "Pr: ", (0, frame_height - 35), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
+                img[(frame_height - 50):(frame_height - 30), 30:(30 + past_width), :] = pred_img
+                cv2.putText(img, "GT: ", (0, frame_height - 15), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
+                img[(frame_height - 30):(frame_height - 10), 30:(30 + past_width), :] = label_img
+                # Line 1 prediction Line 2 groundtruth
+                img = cv2.rectangle(img, (20 + past_width, frame_height - 10), (30 + past_width, frame_height - 50), (255, 255, 255), thickness=-1)
+                cv2.line(img, (30, frame_height - 30), (30 + past_width, frame_height - 30), (255,255,255), 1)
+                cv2.putText(img, "Current Frame", (max(past_width - 110, 0), frame_height - 55), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
+
+                data_pred = list(copy.deepcopy(pred_queue.queue))
+                data_label = list(copy.deepcopy(label_queue.queue))
+                array_pred = np.array(data_pred).transpose()
+                array_label = np.array(data_label).transpose()
+                label = list(set(array_pred[0, :].tolist()) | set(array_label[0, :].tolist()))
+                img = draw_action_label(img, self.palette, self.actions_dict, label)
                 video.write(img)
             video.release()
 
@@ -174,8 +253,13 @@ class VisualRunner():
 
         # AblationCAM and ScoreCAM have batched implementations.
         # You can override the internal batch size for faster computation.
+        input_tensor = input_data['imgs'].reshape([-1]+list(input_data['imgs'].shape[-3:]))
+        with torch.no_grad():
+            outputs = self.model(input_tensor)
+            if not torch.is_tensor(outputs):
+                outputs = outputs[-1]
 
-        grayscale_cam = self.cam(input_tensor=input_data['imgs'].reshape([-1]+list(input_data['imgs'].shape[-3:])),
+        grayscale_cam = self.cam(input_tensor=input_tensor,
                             targets=self.targets,
                             eigen_smooth=self.eigen_smooth,
                             aug_smooth=self.aug_smooth)
@@ -195,20 +279,20 @@ class VisualRunner():
             batch_image = np.expand_dims(np.concatenate(batch_image_list, 0), 0)
             cam_image_list.append(batch_image)
         cam_images = np.concatenate(cam_image_list, 0)
-        return cam_images
+        return outputs, cam_images
     
     def run_one_clip(self, data_dict):
         vid_list = data_dict['vid_list']
         idx = data_dict['current_sliding_cnt']
         labels = data_dict['labels']
         # train segment
-        cam_images = self._model_forward(data_dict)
+        score, cam_images = self._model_forward(data_dict)
             
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
                 self.post_processing.init_scores()
                 self.current_step_vid_list = vid_list
-            self.post_processing.update(cam_images, labels, idx)
+            self.post_processing.update(cam_images, labels, score, idx)
 
     def run_one_iter(self, data):
         # videos sliding stream train
@@ -301,7 +385,6 @@ if __name__ == '__main__':
         # model.load_state_dict(state_dicts)
     # override forawrd method
     model.forward = MethodType(cam_forward, model)
-
     # construct dataloader
     num_workers = cfg.DATASET.get('num_workers', 0)
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
