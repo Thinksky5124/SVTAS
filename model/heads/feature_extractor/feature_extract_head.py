@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 19:20:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 21:18:57
+LastEditTime : 2022-10-24 21:13:54
 Description  : Feature Extract Head
-FilePath     : /ETESVS/model/heads/feature_extract_head.py
+FilePath     : /SVTAS/model/heads/feature_extractor/feature_extract_head.py
 '''
 import torch
 import torch.nn as nn
@@ -17,7 +17,7 @@ class FeatureExtractHead(nn.Module):
     def __init__(self,
                  in_channels=2048,
                  input_seg_num=8,
-                 clip_seg_num=32,
+                 output_seg_num=32,
                  sample_rate=1,
                  pool_space=True,
                  in_format="N,C,T,H,W",
@@ -25,7 +25,7 @@ class FeatureExtractHead(nn.Module):
         super().__init__()
         assert out_format in ["NCT", "NTC"], "Unsupport output format!"
         assert in_format in ["N,C,T,H,W", "N*T,C,H,W", "N*T,C"], "Unsupport input format!"
-        self.clip_seg_num = clip_seg_num
+        self.output_seg_num = output_seg_num
         self.input_seg_num = input_seg_num
         self.in_channels = in_channels
         self.out_format = out_format
@@ -62,10 +62,9 @@ class FeatureExtractHead(nn.Module):
 
         # [stage_num, N, C, T]
         feature = feature.unsqueeze(0)
-        feature = F.interpolate(
-            input=feature,
-            size=[self.in_channels, self.sample_rate * self.clip_seg_num],
-            mode="nearest") * masks[:, 0:1, :].unsqueeze(0)
+        feature = F.adaptive_avg_pool3d(
+            feature, [feature.shape[1], self.in_channels, self.output_seg_num]) * F.adaptive_max_pool2d(
+                masks[:, 0:1, :], [1, self.output_seg_num]).unsqueeze(0)
             
         if self.out_format in ["NTC"]:
             feature = torch.permute(feature, dims=[0, 1, 3, 2])

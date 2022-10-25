@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 19:47:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:59:19
-Description  : file content
-FilePath     : /ETESVS/model/backbones/video/i3d.py
+LastEditTime : 2022-10-24 16:07:12
+Description  : I3D ref:https://github.com/v-iashin/video_features
+FilePath     : /SVTAS/model/backbones/video/i3d.py
 '''
 import torch
 import torch.nn as nn

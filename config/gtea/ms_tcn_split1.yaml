@@ -8,7 +8,7 @@ MODEL:
         num_stages: 4
         num_layers: 10
         num_f_maps: 64
-        dim: 768
+        dim: 1280
         num_classes: 11
         sample_rate: 1
     loss:
@@ -66,7 +66,7 @@ PIPELINE: #PIPELINE field
         transform:
             name: "FeatureStreamTransform"
             transform_list:
-              - ToTensor:
+              - FeatureToTensor:
 
     test:
         name: "BasePipline"
@@ -81,7 +81,7 @@ PIPELINE: #PIPELINE field
         transform:
             name: "FeatureStreamTransform"
             transform_list:
-              - ToTensor:
+              - FeatureToTensor:
 
 OPTIMIZER:
     name: "AdamOptimizer"
@@ -98,8 +98,8 @@ METRIC:
     name: "TASegmentationMetric"
     overlap: [.1, .25, .5]
     actions_map_file_path: "./data/gtea/mapping.txt"
-    file_output: True
-    score_output: True
+    file_output: False
+    score_output: False
 
 
 model_name: "MSTCN_gtea_split1"

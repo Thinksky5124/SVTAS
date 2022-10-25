@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-24 13:19:15
+LastEditTime : 2022-10-25 15:56:45
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
@@ -18,7 +18,7 @@ import torch
 import copy
 from PIL import Image
 from types import MethodType 
-from utils.config import parse_config
+from utils.config import Config
 import model.builder as model_builder
 import loader.builder as dataset_builder
 from mmcv.runner import load_state_dict
@@ -374,7 +374,7 @@ if __name__ == '__main__':
         print(out_path + ' created successful')
     logger = get_logger("SVTAS")
 
-    cfg = parse_config(args.config)
+    cfg = Config.fromfile(args.config)
     # construct model
     model = model_builder.build_model(cfg.MODEL).cuda()
     pretrain_path = cfg.get('PRETRAINED', None)

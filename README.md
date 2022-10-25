@@ -43,14 +43,14 @@ pip install -r requirements.txt
 # export
 pip freeze > requirements.txt
 ```
-- If report`correlation_cuda package no found`, use should read [Install](model/backbones/utils/liteflownet_v3/README.md)
+- If report `correlation_cuda package no found`, you should read [Install](model/backbones/utils/liteflownet_v3/README.md)
 
 # Prepare Data
 
 Read Doc [Prepare Datset](doc/prepare_dataset.md)
 
 # Usage
-Read Doc [Usage]()
+Read Doc [Usage](doc/usage.md)
 
 # Citation
 ```bib

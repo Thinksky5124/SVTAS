@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-05 19:54:12
+LastEditTime : 2022-10-25 14:00:49
 Description: prepare video recognition data and compute image std and mean script
-FilePath     : /ETESVS/tools/prepare_video_recognition_data.py
+FilePath     : /SVTAS/tools/dataset_transform/prepare_video_recognition_data.py
 '''
 import json
 import argparse
@@ -91,7 +91,7 @@ def caculate_video_std_mean(video_path, sample_rate, label_fps, dataset_type):
     if len(frames_select) > 0:
         bgr_image = video_capture.get_batch(frames_select).asnumpy()
         # caculate BGR std and mean
-        norm_imgs = np.reshape(bgr_image, (-1, 3)) / 255.0
+        norm_imgs = np.reshape(bgr_image, (-1, 3))
         action_mean = list(np.mean(norm_imgs, axis=0))
         action_std = list(np.std(norm_imgs, axis=0))
         video_mean.append(action_mean)
@@ -99,7 +99,7 @@ def caculate_video_std_mean(video_path, sample_rate, label_fps, dataset_type):
     else:
         bgr_image = video_capture.get_batch([(videolen - 1)//2]).asnumpy()
         # caculate BGR std and mean
-        norm_imgs = np.reshape(bgr_image, (-1, 3)) / 255.0
+        norm_imgs = np.reshape(bgr_image, (-1, 3))
         action_mean = list(np.mean(norm_imgs, axis=0))
         action_std = list(np.std(norm_imgs, axis=0))
         video_mean.append(action_mean)
@@ -196,7 +196,7 @@ def video_split_to_clip(video_path, output_path_fix, video_name, label_fps,
                     v.write(bgr_image)
                 # caculate BGR std and mean
                 if random.random() >= sample_rate:
-                    norm_imgs = np.reshape(bgr_image, (-1, 3)) / 255.0
+                    norm_imgs = np.reshape(bgr_image, (-1, 3))
                     action_mean = list(np.mean(norm_imgs, axis=0))
                     action_std = list(np.std(norm_imgs, axis=0))
                     video_mean.append(action_mean)

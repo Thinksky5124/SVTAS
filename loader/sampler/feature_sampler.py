@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-22 20:00:06
+LastEditTime : 2022-10-25 11:10:03
 Description  : feature sampler
 FilePath     : /SVTAS/loader/sampler/feature_sampler.py
 '''
@@ -182,7 +182,7 @@ class FeatureSampler():
             labels = self._labels_sample(labels, start_frame=0, end_frame=feature_len, samples_idx=frames_idx).copy()
             frames_feature = feature[:, frames_idx]
             mask = np.ones((labels.shape[0]), dtype=np.float32)
-
+        
         if self.format in ["NTC"]:
             frames_feature = frames_feature.T
 

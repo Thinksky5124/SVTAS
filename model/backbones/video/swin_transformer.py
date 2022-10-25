@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-22 14:18:15
+LastEditTime : 2022-10-25 21:41:53
 Description  : Swim Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
 FilePath     : /SVTAS/model/backbones/video/swin_transformer.py
 '''
@@ -671,8 +671,8 @@ class SwinTransformer3D(nn.Module):
         x = rearrange(x, 'n c d h w -> n d h w c')
         x = self.norm(x)
         x = rearrange(x, 'n d h w c -> n c d h w')
-
-        x = x * masks
+        
+        x = x * F.adaptive_max_pool3d(masks, output_size=[x.shape[2], 1, 1])
         x = torch.reshape(x.transpose(1, 2), [-1, x.shape[1]] + list(x.shape[-2:]))
         return x
 

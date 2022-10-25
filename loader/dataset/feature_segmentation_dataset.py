@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 15:43:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 22:42:46
+LastEditTime : 2022-10-25 11:08:14
 Description  : feature dataset class
-FilePath     : /ETESVS/loader/dataset/feature_segmentation_dataset.py
+FilePath     : /SVTAS/loader/dataset/feature_segmentation_dataset.py
 '''
 import numpy as np
 import os.path as osp

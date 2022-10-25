@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:56:11
+LastEditTime : 2022-10-25 15:56:36
 Description  : Extract flow script
-FilePath     : /ETESVS/tools/extract_flow.py
+FilePath     : /SVTAS/tools/extract/extract_flow.py
 '''
 
 import os
@@ -17,7 +17,7 @@ import cv2
 import model.builder as model_builder
 import argparse
 from utils.logger import get_logger, setup_logger
-from utils.config import parse_config
+from utils.config import Config
 from tqdm import tqdm
 import decord
 from loader.transform import VideoStreamTransform
@@ -160,7 +160,7 @@ def parse_file_paths(input_path, dataset_type):
         
 def main():
     args = parse_args()
-    cfg = parse_config(args.config)
+    cfg = Config.fromfile(args.config)
     setup_logger(f"./output/etract_flow", name="SVTAS", level="INFO", tensorboard=False)
     file_list = parse_file_paths(cfg.DATASET.file_list, cfg.DATASET.dataset_type)
     extractor(cfg, file_list, args.out_path)

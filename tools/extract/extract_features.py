@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-03 15:28:01
+LastEditTime : 2022-10-25 15:56:28
 Description  : Extract video feature script
-FilePath     : /ETESVS/tools/extract/extract_features.py
+FilePath     : /SVTAS/tools/extract/extract_features.py
 '''
 import os
 import sys
@@ -15,7 +15,7 @@ import numpy as np
 import model.builder as model_builder
 import loader.builder as dataset_builder
 import argparse
-from utils.config import parse_config
+from utils.config import Config
 from utils.logger import get_logger, setup_logger
 from mmcv.runner import load_state_dict
 
@@ -24,11 +24,13 @@ class ExtractRunner():
                  logger,
                  model,
                  post_processing,
-                 feature_out_path):
+                 feature_out_path,
+                 logger_interval=10):
         self.model = model
         self.logger = logger
         self.post_processing = post_processing
         self.feature_out_path = feature_out_path
+        self.logger_interval = logger_interval
     
     def epoch_init(self):
         # batch videos sampler
@@ -70,7 +72,7 @@ class ExtractRunner():
         if not torch.is_tensor(outputs):
             outputs = outputs[-1]
             
-        return outputs[-1]
+        return outputs
     
     @torch.no_grad()
     def run_one_clip(self, data_dict):
@@ -85,7 +87,11 @@ class ExtractRunner():
             if self.post_processing.init_flag is not True:
                 self.post_processing.init_scores(sliding_num, len(vid_list))
                 self.current_step_vid_list = vid_list
+                self.logger.info("Current process video: " + ",".join(vid_list))
             self.post_processing.update(score, labels, idx)
+        
+        if idx % self.logger_interval == 0:
+            self.logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
 
     @torch.no_grad()
     def run_one_iter(self, data):
@@ -140,7 +146,7 @@ def extractor(cfg, outpath):
     
     post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
 
-    runner = ExtractRunner(logger=logger, model=model, post_processing=post_processing, feature_out_path=out_path)
+    runner = ExtractRunner(logger=logger, model=model, post_processing=post_processing, feature_out_path=out_path, logger_interval=cfg.get('logger_interval', 100))
 
     runner.epoch_init()
     for i, data in enumerate(dataloader):
@@ -167,7 +173,7 @@ def parse_args():
 def main():
     args = parse_args()
     setup_logger(f"./output/etract_feature", name="SVTAS", level="INFO", tensorboard=False)
-    cfg = parse_config(args.config)
+    cfg = Config.fromfile(args.config)
     extractor(cfg, args.out_path)
 
 if __name__ == '__main__':

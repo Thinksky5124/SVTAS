@@ -12,8 +12,9 @@ from .resnet import ResNet
 from .vit import ViT
 from .swin_v2_transformer import SwinTransformerV2
 from .vit_for_small_dataset import SLViT
+from .sample_vit import SimpleViT
 
 __all__ = [
     "MobileNetV2", "MobileViT", "ResNet", "ViT", "SwinTransformerV2",
-    "SLViT"
+    "SLViT", "SimpleViT"
 ]
