@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-23 21:21:00
+LastEditTime : 2022-10-27 15:32:40
 Description  : Collect function
-FilePath     : \ETESVS\loader\pipline\collect_fn.py
+FilePath     : /SVTAS/loader/pipline/collect_fn.py
 '''
 import re
 from ..builder import PIPLINE

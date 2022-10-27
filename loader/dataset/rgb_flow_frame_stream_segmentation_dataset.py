@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:11:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 15:42:17
+LastEditTime : 2022-10-27 13:39:00
 Description  : file content
-FilePath     : /ETESVS/loader/dataset/rgb_flow_frame_segmentation_dataset.py
+FilePath     : /SVTAS/loader/dataset/rgb_flow_frame_stream_segmentation_dataset.py
 '''
 import os.path as osp
 import numpy as np
@@ -73,7 +73,9 @@ class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
                         if not osp.isfile(video_path):
                             video_path = os.path.join(self.videos_path, video_name + '.avi')
                             if not osp.isfile(video_path):
-                                raise NotImplementedError
+                                video_path = os.path.join(self.videos_path, video_name + '.npy')
+                                if not osp.isfile(video_path):
+                                    raise NotImplementedError
                         flow_path = os.path.join(self.flows_path, video_name + '.mp4')
 
                     elif self.dataset_type in ['breakfast']:
@@ -85,7 +87,9 @@ class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
                         if not osp.isfile(video_path):
                             video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
                             if not osp.isfile(video_path):
-                                raise NotImplementedError
+                                video_path = os.path.join(self.videos_path, video_name + '.npy')
+                                if not osp.isfile(video_path):
+                                    raise NotImplementedError
                         flow_path = os.path.join(self.flows_path, video_segment_name + '.mp4')
 
                     file_ptr = open(label_path, 'r')

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-06 20:19:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-12 16:33:50
+LastEditTime : 2022-10-26 13:15:03
 Description  : Joint Head Modules
-FilePath     : /ETESVS/model/heads/joint/__init__.py
+FilePath     : /SVTAS/model/heads/joint/__init__.py
 '''
 from .transducer_joint_head import TransudcerJointNet
 from .transeger_fc_joint_head import TransegerFCJointNet

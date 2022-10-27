@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:13:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 15:41:39
+LastEditTime : 2022-10-27 13:49:34
 Description: feature dataset class
-FilePath     : /ETESVS/loader/dataset/feature_segmentation_dataset.py
+FilePath     : /SVTAS/loader/dataset/feature_stream_segmentation_dataset.py
 '''
 
 import numpy as np
@@ -18,8 +18,10 @@ from ..builder import DATASET
 @DATASET.register()
 class FeatureStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
     def __init__(self,
+                 flow_feature_path=None,
                  **kwargs):
         super().__init__(**kwargs)
+        self.flow_feature_path = flow_feature_path
     
     def parse_file_paths(self, input_path):
         if self.dataset_type in ['gtea', '50salads', 'breakfast', 'thumos14']:
@@ -67,11 +69,20 @@ class FeatureStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
                     if len(content) % self.sliding_window != 0:
                         precise_sliding_num = precise_sliding_num + 1
 
-                    info.append(
-                        dict(filename=video_path,
-                            raw_labels=classes,
-                            video_name=video_name,
-                            precise_sliding_num=precise_sliding_num))
+                    if self.flow_feature_path is not None:
+                        flow_feature_path = os.path.join(self.flow_feature_path, video_name + '.npy')
+                        info.append(
+                            dict(filename=video_path,
+                                flow_feature_name=flow_feature_path,
+                                raw_labels=classes,
+                                video_name=video_name,
+                                precise_sliding_num=precise_sliding_num))
+                    else:
+                        info.append(
+                            dict(filename=video_path,
+                                raw_labels=classes,
+                                video_name=video_name,
+                                precise_sliding_num=precise_sliding_num))
                         
                 info_proc[proces_idx] = info
 

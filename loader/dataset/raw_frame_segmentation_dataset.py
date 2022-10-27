@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 22:37:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 22:47:07
+LastEditTime : 2022-10-27 13:38:18
 Description  : Raw Frame Segmentation Dataset
-FilePath     : /ETESVS/loader/dataset/raw_frame_segmentation_dataset.py
+FilePath     : /SVTAS/loader/dataset/raw_frame_segmentation_dataset.py
 '''
 import os.path as osp
 import numpy as np
@@ -128,7 +128,9 @@ class RawFrameSegmentationDataset(data.Dataset):
             if not osp.isfile(video_path):
                 video_path = os.path.join(self.videos_path, video_name + '.avi')
                 if not osp.isfile(video_path):
-                    raise NotImplementedError
+                    video_path = os.path.join(self.videos_path, video_name + '.npy')
+                    if not osp.isfile(video_path):
+                        raise NotImplementedError
         elif self.dataset_type in ['breakfast']:
             video_segment_name, video_segment_path = video_segment
             video_name = video_segment_name.split('.')[0]
@@ -138,7 +140,9 @@ class RawFrameSegmentationDataset(data.Dataset):
             if not osp.isfile(video_path):
                 video_path = os.path.join(self.videos_path, video_segment_path + '.avi')
                 if not osp.isfile(video_path):
-                    raise NotImplementedError
+                    video_path = os.path.join(self.videos_path, video_name + '.npy')
+                    if not osp.isfile(video_path):
+                        raise NotImplementedError
         file_ptr = open(label_path, 'r')
         content = file_ptr.read().split('\n')[:-1]
         classes = np.zeros(len(content), dtype='int64')

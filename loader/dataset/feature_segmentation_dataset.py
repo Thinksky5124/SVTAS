@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 15:43:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 11:08:14
+LastEditTime : 2022-10-27 13:49:11
 Description  : feature dataset class
 FilePath     : /SVTAS/loader/dataset/feature_segmentation_dataset.py
 '''
@@ -29,10 +29,12 @@ class FeatureSegmentationDataset(data.Dataset):
                  data_prefix=None,
                  drap_last=False,
                  local_rank=-1,
-                 nprocs=1) -> None:
+                 nprocs=1,
+                 flow_feature_path=None) -> None:
         super().__init__()
         self.suffix = suffix
         self.feature_path = feature_path
+        self.flow_feature_path = flow_feature_path
         self.gt_path = gt_path
         self.actions_map_file_path = actions_map_file_path
         self.dataset_type = dataset_type
@@ -81,6 +83,8 @@ class FeatureSegmentationDataset(data.Dataset):
             feature_path = os.path.join(self.feature_path, video_name + '.npy')
             if not osp.isfile(feature_path):
                 raise NotImplementedError
+            if self.flow_feature_path is not None:
+                flow_feature_path = os.path.join(self.flow_feature_path, video_name + '.npy')
         file_ptr = open(label_path, 'r')
         content = file_ptr.read().split('\n')[:-1]
         classes = np.zeros(len(content), dtype='int64')
@@ -89,6 +93,8 @@ class FeatureSegmentationDataset(data.Dataset):
 
         data_dict = {}
         data_dict['filename'] = feature_path
+        if self.flow_feature_path is not None:
+            data_dict['flow_feature_name'] = flow_feature_path
         data_dict['raw_labels'] = copy.deepcopy(classes)
         data_dict['video_name'] = video_name
 

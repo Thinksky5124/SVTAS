@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-06 16:21:01
+LastEditTime : 2022-10-27 10:15:07
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
-FilePath     : /ETESVS/model/heads/segmentation/mstcn.py
+FilePath     : /SVTAS/model/heads/segmentation/mstcn.py
 '''
 import torch
 import copy
@@ -94,8 +94,8 @@ class DilatedResidualLayer(nn.Module):
         super(DilatedResidualLayer, self).__init__()
         self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=dilation, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
-        self.norm = nn.BatchNorm1d(out_channels)
-        # self.norm = nn.Dropout()
+        # self.norm = nn.BatchNorm1d(out_channels)
+        self.norm = nn.Dropout()
 
     def forward(self, x, mask):
         out = F.relu(self.conv_dilated(x))

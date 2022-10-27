@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 15:56:28
+LastEditTime : 2022-10-27 14:55:54
 Description  : Extract video feature script
 FilePath     : /SVTAS/tools/extract/extract_features.py
 '''
@@ -109,8 +109,11 @@ class ExtractRunner():
                 self.run_one_clip(sliding_seg)
 
 @torch.no_grad()
-def extractor(cfg, outpath):
-    out_path = os.path.join(outpath, "features")
+def extractor(cfg, outpath, flow_extract):
+    if flow_extract:
+        out_path = os.path.join(outpath, "flow_features")
+    else:
+        out_path = os.path.join(outpath, "features")
     isExists = os.path.exists(out_path)
     if not isExists:
         os.makedirs(out_path)
@@ -165,6 +168,9 @@ def parse_args():
                         '--out_path',
                         type=str,
                         help='extract flow file out path')
+    parser.add_argument("--flow_extract",
+                        action="store_true",
+                        help="wheather extract optical flow video")
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(0)
@@ -174,7 +180,7 @@ def main():
     args = parse_args()
     setup_logger(f"./output/etract_feature", name="SVTAS", level="INFO", tensorboard=False)
     cfg = Config.fromfile(args.config)
-    extractor(cfg, args.out_path)
+    extractor(cfg, args.out_path, args.flow_extract)
 
 if __name__ == '__main__':
     main()

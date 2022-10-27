@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 15:56:36
+LastEditTime : 2022-10-27 13:13:00
 Description  : Extract flow script
 FilePath     : /SVTAS/tools/extract/extract_flow.py
 '''
@@ -25,9 +25,11 @@ from PIL import Image
 from utils.flow_vis import make_colorwheel
 
 @torch.no_grad()
-def extractor(cfg, file_list, outpath):
+def extractor(cfg, file_list, outpath, need_visualize):
     model = model_builder.build_model(cfg.MODEL).cuda()
     transforms = VideoStreamTransform(cfg.TRANSFORM)
+    post_transforms = VideoStreamTransform([dict(Clamp = dict(min_val=-20, max_val=20)),
+                                            dict(ToUInt8 = None)])
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     model.eval()
 
@@ -36,6 +38,13 @@ def extractor(cfg, file_list, outpath):
     if not isExists:
         os.makedirs(out_path)
         print(out_path + ' created successful')
+    
+    if need_visualize:
+        video_out_path = os.path.join(outpath, "flow_video")
+        isExists = os.path.exists(video_out_path)
+        if not isExists:
+            os.makedirs(video_out_path)
+            print(video_out_path + ' created successful')
 
 
     for file in tqdm(file_list, desc="extract optical flow"):
@@ -53,8 +62,12 @@ def extractor(cfg, file_list, outpath):
         imgbuf = img[0].copy()
         img = Image.fromarray(imgbuf, mode='RGB')
         video_len = len(video)
-        flow_path = os.path.join(out_path, video_name + '.mp4')
-        videoWrite = cv2.VideoWriter(flow_path, fourcc, cfg.DATASET.fps, img.size)
+        # store flow img
+        flow_img_list = []
+
+        if need_visualize:
+            flow_video_path = os.path.join(video_out_path, video_name + '.mp4')
+            videoWrite = cv2.VideoWriter(flow_video_path, fourcc, cfg.DATASET.fps, img.size)
 
         for start_frame in range(0, video_len, cfg.DATASET.num_segments):
             end_frame = start_frame + cfg.DATASET.num_segments
@@ -78,44 +91,55 @@ def extractor(cfg, file_list, outpath):
             input_data['imgs'] = imgs
             flows = model(input_data).squeeze(0)
 
+            results = {}
+            results['imgs'] = flows
+            flows = post_transforms(results)['imgs']
             flows = flows.cpu().permute(0, 2, 3, 1).numpy()
+            flow_img_list.append(flows)
 
-            u = flows[:, :, :, 0]
-            v = flows[:, :, :, 1]
-            rad = np.sqrt(np.square(u) + np.square(v))
-            rad_max = np.max(rad)
-            epsilon = 1e-5
-            u = u / (rad_max + epsilon)
-            v = v / (rad_max + epsilon)
-            
-            colorwheel = make_colorwheel()  # shape [55x3]
-            flows_image = np.zeros((u.shape[0], u.shape[1], u.shape[2], 3), np.uint8)
+            if need_visualize:
+                u = flows[:, :, :, 0]
+                v = flows[:, :, :, 1]
+                rad = np.sqrt(np.square(u) + np.square(v))
+                rad_max = np.max(rad)
+                epsilon = 1e-5
+                u = u / (rad_max + epsilon)
+                v = v / (rad_max + epsilon)
+                
+                colorwheel = make_colorwheel()  # shape [55x3]
+                flows_image = np.zeros((u.shape[0], u.shape[1], u.shape[2], 3), np.uint8)
 
-            ncols = colorwheel.shape[0]
-            rad = np.sqrt(np.square(u) + np.square(v))
-            a = np.arctan2(-v, -u)/np.pi
-            fk = (a + 1) / 2 * (ncols - 1)
-            k0 = np.floor(fk).astype(np.int32)
-            k1 = k0 + 1
-            k1[k1 == ncols] = 0
-            f = fk - k0
-            for i in range(colorwheel.shape[1]):
-                tmp = colorwheel[:, i]
-                col0 = tmp[k0] / 255.0
-                col1 = tmp[k1] / 255.0
-                col = (1 - f) * col0 + f * col1
-                idx = (rad <= 1)
-                col[idx]  = 1 - rad[idx] * (1-col[idx])
-                col[~idx] = col[~idx] * 0.75   # out of range
-                # Note the 2-i => BGR instead of RGB
-                ch_idx = 2 - i
-                flows_image[:, :, :, ch_idx] = np.floor(255 * col)
+                ncols = colorwheel.shape[0]
+                rad = np.sqrt(np.square(u) + np.square(v))
+                a = np.arctan2(-v, -u)/np.pi
+                fk = (a + 1) / 2 * (ncols - 1)
+                k0 = np.floor(fk).astype(np.int32)
+                k1 = k0 + 1
+                k1[k1 == ncols] = 0
+                f = fk - k0
+                for i in range(colorwheel.shape[1]):
+                    tmp = colorwheel[:, i]
+                    col0 = tmp[k0] / 255.0
+                    col1 = tmp[k1] / 255.0
+                    col = (1 - f) * col0 + f * col1
+                    idx = (rad <= 1)
+                    col[idx]  = 1 - rad[idx] * (1-col[idx])
+                    col[~idx] = col[~idx] * 0.75   # out of range
+                    # Note the 2-i => BGR instead of RGB
+                    ch_idx = 2 - i
+                    flows_image[:, :, :, ch_idx] = np.floor(255 * col)
 
-            for flow_img in flows_image:
-                videoWrite.write(flow_img)
+                for flow_img in flows_image:
+                    videoWrite.write(flow_img)
                 
             model._clear_memory_buffer()
-        videoWrite.release()
+        # save flow imgs
+        flow_imgs = np.concatenate(flow_img_list, axis=0)
+        save_path = os.path.join(out_path, video_name + '.npy')
+        np.save(save_path, flow_imgs)
+        
+        if need_visualize:
+            videoWrite.release()
         
 
 def parse_args():
@@ -129,6 +153,9 @@ def parse_args():
                         '--out_path',
                         type=str,
                         help='extract flow file out path')
+    parser.add_argument("--need_visualize",
+                        action="store_true",
+                        help="wheather need optical flow visualization video")
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(0)
@@ -163,7 +190,7 @@ def main():
     cfg = Config.fromfile(args.config)
     setup_logger(f"./output/etract_flow", name="SVTAS", level="INFO", tensorboard=False)
     file_list = parse_file_paths(cfg.DATASET.file_list, cfg.DATASET.dataset_type)
-    extractor(cfg, file_list, args.out_path)
+    extractor(cfg, file_list, args.out_path, args.need_visualize)
 
 if __name__ == '__main__':
     main()

@@ -2,10 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:29:15
+LastEditTime : 2022-10-27 15:15:44
 Description  : feature decode
-FilePath     : /ETESVS/loader/decode/decode.py
+FilePath     : /SVTAS/loader/decode/decode.py
 '''
+import re
 import numpy as np
 import decord as de
 from ..builder import DECODE
@@ -36,6 +37,9 @@ class FeatureDecoder():
         feature = np.load(file_path)
         if self.is_transpose is True:
             feature = feature.T
+        if "flow_feature_name" in list(results.keys()):
+            flow_feature = np.load(results['flow_feature_name'])
+            feature = np.concatenate([feature, flow_feature], axis=0)
         feature_len = feature.shape[-1]
         results['frames'] = feature
         results['frames_len'] = results['raw_labels'].shape[0]
@@ -66,6 +70,40 @@ class VideoDecoder():
         results['backend'] = self.backend
 
         container = de.VideoReader(file_path)
+        video_len = len(container)
+        results['frames'] = container
+        results['frames_len'] = results['raw_labels'].shape[0]
+        results['video_len'] = video_len
+        
+        return results
+
+class FlowNPYContainer(object):
+    def __init__(self, npy_file):
+        npy_file = re.sub("(mp4|avi)", "npy", npy_file)
+        self.data = np.load(npy_file)
+
+    def get_batch(self, frames_idx):
+        return self.data[frames_idx, :]
+    
+    def __len__(self):
+        return self.data.shape[0]
+
+    
+@DECODE.register()
+class FlowVideoDecoder(object):
+    """
+    get flow from file
+    """
+    def __init__(self,
+                 backend='numpy'):
+        self.backend = backend
+
+    def __call__(self, results):
+        file_path = results['filename']
+        results['format'] = 'video'
+        results['backend'] = self.backend
+
+        container = FlowNPYContainer(file_path)
         video_len = len(container)
         results['frames'] = container
         results['frames_len'] = results['raw_labels'].shape[0]

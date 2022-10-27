@@ -2,11 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 15:59:58
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 10:45:45
+LastEditTime : 2022-10-27 10:44:49
 Description  : Optimizer Config
-FilePath     : /SVTAS/config/_base_/schedules/adam_50e.py
+FilePath     : /SVTAS/config/_base_/schedules/adam_100e.py
 '''
-epochs = 50 #Mandatory, total epoch
+epochs = 100 #Mandatory, total epoch
+
 OPTIMIZER = dict(
     name = "AdamOptimizer",
     learning_rate = 0.0005,

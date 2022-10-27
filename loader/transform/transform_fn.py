@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 20:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 15:06:23
+LastEditTime : 2022-10-27 14:51:00
 Description  : Transform Class Function
 FilePath     : /SVTAS/loader/transform/transform_fn.py
 '''
@@ -18,11 +18,27 @@ __all__ = [
     "FeatureToTensor",
     "ToFloat",
     "ScaleTo1_1",
+    "NormalizeColorTo1",
     "Clamp",
     "PermuteAndUnsqueeze",
     "TensorCenterCrop",
-    "ResizeImproved"
+    "ResizeImproved",
+    "ToUInt8",
+    "TensorImageResize",
+    "TensorPermute"
 ]
+
+class ToUInt8(object):
+    def __init__(self, bound=20):
+        self.bound = bound
+
+    def __call__(self, flow_tensor: torch.FloatTensor) -> torch.FloatTensor:
+        # preprocessing as in
+        # https://github.com/deepmind/kinetics-i3d/issues/61#issuecomment-506727158
+        # but for pytorch
+        # [-bound, bound] -> [0, 255]
+        flow_tensor = (flow_tensor + self.bound) * (255.0 / (2 * self.bound))
+        return flow_tensor.round().to(torch.uint8)
 
 class FeatureToTensor(object):
 
@@ -33,7 +49,11 @@ class ToFloat(object):
 
     def __call__(self, byte_img):
         return byte_img.float()
-        
+
+class NormalizeColorTo1:
+    def __call__(self, img):
+        return img / 255.0
+
 class ScaleTo1_1(object):
     def __call__(self, tensor: torch.FloatTensor) -> torch.FloatTensor:
         return (2 * tensor / 255) - 1
@@ -117,3 +137,32 @@ class ResizeImproved(object):
 
     def __call__(self, img):
         return resize(img, self.size, self.resize_to_smaller_edge, self.interpolation)
+
+class TensorImageResize(object):
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, vid):
+        # NOTE: for those functions, which generally expect mini-batches, we keep them
+        # as non-minibatch so that they are applied as if they were 4d (thus image).
+        # this way, we only apply the transformation in the spatial domain
+        interpolation = 'bilinear'
+        # NOTE: using bilinear interpolation because we don't work on minibatches
+        # at this level
+        scale = None
+        if isinstance(self.size, int):
+            scale = float(self.size) / min(vid.shape[-2:])
+            size = None
+        else:
+            size = self.size
+        return torch.nn.functional.interpolate(
+            vid.unsqueeze(0), size=size, scale_factor=scale, mode=interpolation, align_corners=False,
+            recompute_scale_factor=False
+        ).squeeze(0)
+
+class TensorPermute(object):
+    def __init__(self, permute_list=None):
+        self.permute_list = permute_list
+
+    def __call__(self, tensor: torch.FloatTensor) -> torch.FloatTensor:
+        return tensor.permute(self.permute_list)

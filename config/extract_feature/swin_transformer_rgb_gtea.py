@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 21:28:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 21:43:38
+LastEditTime : 2022-10-25 21:45:55
 Description  : SwinTransformer Config
 FilePath     : /SVTAS/config/extract_feature/swin_transformer_gtea.py
 '''
@@ -42,7 +42,7 @@ MODEL = dict(
         output_seg_num = 1,
         sample_rate = sample_rate,
         pool_space = True,
-        in_format = "N*T,C",
+        in_format = "N*T,C,H,W",
         out_format = "NCT"
     ),
     loss = None

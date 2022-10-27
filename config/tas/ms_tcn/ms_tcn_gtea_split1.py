@@ -2,19 +2,20 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 18:20:34
+LastEditTime : 2022-10-27 10:46:27
 Description  : file content
 FilePath     : /SVTAS/config/tas/ms_tcn/ms_tcn_gtea_split1.py
 '''
 
 _base_ = [
-    '../../_base_/schedules/adam_50e.py',
+    '../../_base_/schedules/adam_100e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py'
 ]
 
 num_classes = 11
 sample_rate = 1
 ignore_index = -100
+model_name = "MSTCN_gtea_split1"
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
@@ -25,7 +26,7 @@ MODEL = dict(
         num_stages = 4,
         num_layers = 10,
         num_f_maps = 64,
-        dim = 768,
+        dim = 512,
         num_classes = num_classes,
         sample_rate = sample_rate
     ),
@@ -45,7 +46,7 @@ POSTPRECESSING = dict(
 )
 
 DATASET = dict(
-    temporal_clip_batch_size = 2,
+    temporal_clip_batch_size = 1,
     video_batch_size = 1,
     num_workers = 2,
     train = dict(
@@ -118,5 +119,3 @@ METRIC = dict(
     file_output = False,
     score_output = False
 )
-
-model_name = "MSTCN_gtea_split1"

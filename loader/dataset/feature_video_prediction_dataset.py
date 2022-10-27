@@ -40,7 +40,7 @@ class FeatureVideoPredictionDataset(FeatureStreamSegmentationDataset):
             precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 
         feature = copy.deepcopy(torch.concat(feature_list, dim=0))
-        labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
+        labels = copy.deepcopy(np.tenate(labels_list, axis=0).astype(np.int64))
         pred_labels = copy.deepcopy(np.concatenate(pred_labels_list, axis=0).astype(np.int64))
         masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
         precise_sliding_num = copy.deepcopy(np.concatenate(precise_sliding_num_list, axis=0).astype(np.float32))
