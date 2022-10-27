@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 15:56:45
+LastEditTime : 2022-10-27 19:04:49
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
@@ -18,11 +18,11 @@ import torch
 import copy
 from PIL import Image
 from types import MethodType 
-from utils.config import Config
-import model.builder as model_builder
-import loader.builder as dataset_builder
+from svtas.utils.config import Config
+import svtas.model.builder as model_builder
+import svtas.loader.builder as dataset_builder
 from mmcv.runner import load_state_dict
-from utils.logger import get_logger, setup_logger
+from svtas.utils.logger import get_logger, setup_logger
 from tools.visualize.cam_forward_fn import cam_forward
 from tools.infer.infer import make_palette, label_arr2img, draw_action_label
 

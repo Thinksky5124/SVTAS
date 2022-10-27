@@ -2,21 +2,22 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 13:56:38
+LastEditTime : 2022-10-27 17:20:57
 Description: main script
-FilePath     : \ETESVS\main.py
+FilePath     : /SVTAS/main.py
 '''
 import argparse
+import os
 import random
 
 import numpy as np
 import torch
-import os
 
-from utils.config import get_config
+from tasks.infer import infer
 from tasks.test import test
 from tasks.train import train
-from tasks.infer import infer
+from utils.config import get_config
+
 
 def parse_args():
     parser = argparse.ArgumentParser("SVTAS train script")

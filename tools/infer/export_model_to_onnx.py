@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-03 15:05:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-21 19:33:31
+LastEditTime : 2022-10-27 19:04:34
 Description  : Export torch model to ONNX
 FilePath     : /SVTAS/tools/infer/export_model_to_onnx.py
 '''
@@ -11,14 +11,14 @@ import os
 import sys
 path = os.path.join(os.getcwd())
 sys.path.append(path)
-import model.builder as model_builder
-from utils.logger import get_logger
+import svtas.model.builder as model_builder
+from svtas.utils.logger import get_logger
 import torch
 import numpy as np
 import onnx
 import onnxruntime
 
-from utils.config import get_config
+from svtas.utils.config import get_config
 
 @torch.no_grad()
 def export_model_to_onnx(cfg,

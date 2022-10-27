@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-16 16:40:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-13 14:06:50
+LastEditTime : 2022-10-27 19:02:59
 Description: caculate model flops param infer-time fps and throughput
-FilePath     : /ETESVS/tools/caculate_model_complex_info.py
+FilePath     : /SVTAS/tools/data_anlysis/caculate_model_complex_info.py
 '''
 import torch
 import os
@@ -15,7 +15,7 @@ sys.path.append(path)
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
-from model.backbones.i3d import InceptionI3d
+from svtas.model.backbones.video import InceptionI3d
 
 # I3D model param flops caculate
 clip_seg_num = 64

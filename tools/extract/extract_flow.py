@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 13:13:00
+LastEditTime : 2022-10-27 19:14:47
 Description  : Extract flow script
 FilePath     : /SVTAS/tools/extract/extract_flow.py
 '''
@@ -14,18 +14,61 @@ sys.path.append(path)
 import torch
 import numpy as np
 import cv2
-import model.builder as model_builder
+import svtas.model.builder as model_builder
 import argparse
-from utils.logger import get_logger, setup_logger
-from utils.config import Config
+from svtas.utils.logger import get_logger, setup_logger
+from svtas.utils.config import Config
 from tqdm import tqdm
 import decord
-from loader.transform import VideoStreamTransform
+import svtas.loader.builder as dataset_builder
 from PIL import Image
-from utils.flow_vis import make_colorwheel
+from svtas.utils.flow_vis import make_colorwheel
+from svtas.runner.extract_runner import ExtractRunner
 
 @torch.no_grad()
-def extractor(cfg, file_list, outpath, need_visualize):
+def extractor(cfg, args):
+    out_path = os.path.join(args.outpath, "flow")
+    isExists = os.path.exists(out_path)
+    if not isExists:
+        os.makedirs(out_path)
+        print(out_path + ' created successful')
+    logger = get_logger("SVTAS")
+    
+    # construct model
+    model = model_builder.build_model(cfg.FLOW_MODEL).cuda()
+
+    # construct dataloader
+    num_workers = cfg.DATASET.get('num_workers', 0)
+    test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
+    temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
+    video_batch_size = cfg.DATASET.get('video_batch_size', 1)
+
+    assert video_batch_size == 1, "Only support 1 batch size"
+
+    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
+    Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
+    dataset_config = cfg.DATASET.config
+    dataset_config['pipeline'] = Pipeline
+    dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
+    dataset_config['video_batch_size'] = video_batch_size
+    dataloader = torch.utils.data.DataLoader(
+        dataset_builder.build_dataset(dataset_config),
+        batch_size=temporal_clip_batch_size,
+        num_workers=test_num_workers,
+        collate_fn=sliding_concate_fn)
+    
+    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
+
+    runner = ExtractRunner(logger=logger, model=model, post_processing=post_processing, feature_out_path=out_path, logger_interval=cfg.get('logger_interval', 100))
+
+    runner.epoch_init()
+    for i, data in enumerate(dataloader):
+        runner.run_one_iter(data=data)
+    
+    logger.info("Finish all extracting!")
+
+@torch.no_grad()
+def extractor_aaa(cfg, outpath, need_visualize):
     model = model_builder.build_model(cfg.MODEL).cuda()
     transforms = VideoStreamTransform(cfg.TRANSFORM)
     post_transforms = VideoStreamTransform([dict(Clamp = dict(min_val=-20, max_val=20)),
@@ -140,7 +183,6 @@ def extractor(cfg, file_list, outpath, need_visualize):
         
         if need_visualize:
             videoWrite.release()
-        
 
 def parse_args():
     parser = argparse.ArgumentParser("SVTAS extract optical flow script")
@@ -156,41 +198,19 @@ def parse_args():
     parser.add_argument("--need_visualize",
                         action="store_true",
                         help="wheather need optical flow visualization video")
+    parser.add_argument("--need_feature",
+                        action="store_true",
+                        help="wheather need optical flow visualization video")
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(0)
     return args
 
-def parse_file_paths(input_path, dataset_type):
-        if dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:
-            file_ptr = open(input_path, 'r')
-            info = file_ptr.read().split('\n')[:-1]
-            file_ptr.close()
-        elif dataset_type in ['breakfast']:
-            file_ptr = open(input_path, 'r')
-            info = file_ptr.read().split('\n')[:-1]
-            file_ptr.close()
-            refine_info = []
-            for info_name in info:
-                video_ptr = info_name.split('.')[0].split('_')
-                file_name = ''
-                for j in range(2):
-                    if video_ptr[j] == 'stereo01':
-                        video_ptr[j] = 'stereo'
-                    file_name = file_name + video_ptr[j] + '/'
-                file_name = file_name + video_ptr[2] + '_' + video_ptr[3]
-                if 'stereo' in file_name:
-                    file_name = file_name + '_ch0'
-                refine_info.append([info_name, file_name])
-            info = refine_info
-        return info
-        
 def main():
     args = parse_args()
     cfg = Config.fromfile(args.config)
     setup_logger(f"./output/etract_flow", name="SVTAS", level="INFO", tensorboard=False)
-    file_list = parse_file_paths(cfg.DATASET.file_list, cfg.DATASET.dataset_type)
-    extractor(cfg, file_list, args.out_path, args.need_visualize)
+    extractor(cfg, args)
 
 if __name__ == '__main__':
     main()
