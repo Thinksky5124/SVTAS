@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:04:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 10:00:22
+LastEditTime : 2022-10-27 21:06:18
 Description  : MobileViT backbone ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/mobile_vit.py
-FilePath     : /ETESVS/model/backbones/image/mobilevit.py
+FilePath     : /SVTAS/svtas/model/backbones/image/mobilevit.py
 '''
 import torch
 import torch.nn as nn
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

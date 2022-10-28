@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:03:40
+LastEditTime : 2022-10-27 20:43:16
 Description  : Extract video feature script
 FilePath     : /SVTAS/tools/extract/extract_features.py
 '''
@@ -18,7 +18,7 @@ import argparse
 from svtas.utils.config import Config
 from svtas.utils.logger import get_logger, setup_logger
 from mmcv.runner import load_state_dict
-from svtas.runner.extract_runner import ExtractRunner
+from svtas.runner.extract_runner import ExtractFeatureRunner
 
 @torch.no_grad()
 def extractor(cfg, outpath, flow_extract):
@@ -61,7 +61,7 @@ def extractor(cfg, outpath, flow_extract):
     
     post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
 
-    runner = ExtractRunner(logger=logger, model=model, post_processing=post_processing, feature_out_path=out_path, logger_interval=cfg.get('logger_interval', 100))
+    runner = ExtractFeatureRunner(logger=logger, model=model, post_processing=post_processing, out_path=out_path, logger_interval=cfg.get('logger_interval', 100))
 
     runner.epoch_init()
     for i, data in enumerate(dataloader):

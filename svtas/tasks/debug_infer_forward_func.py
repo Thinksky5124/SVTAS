@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-09-24 16:53:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 20:53:48
+LastEditTime : 2022-10-27 20:46:18
 Description  : New Forward Function for infer debugging
-FilePath     : /ETESVS/tasks/debug_infer_forward_func.py
+FilePath     : /SVTAS/svtas/tasks/debug_infer_forward_func.py
 '''
 import torch
-from model.debugger import Debugger
+from ..model.debugger import Debugger
 
 debugger = Debugger()
 

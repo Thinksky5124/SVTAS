@@ -2,17 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 22:37:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:31:25
+LastEditTime : 2022-10-27 21:16:27
 Description  : Raw Frame Segmentation Dataset
-FilePath     : /SVTAS/loader/dataset/item_base_dataset/raw_frame_segmentation_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/raw_frame_segmentation_dataset.py
 '''
 import copy
 import os
 import os.path as osp
 
 import numpy as np
-import torch
-import torch.utils.data as data
 
 from ...builder import DATASET
 from .item_base_dataset import ItemDataset
@@ -51,8 +49,8 @@ class RawFrameSegmentationDataset(ItemDataset):
     def __init__(self,
                  videos_path,
                  **kwargs):
-        super().__init__(**kwargs)
         self.videos_path = videos_path
+        super().__init__(**kwargs)
 
     def load_file(self):
         """Load index file to get video information."""

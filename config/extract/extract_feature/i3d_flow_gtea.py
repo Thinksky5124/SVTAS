@@ -2,13 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:53:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 15:42:20
+LastEditTime : 2022-10-28 10:48:46
 Description  : I3D Extractor Config
-FilePath     : /SVTAS/config/extract_feature/i3d_flow_gtea.py
+FilePath     : /SVTAS/config/extract/extract_feature/i3d_flow_gtea.py
 '''
 
 _base_ = [
-    '../../_base_/collater/stream_compose.py'
+    '../../_base_/collater/stream_compose.py', '../../_base_/models/action_recognition/i3d.py',
+    '../../_base_/dataset/gtea_video.py'
 ]
 
 sample_rate = 1
@@ -17,22 +18,12 @@ sliding_window = 1
 clip_seg_num = 64
 
 MODEL = dict(
-    architecture = "Recognition3D",
     backbone = dict(
-        name = "I3D",
         pretrained = "./data/i3d_flow.pt",
         in_channels = 2
     ),
-    neck = None,
     head = dict(
-        name = "FeatureExtractHead",
-        in_channels = 1024,
-        input_seg_num = 8,
-        output_seg_num = 1,
         sample_rate = sample_rate,
-        pool_space = True,
-        in_format = "N,C,T,H,W",
-        out_format = "NCT"
     ),
     loss = None
 )
@@ -50,17 +41,8 @@ DATASET = dict(
     video_batch_size = 4,
     num_workers = 2,
     config = dict(
-        name = "RawFrameStreamSegmentationDataset",
-        data_prefix = "./",
-        file_path = "./data/gtea/splits/all_files.txt",
         videos_path = "./data/gtea/flow",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
-        train_mode = False,
-        sliding_window = sliding_window,
-        clip_seg_num = clip_seg_num,
-        sample_rate = sample_rate
+        sliding_window = sliding_window
     )
 )
 

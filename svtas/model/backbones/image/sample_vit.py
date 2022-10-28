@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 14:52:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-24 14:55:23
+LastEditTime : 2022-10-27 21:06:30
 Description  : Sample ViT ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/simple_vit.py
-FilePath     : /SVTAS/model/backbones/image/sample_vit.py
+FilePath     : /SVTAS/svtas/model/backbones/image/sample_vit.py
 '''
 import torch
 from torch import nn
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

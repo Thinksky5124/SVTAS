@@ -2,15 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:22:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-17 15:44:15
+LastEditTime : 2022-10-27 21:05:10
 Description  : Stream Segmentation 2D without backbone loss
-FilePath     : /SVTAS/model/architectures/segmentation/stream_segmentation2d.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_segmentation2d.py
 '''
 import torch
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
-
-from utils.logger import get_logger
 
 from ...builder import build_backbone
 from ...builder import build_neck

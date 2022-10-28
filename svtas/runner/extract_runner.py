@@ -2,10 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:01:34
+LastEditTime : 2022-10-28 10:04:13
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
+from abc import abstractclassmethod
+import cv2
 import numpy as np
 import os
 import torch
@@ -15,12 +17,12 @@ class ExtractRunner():
                  logger,
                  model,
                  post_processing,
-                 feature_out_path,
+                 out_path,
                  logger_interval=10):
         self.model = model
         self.logger = logger
         self.post_processing = post_processing
-        self.feature_out_path = feature_out_path
+        self.out_path = out_path
         self.logger_interval = logger_interval
     
     def epoch_init(self):
@@ -29,20 +31,26 @@ class ExtractRunner():
         self.current_step = 0
         self.current_step_vid_list = None
         self.model.eval()
+        self.init_file_dir()
+    
+    @abstractclassmethod
+    def init_file_dir(self):
+        pass
+    
+    @abstractclassmethod
+    def duil_will_end_extract(self, extract_output, current_vid_list):
+        raise NotImplementedError()
     
     @torch.no_grad()
     def batch_end_step(self, sliding_num, vid_list, step):
-
+        self.model._clear_memory_buffer()
         # get extract feature
-        extract_feature_list = self.post_processing.output()
+        extract_output = self.post_processing.output()
         
         # save feature file
-        current_vid_list = self.current_step_vid_list
-        for extract_feature, vid in zip(extract_feature_list, current_vid_list):
-            feature_save_path = os.path.join(self.feature_out_path, vid + ".npy")
-            np.save(feature_save_path, extract_feature)
+        self.duil_will_end_extract(extract_output, self.current_step_vid_list)
 
-        self.logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(current_vid_list))
+        self.logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(self.current_step_vid_list))
         self.current_step_vid_list = vid_list
         
         if len(self.current_step_vid_list) > 0:
@@ -98,3 +106,50 @@ class ExtractRunner():
 
             if idx >= 0: 
                 self.run_one_clip(sliding_seg)
+
+class ExtractFeatureRunner(ExtractRunner):
+
+    def init_file_dir(self):
+        pass
+
+    def duil_will_end_extract(self, extract_output, current_vid_list):
+        for extract_feature, vid in zip(extract_output, current_vid_list):
+            feature_save_path = os.path.join(self.out_path, vid + ".npy")
+            np.save(feature_save_path, extract_feature)
+
+class ExtractOpticalFlowRunner(ExtractRunner):
+
+    def init_file_dir(self):
+        self.flow_out_path = os.path.join(self.out_path, "flow")
+        isExists = os.path.exists(self.flow_out_path)
+        if not isExists:
+            os.makedirs(self.flow_out_path)
+            print(self.flow_out_path + ' created successful')
+
+        if self.post_processing.need_visualize:
+            self.video_out_path = os.path.join(self.out_path, "flow_video")
+            isExists = os.path.exists(self.video_out_path)
+            if not isExists:
+                os.makedirs(self.video_out_path)
+                print(self.video_out_path + ' created successful')
+
+    def duil_will_end_extract(self, extract_output, current_vid_list):
+        if len(extract_output) > 1:
+            flow_imgs_list, flow_visual_imgs_list, fps = extract_output
+            for extract_flow, flow_visual_imgs, vid in zip(flow_imgs_list, flow_visual_imgs_list, current_vid_list):
+                optical_flow_save_path = os.path.join(self.flow_out_path, vid + ".npy")
+                np.save(optical_flow_save_path, extract_flow)
+
+                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                flow_video_path = os.path.join(self.video_out_path, vid + '.mp4')
+                videoWrite = cv2.VideoWriter(flow_video_path, fourcc, fps, (flow_visual_imgs.shape[-2], flow_visual_imgs.shape[-3]))
+
+                for flow_img in flow_visual_imgs:
+                    videoWrite.write(flow_img)
+                
+                videoWrite.release()
+                
+        else:
+            for extract_flow, vid in zip(extract_output, current_vid_list):
+                optical_flow_save_path = os.path.join(self.flow_out_path, vid + ".npy")
+                np.save(optical_flow_save_path, extract_flow)

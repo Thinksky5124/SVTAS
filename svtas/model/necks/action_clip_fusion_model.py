@@ -14,7 +14,7 @@ import torch
 from torch import nn
 from collections import OrderedDict
 
-from utils.logger import get_logger
+from ...utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ..builder import NECKS
 

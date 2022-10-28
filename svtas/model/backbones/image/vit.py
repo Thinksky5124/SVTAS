@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:02:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 10:00:06
+LastEditTime : 2022-10-27 21:06:48
 Description  : ViT backbone ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
-FilePath     : /ETESVS/model/backbones/image/vit.py
+FilePath     : /SVTAS/svtas/model/backbones/image/vit.py
 '''
 
 import torch
 from torch import nn
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

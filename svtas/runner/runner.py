@@ -2,16 +2,16 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:11:06
+LastEditTime : 2022-10-27 20:54:03
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
 import torch
 import time
-from utils.logger import log_batch
+from ..utils.logger import log_batch
 import torch.distributed as dist
 
-from utils.logger import get_logger
+from ..utils.logger import get_logger
 
 
 try:

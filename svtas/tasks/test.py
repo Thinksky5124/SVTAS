@@ -2,24 +2,27 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:11:27
+LastEditTime : 2022-10-27 20:50:58
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
 import torch
-from utils.logger import get_logger
+from ..utils.logger import get_logger
 from runner.runner import Runner
 from utils.recorder import build_recod
 import time
 import numpy as np
 
-import model.builder as model_builder
-import loader.builder as dataset_builder
-import metric.builder as metric_builder
+from ..model.builder import build_model
+from ..model.builder import build_loss
+from ..loader.builder import build_dataset
+from ..loader.builder import build_pipline
+from ..metric.builder import build_metric
+from ..model.builder import build_post_precessing
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
-from utils.collect_env import collect_env
+from ..utils.collect_env import collect_env
 
 try:
     from apex import amp
@@ -53,8 +56,8 @@ def test(cfg,
     if local_rank < 0:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 1.construct model
-        model = model_builder.build_model(cfg.MODEL).to(device)
-        criterion = model_builder.build_loss(cfg.MODEL.loss).to(device)
+        model = build_model(cfg.MODEL).to(device)
+        criterion = build_loss(cfg.MODEL.loss).to(device)
 
         # wheather to use amp
         if use_amp is True:
@@ -63,8 +66,8 @@ def test(cfg,
         torch.cuda.set_device(local_rank)
         torch.distributed.init_process_group(backend='nccl')
         # 1.construct model
-        model = model_builder.build_model(cfg.MODEL).cuda(local_rank)
-        criterion = model_builder.build_loss(cfg.MODEL.loss).cuda(local_rank)
+        model = build_model(cfg.MODEL).cuda(local_rank)
+        criterion = build_loss(cfg.MODEL.loss).cuda(local_rank)
 
         device = torch.device('cuda:{}'.format(local_rank))
     
@@ -86,8 +89,8 @@ def test(cfg,
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
-    test_Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.test)
+    sliding_concate_fn = build_pipline(cfg.COLLATE)
+    test_Pipeline = build_pipline(cfg.PIPELINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_Pipeline
     test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -95,7 +98,7 @@ def test(cfg,
     test_dataset_config['local_rank'] = local_rank
     test_dataset_config['nprocs'] = nprocs
     test_dataloader = torch.utils.data.DataLoader(
-        dataset_builder.build_dataset(test_dataset_config),
+        build_dataset(test_dataset_config),
         batch_size=temporal_clip_batch_size,
         num_workers=test_num_workers,
         collate_fn=sliding_concate_fn)
@@ -118,11 +121,11 @@ def test(cfg,
         amp.load_state_dict(checkpoint['amp'])
 
     # add params to metrics
-    Metric = metric_builder.build_metric(cfg.METRIC)
+    Metric = build_metric(cfg.METRIC)
     
     record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
 
-    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
+    post_processing = build_post_precessing(cfg.POSTPRECESSING)
 
     runner = Runner(logger=logger,
                 video_batch_size=video_batch_size,

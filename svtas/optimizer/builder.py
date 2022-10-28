@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:12:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:10:53
+LastEditTime : 2022-10-27 20:54:19
 Description  : optimizer and learning rate scheduler builder
 FilePath     : /SVTAS/svtas/optimizer/builder.py
 '''
-from utils.build import Registry
-from utils.build import build
+from ..utils.build import Registry
+from ..utils.build import build
 
 OPTIMIZER = Registry('optimizer')
 LRSCHEDULER = Registry('lr_scheduler')

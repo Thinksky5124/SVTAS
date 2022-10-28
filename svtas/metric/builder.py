@@ -2,12 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-04-27 15:27:42
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:09:37
+LastEditTime : 2022-10-27 21:04:10
 Description: metric builder
-FilePath     : /ETESVS/metric/builder.py
+FilePath     : /SVTAS/svtas/metric/builder.py
 '''
-from utils.build import Registry
-from utils.build import build
+from ..utils.build import Registry
+from ..utils.build import build
 
 METRIC = Registry('metric')
 

@@ -8,9 +8,6 @@ FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation3d_wi
 '''
 import torch
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
-
-from utils.logger import get_logger
 
 from ...builder import build_backbone
 from ...builder import build_neck

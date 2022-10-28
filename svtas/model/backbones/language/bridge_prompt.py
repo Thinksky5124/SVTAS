@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-06-14 15:27:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:59:57
+LastEditTime : 2022-10-27 21:06:57
 Description  : Bridge-Prompt: Towards Ordinal Action Understanding in Instructional Videos ref:https://github.com/ttlmh/Bridge-Prompt
-FilePath     : /ETESVS/model/backbones/language/bridge_prompt.py
+FilePath     : /SVTAS/svtas/model/backbones/language/bridge_prompt.py
 '''
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import numpy as np
 from mmcv.runner import load_checkpoint
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from ...builder import BACKBONES
 # from clip import clip
 from ..utils.clip import LayerNorm

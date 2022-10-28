@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-24 22:56:49
+LastEditTime : 2022-10-27 21:13:37
 Description  : Transform module
-FilePath     : /SVTAS/loader/transform/transform.py
+FilePath     : /SVTAS/svtas/loader/transform/transform.py
 '''
 import numpy as np
 import torch
 import copy
 import torchvision.transforms as transforms
-import loader.transform.transform_fn as custom_transforms
+from . import transform_fn as custom_transforms
 from ..builder import TRANSFORM
 
 @TRANSFORM.register()

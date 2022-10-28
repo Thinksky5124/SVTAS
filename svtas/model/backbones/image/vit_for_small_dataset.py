@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-10-22 21:25:42
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-22 21:33:45
+LastEditTime : 2022-10-27 21:06:40
 Description  : ViT for small dataset ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit_for_small_dataset.py
-FilePath     : /SVTAS/model/backbones/image/vit_for_small_dataset.py
+FilePath     : /SVTAS/svtas/model/backbones/image/vit_for_small_dataset.py
 '''
 from math import sqrt
 import torch
 import torch.nn.functional as F
 from torch import nn
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

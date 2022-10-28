@@ -2,12 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:19:48
+LastEditTime : 2022-10-27 20:55:37
 Description  : Collect function
-FilePath     : /SVTAS/loader/pipline/collect_fn.py
+FilePath     : /SVTAS/svtas/loader/pipline/collect_fn.py
 '''
 import copy
-import re
 
 import torch
 

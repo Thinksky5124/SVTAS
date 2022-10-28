@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:13:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:31:28
+LastEditTime : 2022-10-27 21:16:36
 Description: feature dataset class
-FilePath     : /SVTAS/loader/dataset/stream_base_dataset/feature_stream_segmentation_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/feature_stream_segmentation_dataset.py
 '''
 
 import copy
@@ -25,10 +25,10 @@ class FeatureStreamSegmentationDataset(StreamDataset):
                  sliding_window=60,
                  flow_feature_path=None,
                  **kwargs):
-        super().__init__(**kwargs)
         self.flow_feature_path = flow_feature_path
         self.feature_path = feature_path
         self.sliding_window = sliding_window
+        super().__init__(**kwargs)
     
     def parse_file_paths(self, input_path):
         if self.dataset_type in ['gtea', '50salads', 'breakfast', 'thumos14']:

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:03:04
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:59:31
+LastEditTime : 2022-10-27 21:07:15
 Description  : Transducer TextEncoder ref:https://github.com/upskyy/Transformer-Transducer/blob/main/transformer_transducer/label_encoder.py
-FilePath     : /ETESVS/model/backbones/language/transducer_text_encoder.py
+FilePath     : /SVTAS/svtas/model/backbones/language/transducer_text_encoder.py
 '''
 from typing import Tuple
 from torch import Tensor
@@ -12,8 +12,7 @@ from ..utils.transducer import get_attn_pad_mask, PositionalEncoding, EncoderLay
 import torch
 import torch.nn as nn
 import numpy as np
-
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-24 16:46:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:10:40
+LastEditTime : 2022-10-27 20:45:30
 Description  : Debugger Class for Infer debugging
 FilePath     : /SVTAS/svtas/model/debugger.py
 '''
@@ -10,7 +10,7 @@ import torch
 import onnx 
 import onnxruntime 
 import numpy as np
-from utils.logger import get_logger
+from ..utils.logger import get_logger
  
 class DebugOp(torch.autograd.Function): 
     @staticmethod 

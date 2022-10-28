@@ -22,7 +22,7 @@ from mmcv.cnn import ConvModule, constant_init, kaiming_init
 from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import _BatchNorm
 from torch.utils import checkpoint as cp
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 
 from ...builder import BACKBONES
 

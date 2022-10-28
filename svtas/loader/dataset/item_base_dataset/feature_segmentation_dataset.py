@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 15:43:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:31:08
+LastEditTime : 2022-10-27 21:16:11
 Description  : feature dataset class
-FilePath     : /SVTAS/loader/dataset/item_base_dataset/feature_segmentation_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/feature_segmentation_dataset.py
 '''
 import copy
 import os
@@ -24,9 +24,9 @@ class FeatureSegmentationDataset(ItemDataset):
                  flow_feature_path=None,
                  **kwargs,
                  ) -> None:
-        super().__init__(**kwargs)
         self.flow_feature_path = flow_feature_path
         self.feature_path = feature_path
+        super().__init__(**kwargs)
     
     def load_file(self):
         """Load index file to get video information."""

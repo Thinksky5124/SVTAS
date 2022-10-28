@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:02:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 10:00:46
+LastEditTime : 2022-10-27 21:05:30
 Description  : Transducer AudioEncoder ref:https://github.com/upskyy/Transformer-Transducer/blob/main/transformer_transducer/audio_encoder.py
-FilePath     : /ETESVS/model/backbones/audio/transudcer_audio_encoder.py
+FilePath     : /SVTAS/svtas/model/backbones/audio/transudcer_audio_encoder.py
 '''
 from typing import Tuple
 from torch import Tensor
@@ -12,7 +12,7 @@ from ..utils.transducer import get_attn_pad_mask, PositionalEncoding, EncoderLay
 import torch
 import torch.nn as nn
 
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

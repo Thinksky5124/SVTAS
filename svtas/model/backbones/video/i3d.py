@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 19:47:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-24 16:07:12
+LastEditTime : 2022-10-27 21:08:07
 Description  : I3D ref:https://github.com/v-iashin/video_features
-FilePath     : /SVTAS/model/backbones/video/i3d.py
+FilePath     : /SVTAS/svtas/model/backbones/video/i3d.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.runner import load_checkpoint
 
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from ...builder import BACKBONES
 
 

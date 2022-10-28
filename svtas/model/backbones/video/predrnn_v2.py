@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from ..utils.stlstm import SpatioTemporalLSTMCell
 import torch.nn.functional as F
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:57:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-26 20:43:45
+LastEditTime : 2022-10-27 21:04:29
 Description  : CLIP achitectures
-FilePath     : /SVTAS/model/architectures/recognition/action_clip.py
+FilePath     : /SVTAS/svtas/model/architectures/recognition/action_clip.py
 '''
 import torch
 import torch.nn as nn
@@ -14,7 +14,7 @@ from mmcv.runner import load_state_dict
 from collections import OrderedDict
 import re
 
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 
 from ...builder import build_backbone
 from ...builder import build_neck

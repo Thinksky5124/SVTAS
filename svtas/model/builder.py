@@ -2,12 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:16:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:10:34
+LastEditTime : 2022-10-27 20:45:15
 Description: registry and builder model
 FilePath     : /SVTAS/svtas/model/builder.py
 '''
-from utils.build import Registry
-from utils.build import build
+from ..utils.build import Registry
+from ..utils.build import build
 
 BACKBONES = Registry('backbone')
 NECKS = Registry('neck')

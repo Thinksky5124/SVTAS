@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 13:44:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 10:00:32
+LastEditTime : 2022-10-27 21:05:56
 Description  : RAFT ref:https://github.com/princeton-vl/RAFT
-FilePath     : /ETESVS/model/backbones/flow/raft.py
+FilePath     : /SVTAS/svtas/model/backbones/flow/raft.py
 '''
 '''
     Reference: https://github.com/princeton-vl/RAFT/tree/25eb2ac723c36865c636c9d1f497af8023981868
@@ -21,7 +21,7 @@ from ..utils.raft.corr import CorrBlock, AlternateCorrBlock
 from ..utils.raft.utils import bilinear_sampler, coords_grid, upflow8
 
 from mmcv.runner import load_checkpoint
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from ...builder import BACKBONES
 
 try:

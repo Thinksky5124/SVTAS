@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:11:12
+LastEditTime : 2022-10-27 20:49:56
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
 import torch
-from utils.logger import get_logger
+from ..utils.logger import get_logger
 from ..runner.infer_runner import InferONNXRunner 
-from utils.logger import AverageMeter
+from ..utils.logger import AverageMeter
 from .debug_infer_forward_func import infer_forward, debugger
 import time
 import numpy as np
@@ -18,10 +18,12 @@ import onnxruntime
 import os
 from types import MethodType 
 
-import model.builder as model_builder
-import loader.builder as dataset_builder
-import metric.builder as metric_builder
-from utils.collect_env import collect_env
+from ..model.builder import build_model
+from ..loader.builder import build_dataset
+from ..loader.builder import build_pipline
+from ..metric.builder import build_metric
+from ..model.builder import build_post_precessing
+from ..utils.collect_env import collect_env
 
 def infer(cfg,
           args,
@@ -51,7 +53,7 @@ def infer(cfg,
     # 1. Construct model.
     if local_rank < 0:
         # 1.construct model
-        model = model_builder.build_model(cfg.MODEL).to(device)
+        model = build_model(cfg.MODEL).to(device)
 
     # wheather batch train
     batch_train = False
@@ -65,8 +67,8 @@ def infer(cfg,
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     assert video_batch_size == 1, "Only Support video_batch_size equal to 1!"
-    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
-    infer_Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.infer)
+    sliding_concate_fn = build_pipline(cfg.COLLATE)
+    infer_Pipeline = build_pipline(cfg.PIPELINE.infer)
     infer_dataset_config = cfg.DATASET.infer
     infer_dataset_config['pipeline'] = infer_Pipeline
     infer_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -74,7 +76,7 @@ def infer(cfg,
     infer_dataset_config['local_rank'] = local_rank
     infer_dataset_config['nprocs'] = nprocs
     infer_dataloader = torch.utils.data.DataLoader(
-        dataset_builder.build_dataset(infer_dataset_config),
+        build_dataset(infer_dataset_config),
         batch_size=temporal_clip_batch_size,
         num_workers=infer_num_workers,
         collate_fn=sliding_concate_fn)
@@ -120,12 +122,12 @@ def infer(cfg,
         dummy_input = input_constructor(input_shape)
 
     # add params to metrics
-    Metric = metric_builder.build_metric(cfg.METRIC)
+    Metric = build_metric(cfg.METRIC)
     
     record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                     'reader_time': AverageMeter('reader_time', '.5f')}
 
-    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
+    post_processing = build_post_precessing(cfg.POSTPRECESSING)
 
     if cfg.INFER.infer_engine.name == "onnx":
         if validate is True:

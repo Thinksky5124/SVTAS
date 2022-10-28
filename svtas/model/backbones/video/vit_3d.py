@@ -8,7 +8,7 @@ FilePath     : /SVTAS/model/backbones/video/vit_3d.py
 '''
 import torch
 from torch import nn
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 

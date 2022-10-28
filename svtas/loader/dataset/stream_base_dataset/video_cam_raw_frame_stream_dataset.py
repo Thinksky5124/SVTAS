@@ -2,17 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 11:11:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:31:41
+LastEditTime : 2022-10-27 20:55:21
 Description  : Video CAM dataset class
-FilePath     : /SVTAS/loader/dataset/stream_base_dataset/video_cam_raw_frame_stream_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/video_cam_raw_frame_stream_dataset.py
 '''
 import copy
-import os
-import os.path as osp
 
 import numpy as np
 import torch
-import torch.utils.data as data
 
 from ...builder import DATASET
 from .raw_frame_stream_segmentation_dataset import \

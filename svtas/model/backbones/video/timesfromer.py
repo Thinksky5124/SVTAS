@@ -17,7 +17,7 @@ from mmcv.cnn.utils.weight_init import trunc_normal_
 from mmcv.runner import _load_checkpoint, load_checkpoint
 from torch.nn.modules.utils import _pair
 
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from ...builder import BACKBONES
 
 

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 10:00:26
+LastEditTime : 2022-10-27 20:44:15
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
-FilePath     : /ETESVS/model/backbones/image/mobilenet_v2.py
+FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v2.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
@@ -13,7 +13,7 @@ from mmcv.cnn import ConvModule, constant_init, kaiming_init
 from mmcv.runner import load_checkpoint
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 
 from ...builder import BACKBONES
 

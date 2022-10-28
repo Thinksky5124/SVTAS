@@ -2,13 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:53:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:21:41
+LastEditTime : 2022-10-28 10:44:39
 Description  : I3D Extractor Config
 FilePath     : /SVTAS/config/extract/extract_feature/i3d_rgb_gtea.py
 '''
 
 _base_ = [
     '../../_base_/collater/stream_compose.py', '../../_base_/models/action_recognition/i3d.py',
+    '../../_base_/dataset/gtea_video.py'
 ]
 
 sample_rate = 1
@@ -32,9 +33,7 @@ POSTPRECESSING = dict(
 
 DATASET = dict(
     config = dict(
-        sliding_window = sliding_window,
-        clip_seg_num = clip_seg_num,
-        sample_rate = sample_rate
+        sliding_window = sliding_window
     )
 )
 

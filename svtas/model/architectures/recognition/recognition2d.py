@@ -2,16 +2,16 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-12 15:50:30
+LastEditTime : 2022-10-27 21:04:42
 Description: Action Recognition 2D framework
-FilePath     : /ETESVS/model/architectures/recognition/recognition2d.py
+FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition2d.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.runner import load_checkpoint
 
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 
 from ...builder import build_backbone
 from ...builder import build_neck

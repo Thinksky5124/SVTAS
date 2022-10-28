@@ -2,12 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-04-27 15:27:42
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 15:25:12
+LastEditTime : 2022-10-27 21:03:45
 Description: dataset builder
-FilePath     : /ETESVS/loader/builder.py
+FilePath     : /SVTAS/svtas/loader/builder.py
 '''
-from utils.build import Registry
-from utils.build import build
+from ..utils.build import Registry
+from ..utils.build import build
 
 DATASET = Registry('dataset')
 PIPLINE = Registry('pipline')

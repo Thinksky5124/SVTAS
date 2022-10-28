@@ -2,11 +2,11 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-12 15:37:30
+LastEditTime : 2022-10-27 20:45:53
 Description: recorder construct function
-FilePath     : /ETESVS/utils/recorder.py
+FilePath     : /SVTAS/svtas/utils/recorder.py
 '''
-from utils.logger import AverageMeter
+from .logger import AverageMeter
 
 def build_recod(architecture_type, mode):
     assert mode in ["train", "validation", "test"]

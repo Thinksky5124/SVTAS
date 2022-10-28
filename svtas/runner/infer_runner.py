@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-09-24 14:59:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:11:01
+LastEditTime : 2022-10-27 20:53:54
 Description  : Infer Runner Class
 FilePath     : /SVTAS/svtas/runner/infer_runner.py
 '''
 import torch
 import time
-from utils.logger import log_batch
+from ..utils.logger import log_batch
 
-from utils.logger import get_logger
+from ..utils.logger import get_logger
 import numpy as np
 from .runner import Runner
 

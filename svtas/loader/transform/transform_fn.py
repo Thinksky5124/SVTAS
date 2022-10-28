@@ -2,17 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 20:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 14:51:00
+LastEditTime : 2022-10-27 20:55:52
 Description  : Transform Class Function
-FilePath     : /SVTAS/loader/transform/transform_fn.py
+FilePath     : /SVTAS/svtas/loader/transform/transform_fn.py
 '''
 import torch
 from typing import Iterable
-import numpy as np
-import cv2
 from PIL import Image
-import random
-import mmcv
 
 __all__ = [
     "FeatureToTensor",

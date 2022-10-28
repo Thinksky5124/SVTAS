@@ -15,7 +15,7 @@ try:
     from spatial_correlation_sampler import SpatialCorrelationSampler
 except:
     print("Can't not use FastFlowNet")
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from ...builder import BACKBONES
 
 class Correlation(nn.Module):

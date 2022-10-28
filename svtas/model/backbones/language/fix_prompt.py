@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:59:49
+LastEditTime : 2022-10-27 21:07:01
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
-FilePath     : /ETESVS/model/backbones/language/fix_prompt.py
+FilePath     : /SVTAS/svtas/model/backbones/language/fix_prompt.py
 '''
 import torch
 import torch.nn as nn
 import random
 from mmcv.runner import load_checkpoint
 from torch.nn import functional as F
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from torch.nn.utils.rnn import pad_sequence
 from num2words import num2words
 

@@ -7,7 +7,7 @@ Description  : ImageCLIP ref:https://github.com/openai/CLIP/blob/main/clip/model
 FilePath     : /SVTAS/model/backbones/image/clip.py
 '''
 
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
 from einops import rearrange

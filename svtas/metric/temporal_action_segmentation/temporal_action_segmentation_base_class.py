@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:11:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 14:48:36
+LastEditTime : 2022-10-27 21:03:58
 Description  : Temporal action segmentation base class
-FilePath     : /ETESVS/metric/temporal_action_segmentation/temporal_action_segmentation_base_class.py
+FilePath     : /SVTAS/svtas/metric/temporal_action_segmentation/temporal_action_segmentation_base_class.py
 '''
 import os
 import numpy as np
 import pandas as pd
 from ..base_metric import BaseMetric
-from utils.config import get_logger
+from ...utils.config import get_logger
 from ..builder import METRIC
 
 from .temporal_action_segmentation_metric_utils import get_labels_scores_start_end_time, get_labels_start_end_time

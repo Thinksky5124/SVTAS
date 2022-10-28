@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:55:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 21:12:51
+LastEditTime : 2022-10-27 21:06:36
 Description  : Swin Transformer V2 model ref:https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer_v2.py
-FilePath     : /ETESVS/model/backbones/image/swin_v2_transformer.py
+FilePath     : /SVTAS/svtas/model/backbones/image/swin_v2_transformer.py
 '''
 # --------------------------------------------------------
 # Swin Transformer V2
@@ -20,7 +20,7 @@ import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import numpy as np
 from mmcv.runner import load_checkpoint
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from ...builder import BACKBONES
 
 

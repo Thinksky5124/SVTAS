@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:31:31
+LastEditTime : 2022-10-27 21:16:00
 Description: dataset class
-FilePath     : /SVTAS/loader/dataset/stream_base_dataset/raw_frame_stream_segmentation_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_stream_segmentation_dataset.py
 '''
 import copy
 import os
@@ -12,7 +12,6 @@ import os.path as osp
 
 import numpy as np
 import torch
-import torch.utils.data as data
 
 from ...builder import DATASET
 from .stream_base_dataset import StreamDataset
@@ -52,9 +51,9 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
                  videos_path,
                  sliding_window=60,
                  **kwargs):
-        super().__init__(**kwargs)
         self.videos_path = videos_path
         self.sliding_window = sliding_window
+        super().__init__(**kwargs)
 
     def parse_file_paths(self, input_path):
         if self.dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:

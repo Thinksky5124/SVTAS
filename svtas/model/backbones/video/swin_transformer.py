@@ -14,7 +14,7 @@ import numpy as np
 from timm.models.layers import DropPath, trunc_normal_
 
 from mmcv.runner import load_checkpoint
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from ...builder import BACKBONES
 
 from functools import reduce, lru_cache

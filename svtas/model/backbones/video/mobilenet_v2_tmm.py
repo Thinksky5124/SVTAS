@@ -2,16 +2,16 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:02:02
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:59:13
+LastEditTime : 2022-10-27 21:08:13
 Description: MobileNet V2 temporal memory module
-FilePath     : /ETESVS/model/backbones/video/mobilenet_v2_tmm.py
+FilePath     : /SVTAS/svtas/model/backbones/video/mobilenet_v2_tmm.py
 '''
 import torch
 import torch.nn as nn
 from mmcv.cnn import constant_init, kaiming_init
 from mmcv.runner import load_checkpoint
 from torch.nn.modules.batchnorm import _BatchNorm
-from utils.logger import get_logger
+from ....utils.logger import get_logger
 from mmcv.cnn import ConvModule
 from .mobilenet_v2_tsm import MobileNetV2TSM
 from ...builder import BACKBONES

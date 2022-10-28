@@ -2,15 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:51:42
+LastEditTime : 2022-10-27 21:04:55
 Description  : Multi Modality stream segmentation
-FilePath     : /ETESVS/model/architectures/multi_modality_stream_segmentation.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/multi_modality_stream_segmentation.py
 '''
 import torch
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
-
-from utils.logger import get_logger
 
 from ...builder import build_backbone
 from ...builder import build_neck
