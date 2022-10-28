@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 10:59:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 14:13:26
+LastEditTime : 2022-10-28 15:00:18
 Description  : ViT
 FilePath     : /SVTAS/config/_base_/models/image_classification/vit.py
 '''
 MODEL = dict(
     architecture = "Recognition2D",
     backbone = dict(
-        name = "SLViT",
+        name = "ViT",
         image_size = 224,
         patch_size = 32,
         depth = 4,

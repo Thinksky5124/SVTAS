@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 10:19:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 10:41:07
+LastEditTime : 2022-10-28 15:06:02
 Description  : Adan Optimizer ref:https://github.com/sail-sg/Adan
-FilePath     : /SVTAS/optimizer/adan_optimizer.py
+FilePath     : /SVTAS/svtas/optimizer/adan_optimizer.py
 '''
 """ Adan Optimizer
 Adan: Adaptive Nesterov Momentum Algorithm for Faster Optimizing Deep Models[J]. arXiv preprint arXiv:2208.06677, 2022.
@@ -56,7 +56,7 @@ class AdanOptimizer(Optimizer):
         if not 0.0 <= betas[2] < 1.0:
             raise ValueError("Invalid beta parameter at index 2: {}".format(betas[2]))
         defaults = dict(lr=learning_rate, betas=betas, eps=eps, weight_decay=weight_decay, no_prox=no_prox)
-        super(Adan, self).__init__(filter(lambda p: p.requires_grad, model.parameters()), defaults)
+        super(AdanOptimizer, self).__init__(filter(lambda p: p.requires_grad, model.parameters()), defaults)
 
     @torch.no_grad()
     def restart_opt(self):
