@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 11:10:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 11:24:02
+LastEditTime : 2022-10-28 14:36:45
 Description  : LiteFlowNet Config
-FilePath     : /SVTAS/config/extract_flow/liteflow_gtea.py
+FilePath     : /SVTAS/config/extract/extract_flow/liteflow_gtea.py
 '''
 MODEL = dict(
     architecture = "OpticalFlowEstimation",
@@ -16,11 +16,18 @@ MODEL = dict(
 )
 
 DATASET = dict(
-    video_path = "./data/gtea/Videos",
-    file_list = "./data/gtea/splits/all_files.txt",
-    dataset_type = "gtea",
-    num_segments = 32,
-    fps = 15
+    video_batch_size = 1,
+    config = dict(
+        name = "RawFrameStreamSegmentationDataset",
+        data_prefix = "./",
+        file_path = "./data/gtea/splits/all_files.txt",
+        videos_path = "./data/gtea/Videos",
+        gt_path = "./data/gtea/groundTruth",
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        dataset_type = "gtea",
+        train_mode = False,
+        sliding_window = 64
+    )
 )
 
 TRANSFORM = [

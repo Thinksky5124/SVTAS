@@ -2,14 +2,14 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:50:58
+LastEditTime : 2022-10-28 14:04:30
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
 import torch
 from ..utils.logger import get_logger
-from runner.runner import Runner
-from utils.recorder import build_recod
+from ..runner.runner import Runner
+from ..utils.recorder import build_recod
 import time
 import numpy as np
 

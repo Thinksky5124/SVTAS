@@ -14,9 +14,9 @@ Switch `--validate` on to validating while training.
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
-python -m paddle.distributed.launch \
+python -m torch.distributed.launch \
     --nproc_per_node=4 \
-    main.py \
+    tools/launch.py \
     --m train \
     --launcher pytorch \
     --validate \
@@ -27,7 +27,7 @@ python -m paddle.distributed.launch \
 ```bash
 export CUDA_VISIBLE_DEVICES=0
 
-python main.py \
+python tools/launch.py \
     --mode train \
     --validate \
     -c CONFIG_PATH \
@@ -39,7 +39,7 @@ Indicating `-c` to set configuration, and one can flexible add `-o` in the scrip
 ```bash
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
-    main.py \
+    tools/launch.py \
     --m train \
     --launcher pytorch \
     --validate \
@@ -78,7 +78,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
-    main.py \
+    tools/launch.py \
     --m train \
     --launcher pytorch \
     --validate \
@@ -97,7 +97,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
-    main.py \
+    tools/launch.py \
     --m train \
     --launcher pytorch \
     --validate \
@@ -117,12 +117,12 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 python -m paddle.distributed.launch \
     --nproc_per_node=4 \
-    main.py \
+    tools/launch.py \
     --m test \
     --launcher pytorch \
     --test \
     -c CONFIG_PATH \
-    main.py \
+    example.py \
     -c ./configs/example.yaml \
     --weights=./output/example/path_to_weights
 ```

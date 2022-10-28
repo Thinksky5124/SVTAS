@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 11:09:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 10:04:40
+LastEditTime : 2022-10-28 14:36:18
 Description  : RAFT extract flow Config
 FilePath     : /SVTAS/config/extract/extract_flow/raft_gtea.py
 '''
 _base_ = [
     '../../_base_/collater/stream_compose.py', '../../_base_/models/optical_flow_estimate/raft.py',
-    '../../_base_/dataset/gtea_video.py'
+    '../../_base_/dataset/gtea/gtea_video.py'
 ]
 sliding_window = 32
 clip_seg_num = 32
@@ -17,7 +17,15 @@ sample_rate = 1
 DATASET = dict(
     video_batch_size = 1,
     config = dict(
-        sliding_window = sliding_window
+        name = "RawFrameStreamSegmentationDataset",
+        data_prefix = "./",
+        file_path = "./data/gtea/splits/all_files.txt",
+        videos_path = "./data/gtea/Videos",
+        gt_path = "./data/gtea/groundTruth",
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        dataset_type = "gtea",
+        train_mode = False,
+        sliding_window = 64
     )
 )
 

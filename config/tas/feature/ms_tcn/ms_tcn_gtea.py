@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:22:12
+LastEditTime : 2022-10-28 14:31:00
 Description  : file content
-FilePath     : /SVTAS/config/tas/ms_tcn/ms_tcn_gtea_split1.py
+FilePath     : /SVTAS/config/tas/feature/ms_tcn/ms_tcn_gtea.py
 '''
 
 _base_ = [
-    '../../_base_/schedules/adam_100e.py', '../../_base_/models/temporal_action_segmentation/ms_tcn.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
-    '../../_base_/dataset/gtea_feature.py'
+    '../../../_base_/schedules/adam_100e.py', '../../../_base_/models/temporal_action_segmentation/ms_tcn.py',
+    '../../../_base_/default_runtime.py', '../../../_base_/collater/batch_compose.py',
+    '../../../_base_/dataset/gtea/gtea_feature.py'
 ]
 
 split = 1
@@ -21,6 +21,7 @@ model_name = "MSTCN_gtea_split1"
 
 MODEL = dict(
     head = dict(
+        dim = 1536,
         num_classes = num_classes,
         sample_rate = sample_rate
     ),

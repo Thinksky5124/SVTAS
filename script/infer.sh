@@ -8,10 +8,10 @@
 ### 
 
 # Debug Infer Model
-# python main.py --mode infer --validate -c config/infer/mobinetv2tsm_memory_tcn_split1.yaml -w output/MobileNetV2TSM_Memory_TCN_gtea_split1/MobileNetV2TSM_Memory_TCN_gtea_split1_best.pkl
+# python tools/launch.py --mode infer --validate -c config/infer/mobinetv2tsm_memory_tcn_split1.yaml -w output/MobileNetV2TSM_Memory_TCN_gtea_split1/MobileNetV2TSM_Memory_TCN_gtea_split1_best.pkl
 
 # Only Infer
-# python main.py --mode infer -c config/infer/mobinetv2tsm_memory_tcn_split1.yaml -w output/MobileNetV2TSM_Memory_TCN_gtea_split1/MobileNetV2TSM_Memory_TCN_gtea_split1_best.pkl
+# python tools/launch.py --mode infer -c config/infer/mobinetv2tsm_memory_tcn_split1.yaml -w output/MobileNetV2TSM_Memory_TCN_gtea_split1/MobileNetV2TSM_Memory_TCN_gtea_split1_best.pkl
 
 # export Infer model
 # python tools/infer/export_model_to_onnx.py -c config/infer/mobinetv2tsm_3Dtcn_split1.yaml -w output/MobileNetV2TSM_3D_TCN_gtea_split1/MobileNetV2TSM_3D_TCN_gtea_split1_best.pkl

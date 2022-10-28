@@ -4,7 +4,7 @@ Date         : 2022-10-27 18:25:10
 LastEditors  : Thyssen Wen
 LastEditTime : 2022-10-27 18:30:00
 Description  : gtea Dataset
-FilePath     : /SVTAS/config/_base_/dataset/gtea_feature.py
+FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_feature.py
 '''
 DATASET = dict(
     temporal_clip_batch_size = 1,

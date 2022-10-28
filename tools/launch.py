@@ -2,21 +2,24 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 17:20:57
+LastEditTime : 2022-10-28 14:03:52
 Description: main script
-FilePath     : /SVTAS/main.py
+FilePath     : /SVTAS/tools/launch.py
 '''
 import argparse
 import os
+import sys
+path = os.path.join(os.getcwd())
+sys.path.append(path)
 import random
 
 import numpy as np
 import torch
 
-from tasks.infer import infer
-from tasks.test import test
-from tasks.train import train
-from utils.config import get_config
+from svtas.tasks.infer import infer
+from svtas.tasks.test import test
+from svtas.tasks.train import train
+from svtas.utils.config import get_config
 
 
 def parse_args():
