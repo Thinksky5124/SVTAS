@@ -9,7 +9,7 @@ FilePath     : /SVTAS/config/extract/extract_feature/i3d_rgb_gtea.py
 
 _base_ = [
     '../../_base_/collater/stream_compose.py', '../../_base_/models/action_recognition/i3d.py',
-    '../../_base_/dataset/gtea/gtea_video.py'
+    '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
 
 sample_rate = 1

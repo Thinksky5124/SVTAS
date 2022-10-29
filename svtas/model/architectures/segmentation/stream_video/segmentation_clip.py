@@ -2,18 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-06-11 11:05:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-12 11:53:35
+LastEditTime : 2022-10-28 19:52:12
 Description  : Segmentation model clip way to train
-FilePath     : /ETESVS/model/architectures/segmentation/segmentation_clip.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/segmentation_clip.py
 '''
 import torch
 import torch.nn as nn
 
-from ...builder import build_architecture
-from ...builder import build_neck
-from ...builder import build_head
+from ....builder import build_architecture
+from ....builder import build_neck
+from ....builder import build_head
 
-from ...builder import ARCHITECTURE
+from ....builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
 class SegmentationCLIP(nn.Module):

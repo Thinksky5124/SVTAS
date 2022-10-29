@@ -9,11 +9,11 @@ FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_segmentation
 import torch
 import torch.nn as nn
 
-from ...builder import build_backbone
-from ...builder import build_neck
-from ...builder import build_head
+from ....builder import build_backbone
+from ....builder import build_neck
+from ....builder import build_head
 
-from ...builder import ARCHITECTURE
+from ....builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
 class StreamSegmentation3D(nn.Module):

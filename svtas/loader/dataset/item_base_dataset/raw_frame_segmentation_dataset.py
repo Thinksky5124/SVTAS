@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 22:37:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:16:27
+LastEditTime : 2022-10-28 16:56:17
 Description  : Raw Frame Segmentation Dataset
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/raw_frame_segmentation_dataset.py
 '''
@@ -117,8 +117,8 @@ class RawFrameSegmentationDataset(ItemDataset):
         data_dict = self.pipeline(data_dict)
 
         output_data_dict['imgs'] = copy.deepcopy(data_dict['imgs'])
-        output_data_dict['labels'] = copy.deepcopy(data_dict['labels'])
-        output_data_dict['masks'] = copy.deepcopy(data_dict['masks'])
+        output_data_dict['labels'] = copy.deepcopy(data_dict['labels'].astype(np.int64))
+        output_data_dict['masks'] = copy.deepcopy(data_dict['masks'].astype(np.float32))
         output_data_dict['vid_list'] = video_name
         output_data_dict['sliding_num'] = 1
         output_data_dict['precise_sliding_num'] = 1.0

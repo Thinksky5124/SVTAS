@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:45:53
+LastEditTime : 2022-10-28 20:11:22
 Description: recorder construct function
 FilePath     : /SVTAS/svtas/utils/recorder.py
 '''
@@ -58,7 +58,8 @@ def build_recod(architecture_type, mode):
                    'head_loss': AverageMeter("head_loss", '.5f')
                   }
     elif architecture_type in ["FeatureSegmentation", "Recognition2D", "Recognition3D",
-                                "StreamSegmentation3D", "StreamSegmentation2D", "Transeger"]:
+                                "StreamSegmentation3D", "StreamSegmentation2D", "Transeger",
+                                "Segmentation2D", "Segmentation3D"]:
         if mode == "train":
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                     'reader_time': AverageMeter('reader_time', '.5f'),

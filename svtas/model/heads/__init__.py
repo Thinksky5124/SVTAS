@@ -14,11 +14,12 @@ from .feature_extractor import FeatureExtractHead
 from .joint import TransudcerJointNet, TransegerFCJointNet
 from .text_pred import TextPredFCHead
 from .automatic_speech_recognition import Conformer
+from .align_heads import (InterploteAlignHead)
 
 __all__ = [
     'MultiStageModel', 'ETESVSHead', 'ASFormer', 'MultiStageModel',
     'SingleStageModel', 'TCN3DHead', 'TSMHead', 'I3DHead', 'MoViNetHead',
     'TimeSformerHead', 'LSTMSegmentationHead', 'FCHead', 'OadTRHead',
     'FeatureExtractHead', 'TransudcerJointNet', 'TransegerFCJointNet',
-    'TextPredFCHead', 'Conformer'
+    'TextPredFCHead', 'Conformer', 'InterploteAlignHead'
 ]

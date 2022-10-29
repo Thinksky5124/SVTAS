@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:20:58
+LastEditTime : 2022-10-28 20:18:26
 Description  : Raw frame sampler
-FilePath     : /SVTAS/loader/sampler/frame_sampler.py
+FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
 import random
 
@@ -37,13 +37,13 @@ class VideoFrameSample():
 
     def __call__(self, start_idx, end_idx, sample_rate):
         if self.mode == 'random':
-            return self.random_sample(start_idx, end_idx, sample_rate)
+            return self.random_sample(start_idx, end_idx - 1, sample_rate)
         elif self.mode == 'uniform':
-            return self.uniform_sample(start_idx, end_idx, sample_rate)
+            return self.uniform_sample(start_idx, end_idx - 1, sample_rate)
         elif self.mode == 'linspace':
-            return self.linspace_sample(start_idx, end_idx, sample_rate)
+            return self.linspace_sample(start_idx, end_idx - 1, sample_rate)
         elif self.mode == 'random_choice':
-            return self.random_choice_sample(start_idx, end_idx, sample_rate)
+            return self.random_choice_sample(start_idx, end_idx - 1, sample_rate)
         else:
             raise NotImplementedError
 
@@ -471,7 +471,7 @@ class VideoSampler():
                 pad_len = self.clip_seg_num - len(imgs)
                 for i in range(pad_len):
                     imgs.append(np_frames)
-                
+        
         mask = np.ones((labels.shape[0]))
 
         results['imgs'] = imgs[:self.clip_seg_num].copy()

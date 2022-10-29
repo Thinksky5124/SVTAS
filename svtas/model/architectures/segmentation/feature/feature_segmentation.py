@@ -2,22 +2,22 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:04:51
+LastEditTime : 2022-10-28 19:55:55
 Description: feaeture segmentation model framework
-FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature_segmentation.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature/feature_segmentation.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.runner import load_checkpoint
 
-from ....utils.logger import get_logger
+from .....utils.logger import get_logger
 
-from ...builder import build_backbone
-from ...builder import build_neck
-from ...builder import build_head
+from ....builder import build_backbone
+from ....builder import build_neck
+from ....builder import build_head
 
-from ...builder import ARCHITECTURE
+from ....builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
 class FeatureSegmentation(nn.Module):

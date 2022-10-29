@@ -1,11 +1,12 @@
 '''
-Author: Thyssen Wen
-Date: 2022-04-28 19:46:22
+Author       : Thyssen Wen
+Date         : 2022-10-17 13:15:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-18 09:18:00
-Description: 3D TCN model
-FilePath     : /ETESVS/model/heads/segmentation/tcn_3d_head.py
+LastEditTime : 2022-10-28 17:02:40
+Description  : 3D TCN model
+FilePath     : /SVTAS/svtas/model/heads/segmentation/tcn_3d_head.py
 '''
+
 import torch
 import copy
 import torch.nn as nn
@@ -18,9 +19,11 @@ from ...builder import HEADS
 class TCN3DHead(nn.Module):
     def __init__(self,
                  num_classes,
+                 num_stages=1,
                  num_layers=4,
                  sample_rate=4,
                  seg_in_channels=2048,
+                 hidden_channels=128,
                  num_f_maps=64,
                  out_feature=False):
         super(TCN3DHead, self).__init__()
@@ -31,10 +34,10 @@ class TCN3DHead(nn.Module):
         self.sample_rate = sample_rate
         self.num_layers = num_layers
 
-        self.conv_1x1 = nn.Conv3d(seg_in_channels, num_f_maps, (1, 1, 1))
-        self.layers = nn.ModuleList([DilatedResidual3DLayer(2 ** i, num_f_maps, num_f_maps) for i in range(num_layers)])
+        self.stage1 = SingleStage3DModel(num_layers, num_f_maps, seg_in_channels, hidden_channels, out_feature=out_feature)
+        self.stages = nn.ModuleList([copy.deepcopy(SingleStage3DModel(num_layers, num_f_maps, hidden_channels, hidden_channels)) for s in range(num_stages-1)])
         self.head_avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
+        self.conv_out = nn.Conv1d(hidden_channels, num_classes, 1)
 
     def init_weights(self):
         pass
@@ -51,10 +54,23 @@ class TCN3DHead(nn.Module):
     def forward(self, seg_feature, mask):
         # segmentation branch
         # seg_feature [N, seg_in_channels, num_segs, 7, 7]
-        feature_embedding = self.conv_1x1(seg_feature)
-        out = feature_embedding
-        for layer in self.layers:
-            out = layer(out, mask[:, :, ::self.sample_rate])
+        
+        mask = mask[:, :, ::self.sample_rate]
+        
+        output = self.stage1(seg_feature, mask)
+
+        if self.out_feature is True:
+            feature, out = output
+        else:
+            out = output
+        
+        outputs = out.unsqueeze(0)
+        for s in self.stages:
+            if self.out_feature is True:
+                out, feature = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+            else:
+                out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+            outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
         
         out = torch.permute(out, dims=[0, 2, 1, 3, 4])
         # seg_feature [N, num_segs, 1280, 7, 7]
@@ -78,8 +94,27 @@ class TCN3DHead(nn.Module):
             mode="nearest")
             
         if self.out_feature is True:
-            return feature_embedding * mask[:, 0:1, :], outputs
+            return feature * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1), outputs
         return outputs
+
+class SingleStage3DModel(nn.Module):
+    def __init__(self, num_layers, num_f_maps, dim, hidden_channels, out_feature=False):
+        super(SingleStage3DModel, self).__init__()
+        self.out_feature = out_feature
+        self.conv_1x1 = nn.Conv3d(dim, num_f_maps, (1, 1, 1))
+        self.layers = nn.ModuleList([copy.deepcopy(DilatedResidual3DLayer(2 ** i, num_f_maps, num_f_maps)) for i in range(num_layers)])
+        self.conv_out = nn.Conv3d(num_f_maps, hidden_channels, (1, 1, 1))
+
+    def forward(self, x, mask):
+        feature_embedding = self.conv_1x1(x)
+        feature = feature_embedding
+        for layer in self.layers:
+            feature = layer(feature, mask)
+        out = self.conv_out(feature) * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1)
+        if self.out_feature is True:
+            return feature_embedding * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1), out
+
+        return out
 
 
 class DilatedResidual3DLayer(nn.Module):
@@ -87,7 +122,8 @@ class DilatedResidual3DLayer(nn.Module):
         super(DilatedResidual3DLayer, self).__init__()
         self.conv_dilated = nn.Conv3d(in_channels, out_channels, (3,3,3), stride=(1, 1, 1), padding=(dilation, dilation, dilation), dilation=(dilation, dilation, dilation))
         self.conv_1x1 = nn.Conv3d(out_channels, out_channels, (1, 1, 1))
-        self.norm = nn.LazyBatchNorm3d()
+        # self.norm = nn.LazyBatchNorm3d()
+        self.norm = nn.Dropout()
 
     def forward(self, x, mask):
         # !

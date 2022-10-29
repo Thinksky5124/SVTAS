@@ -2,21 +2,21 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 21:12:13
+LastEditTime : 2022-10-28 19:52:34
 Description: etesvs model framework
-FilePath     : /ETESVS/model/architectures/segmentation/stream_segmentation2d_with_neck.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/stream_segmentation2d_with_backboneloss.py
 '''
 import torch
 import torch.nn as nn
 
-from ...builder import build_backbone
-from ...builder import build_neck
-from ...builder import build_head
+from ....builder import build_backbone
+from ....builder import build_neck
+from ....builder import build_head
 
-from ...builder import ARCHITECTURE
+from ....builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class StreamSegmentation2DWithNeck(nn.Module):
+class StreamSegmentation2DWithBackbone(nn.Module):
     def __init__(self,
                  backbone=None,
                  neck=None,
@@ -50,7 +50,7 @@ class StreamSegmentation2DWithNeck(nn.Module):
     def forward(self, input_data):
         masks = input_data['masks']
         imgs = input_data['imgs']
-        
+
         # masks.shape=[N,T]
         masks = masks.unsqueeze(1)
 
@@ -68,13 +68,12 @@ class StreamSegmentation2DWithNeck(nn.Module):
         # feature [N * T , F_dim, 7, 7]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, backbone_score, neck_score = self.neck(
+            seg_feature, backbone_score = self.neck(
                 feature, masks[:, :, ::self.sample_rate])
             
         else:
             seg_feature = feature
             backbone_score = None
-            neck_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
@@ -82,7 +81,7 @@ class StreamSegmentation2DWithNeck(nn.Module):
         if self.head is not None:
             head_score = self.head(seg_feature, masks)
         else:
-            head_score = None
+            head_score = seg_feature
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return backbone_score, neck_score, head_score
+        return backbone_score, head_score

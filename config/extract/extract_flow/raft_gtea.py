@@ -8,7 +8,7 @@ FilePath     : /SVTAS/config/extract/extract_flow/raft_gtea.py
 '''
 _base_ = [
     '../../_base_/collater/stream_compose.py', '../../_base_/models/optical_flow_estimate/raft.py',
-    '../../_base_/dataset/gtea/gtea_video.py'
+    '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
 sliding_window = 32
 clip_seg_num = 32

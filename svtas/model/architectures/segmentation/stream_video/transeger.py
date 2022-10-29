@@ -2,18 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-12 15:36:34
+LastEditTime : 2022-10-28 19:56:25
 Description  : Transeger framework
-FilePath     : /ETESVS/model/architectures/segmentation/transeger.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/transeger.py
 '''
 import torch
 import torch.nn as nn
 
-from ...builder import build_architecture
-from ...builder import build_neck
-from ...builder import build_head
+from ....builder import build_architecture
+from ....builder import build_neck
+from ....builder import build_head
 
-from ...builder import ARCHITECTURE
+from ....builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
 class Transeger(nn.Module):

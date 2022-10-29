@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 18:50:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 15:55:43
+LastEditTime : 2022-10-28 19:30:38
 Description  : Score Post precessing Module
-FilePath     : /ETESVS/model/post_precessings/score_post_processing.py
+FilePath     : /SVTAS/svtas/model/post_precessings/score_post_processing.py
 '''
 import numpy as np
 import torch
