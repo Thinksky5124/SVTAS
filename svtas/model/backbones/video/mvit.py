@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 15:44:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 20:55:29
+LastEditTime : 2022-10-30 16:30:05
 Description  : MViT ref:https://github.com/facebookresearch/SlowFast/blob/main/slowfast/models/video_model_builder.py
 FilePath     : /SVTAS/svtas/model/backbones/video/mvit.py
 '''
@@ -14,18 +14,18 @@ from functools import partial
 import torch.nn.functional as F
 from torch.nn.init import trunc_normal_
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
 from ...builder import BACKBONES
+from mmcv.runner import load_state_dict
+from collections import OrderedDict
+import re
+from torch.distributed.algorithms._checkpoint import checkpoint_wrapper
+
+from .reversible_mvit import ReversibleMViT
 
 from ..utils import (TwoStreamFusion, calc_mvit_feature_geometry,
     get_3d_sincos_pos_embed, PatchEmbed,
     round_width, MultiScaleBlock)
-from .reversible_mvit import ReversibleMViT
 
-try:
-    from fairscale.nn.checkpoint import checkpoint_wrapper
-except ImportError:
-    checkpoint_wrapper = None
 
 @BACKBONES.register()
 class MViT(nn.Module):
@@ -39,63 +39,91 @@ class MViT(nn.Module):
     https://arxiv.org/abs/2104.11227
     """
 
-    def __init__(self, cfg):
+    def __init__(self,
+                 pool_first = False,
+                 spatial_size = 224,
+                 input_channel_num = [3],
+                 use_2d_patch = False,
+                 enable_rev = False,
+                 patch_stride = [2, 4, 4],
+                 clip_seg_num = 32,
+                 embed_dim = 96,
+                 num_heads = 1,
+                 mlp_ratio = 4.0,
+                 qkv_bias = True,
+                 drop_rate = 0.0,
+                 depth = 24,
+                 drop_path_rate = 0.3,
+                 mode = "conv",
+                 cls_embed_on = True,
+                 use_mean_pooling = True,
+                 use_abs_pos = False,
+                 use_fixed_sincos_pos = False,
+                 sep_pos_embed = True,
+                 rel_pos_spatial = True,
+                 rel_pos_temporal = True,
+                 norm = "layernorm",
+                 act_checkpoint = False,
+                 patch_kernel = (3, 7, 7),
+                 pathch_padding = (1, 3, 3),
+                 cfg_dim_mul = [[2, 2.0], [5, 2.0], [21, 2.0]],
+                 cfg_head_mul = [[2, 2.0], [5, 2.0], [21, 2.0]],
+                 pool_q_stride = [[0, 1, 1, 1], [1, 1, 1, 1], [2, 1, 2, 2], [3, 1, 1, 1], [4, 1, 1, 1], [5, 1, 2, 2], [6, 1, 1, 1], [7, 1, 1, 1],
+                                  [8, 1, 1, 1], [9, 1, 1, 1], [10, 1, 1, 1], [11, 1, 1, 1], [12, 1, 1, 1], [13, 1, 1, 1], [14, 1, 1, 1], [15, 1, 1, 1],
+                                  [16, 1, 1, 1], [17, 1, 1, 1], [18, 1, 1, 1], [19, 1, 1, 1], [20, 1, 1, 1], [21, 1, 2, 2], [22, 1, 1, 1], [23, 1, 1, 1]],
+                 pool_kvq_kernel = [3, 3, 3],
+                 pool_kv_stride_adaptive = [1, 8, 8],
+                 pool_kv_stride = [],
+                 norm_stem = False,
+                 rel_pos_zero_init = False,
+                 residual_pooling = False,
+                 dim_mul_in_att = True,
+                 separate_qkv = False,
+                 rev_respath_fuse = "concat",
+                 zero_decay_pos_cls=False,
+                 res_q_fusion = "concat",
+                 buffer_layers = [1,3, 14],
+                 pretrained=None):
         super().__init__()
-        # Get parameters.
-        assert cfg.DATA.TRAIN_CROP_SIZE == cfg.DATA.TEST_CROP_SIZE
-        self.cfg = cfg
-        pool_first = cfg.MVIT.POOL_FIRST
         # Prepare input.
-        spatial_size = cfg.DATA.TRAIN_CROP_SIZE
-        temporal_size = cfg.DATA.NUM_FRAMES
-        in_chans = cfg.DATA.INPUT_CHANNEL_NUM[0]
-        self.use_2d_patch = cfg.MVIT.PATCH_2D
-        self.enable_detection = cfg.DETECTION.ENABLE
-        self.enable_rev = cfg.MVIT.REV.ENABLE
-        self.patch_stride = cfg.MVIT.PATCH_STRIDE
+        self.pretrained = pretrained
+        in_chans = input_channel_num[0]
+        self.zero_decay_pos_cls = zero_decay_pos_cls
+        self.use_2d_patch = use_2d_patch
+        self.enable_rev = enable_rev
+        self.patch_stride = patch_stride
         if self.use_2d_patch:
             self.patch_stride = [1] + self.patch_stride
-        self.T = cfg.DATA.NUM_FRAMES // self.patch_stride[0]
-        self.H = cfg.DATA.TRAIN_CROP_SIZE // self.patch_stride[1]
-        self.W = cfg.DATA.TRAIN_CROP_SIZE // self.patch_stride[2]
+        self.T = clip_seg_num // self.patch_stride[0]
+        self.H = spatial_size // self.patch_stride[1]
+        self.W = spatial_size // self.patch_stride[2]
         # Prepare output.
-        num_classes = cfg.MODEL.NUM_CLASSES
-        embed_dim = cfg.MVIT.EMBED_DIM
         # Prepare backbone
-        num_heads = cfg.MVIT.NUM_HEADS
-        mlp_ratio = cfg.MVIT.MLP_RATIO
-        qkv_bias = cfg.MVIT.QKV_BIAS
-        self.drop_rate = cfg.MVIT.DROPOUT_RATE
-        depth = cfg.MVIT.DEPTH
-        drop_path_rate = cfg.MVIT.DROPPATH_RATE
-        layer_scale_init_value = cfg.MVIT.LAYER_SCALE_INIT_VALUE
-        head_init_scale = cfg.MVIT.HEAD_INIT_SCALE
-        mode = cfg.MVIT.MODE
-        self.cls_embed_on = cfg.MVIT.CLS_EMBED_ON
-        self.use_mean_pooling = cfg.MVIT.USE_MEAN_POOLING
+        self.drop_rate = drop_rate
+        self.cls_embed_on = cls_embed_on
+        self.use_mean_pooling = use_mean_pooling
         # Params for positional embedding
-        self.use_abs_pos = cfg.MVIT.USE_ABS_POS
-        self.use_fixed_sincos_pos = cfg.MVIT.USE_FIXED_SINCOS_POS
-        self.sep_pos_embed = cfg.MVIT.SEP_POS_EMBED
-        self.rel_pos_spatial = cfg.MVIT.REL_POS_SPATIAL
-        self.rel_pos_temporal = cfg.MVIT.REL_POS_TEMPORAL
-        if cfg.MVIT.NORM == "layernorm":
+        self.use_abs_pos = use_abs_pos
+        self.use_fixed_sincos_pos = use_fixed_sincos_pos
+        self.sep_pos_embed = sep_pos_embed
+        self.rel_pos_spatial = rel_pos_spatial
+        self.rel_pos_temporal = rel_pos_temporal
+        if norm == "layernorm":
             norm_layer = partial(nn.LayerNorm, eps=1e-6)
         else:
             raise NotImplementedError("Only supports layernorm.")
-        self.num_classes = num_classes
         self.patch_embed = PatchEmbed(
             dim_in=in_chans,
             dim_out=embed_dim,
-            kernel=cfg.MVIT.PATCH_KERNEL,
-            stride=cfg.MVIT.PATCH_STRIDE,
-            padding=cfg.MVIT.PATCH_PADDING,
+            kernel=patch_kernel,
+            stride=patch_stride,
+            padding=pathch_padding,
             conv_2d=self.use_2d_patch,
         )
 
-        if cfg.MODEL.ACT_CHECKPOINT:
-            self.patch_embed = checkpoint_wrapper(self.patch_embed)
-        self.input_dims = [temporal_size, spatial_size, spatial_size]
+        if act_checkpoint:
+            self.patch_embed = checkpoint_wrapper.checkpoint_wrapper(self.patch_embed)
+        self.input_dims = [clip_seg_num, spatial_size, spatial_size]
         assert self.input_dims[1] == self.input_dims[2]
         self.patch_dims = [
             self.input_dims[i] // self.patch_stride[i]
@@ -141,51 +169,51 @@ class MViT(nn.Module):
             self.pos_drop = nn.Dropout(p=self.drop_rate)
 
         dim_mul, head_mul = torch.ones(depth + 1), torch.ones(depth + 1)
-        for i in range(len(cfg.MVIT.DIM_MUL)):
-            dim_mul[cfg.MVIT.DIM_MUL[i][0]] = cfg.MVIT.DIM_MUL[i][1]
-        for i in range(len(cfg.MVIT.HEAD_MUL)):
-            head_mul[cfg.MVIT.HEAD_MUL[i][0]] = cfg.MVIT.HEAD_MUL[i][1]
+        for i in range(len(cfg_dim_mul)):
+            dim_mul[cfg_dim_mul[i][0]] = cfg_dim_mul[i][1]
+        for i in range(len(cfg_head_mul)):
+            head_mul[cfg_head_mul[i][0]] = cfg_head_mul[i][1]
 
-        pool_q = [[] for i in range(cfg.MVIT.DEPTH)]
-        pool_kv = [[] for i in range(cfg.MVIT.DEPTH)]
-        stride_q = [[] for i in range(cfg.MVIT.DEPTH)]
-        stride_kv = [[] for i in range(cfg.MVIT.DEPTH)]
+        pool_q = [[] for i in range(depth)]
+        pool_kv = [[] for i in range(depth)]
+        stride_q = [[] for i in range(depth)]
+        stride_kv = [[] for i in range(depth)]
 
-        for i in range(len(cfg.MVIT.POOL_Q_STRIDE)):
-            stride_q[cfg.MVIT.POOL_Q_STRIDE[i][0]] = cfg.MVIT.POOL_Q_STRIDE[i][
+        for i in range(len(pool_q_stride)):
+            stride_q[pool_q_stride[i][0]] = pool_q_stride[i][
                 1:
             ]
-            if cfg.MVIT.POOL_KVQ_KERNEL is not None:
-                pool_q[cfg.MVIT.POOL_Q_STRIDE[i][0]] = cfg.MVIT.POOL_KVQ_KERNEL
+            if pool_kvq_kernel is not None:
+                pool_q[pool_q_stride[i][0]] = pool_kvq_kernel
             else:
-                pool_q[cfg.MVIT.POOL_Q_STRIDE[i][0]] = [
-                    s + 1 if s > 1 else s for s in cfg.MVIT.POOL_Q_STRIDE[i][1:]
+                pool_q[pool_q_stride[i][0]] = [
+                    s + 1 if s > 1 else s for s in pool_q_stride[i][1:]
                 ]
 
         # If POOL_KV_STRIDE_ADAPTIVE is not None, initialize POOL_KV_STRIDE.
-        if cfg.MVIT.POOL_KV_STRIDE_ADAPTIVE is not None:
-            _stride_kv = cfg.MVIT.POOL_KV_STRIDE_ADAPTIVE
-            cfg.MVIT.POOL_KV_STRIDE = []
-            for i in range(cfg.MVIT.DEPTH):
+        if pool_kv_stride_adaptive is not None:
+            _stride_kv = pool_kv_stride_adaptive
+            pool_kv_kernel = []
+            for i in range(depth):
                 if len(stride_q[i]) > 0:
                     _stride_kv = [
                         max(_stride_kv[d] // stride_q[i][d], 1)
                         for d in range(len(_stride_kv))
                     ]
-                cfg.MVIT.POOL_KV_STRIDE.append([i] + _stride_kv)
+                pool_kv_kernel.append([i] + _stride_kv)
 
-        for i in range(len(cfg.MVIT.POOL_KV_STRIDE)):
-            stride_kv[cfg.MVIT.POOL_KV_STRIDE[i][0]] = cfg.MVIT.POOL_KV_STRIDE[
+        for i in range(len(pool_kv_stride)):
+            stride_kv[pool_kv_stride[i][0]] = pool_kv_stride[
                 i
             ][1:]
-            if cfg.MVIT.POOL_KVQ_KERNEL is not None:
+            if pool_kvq_kernel is not None:
                 pool_kv[
-                    cfg.MVIT.POOL_KV_STRIDE[i][0]
-                ] = cfg.MVIT.POOL_KVQ_KERNEL
+                    pool_kv_stride[i][0]
+                ] = pool_kvq_kernel
             else:
-                pool_kv[cfg.MVIT.POOL_KV_STRIDE[i][0]] = [
+                pool_kv[pool_kv_stride[i][0]] = [
                     s + 1 if s > 1 else s
-                    for s in cfg.MVIT.POOL_KV_STRIDE[i][1:]
+                    for s in pool_kv_stride[i][1:]
                 ]
 
         self.pool_q = pool_q
@@ -193,7 +221,7 @@ class MViT(nn.Module):
         self.stride_q = stride_q
         self.stride_kv = stride_kv
 
-        self.norm_stem = norm_layer(embed_dim) if cfg.MVIT.NORM_STEM else None
+        self.norm_stem = norm_layer(embed_dim) if norm_stem else None
 
         input_size = self.patch_dims
 
@@ -202,17 +230,37 @@ class MViT(nn.Module):
             # rev does not allow cls token
             assert not self.cls_embed_on
 
-            self.rev_backbone = ReversibleMViT(cfg, self)
+            self.rev_backbone = ReversibleMViT(embed_dim,
+                                               depth,
+                                               num_heads,
+                                               mlp_ratio,
+                                               qkv_bias,
+                                               drop_path_rate,
+                                               drop_rate,
+                                               res_q_fusion,
+                                               norm,
+                                               cfg_dim_mul,
+                                               cfg_head_mul,
+                                               buffer_layers,
+                                               cls_embed_on,
+                                               mode,
+                                               pool_first,
+                                               rel_pos_spatial,
+                                               rel_pos_temporal,
+                                               rel_pos_zero_init,
+                                               residual_pooling,
+                                               separate_qkv,
+                                               self)
 
             embed_dim = round_width(
                 embed_dim, dim_mul.prod(), divisor=num_heads
             )
 
             self.fuse = TwoStreamFusion(
-                cfg.MVIT.REV.RESPATH_FUSE, dim=2 * embed_dim
+                rev_respath_fuse, dim=2 * embed_dim
             )
 
-            if "concat" in self.cfg.MVIT.REV.RESPATH_FUSE:
+            if "concat" in self.rev_respath_fuse:
                 self.norm = norm_layer(2 * embed_dim)
             else:
                 self.norm = norm_layer(embed_dim)
@@ -223,7 +271,7 @@ class MViT(nn.Module):
 
             for i in range(depth):
                 num_heads = round_width(num_heads, head_mul[i])
-                if cfg.MVIT.DIM_MUL_IN_ATT:
+                if dim_mul_in_att:
                     dim_out = round_width(
                         embed_dim,
                         dim_mul[i],
@@ -254,14 +302,14 @@ class MViT(nn.Module):
                     pool_first=pool_first,
                     rel_pos_spatial=self.rel_pos_spatial,
                     rel_pos_temporal=self.rel_pos_temporal,
-                    rel_pos_zero_init=cfg.MVIT.REL_POS_ZERO_INIT,
-                    residual_pooling=cfg.MVIT.RESIDUAL_POOLING,
-                    dim_mul_in_att=cfg.MVIT.DIM_MUL_IN_ATT,
-                    separate_qkv=cfg.MVIT.SEPARATE_QKV,
+                    rel_pos_zero_init=rel_pos_zero_init,
+                    residual_pooling=residual_pooling,
+                    dim_mul_in_att=dim_mul_in_att,
+                    separate_qkv=separate_qkv,
                 )
 
-                if cfg.MODEL.ACT_CHECKPOINT:
-                    attention_block = checkpoint_wrapper(attention_block)
+                if act_checkpoint:
+                    attention_block = checkpoint_wrapper.checkpoint_wrapper(attention_block)
                 self.blocks.append(attention_block)
                 if len(stride_q[i]) > 0:
                     input_size = [
@@ -294,12 +342,12 @@ class MViT(nn.Module):
 
         if self.cls_embed_on:
             trunc_normal_(self.cls_token, std=0.02)
-        self.apply(self._init_weights)
 
-        self.head.projection.weight.data.mul_(head_init_scale)
-        self.head.projection.bias.data.mul_(head_init_scale)
-
-        self.feat_size, self.feat_stride = calc_mvit_feature_geometry(cfg)
+        self.feat_size, self.feat_stride = calc_mvit_feature_geometry(num_frames=clip_seg_num,
+                                                                      patch_stride=patch_stride,
+                                                                      crop_size=spatial_size,
+                                                                      depth=depth,
+                                                                      pool_q_stride=pool_q_stride)
 
     def _init_weights(self, m):
         if isinstance(m, (nn.Linear, nn.Conv2d, nn.Conv3d)):
@@ -313,7 +361,7 @@ class MViT(nn.Module):
     @torch.jit.ignore
     def no_weight_decay(self):
         names = []
-        if self.cfg.MVIT.ZERO_DECAY_POS_CLS:
+        if self.zero_decay_pos_cls:
             if self.use_abs_pos:
                 if self.sep_pos_embed:
                     names.extend(
@@ -368,7 +416,6 @@ class MViT(nn.Module):
         """
         # rev does not support cls token or detection
         assert not self.cls_embed_on
-        assert not self.enable_detection
 
         x = self.rev_backbone(x)
 
@@ -381,12 +428,34 @@ class MViT(nn.Module):
             x = self.fuse(x)
             x = x.mean(1)
 
-        x = self.head(x)
-
         return x
+    
+    def _clear_memory_buffer(self):
+        pass
+    
+    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+        if child_model is False:
+            if isinstance(self.pretrained, str):
+                def revise_keys_fn(state_dict, revise_keys=[(r'module.', r'')]):
+                    # strip prefix of state_dict
+                    metadata = getattr(state_dict, '_metadata', OrderedDict())
+                    for p, r in revise_keys:
+                        state_dict = OrderedDict(
+                            {re.sub(p, r, k): v
+                            for k, v in state_dict.items()})
+                    # Keep metadata in state_dict
+                    state_dict._metadata = metadata
+                    return state_dict
 
-    def forward(self, x, bboxes=None, return_attn=False):
-        x = x[0]
+                logger  = get_logger("SVTAS")
+                checkpoint = torch.load(self.pretrained)
+                load_state_dict(self, checkpoint['model_state'], strict=False, logger=logger)
+            else:
+                self.apply(self._init_weights)
+        else:
+            self.apply(self._init_weights)
+
+    def forward(self, x, masks):
         x, bcthw = self.patch_embed(x)
         bcthw = list(bcthw)
         if len(bcthw) == 4:  # Fix bcthw in case of 4D tensor
@@ -437,30 +506,16 @@ class MViT(nn.Module):
             for blk in self.blocks:
                 x, thw = blk(x, thw)
 
-            if self.enable_detection:
-                assert not self.enable_rev
-
-                x = self.norm(x)
+            if self.use_mean_pooling:
                 if self.cls_embed_on:
                     x = x[:, 1:]
+                x = x.mean(1)
+                x = self.norm(x)
+            elif self.cls_embed_on:
+                x = self.norm(x)
+                x = x[:, 0]
+            else:  # this is default, [norm->mean]
+                x = self.norm(x)
+                x = x.mean(1)
 
-                B, _, C = x.shape
-                x = x.transpose(1, 2).reshape(B, C, thw[0], thw[1], thw[2])
-
-                x = self.head([x], bboxes)
-
-            else:
-                if self.use_mean_pooling:
-                    if self.cls_embed_on:
-                        x = x[:, 1:]
-                    x = x.mean(1)
-                    x = self.norm(x)
-                elif self.cls_embed_on:
-                    x = self.norm(x)
-                    x = x[:, 0]
-                else:  # this is default, [norm->mean]
-                    x = self.norm(x)
-                    x = x.mean(1)
-                x = self.head(x)
-
-        return 
+        return x

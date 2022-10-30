@@ -6,7 +6,6 @@ from torch.autograd import Function as Function
 
 from ..utils import MultiScaleAttention, attention_pool, Mlp, TwoStreamFusion, drop_path, round_width
 
-
 class ReversibleMViT(nn.Module):
     """
     Reversible model builder. This builds the reversible transformer encoder
@@ -17,7 +16,28 @@ class ReversibleMViT(nn.Module):
     https://openaccess.thecvf.com/content/CVPR2022/papers/Mangalam_Reversible_Vision_Transformers_CVPR_2022_paper.pdf
     """
 
-    def __init__(self, config, model):
+    def __init__(self,
+                 embed_dim,
+                 depth,
+                 num_heads,
+                 mlp_ratio,
+                 qkv_bias,
+                 drop_path_rate,
+                 drop_rate,
+                 res_q_fusion,
+                 norm,
+                 cfg_dim_mul,
+                 cfg_head_mul,
+                 buffer_layers,
+                 cls_embed_on,
+                 mode,
+                 pool_first,
+                 rel_pos_spatial,
+                 rel_pos_temporal,
+                 rel_pos_zero_init,
+                 residual_pooling,
+                 separate_qkv,
+                 model):
         """
         The `__init__` method of any subclass should also contain these
             arguments.
@@ -29,17 +49,9 @@ class ReversibleMViT(nn.Module):
         """
 
         super().__init__()
-        self.cfg = config
 
-        embed_dim = self.cfg.MVIT.EMBED_DIM
-        depth = self.cfg.MVIT.DEPTH
-        num_heads = self.cfg.MVIT.NUM_HEADS
-        mlp_ratio = self.cfg.MVIT.MLP_RATIO
-        qkv_bias = self.cfg.MVIT.QKV_BIAS
-
-        drop_path_rate = self.cfg.MVIT.DROPPATH_RATE
-        self.dropout = config.MVIT.DROPOUT_RATE
-        self.pre_q_fusion = self.cfg.MVIT.REV.PRE_Q_FUSION
+        self.dropout = drop_rate
+        self.pre_q_fusion = res_q_fusion
         dpr = [
             x.item() for x in torch.linspace(0, drop_path_rate, depth)
         ]  # stochastic depth decay rule
@@ -49,16 +61,16 @@ class ReversibleMViT(nn.Module):
         self.layers = nn.ModuleList([])
         self.no_custom_backward = False
 
-        if self.cfg.MVIT.NORM == "layernorm":
+        if norm == "layernorm":
             norm_layer = partial(nn.LayerNorm, eps=1e-6)
         else:
             raise NotImplementedError("Only supports layernorm.")
 
         dim_mul, head_mul = torch.ones(depth + 1), torch.ones(depth + 1)
-        for i in range(len(self.cfg.MVIT.DIM_MUL)):
-            dim_mul[self.cfg.MVIT.DIM_MUL[i][0]] = self.cfg.MVIT.DIM_MUL[i][1]
-        for i in range(len(self.cfg.MVIT.HEAD_MUL)):
-            head_mul[self.cfg.MVIT.HEAD_MUL[i][0]] = self.cfg.MVIT.HEAD_MUL[i][
+        for i in range(len(cfg_dim_mul)):
+            dim_mul[cfg_dim_mul[i][0]] = cfg_dim_mul[i][1]
+        for i in range(len(cfg_head_mul)):
+            head_mul[cfg_head_mul[i][0]] = cfg_head_mul[i][
                 1
             ]
 
@@ -82,7 +94,7 @@ class ReversibleMViT(nn.Module):
                 divisor=round_width(num_heads, head_mul[i + 1]),
             )
 
-            if i in self.cfg.MVIT.REV.BUFFER_LAYERS:
+            if i in buffer_layers:
                 layer_type = StageTransitionBlock
                 input_mult = 2 if "concat" in self.pre_q_fusion else 1
             else:
@@ -100,9 +112,17 @@ class ReversibleMViT(nn.Module):
                     input_size=input_size,
                     dim_out=dim_out * input_mult // dimout_correction,
                     num_heads=num_heads,
-                    cfg=self.cfg,
-                    mlp_ratio=mlp_ratio,
+                    drop_rate=drop_rate,
                     qkv_bias=qkv_bias,
+                    cls_embed_on=cls_embed_on,
+                    mode=mode,
+                    pool_first=pool_first,
+                    rel_pos_spatial=rel_pos_spatial,
+                    rel_pos_temporal=rel_pos_temporal,
+                    rel_pos_zero_init=rel_pos_zero_init,
+                    residual_pooling=residual_pooling,
+                    separate_qkv=separate_qkv,
+                    mlp_ratio=mlp_ratio,
                     drop_path=dpr[i],
                     norm_layer=norm_layer,
                     kernel_q=pool_q[i] if len(pool_q) > i else [],
@@ -284,14 +304,23 @@ class StageTransitionBlock(nn.Module):
         input_size,
         dim_out,
         num_heads,
-        mlp_ratio,
+        drop_rate,
         qkv_bias,
+        cls_embed_on,
+        mode,
+        pool_first,
+        rel_pos_spatial,
+        rel_pos_temporal,
+        rel_pos_zero_init,
+        residual_pooling,
+        separate_qkv,
+        mlp_ratio,
         drop_path,
         kernel_q,
         kernel_kv,
         stride_q,
         stride_kv,
-        cfg,
+        res_path="conv",
         norm_layer=nn.LayerNorm,
         pre_q_fusion=None,
         layer_id=0,
@@ -310,7 +339,16 @@ class StageTransitionBlock(nn.Module):
             dim=embed_dim,
             input_size=input_size,
             num_heads=num_heads,
-            cfg=cfg,
+            drop_rate=drop_rate,
+            qkv_bias=qkv_bias,
+            cls_embed_on=cls_embed_on,
+            mode=mode,
+            pool_first=pool_first,
+            rel_pos_spatial=rel_pos_spatial,
+            rel_pos_temporal=rel_pos_temporal,
+            rel_pos_zero_init=rel_pos_zero_init,
+            residual_pooling=residual_pooling,
+            separate_qkv=separate_qkv,
             dim_out=dim_out,
             kernel_q=kernel_q,
             kernel_kv=kernel_kv,
@@ -328,14 +366,14 @@ class StageTransitionBlock(nn.Module):
         self.layer_id = layer_id
 
         self.is_proj = False
-        self.has_cls_embed = cfg.MVIT.CLS_EMBED_ON
+        self.has_cls_embed = cls_embed_on
 
         self.is_conv = False
-        self.pool_first = cfg.MVIT.POOL_FIRST
-        self.mode = cfg.MVIT.MODE
+        self.pool_first = pool_first
+        self.mode = mode
         self.pre_q_fuse = TwoStreamFusion(pre_q_fusion, dim=dim)
 
-        if cfg.MVIT.REV.RES_PATH == "max":
+        if res_path == "max":
             self.res_conv = False
             self.pool_skip = nn.MaxPool3d(
                 # self.attention.attn.pool_q.kernel_size,
@@ -346,7 +384,7 @@ class StageTransitionBlock(nn.Module):
                 ceil_mode=False,
             )
 
-        elif cfg.MVIT.REV.RES_PATH == "conv":
+        elif res_path == "conv":
             self.res_conv = True
         else:
             raise NotImplementedError
@@ -443,7 +481,15 @@ class ReversibleBlock(nn.Module):
         kernel_kv,
         stride_q,
         stride_kv,
-        cfg,
+        drop_rate,
+        cls_embed_on,
+        mode,
+        pool_first,
+        rel_pos_spatial,
+        rel_pos_temporal,
+        rel_pos_zero_init,
+        residual_pooling,
+        separate_qkv,
         norm_layer=nn.LayerNorm,
         layer_id=0,
         **kwargs
@@ -460,7 +506,16 @@ class ReversibleBlock(nn.Module):
             dim=dim,
             input_size=input_size,
             num_heads=num_heads,
-            cfg=cfg,
+            drop_rate=drop_rate,
+            qkv_bias=qkv_bias,
+            cls_embed_on=cls_embed_on,
+            mode=mode,
+            pool_first=pool_first,
+            rel_pos_spatial=rel_pos_spatial,
+            rel_pos_temporal=rel_pos_temporal,
+            rel_pos_zero_init=rel_pos_zero_init,
+            residual_pooling=residual_pooling,
+            separate_qkv=separate_qkv,
             dim_out=dim_out,
             kernel_q=kernel_q,
             kernel_kv=kernel_kv,
@@ -646,7 +701,16 @@ class AttentionSubBlock(nn.Module):
         dim,
         input_size,
         num_heads,
-        cfg,
+        drop_rate,
+        qkv_bias,
+        cls_embed_on,
+        mode,
+        pool_first,
+        rel_pos_spatial,
+        rel_pos_temporal,
+        rel_pos_zero_init,
+        residual_pooling,
+        separate_qkv,
         dim_out=None,
         kernel_q=(1, 1, 1),
         kernel_kv=(1, 1, 1),
@@ -674,16 +738,16 @@ class AttentionSubBlock(nn.Module):
             stride_q=stride_q,
             stride_kv=stride_kv,
             norm_layer=norm_layer,
-            drop_rate=cfg.MVIT.DROPOUT_RATE,
-            qkv_bias=cfg.MVIT.QKV_BIAS,
-            has_cls_embed=cfg.MVIT.CLS_EMBED_ON,
-            mode=cfg.MVIT.MODE,
-            pool_first=cfg.MVIT.POOL_FIRST,
-            rel_pos_spatial=cfg.MVIT.REL_POS_SPATIAL,
-            rel_pos_temporal=cfg.MVIT.REL_POS_TEMPORAL,
-            rel_pos_zero_init=cfg.MVIT.REL_POS_ZERO_INIT,
-            residual_pooling=cfg.MVIT.RESIDUAL_POOLING,
-            separate_qkv=cfg.MVIT.SEPARATE_QKV,
+            drop_rate=drop_rate,
+            qkv_bias=qkv_bias,
+            has_cls_embed=cls_embed_on,
+            mode=mode,
+            pool_first=pool_first,
+            rel_pos_spatial=rel_pos_spatial,
+            rel_pos_temporal=rel_pos_temporal,
+            rel_pos_zero_init=rel_pos_zero_init,
+            residual_pooling=residual_pooling,
+            separate_qkv=separate_qkv,
         )
 
     def forward(self, x):

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 20:42:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 20:52:46
+LastEditTime : 2022-10-30 15:47:18
 Description  : ref:https://github.com/facebookresearch/SlowFast
 FilePath     : /SVTAS/svtas/model/backbones/utils/mvit/utils.py
 '''
@@ -119,27 +119,31 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
     emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
     return emb
     
-def calc_mvit_feature_geometry(cfg):
+def calc_mvit_feature_geometry(num_frames,
+                               patch_stride,
+                               crop_size,
+                               depth,
+                               pool_q_stride):
     feat_size = [
         [
-            cfg.DATA.NUM_FRAMES // cfg.MVIT.PATCH_STRIDE[0]
-            if len(cfg.MVIT.PATCH_STRIDE) > 2
+            num_frames // patch_stride[0]
+            if len(patch_stride) > 2
             else 1,
-            cfg.DATA.TRAIN_CROP_SIZE // cfg.MVIT.PATCH_STRIDE[-2],
-            cfg.DATA.TRAIN_CROP_SIZE // cfg.MVIT.PATCH_STRIDE[-1],
+            crop_size // patch_stride[-2],
+            crop_size // patch_stride[-1],
         ]
-        for i in range(cfg.MVIT.DEPTH)
+        for i in range(depth)
     ]
     feat_stride = [
         [
-            cfg.MVIT.PATCH_STRIDE[0] if len(cfg.MVIT.PATCH_STRIDE) > 2 else 1,
-            cfg.MVIT.PATCH_STRIDE[-2],
-            cfg.MVIT.PATCH_STRIDE[-1],
+            patch_stride[0] if len(patch_stride) > 2 else 1,
+            patch_stride[-2],
+            patch_stride[-1],
         ]
-        for i in range(cfg.MVIT.DEPTH)
+        for i in range(depth)
     ]
-    for _, x in enumerate(cfg.MVIT.POOL_Q_STRIDE):
-        for i in range(cfg.MVIT.DEPTH):
+    for _, x in enumerate(pool_q_stride):
+        for i in range(depth):
             if i >= x[0]:
                 for j in range(len(feat_size[i])):
                     feat_size[i][j] = feat_size[i][j] // x[j + 1]
