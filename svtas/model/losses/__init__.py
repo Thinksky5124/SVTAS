@@ -2,12 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-21 15:47:45
+LastEditTime : 2022-10-30 19:17:43
 Description: file content
-FilePath     : /SVTAS/model/losses/__init__.py
+FilePath     : /SVTAS/svtas/model/losses/__init__.py
 '''
 from .etesvs_loss import ETESVSLoss
-from .segmentation_loss import SegmentationLoss
+from .segmentation_loss import SegmentationLoss, ActionCLIPSegmentationLoss
 from .recognition_segmentation_loss import RecognitionSegmentationLoss
 from .recognition_segmentation_loss import SoftLabelRocgnitionLoss
 from .steam_segmentation_loss import StreamSegmentationLoss
@@ -20,5 +20,5 @@ __all__ = [
     'ETESVSLoss', 'SegmentationLoss', 'RecognitionSegmentationLoss',
     'StreamSegmentationLoss', 'SoftLabelRocgnitionLoss', 'VideoPredictionLoss',
     'TransegerLoss', 'SgementationCLIPLoss', 'CLIPLoss', 'BridgePromptCLIPLoss',
-    'BridgePromptCLIPSegmentationLoss'
+    'BridgePromptCLIPSegmentationLoss', 'ActionCLIPSegmentationLoss'
 ]

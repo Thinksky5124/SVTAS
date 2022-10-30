@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 19:58:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-22 15:09:08
+LastEditTime : 2022-10-30 16:52:01
 Description  : CLIP simple tokenizer ref:https://github.com/KaiyangZhou/CoOp/blob/main/clip/simple_tokenizer.py
-FilePath     : /ETESVS/model/backbones/utils/clip/simple_tokenizer.py
+FilePath     : /SVTAS/svtas/model/backbones/utils/clip/simple_tokenizer.py
 '''
 import gzip
 import html
@@ -20,7 +20,7 @@ import regex as re
 
 @lru_cache()
 def default_bpe():
-    return os.path.join(os.getcwd(), "model", "backbones", "utils", "clip", "bpe_simple_vocab_16e6.txt.gz")
+    return os.path.join(os.getcwd(), "svtas", "model", "backbones", "utils", "clip", "bpe_simple_vocab_16e6.txt.gz")
 
 
 @lru_cache()

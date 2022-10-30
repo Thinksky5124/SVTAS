@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 20:18:26
+LastEditTime : 2022-10-30 16:40:29
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -37,13 +37,13 @@ class VideoFrameSample():
 
     def __call__(self, start_idx, end_idx, sample_rate):
         if self.mode == 'random':
-            return self.random_sample(start_idx, end_idx - 1, sample_rate)
+            return self.random_sample(start_idx, end_idx, sample_rate)
         elif self.mode == 'uniform':
-            return self.uniform_sample(start_idx, end_idx - 1, sample_rate)
+            return self.uniform_sample(start_idx, end_idx, sample_rate)
         elif self.mode == 'linspace':
             return self.linspace_sample(start_idx, end_idx - 1, sample_rate)
         elif self.mode == 'random_choice':
-            return self.random_choice_sample(start_idx, end_idx - 1, sample_rate)
+            return self.random_choice_sample(start_idx, end_idx, sample_rate)
         else:
             raise NotImplementedError
 

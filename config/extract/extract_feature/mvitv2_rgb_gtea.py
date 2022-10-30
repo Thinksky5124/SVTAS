@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 15:37:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 16:32:41
+LastEditTime : 2022-10-30 16:36:20
 Description  : MViTV2 Config
 FilePath     : /SVTAS/config/extract/extract_feature/mvitv2_rgb_gtea.py
 '''
@@ -21,7 +21,9 @@ MODEL = dict(
     backbone = dict(
         name = "MViT",
         clip_seg_num = 32,
-        pretrained = "./data/MViTv2_B_32x3_k400_f304025456.pyth"
+        pretrained = "./data/MViTv2_B_32x3_k400_f304025456.pyth",
+        enable_rev = True,
+        cls_embed_on = False
     ),
     head = dict(
         sample_rate = sample_rate

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:31:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:10:46
+LastEditTime : 2022-10-30 19:14:27
 Description  : ImageCLIP ref:https://github.com/sallymmx/ActionCLIP/blob/master/modules/Visual_Prompt.py
 FilePath     : /SVTAS/svtas/model/necks/action_clip_fusion_model.py
 '''
@@ -226,4 +226,6 @@ class ActionCLIPFusionNeck(nn.Module):
 
         else:
             raise ValueError('Unknown optimizer: {}'.format(self.sim_header))
-        return x.reshape([-1, x.shape[-1]])
+        
+        x = x.permute([0, 2, 1]) * masks[: ,0:1, :]
+        return x

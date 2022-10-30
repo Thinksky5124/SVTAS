@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 15:14:51
+LastEditTime : 2022-10-30 16:39:15
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/vit_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/slvit_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/adan_50e.py', '../../_base_/models/image_classification/vit.py',
@@ -20,7 +20,7 @@ sliding_window = 32
 split = 1
 batch_size = 2
 
-model_name = "ViT_gtea_split" + str(split)
+model_name = "SLViT_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",

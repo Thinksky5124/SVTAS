@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 15:44:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 16:30:05
+LastEditTime : 2022-10-30 16:36:49
 Description  : MViT ref:https://github.com/facebookresearch/SlowFast/blob/main/slowfast/models/video_model_builder.py
 FilePath     : /SVTAS/svtas/model/backbones/video/mvit.py
 '''
@@ -108,6 +108,7 @@ class MViT(nn.Module):
         self.sep_pos_embed = sep_pos_embed
         self.rel_pos_spatial = rel_pos_spatial
         self.rel_pos_temporal = rel_pos_temporal
+        self.rev_respath_fuse = rev_respath_fuse
         if norm == "layernorm":
             norm_layer = partial(nn.LayerNorm, eps=1e-6)
         else:

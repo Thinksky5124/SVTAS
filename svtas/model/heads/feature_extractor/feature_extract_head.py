@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 19:20:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-24 21:13:54
+LastEditTime : 2022-10-30 18:57:52
 Description  : Feature Extract Head
-FilePath     : /SVTAS/model/heads/feature_extractor/feature_extract_head.py
+FilePath     : /SVTAS/svtas/model/heads/feature_extractor/feature_extract_head.py
 '''
 import torch
 import torch.nn as nn
@@ -24,7 +24,7 @@ class FeatureExtractHead(nn.Module):
                  out_format="NCT"):
         super().__init__()
         assert out_format in ["NCT", "NTC"], "Unsupport output format!"
-        assert in_format in ["N,C,T,H,W", "N*T,C,H,W", "N*T,C"], "Unsupport input format!"
+        assert in_format in ["N,C,T,H,W", "N*T,C,H,W", "N*T,C", "N,C,T"], "Unsupport input format!"
         self.output_seg_num = output_seg_num
         self.input_seg_num = input_seg_num
         self.in_channels = in_channels
@@ -51,6 +51,9 @@ class FeatureExtractHead(nn.Module):
         elif self.in_format in ["N*T,C"]:
             # [N * input_seg_num, in_channels] -> [N * input_seg_num, in_channels, 1, 1]
             feature = feature.unsqueeze(-1).unsqueeze(-1)
+        elif self.in_format in ["N,C,T"]:
+            feature = feature.permute([0, 2, 1])
+            feature = torch.reshape(feature, [-1, feature.shape[-1]]).unsqueeze(-1).unsqueeze(-1)
 
         # feature.shape = [N * input_seg_num, in_channels, 1, 1]
         if self.avg_pool is not None:
