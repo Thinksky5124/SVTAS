@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:44:41
+LastEditTime : 2022-10-31 16:46:12
 Description  : file content
 FilePath     : /SVTAS/config/tas/rgb/bridge_prompt_ms_tcn_gtea.py
 '''
@@ -22,7 +22,7 @@ cnt_max = 30
 model_name = "BridgePrompt_MS_TCN_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "ActionCLIP",
+    architecture = "ActionCLIPSegmentation",
     pretrained = "./data/checkpoint/vit-16-32f.pt",
     image_prompt = dict(
         name = "CLIP",
