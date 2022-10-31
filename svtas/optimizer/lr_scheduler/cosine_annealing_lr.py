@@ -6,7 +6,7 @@ LastEditTime : 2022-10-28 16:17:35
 Description  : file content
 FilePath     : /SVTAS/svtas/optimizer/cosine_annealing_lr.py
 '''
-from .builder import LRSCHEDULER
+from ..builder import LRSCHEDULER
 import torch
 
 @LRSCHEDULER.register()

@@ -6,7 +6,7 @@ LastEditTime : 2022-05-13 21:10:46
 Description  : TSM SGD optimizer
 FilePath     : /ETESVS/optimizer/tsm_sgd_optimizer.py
 '''
-from .builder import OPTIMIZER
+from ..builder import OPTIMIZER
 import torch
 from mmcv.utils import SyncBatchNorm, _BatchNorm
 

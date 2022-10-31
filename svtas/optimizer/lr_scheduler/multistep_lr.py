@@ -6,7 +6,7 @@ LastEditTime : 2022-05-06 15:38:38
 Description  : multi-step learning rate schedular
 FilePath     : /ETESVS/optimizer/multistep_lr.py
 '''
-from .builder import LRSCHEDULER
+from ..builder import LRSCHEDULER
 import torch
 
 @LRSCHEDULER.register()

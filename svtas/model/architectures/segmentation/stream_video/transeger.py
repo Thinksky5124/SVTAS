@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 19:56:25
+LastEditTime : 2022-10-31 10:23:56
 Description  : Transeger framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/transeger.py
 '''
@@ -25,7 +25,7 @@ class Transeger(nn.Module):
         super().__init__()
         self.image_backbone = build_architecture(image_backbone)
         self.text_backbone = build_architecture(text_backbone)
-        self.joint = build_head(joint)
+        self.joint = build_neck(joint)
 
         self.init_weights()
 

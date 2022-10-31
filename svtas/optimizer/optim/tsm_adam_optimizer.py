@@ -6,7 +6,7 @@ LastEditTime : 2022-06-13 19:49:46
 Description  : TSM Adam optimizer
 FilePath     : /ETESVS/optimizer/tsm_adam_optimizer.py
 '''
-from .builder import OPTIMIZER
+from ..builder import OPTIMIZER
 import torch
 from mmcv.utils import SyncBatchNorm, _BatchNorm
 

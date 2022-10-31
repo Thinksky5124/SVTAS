@@ -6,7 +6,7 @@ LastEditTime : 2022-10-28 16:12:43
 Description  : AdamW optimizer
 FilePath     : /SVTAS/svtas/optimizer/adamw_optimizer.py
 '''
-from .builder import OPTIMIZER
+from ..builder import OPTIMIZER
 import torch
 
 @OPTIMIZER.register()

@@ -2,14 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 16:13:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-16 11:16:05
+LastEditTime : 2022-10-31 13:44:13
 Description  : Bridge-Prompt Fusion Model ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/modules/fusion_module.py
-FilePath     : /ETESVS/model/heads/joint/bridge_fusion_earlyhyp.py
+FilePath     : /SVTAS/svtas/model/necks/bridge_fusion_earlyhyp.py
 '''
 import torch
 from torch import nn
-from ...builder import build_head
-from ...builder import HEADS
+from ..builder import NECKS
 
 class LayerNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-12):
@@ -78,30 +77,36 @@ class BPromptFusing(nn.Module):
         return x[:, :, 0], x[:, :, -self.clip_length:]
 
 
-@HEADS.register()
+@NECKS.register()
 class BridgePromptFusionEarlyhyp(nn.Module):
     def __init__(self,
                  embedding_dim=512,
-                 clip_seg_num=32,
                  num_layers=6,
                  cnt_max=7,
-                 seg_model=None):
+                 context_length=77,
+                 transformer_width=512,
+                 clip_seg_num=32):
         super().__init__()
         self.cnt_max = cnt_max
         self.clip_seg_num = clip_seg_num
 
-        transformer_heads = embedding_dim // 64
+        transformer_width = transformer_width
+        transformer_heads = transformer_width // 64
+
+        self.frame_position_embeddings = nn.Embedding(context_length, embedding_dim)
+
+        self.pos_emb = nn.Sequential(nn.LayerNorm(embedding_dim),
+                                        nn.Linear(embedding_dim, clip_seg_num),
+                                        nn.Softmax(dim=-1))
 
         self.transformer = BPromptFusing(clip_length=self.clip_seg_num, embed_dim=embedding_dim, n_layers=num_layers,
                                             heads=transformer_heads)
-        self.seg_model = build_head(seg_model)
 
     def init_weights(self):
         self.apply(self._init_weights)
-        self.seg_model.init_weights()
 
     def _clear_memory_buffer(self):
-        self.seg_model._clear_memory_buffer()
+        pass
 
     def _init_weights(self, module):
         """ Initialize the weights.
@@ -142,8 +147,6 @@ class BridgePromptFusionEarlyhyp(nn.Module):
         x = x.type(x_original.dtype) + x_original
 
         seg_feature = x.mean(dim=2, keepdim=False)
-        # segmentation
-        seg_score = self.seg_model(img_seg_feature, masks.unsqueeze(1))
         
         return text_all_embedding, text_cnt_embedding, text_acts_embedding, \
-                    cnt_emb.mean(dim=1, keepdim=False), seg_feature, seg_score
+                    cnt_emb.mean(dim=1, keepdim=False), seg_feature

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-14 15:27:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:06:57
+LastEditTime : 2022-10-31 10:47:31
 Description  : Bridge-Prompt: Towards Ordinal Action Understanding in Instructional Videos ref:https://github.com/ttlmh/Bridge-Prompt
 FilePath     : /SVTAS/svtas/model/backbones/language/bridge_prompt.py
 '''
@@ -21,60 +21,28 @@ from ..utils.clip import Transformer
 @BACKBONES.register()
 class BridgePromptTextEncoder(nn.Module):
     def __init__(self,
+                 clip_model,
                  actions_map_file_path,
-                 embedding_dim,
-                 encoder_layers_num,
-                 encoder_heads_num,
-                 text_embed_dim,
-                 vocab_size=49408,
                  cnt_max=7,
                  sample_rate=4,
                  max_len=77,
                  dataset_type="gtea",
-                 ignore_index=-100,
-                 pretrained=None,
-                 token_embedding_pretrained=None):
+                 ignore_index=-100):
         super().__init__()
-        attn_mask = None
+        self.clip_model = clip_model
         file_ptr = open(actions_map_file_path, 'r')
         actions = file_ptr.read().split('\n')[:-1]
         file_ptr.close()
         id2classes = {int(a.split()[0]): a.split()[1] for a in actions}
 
-        self.pretrained = pretrained
-        self.token_embedding_pretrained = token_embedding_pretrained
-        self.sample_rate = sample_rate
-        self.embedding_dim = embedding_dim
-
-        self.token_embedding = nn.Embedding(vocab_size, embedding_dim)
         self.prompt = BridgePrompt(dataset_type=dataset_type, cnt_max=cnt_max, sample_rate=sample_rate, max_len=max_len,
                                    labels_id2classesname=id2classes, ignore_index=ignore_index)
-        self.transformer = Transformer(width=embedding_dim, layers=encoder_layers_num, heads=encoder_heads_num, attn_mask=attn_mask)
-        self.positional_embedding = nn.Parameter(torch.empty(max_len, embedding_dim))
-        self.ln_final = LayerNorm(embedding_dim)
-        self.text_projection = nn.Parameter(torch.empty(embedding_dim, text_embed_dim))
-        self.squeeze_sentence = nn.Linear(max_len * text_embed_dim, text_embed_dim)
 
     def _clear_memory_buffer(self):
         pass
     
     def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
-        if child_model is False:
-            if isinstance(self.pretrained, str):
-                logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
-            else:
-                nn.init.normal_(self.positional_embedding, std=0.01)
-                nn.init.normal_(self.token_embedding.weight, std=0.02)
-                nn.init.normal_(self.text_projection, std=self.transformer.width ** -0.5)
-        else:
-            nn.init.normal_(self.positional_embedding, std=0.01)
-            nn.init.normal_(self.token_embedding.weight, std=0.02)
-            nn.init.normal_(self.text_projection, std=self.transformer.width ** -0.5)
-        
-        if isinstance(self.token_embedding_pretrained, str):
-            logger = get_logger("SVTAS")
-            load_checkpoint(self, self.token_embedding_pretrained, strict=False, logger=logger)
+        pass
 
     def forward(self, labels, masks):
         b, temporal_len = masks.shape
@@ -89,20 +57,7 @@ class BridgePromptTextEncoder(nn.Module):
             prompt = prompt.to(masks.device)
             # [B NUM max_len] -> [B*NUM max_len]
             prompt = torch.reshape(prompt, [-1, prompt.shape[-1]])
-            # [B*NUM max_len D]
-            x = self.token_embedding(prompt)
-            
-
-            x = x + self.positional_embedding
-            x = x.permute(1, 0, 2)  # NLD -> LND
-            x = self.transformer(x)
-            x = x.permute(1, 0, 2)  # LND -> NLD
-            x = self.ln_final(x)
-
-            # x.shape = [batch_size, n_ctx, transformer.width] -> [2 D]
-            # take features from the eot embedding (eot_token is the highest number in each sequence)
-            x = x[torch.arange(x.shape[0]), prompt.argmax(dim=-1)] @ self.text_projection
-
+            x = self.clip_model.encode_text(prompt)
             outputs.append(x)
         # text_cnt_embedding [B D]
         # text_acts_embedding [B cnt_max D]

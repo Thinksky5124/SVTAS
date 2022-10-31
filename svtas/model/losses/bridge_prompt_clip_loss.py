@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 19:43:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-29 10:10:56
+LastEditTime : 2022-10-31 14:12:43
 Description  : Bridge Prompt CLIP Loss ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/train.py
-FilePath     : /ETESVS/model/losses/bridge_prompt_clip_loss.py
+FilePath     : /SVTAS/svtas/model/losses/bridge_prompt_clip_loss.py
 '''
 import numpy as np
 import torch
@@ -106,7 +106,9 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         # text_cnt_embedding [N D]
         # text_acts_embedding [N cnt_max D]
         # cnt_emb [N D]
-        text_all_embedding, text_cnt_embedding, text_acts_embedding, cnt_emb, image_embedding, img_seg_score = model_output
+        image_embedding, text_feature, img_seg_score = model_output
+
+        text_all_embedding, text_cnt_embedding, text_acts_embedding, cnt_emb = text_feature
 
         # img backbone label learning
         img_seg_loss = self.img_seg_loss(img_seg_score, input_data)['loss']

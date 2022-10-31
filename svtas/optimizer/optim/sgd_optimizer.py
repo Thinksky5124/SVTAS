@@ -6,7 +6,7 @@ LastEditTime : 2022-05-06 16:08:05
 Description  : SGD optimizer
 FilePath     : /ETESVS/optimizer/sgd_optimizer.py
 '''
-from .builder import OPTIMIZER
+from ..builder import OPTIMIZER
 import torch
 
 @OPTIMIZER.register()

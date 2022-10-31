@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:31:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 19:14:27
+LastEditTime : 2022-10-31 14:09:32
 Description  : ImageCLIP ref:https://github.com/sallymmx/ActionCLIP/blob/master/modules/Visual_Prompt.py
 FilePath     : /SVTAS/svtas/model/necks/action_clip_fusion_model.py
 '''
@@ -189,7 +189,7 @@ class ActionCLIPFusionNeck(nn.Module):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
 
-    def forward(self, x, masks):
+    def forward(self, x, text_embedding, masks):
         b, t, c = x.size()
         x = x.contiguous()
         if self.sim_header == "meanP":
@@ -228,4 +228,4 @@ class ActionCLIPFusionNeck(nn.Module):
             raise ValueError('Unknown optimizer: {}'.format(self.sim_header))
         
         x = x.permute([0, 2, 1]) * masks[: ,0:1, :]
-        return x
+        return text_embedding, x
