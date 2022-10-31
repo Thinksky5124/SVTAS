@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:04:45
+LastEditTime : 2022-10-31 19:16:20
 Description: Action Recognition 3D framework
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition3d.py
 '''
@@ -96,4 +96,4 @@ class Recognition3D(nn.Module):
             head_score = self.head(seg_feature, masks)
         else:
             head_score = seg_feature
-        return head_score
+        return {"output":head_score}

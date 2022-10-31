@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:54:03
+LastEditTime : 2022-10-31 19:13:28
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -202,10 +202,8 @@ class Runner():
             else:
                 loss.backward()
         
-        if not torch.is_tensor(outputs):
-            outputs = outputs[-1]
-            
-        return outputs, loss_dict
+        score = outputs['output']
+        return score, loss_dict
 
     def run_one_clip(self, data_dict):
         vid_list = data_dict['vid_list']

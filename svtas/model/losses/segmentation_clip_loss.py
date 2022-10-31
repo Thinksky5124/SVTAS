@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-11 11:34:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-12 14:43:16
+LastEditTime : 2022-10-31 19:35:18
 Description  : Segmentation CLIP loss
-FilePath     : /ETESVS/model/losses/segmentation_clip_loss.py
+FilePath     : /SVTAS/svtas/model/losses/segmentation_clip_loss.py
 '''
 import numpy as np
 import torch
@@ -40,7 +40,7 @@ class SgementationCLIPLoss(nn.Module):
         # img_feature [N C T]
         # text_feature [N C T]
         # img_extract_score [N C T]
-        img_feature, text_feature, img_seg_score = model_output
+        img_feature, text_feature, img_seg_score = model_output["image_feature"], model_output["text_feature"], model_output["output"]
 
         # img backbone label learning
         img_seg_loss= self.img_seg_loss(img_seg_score, input_data)['loss']
@@ -70,7 +70,7 @@ class CLIPLoss(nn.Module):
     def forward(self, model_output, input_data):
         # img_feature [N C T]
         # text_feature [N C T]
-        img_feature, text_feature = model_output
+        img_feature, text_feature = model_output["image_feature"], model_output["text_feature"]
         masks, precise_sliding_num = input_data["masks"], input_data['precise_sliding_num']
 
         b, d_i, T = img_feature.shape

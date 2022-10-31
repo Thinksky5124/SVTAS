@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 16:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:28:29
+LastEditTime : 2022-10-31 19:38:36
 Description  : Video prediction loss
-FilePath     : /ETESVS/model/losses/video_prediction_loss.py
+FilePath     : /SVTAS/svtas/model/losses/video_prediction_loss.py
 '''
 import torch
 import torch.nn as nn
@@ -36,7 +36,7 @@ class VideoPredictionLoss(nn.Module):
                 sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
     
     def forward(self, model_output, input_data):
-        pred_frames_score, frames_score = model_output
+        pred_frames_score, frames_score = model_output["output"]
         masks, labels, pred_labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data["pred_labels"], input_data['precise_sliding_num']
         # frames_score [stage_num, N, C, T]
         # pred_frames_score [stage_num， N, C, P_T]

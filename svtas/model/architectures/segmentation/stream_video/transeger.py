@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 10:23:56
+LastEditTime : 2022-10-31 19:18:12
 Description  : Transeger framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/transeger.py
 '''
@@ -89,4 +89,4 @@ class Transeger(nn.Module):
         # joint_score [num_satge N C T]
         if not self.training:
             self.last_clip_labels = torch.argmax(joint_score[-1], dim=-2).detach().clone()
-        return joint_score
+        return {"output":joint_score}

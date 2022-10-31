@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 10:04:13
+LastEditTime : 2022-10-31 19:00:31
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
@@ -68,10 +68,9 @@ class ExtractRunner():
 
         outputs = self.model(input_data)
         
-        if not torch.is_tensor(outputs):
-            outputs = outputs[-1]
+        score = outputs['output']
             
-        return outputs
+        return score
     
     @torch.no_grad()
     def run_one_clip(self, data_dict):

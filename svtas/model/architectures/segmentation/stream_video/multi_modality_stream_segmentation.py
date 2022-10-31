@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:04:55
+LastEditTime : 2022-10-31 19:16:32
 Description  : Multi Modality stream segmentation
-FilePath     : /SVTAS/svtas/model/architectures/segmentation/multi_modality_stream_segmentation.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/multi_modality_stream_segmentation.py
 '''
 import torch
 import torch.nn as nn
@@ -117,4 +117,4 @@ class MulModStreamSegmentation(nn.Module):
             head_score = None
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return backbone_score, head_score
+        return {"output":head_score, "backbone_score":backbone_score}

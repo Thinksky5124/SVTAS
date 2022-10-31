@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 16:45:09
+LastEditTime : 2022-10-31 19:33:58
 Description: loss function
-FilePath     : /ETESVS/model/losses/etesvs_loss.py
+FilePath     : /SVTAS/svtas/model/losses/etesvs_loss.py
 '''
 import torch
 import numpy as np
@@ -42,7 +42,7 @@ class ETESVSLoss(nn.Module):
         self.head_loss = SegmentationLoss(self.num_classes, sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
 
     def forward(self, model_output, input_data):
-        backbone_score, neck_score, head_score = model_output
+        backbone_score, neck_score, head_score = model_output["backbone_score"], model_output["neck_score"], model_output["output"]
         masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # seg_score [stage_num, N, C, T]
         # masks [N, T]

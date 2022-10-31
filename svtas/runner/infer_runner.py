@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-24 14:59:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:53:54
+LastEditTime : 2022-10-31 19:13:10
 Description  : Infer Runner Class
 FilePath     : /SVTAS/svtas/runner/infer_runner.py
 '''
@@ -122,10 +122,9 @@ class InferONNXRunner(Runner):
 
         outputs = self.model.run(None, input_data)
         
-        if type(outputs) is not np.ndarray:
-            outputs = outputs[-1]
+        score = outputs['output']
             
-        return outputs
+        return score
         
     def run_one_clip(self, data_dict):
         vid_list = data_dict['vid_list']

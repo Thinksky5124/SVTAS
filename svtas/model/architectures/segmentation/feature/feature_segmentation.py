@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 19:55:55
+LastEditTime : 2022-10-31 19:16:26
 Description: feaeture segmentation model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature/feature_segmentation.py
 '''
@@ -95,4 +95,4 @@ class FeatureSegmentation(nn.Module):
         else:
             head_score = None
         # seg_score [stage_num, N, C, T]
-        return head_score
+        return {"output":head_score}

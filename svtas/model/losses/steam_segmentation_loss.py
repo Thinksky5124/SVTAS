@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-15 20:26:36
+LastEditTime : 2022-10-31 19:37:29
 Description: loss function
-FilePath     : /ETESVS/model/losses/steam_segmentation_loss.py
+FilePath     : /SVTAS/svtas/model/losses/steam_segmentation_loss.py
 '''
 import torch
 import torch.nn as nn
@@ -37,7 +37,7 @@ class StreamSegmentationLoss(nn.Module):
                 sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
 
     def forward(self, model_output, input_data):
-        backbone_score, head_score = model_output
+        backbone_score, head_score = model_output["backbone_score"], model_output["output"]
         masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # seg_score [stage_num, N, C, T]
         # masks [N, T]

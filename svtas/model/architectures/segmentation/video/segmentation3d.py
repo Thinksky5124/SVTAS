@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 19:55:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 20:21:52
+LastEditTime : 2022-10-31 19:19:13
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/video/segmentation3d.py
 '''
@@ -113,4 +113,4 @@ class Segmentation3D(nn.Module):
         else:
             head_score = head_score
 
-        return head_score
+        return {"output":head_score}

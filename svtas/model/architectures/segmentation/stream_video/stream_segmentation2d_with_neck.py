@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 19:56:08
+LastEditTime : 2022-10-31 19:17:03
 Description: etesvs model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/stream_segmentation2d_with_neck.py
 '''
@@ -85,4 +85,4 @@ class StreamSegmentation2DWithNeck(nn.Module):
             head_score = None
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return backbone_score, neck_score, head_score
+        return {"output":head_score, "backbone_score":backbone_score, "neck_score":neck_score}

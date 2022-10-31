@@ -155,4 +155,4 @@ class ActionCLIPSegmentation(nn.Module):
         else:
             head_score = head_score
             
-        return neck_feature, text_feature, head_score
+        return {"output":head_score, "image_feature":neck_feature, "text_feature":text_feature}

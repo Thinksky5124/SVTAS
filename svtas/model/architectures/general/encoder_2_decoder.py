@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-27 15:46:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-06 20:42:42
+LastEditTime : 2022-10-31 19:27:54
 Description  : Text Translation framework
-FilePath     : /ETESVS/model/architectures/general/encoder_2_decoder.py
+FilePath     : /SVTAS/svtas/model/architectures/general/encoder_2_decoder.py
 '''
 import torch
 import torch.nn as nn
@@ -74,5 +74,5 @@ class Encoder2Decoder(nn.Module):
             x = self.head(x, masks)
         else:
             x = x
-
-        return x
+        
+        return {"output":x}

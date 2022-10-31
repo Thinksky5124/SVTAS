@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:57:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:24:12
+LastEditTime : 2022-10-31 19:26:57
 Description  : CLIP achitectures
 FilePath     : /SVTAS/svtas/model/architectures/recognition/action_clip.py
 '''
@@ -139,4 +139,4 @@ class ActionCLIP(nn.Module):
             head_score = self.head(image_embedding, masks)
         else:
             head_score = image_embedding
-        return neck_feature, text_feature, head_score
+        return {"output":head_score, "image_feature":neck_feature, "text_feature":text_feature}

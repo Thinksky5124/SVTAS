@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:57:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-26 19:45:37
+LastEditTime : 2022-10-31 19:27:21
 Description  : file content
-FilePath     : /ETESVS/model/architectures/optical_flow_estimator.py
+FilePath     : /SVTAS/svtas/model/architectures/optical_flow/optical_flow_estimator.py
 '''
 
 import torch
@@ -55,4 +55,4 @@ class OpticalFlowEstimation(nn.Module):
         else:
             flows = flow2
         # seg_score [N,T,C,H,W]
-        return flows
+        return {"output":flows}

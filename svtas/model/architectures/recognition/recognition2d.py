@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:04:42
+LastEditTime : 2022-10-31 19:16:02
 Description: Action Recognition 2D framework
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition2d.py
 '''
@@ -96,4 +96,4 @@ class Recognition2D(nn.Module):
             head_score = self.head(seg_feature, masks)
         else:
             head_score = seg_feature
-        return head_score
+        return {"output":head_score}

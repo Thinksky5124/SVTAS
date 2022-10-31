@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-29 17:24:00
+LastEditTime : 2022-10-31 19:34:43
 Description: Action recognition model loss
-FilePath     : /ETESVS/model/losses/recognition_segmentation_loss.py
+FilePath     : /SVTAS/svtas/model/losses/recognition_segmentation_loss.py
 '''
 import torch
 import torch.nn as nn
@@ -40,7 +40,7 @@ class RecognitionSegmentationLoss(nn.Module):
             raise NotImplementedError
 
     def forward(self, model_output, input_data):
-        score = model_output
+        score = model_output["output"]
         masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
@@ -76,7 +76,8 @@ class SoftLabelRocgnitionLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.elps = 1e-10
     
-    def forward(self, score, input_data):
+    def forward(self, model_output, input_data):
+        score = model_output["output"]
         # score [N C T]
         gt_mask, gt, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # gt_mask [N, T]

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:22:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:05:13
+LastEditTime : 2022-10-31 19:18:02
 Description  : Stream Segmentation 3D without backbone loss
-FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_segmentation3d.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/stream_segmentation3d.py
 '''
 import torch
 import torch.nn as nn
@@ -93,4 +93,4 @@ class StreamSegmentation3D(nn.Module):
             head_score = seg_feature
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return head_score
+        return {"output":head_score}

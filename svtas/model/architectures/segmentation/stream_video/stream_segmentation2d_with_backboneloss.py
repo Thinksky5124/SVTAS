@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 19:52:34
+LastEditTime : 2022-10-31 19:16:57
 Description: etesvs model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/stream_segmentation2d_with_backboneloss.py
 '''
@@ -84,4 +84,4 @@ class StreamSegmentation2DWithBackbone(nn.Module):
             head_score = seg_feature
         # seg_score [stage_num, N, C, T]
         # cls_score [N, C, T]
-        return backbone_score, head_score
+        return {"output":head_score, "backbone_score":backbone_score}

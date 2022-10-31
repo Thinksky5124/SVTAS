@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 15:00:22
+LastEditTime : 2022-10-31 19:39:24
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/ms_tcn_gtea.py
 '''
@@ -18,7 +18,7 @@ split = 1
 num_classes = 11
 sample_rate = 1
 ignore_index = -100
-epoch = 50
+epochs = 50
 model_name = "MSTCN_gtea_split" + str(split)
 
 MODEL = dict(
@@ -52,7 +52,7 @@ DATASET = dict(
 )
 
 LRSCHEDULER = dict(
-    step_size = [epoch]
+    step_size = [epochs]
 )
 
 PIPELINE = dict(

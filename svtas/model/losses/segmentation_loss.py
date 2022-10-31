@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 19:17:36
+LastEditTime : 2022-10-31 19:36:31
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''
@@ -39,7 +39,7 @@ class SegmentationLoss(nn.Module):
     def forward(self, model_output, input_data):
         # score shape [stage_num N C T]
         # masks shape [N T]
-        head_score = model_output
+        head_score = model_output["output"]
         masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         
         _, b, _, t = head_score.shape
@@ -66,7 +66,7 @@ class ActionCLIPSegmentationLoss(SegmentationLoss):
     def forward(self, model_output, input_data):
         # score shape [stage_num N C T]
         # masks shape [N T]
-        image_embedding, text_embedding, head_score = model_output
+        img_feature, text_feature, head_score = model_output["image_feature"], model_output["text_feature"], model_output["output"]
         masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         
         _, b, _, t = head_score.shape

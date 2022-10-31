@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 19:43:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:28:00
+LastEditTime : 2022-10-31 19:32:35
 Description  : Bridge Prompt CLIP Loss ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/train.py
 FilePath     : /SVTAS/svtas/model/losses/bridge_prompt_clip_loss.py
 '''
@@ -109,13 +109,13 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         # text_cnt_embedding [N D]
         # text_acts_embedding [N cnt_max D]
         # cnt_emb [N D]
-        image_embedding, text_feature, img_seg_score = model_output
+        image_embedding, text_feature, img_seg_score = model_output["image_feature"], model_output["text_feature"], model_output["output"]
 
         text_all_embedding, text_cnt_embedding, text_acts_embedding, cnt_emb = text_feature
 
         if self.is_segmentation:
             # img backbone label learning
-            img_seg_loss = self.img_seg_loss(img_seg_score, input_data)['loss']
+            img_seg_loss = self.img_seg_loss({"output":img_seg_score}, input_data)['loss']
 
         all_ground_truth, cnt_ground_truth, act_ground_truth = self.gen_label(input_data["labels"], dtype=image_embedding.dtype)
 
@@ -129,15 +129,15 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         # [N NUM D] -> [N D]
         image_embedding_mean = torch.mean(image_embedding, dim=1)
         input_data_all = {"masks": bridge_prompt_mask, "labels": all_ground_truth, "precise_sliding_num": input_data["precise_sliding_num"]}
-        all_loss = self.clip_loss([image_embedding_mean, text_all_embedding], input_data_all)['loss']
+        all_loss = self.clip_loss({"image_feature":image_embedding_mean, "text_feature":text_all_embedding}, input_data_all)['loss']
         # cnt loss
         input_data_cnt = {"masks": bridge_prompt_mask, "labels": cnt_ground_truth, "precise_sliding_num": input_data["precise_sliding_num"]}
-        cnt_loss = self.clip_loss([cnt_emb, text_cnt_embedding], input_data_cnt)['loss']
+        cnt_loss = self.clip_loss({"image_feature":cnt_emb, "text_feature":text_cnt_embedding}, input_data_cnt)['loss']
         # act loss
         act_loss = 0.
         for dd in range(text_acts_embedding.shape[1]):
             input_data_act = {"masks": bridge_prompt_mask, "labels": act_ground_truth[:, :, dd], "precise_sliding_num": input_data["precise_sliding_num"]}
-            act_loss += self.clip_loss([image_embedding[:, dd, :], text_acts_embedding[:, dd, :]], input_data_act)['loss']
+            act_loss += self.clip_loss({"image_feature":image_embedding[:, dd, :], "text_feature":text_acts_embedding[:, dd, :]}, input_data_act)['loss']
 
         if self.is_segmentation:
             loss = img_seg_loss + all_loss + cnt_loss + act_loss
@@ -183,7 +183,7 @@ class BridgePromptCLIPLoss(nn.Module):
         return loss
     
     def forward(self, model_output, input_data):
-        image_embedding, text_embedding = model_output
+        image_embedding, text_embedding = model_output["image_feature"], model_output["text_feature"]
         masks, ground_truth, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         logit_scale = self.logit_scale.exp()
 
