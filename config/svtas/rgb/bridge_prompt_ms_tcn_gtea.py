@@ -2,30 +2,32 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 19:26:05
+LastEditTime : 2022-10-31 16:44:58
 Description  : file content
-FilePath     : /SVTAS/config/tas/rgb/action_clip_ms_tcn_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/bridge_prompt_ms_tcn_gtea.py
 '''
 _base_ = [
-    '../../_base_/schedules/adamw_50e.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
-    '../../_base_/dataset/gtea/gtea_video.py'
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
+    '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
 split = 1
 num_classes = 11
 sample_rate = 1
-clip_seg_num = 64
+clip_seg_num = 32
+sliding_window = 32
 ignore_index = -100
 batch_size = 1
-model_name = "ActionCLIP_MS_TCN_gtea_split" + str(split)
+epochs = 50
+cnt_max = 30
+model_name = "BridgePrompt_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "ActionCLIPSegmentation",
-    pretrained = "./data/vit-16-32f.pt",
-    is_feature_extract = True,
+    architecture = "ActionCLIP",
+    pretrained = "./data/checkpoint/vit-16-32f.pt",
     image_prompt = dict(
         name = "CLIP",
-        # pretrained = "./data/ViT-B-16.pt",
+        # pretrained = "./data/checkpoint/ViT-B-16.pt",
         embed_dim = 512,
         image_resolution = 224,
         vision_layers = 12,
@@ -43,34 +45,34 @@ MODEL = dict(
         emb_dropout = 0.,
     ),
     text_prompt = dict(
-        name = "TextCLIP"
+        name = "BridgePromptTextEncoder",
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        cnt_max=cnt_max
     ),
     fusion_neck = dict(
-        name = "ActionCLIPFusionNeck",
-        sim_head = "Transf",
-        embed_dim_cfg = 512,
-        context_length_cfg = 77,
-        transformer_width_cfg = 512,
+        name = "BridgePromptFusionEarlyhyp",
+        embedding_dim = 512,
+        num_layers=6,
+        cnt_max=cnt_max,
         clip_seg_num = clip_seg_num
     ),
     head = dict(
         name = "MultiStageModel",
-        num_stages = 4,
-        num_layers = 10,
+        num_stages = 1,
+        num_layers = 4,
         num_f_maps = 64,
         dim = 512,
         num_classes = 11,
         sample_rate = sample_rate
     ),
-    aligin_head = dict(
-        name = "InterploteAlignHead"
-    ),
     loss = dict(
-        name = "ActionCLIPSegmentationLoss",
+        name = "BridgePromptCLIPSegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
+        cnt_max = cnt_max,
         smooth_weight = 0.15,
-        ignore_index = -100
+        ignore_index = -100,
+        is_segmentation=True
     )
 )
 
@@ -80,15 +82,21 @@ POSTPRECESSING = dict(
     ignore_index = ignore_index
 )
 
+LRSCHEDULER = dict(
+    step_size = [epochs]
+)
+
 DATASET = dict(
-    temporal_clip_batch_size = batch_size,
+    temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle"
+        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
+        sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle"
+        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
+        sliding_window = sliding_window,
     )
 )
 
@@ -100,11 +108,12 @@ PIPELINE = dict(
             backend = "decord"
         ),
         sample = dict(
-            name = "VideoSampler",
-            is_train = True,
-            sample_mode = 'linspace',
+            name = "VideoStreamSampler",
+            is_train = False,
+            sample_rate = sample_rate,
             clip_seg_num = clip_seg_num,
-            channel_mode="RGB"
+            sliding_window = sliding_window,
+            sample_mode = "uniform"
         ),
         transform = dict(
             name = "VideoStreamTransform",
@@ -128,11 +137,12 @@ PIPELINE = dict(
             backend = "decord"
         ),
         sample = dict(
-            name = "VideoSampler",
+            name = "VideoStreamSampler",
             is_train = False,
-            sample_mode = 'linspace',
+            sample_rate = sample_rate,
             clip_seg_num = clip_seg_num,
-            channel_mode = "RGB"
+            sliding_window = sliding_window,
+            sample_mode = "uniform"
         ),
         transform = dict(
             name = "VideoStreamTransform",

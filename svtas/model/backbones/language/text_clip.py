@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:15:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 14:04:25
+LastEditTime : 2022-10-31 15:33:33
 Description  : ActionCLIP TextCLIP ref:https://github.com/sallymmx/ActionCLIP/blob/master/modules/Text_Prompt.py
 FilePath     : /SVTAS/svtas/model/backbones/language/text_clip.py
 '''
@@ -37,7 +37,7 @@ class TextCLIP(nn.Module):
         id2classes = {int(a.split()[0]): a.split()[1] for a in actions}
         self.text_dict = {}
         for ii, txt in enumerate(self.text_aug):
-            self.text_dict[ii] = torch.cat([self._tokenizer(txt.format(c)) for i, c in id2classes])
+            self.text_dict[ii] = torch.cat([self._tokenizer.tokenize(txt.format(c)) for i, c in id2classes.items()])
     
     def _clear_memory_buffer(self):
         pass
@@ -47,7 +47,7 @@ class TextCLIP(nn.Module):
 
     def __call__(self, labels, masks):
         text_id = numpy.random.randint(self.num_text_aug, size = labels.shape[0])
-        texts = torch.stack([self.text_dict[j][i,:] for i,j in zip(labels.shape[0], text_id)])
+        texts = torch.stack([self.text_dict[j][i,:] for i,j in zip(labels, text_id)])
         text_embedding = self.clip_model.encode_text(texts)
         return text_embedding
     

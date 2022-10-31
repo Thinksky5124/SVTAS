@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:01:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-26 14:46:09
+LastEditTime : 2022-10-31 16:06:43
 Description  : ImageCLIP ref:https://github.com/openai/CLIP/blob/main/clip/model.py
-FilePath     : /SVTAS/model/backbones/image/clip.py
+FilePath     : /SVTAS/svtas/model/backbones/image/clip.py
 '''
 
 from ....utils.logger import get_logger
@@ -436,7 +436,8 @@ class CLIP(nn.Module):
         return self.visual.conv1.weight.dtype
 
     def encode_image(self, image):
-        return self.visual(image.type(self.dtype))
+        x = self.visual(image.type(self.dtype))
+        return x
 
     def encode_text(self, text):
         x = self.token_embedding(text).type(self.dtype)  # [batch_size, n_ctx, d_model]

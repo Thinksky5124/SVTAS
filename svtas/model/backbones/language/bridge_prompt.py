@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-14 15:27:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 10:47:31
+LastEditTime : 2022-10-31 16:00:52
 Description  : Bridge-Prompt: Towards Ordinal Action Understanding in Instructional Videos ref:https://github.com/ttlmh/Bridge-Prompt
 FilePath     : /SVTAS/svtas/model/backbones/language/bridge_prompt.py
 '''
@@ -45,7 +45,7 @@ class BridgePromptTextEncoder(nn.Module):
         pass
 
     def forward(self, labels, masks):
-        b, temporal_len = masks.shape
+        b, _, temporal_len = masks.shape
         prompts = self.prompt(labels, b, temporal_len, masks.device)
 
         outputs = []
@@ -92,10 +92,25 @@ class BridgePrompt(nn.Module):
                         f"This clip contains five actions,", f"This clip contains six actions,",
                         f"This clip contains seven actions,", f"This clip contains eight actions,",
                         f"This clip contains nine actions,", f"This clip contains ten actions,",
-                        f"This clip contains eleven actions,", f"This clip contains twelve actions,"]
+                        f"This clip contains eleven actions,", f"This clip contains twelve actions,",
+                        f"This clip contains thirteen actions,", f"This clip contains fourteen actions,",
+                        f"This clip contains fifteen actions,", f"This clip contains sixteen actions,",
+                        f"This clip contains seventeen actions,", f"This clip contains eighteen actions,",
+                        f"This clip contains nineteen actions,", f"This clip contains twenty actions,",
+                        f"This clip contains twenty-one actions,", f"This clip contains twenty-two actions,",
+                        f"This clip contains twenty-three actions,", f"This clip contains twenty-four actions,",
+                        f"This clip contains twenty-five actions,", f"This clip contains twenty-six actions,",
+                        f"This clip contains twenty-seven actions,", f"This clip contains twenty-eight actions,",
+                        f"This clip contains twenty-nine actions,", f"This clip contains thirty actions,",
+                        f"This clip contains thirty-one actions,", f"This clip contains thirty-two actions,"]
         text_aug_acts = [f"Firstly, ", f"Secondly, ", f"Thirdly, ", f"Fourthly, ",
                         f"Fifthly, ", f"Sixthly, ", f"Seventhly, ", f"Eighthly, ",
-                        f"Ninthly", f"Tenthly", f"Eleventhly", f"Twelfthly"]
+                        f"Ninthly", f"Tenthly", f"Eleventhly", f"Twelfthly"
+                        f"Thirteenthly, ", f"Fourteenthly, ", f"Fifteenthly, ", f"Sixteenthly, ",
+                        f"Seventeenthly, ", f"Eighteenthly, ", f"Nineteenthly, ", f"Twentiethly, ",
+                        f"Twenty-firstly, ", f"Twenty-secondly, ", f"Twenty-thirdly, ", f"Twenty-fourthly, ",
+                        f"Twenty-fifthly", f"Twenty-sixthly", f"Twenty-seventhly", f"Twenty-eighthly",
+                        f"Twenty-ninthly", f"Thirtiethly", f"Thirty-firstly", f"Thirty-secondly",]
         self.text_aug_temp = [f"the person is {{}}.", f"the person is performing the action of {{}}.",
                         f"the character is {{}}.", f"he or she is {{}}.", f"the action {{}} is being played.",
                         f"it is the action of {{}}.", f"the human is {{}}.",
@@ -111,13 +126,33 @@ class BridgePrompt(nn.Module):
                         f"The sixth action does not exist.", f"The seventh action does not exist.",
                         f"The eighth action does not exist.", f"The nine action does not exist.",
                         f"The ten action does not exist.", f"The eleven action does not exist.",
-                        f"The twelve action does not exist."]
+                        f"The twelve action does not exist.", f"The thirteen action does not exist.",
+                        f"The fourteen action does not exist.", f"The fifteen action does not exist.",
+                        f"The sixteen action does not exist.", f"The seventeen action does not exist.",
+                        f"The eighteen action does not exist.", f"The nineteen action does not exist.",
+                        f"The twenty action does not exist.", f"The twenty-one action does not exist.",
+                        f"The twenty-two action does not exist.", f"The twenty-three action does not exist.",
+                        f"The twenty-four action does not exist.", f"The twenty-five action does not exist.",
+                        f"The twenty-six action does not exist.", f"The twenty-seven action does not exist.",
+                        f"The twenty-eight action does not exist.", f"The twenty-nine action does not exist.",
+                        f"The thirty action does not exist.", f"The thirty-one action does not exist.",
+                        f"The thirty-two action does not exist."]
         text_aug_acts = [f"this is the first action.", f"this is the second action.",
                         f"this is the third action.", f"this is the fourth action.",
                         f"this is the fifth action.", f"this is the sixth action.",
                         f"this is the seventh action.", f"this is the eighth action.",
                         f"this is the nine action.", f"this is the ten action.",
-                        f"this is the eleven action.", f"this is the twelve action."]
+                        f"this is the eleven action.", f"this is the twelve action.",
+                        f"this is the thirteen action.", f"this is the fourteen action.",
+                        f"this is the fifteen action.", f"this is the sixteen action.",
+                        f"this is the seventeen action.", f"this is the eighteen action.",
+                        f"this is the nineteen action.", f"this is the twenty action.",
+                        f"this is the twenty-one action.", f"this is the twenty-two action.",
+                        f"this is the twenty-three action.", f"this is the twenty-four action.",
+                        f"this is the twenty-five action.", f"this is the twenty-six action.",
+                        f"this is the twenty-seven action.", f"this is the twenty-eight action.",
+                        f"this is the twenty-nine action.", f"this is the thirty action.",
+                        f"this is the thirty-one action.", f"this is the thirty-two action."]
         
         self.text_aug_cnts = text_aug_cnts[:self.cnt_max + 1]
         self.text_aug_acts = text_aug_acts[:self.cnt_max]

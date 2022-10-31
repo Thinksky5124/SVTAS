@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 19:21:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 19:24:33
+LastEditTime : 2022-10-31 16:24:40
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/video/action_clip_segmentation.py
 '''
@@ -42,6 +42,7 @@ class ActionCLIPSegmentation(nn.Module):
             self.image_prompt = None
             
         if text_prompt is not None:
+            text_prompt['clip_model'] = self.image_prompt
             self.text_prompt = build_backbone(text_prompt)
         else:
             self.neck = None
@@ -123,35 +124,35 @@ class ActionCLIPSegmentation(nn.Module):
         # x [N * T, C, H, W]
 
         if self.text_prompt is not None and self.is_feature_extract is False:
-            texts = self.text_prompt(labels, masks)
-            text_embedding = self.image_prompt.encode_text(texts)
+            text_embedding = self.text_prompt(labels, masks)
         else:
-            text_embedding = None
+            text_embedding = labels
 
         if self.image_prompt is not None:
              # masks.shape [N * T, 1, 1, 1]
-            imgs_masks = masks[:, :, ::self.sample_rate].permute([0, 2, 1])
+            imgs_masks = masks[:, :, ::self.sample_rate]
             image_embedding = self.image_prompt.encode_image(imgs)
-            image_embedding = image_embedding.view(b, t, -1) * imgs_masks
+            image_embedding = image_embedding.view(b, t, -1).permute([0, 2, 1]) * imgs_masks
         else:
             image_embedding = imgs
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
         # cls_feature [N, F_dim, T]
-        if self.fusion_neck is not None:
-            neck_feature = self.fusion_neck(image_embedding, masks)
+        if self.fusion_neck is not None and self.is_feature_extract is False:
+            text_feature, neck_feature = self.fusion_neck(image_embedding, text_embedding, masks)
         else:
             neck_feature = image_embedding
+            text_feature = text_embedding
         
         if self.head is not None:
-            head_score = self.head(neck_feature, masks)
+            head_score = self.head(image_embedding, masks)
         else:
-            head_score = neck_feature
+            head_score = image_embedding
         
         if self.aligin_head is not None:
             head_score = self.aligin_head(head_score, input_data['labels'], masks)
         else:
             head_score = head_score
             
-        return image_embedding, text_embedding, head_score
+        return neck_feature, text_feature, head_score

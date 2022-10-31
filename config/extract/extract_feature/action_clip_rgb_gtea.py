@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:50:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:26:15
+LastEditTime : 2022-10-31 16:11:15
 Description  : Action Clip Config
 FilePath     : /SVTAS/config/extract/extract_feature/action_clip_rgb_gtea.py
 '''
@@ -17,11 +17,11 @@ clip_seg_num = 8
 
 MODEL = dict(
     architecture = "ActionCLIP",
-    pretrained = "./data/vit-16-32f.pt",
+    pretrained = "./data/checkpoint/vit-16-32f.pt",
     is_feature_extract = True,
     image_prompt = dict(
         name = "CLIP",
-        # pretrained = "./data/ViT-B-16.pt",
+        # pretrained = "./data/checkpoint/ViT-B-16.pt",
         embed_dim = 512,
         image_resolution = 224,
         vision_layers = 12,
@@ -39,7 +39,8 @@ MODEL = dict(
         emb_dropout = 0.,
     ),
     text_prompt = dict(
-        name = "TextCLIP"
+        name = "TextCLIP",
+        actions_map_file_path = "./data/gtea/mapping.txt"
     ),
     fusion_neck = dict(
         name = "ActionCLIPFusionNeck",
@@ -56,7 +57,7 @@ MODEL = dict(
         output_seg_num = 1,
         sample_rate = sample_rate,
         pool_space = True,
-        in_format = "N*T,C",
+        in_format = "N,T,C",
         out_format = "NCT"
     ),
     loss = None

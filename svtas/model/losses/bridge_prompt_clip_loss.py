@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 19:43:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 14:12:43
+LastEditTime : 2022-10-31 16:28:00
 Description  : Bridge Prompt CLIP Loss ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/train.py
 FilePath     : /SVTAS/svtas/model/losses/bridge_prompt_clip_loss.py
 '''
@@ -23,7 +23,8 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
                  smooth_weight=0.15,
                  img_seg_loss_weights=1.0,
                  clip_loss_weight=1.0,
-                 ignore_index=-100):
+                 ignore_index=-100,
+                 is_segmentation=False):
         super().__init__()
         self.ignore_index = ignore_index
         self.num_classes = num_classes
@@ -32,8 +33,10 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         self.clip_loss_weight = clip_loss_weight
         self.sample_rate = sample_rate
         self.cnt_max = cnt_max
-        self.img_seg_loss = SegmentationLoss(num_classes=self.num_classes, loss_weight=self.img_seg_loss_weights, 
-                sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
+        self.is_segmentation = is_segmentation
+        if is_segmentation:
+            self.img_seg_loss = SegmentationLoss(num_classes=self.num_classes, loss_weight=self.img_seg_loss_weights, 
+                    sample_rate=self.sample_rate, smooth_weight=self.smooth_weight, ignore_index=self.ignore_index)
         self.clip_loss = BridgePromptCLIPLoss(loss_weight=self.clip_loss_weight, ignore_index=self.ignore_index)
         self.elps = 1e-10
     
@@ -110,8 +113,9 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
 
         text_all_embedding, text_cnt_embedding, text_acts_embedding, cnt_emb = text_feature
 
-        # img backbone label learning
-        img_seg_loss = self.img_seg_loss(img_seg_score, input_data)['loss']
+        if self.is_segmentation:
+            # img backbone label learning
+            img_seg_loss = self.img_seg_loss(img_seg_score, input_data)['loss']
 
         all_ground_truth, cnt_ground_truth, act_ground_truth = self.gen_label(input_data["labels"], dtype=image_embedding.dtype)
 
@@ -135,12 +139,16 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
             input_data_act = {"masks": bridge_prompt_mask, "labels": act_ground_truth[:, :, dd], "precise_sliding_num": input_data["precise_sliding_num"]}
             act_loss += self.clip_loss([image_embedding[:, dd, :], text_acts_embedding[:, dd, :]], input_data_act)['loss']
 
-        loss = img_seg_loss + all_loss + cnt_loss + act_loss
+        if self.is_segmentation:
+            loss = img_seg_loss + all_loss + cnt_loss + act_loss
+        else:
+            loss = all_loss + cnt_loss + act_loss
 
         loss_dict={}
         loss_dict["loss"] = loss
         loss_dict["img_extract_loss"] = all_loss + cnt_loss + act_loss
-        loss_dict["img_seg_loss"] = img_seg_loss
+        if self.is_segmentation:
+            loss_dict["img_seg_loss"] = img_seg_loss
         loss_dict["clip_loss"] = all_loss + cnt_loss + act_loss
         return loss_dict
 

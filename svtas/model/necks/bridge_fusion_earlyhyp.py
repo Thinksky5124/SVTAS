@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 16:13:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 13:44:13
+LastEditTime : 2022-10-31 16:18:21
 Description  : Bridge-Prompt Fusion Model ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/modules/fusion_module.py
 FilePath     : /SVTAS/svtas/model/necks/bridge_fusion_earlyhyp.py
 '''
@@ -147,6 +147,8 @@ class BridgePromptFusionEarlyhyp(nn.Module):
         x = x.type(x_original.dtype) + x_original
 
         seg_feature = x.mean(dim=2, keepdim=False)
+
+        text_feature = text_all_embedding, text_cnt_embedding, text_acts_embedding, \
+                    cnt_emb.mean(dim=1, keepdim=False)
         
-        return text_all_embedding, text_cnt_embedding, text_acts_embedding, \
-                    cnt_emb.mean(dim=1, keepdim=False), seg_feature
+        return text_feature, seg_feature
