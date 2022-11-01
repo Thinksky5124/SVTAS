@@ -2,17 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:19:20
+LastEditTime : 2022-11-01 14:53:00
 Description  : feature decode
-FilePath     : /SVTAS/loader/decode/decode.py
+FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
-import re
-
-import decord as de
 import numpy as np
 
 from ..builder import DECODE
 
+from .container import get_container
 
 @DECODE.register()
 class FeatureDecoder():
@@ -71,25 +69,18 @@ class VideoDecoder():
         file_path = results['filename']
         results['format'] = 'video'
         results['backend'] = self.backend
-
-        container = de.VideoReader(file_path)
+        
+        try:
+            container = get_container(self.backend)(file_path)
+        except:
+            print("file: " + file_path + " get error!")
+            raise
         video_len = len(container)
         results['frames'] = container
         results['frames_len'] = results['raw_labels'].shape[0]
         results['video_len'] = video_len
         
         return results
-
-class FlowNPYContainer(object):
-    def __init__(self, npy_file):
-        npy_file = re.sub("(mp4|avi)", "npy", npy_file)
-        self.data = np.load(npy_file)
-
-    def get_batch(self, frames_idx):
-        return self.data[frames_idx, :]
-    
-    def __len__(self):
-        return self.data.shape[0]
 
     
 @DECODE.register()
@@ -106,7 +97,11 @@ class FlowVideoDecoder(object):
         results['format'] = 'video'
         results['backend'] = self.backend
 
-        container = FlowNPYContainer(file_path)
+        try:
+            container = get_container(self.backend)(file_path)
+        except:
+            print("file: " + file_path + " get error!")
+            raise
         video_len = len(container)
         results['frames'] = container
         results['frames_len'] = results['raw_labels'].shape[0]
@@ -137,8 +132,17 @@ class RGBFlowVideoDecoder():
         results['format'] = 'video'
         results['backend'] = self.backend
 
-        rgb_container = de.VideoReader(file_path)
-        flow_container = de.VideoReader(flow_path)
+        try:
+            rgb_container = get_container(self.backend)(file_path)
+        except:
+            print("file: " + file_path + " get error!")
+            raise
+        
+        try:
+            flow_container = get_container(self.backend)(flow_path)
+        except:
+            print("file: " + flow_path + " get error!")
+            raise
         video_len = len(rgb_container)
         results['rgb_frames'] = rgb_container
         results['flow_frames'] = flow_container

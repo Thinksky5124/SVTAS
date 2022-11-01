@@ -69,7 +69,7 @@ PIPELINE = dict(
     transform = dict(
         name = "VideoStreamTransform",
         transform_list = [
-            dict(FeatureToTensor = None),
+            dict(XToTensor = None),
             dict(ToFloat = None),
             dict(TensorPermute = dict(permute_list = [2, 0, 1])),
             dict(TensorImageResize = dict(size = 256)),

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:50:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:11:15
+LastEditTime : 2022-10-31 20:28:06
 Description  : Action Clip Config
 FilePath     : /SVTAS/config/extract/extract_feature/action_clip_rgb_gtea.py
 '''
@@ -57,7 +57,7 @@ MODEL = dict(
         output_seg_num = 1,
         sample_rate = sample_rate,
         pool_space = True,
-        in_format = "N,T,C",
+        in_format = "N,C,T",
         out_format = "NCT"
     ),
     loss = None
@@ -84,9 +84,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = False,
-        sliding_window = sliding_window,
-        clip_seg_num = clip_seg_num,
-        sample_rate = sample_rate
+        sliding_window = sliding_window
     )
 )
 

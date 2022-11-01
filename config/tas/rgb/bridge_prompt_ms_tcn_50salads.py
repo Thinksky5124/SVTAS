@@ -2,24 +2,24 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 20:10:46
+LastEditTime : 2022-10-31 20:09:55
 Description  : file content
-FilePath     : /SVTAS/config/tas/rgb/bridge_prompt_ms_tcn_gtea.py
+FilePath     : /SVTAS/config/tas/rgb/bridge_prompt_ms_tcn_50salads.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
-    '../../_base_/dataset/gtea/gtea_video.py'
+    '../../_base_/dataset/50salads/50salads_video.py'
 ]
 split = 1
-num_classes = 11
+num_classes = 19
 sample_rate = 1
 clip_seg_num = 64
 ignore_index = -100
 batch_size = 1
 epochs = 50
 cnt_max = 30
-model_name = "BridgePrompt_MS_TCN_gtea_split" + str(split)
+model_name = "BridgePrompt_MS_TCN_50salads_split" + str(split)
 
 MODEL = dict(
     architecture = "ActionCLIPSegmentation",
@@ -81,10 +81,10 @@ DATASET = dict(
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle"
+        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle"
     ),
     test = dict(
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle"
+        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle"
     )
 )
 
@@ -111,8 +111,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                    mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
+                    std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
                 ))
             ]
         )
@@ -138,8 +138,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                    mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
+                    std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
                 ))
             ]
         )

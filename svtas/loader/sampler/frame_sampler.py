@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 09:44:18
+LastEditTime : 2022-11-01 14:52:35
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -76,14 +76,18 @@ class VideoStreamSampler():
             self.channel = 2
         self.sample = VideoFrameSample(mode = sample_mode)
     
-    def _all_valid_frames(self, start_frame, end_frame, video_len, container, labels):
+    def _all_valid_frames(self, start_frame, end_frame, video_len, container, labels, filename):
         imgs = []
         vid_end_frame = end_frame
         if end_frame > video_len:
             vid_end_frame = video_len
         frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
         labels = self._labels_sample(labels, start_frame=start_frame, end_frame=end_frame, samples_idx=frames_idx).copy()
-        frames_select = container.get_batch(frames_idx)
+        try:
+            frames_select = container.get_batch(frames_idx)
+        except:
+            print("file: " + filename + "sample frame index: " + ",".join([str(i) for i in frames_idx]) +" error!")
+            raise
         # dearray_to_img
         if not isinstance(frames_select, np.ndarray):
             np_frames = frames_select.asnumpy()
@@ -110,12 +114,17 @@ class VideoStreamSampler():
 
         return imgs, labels, mask
     
-    def _some_valid_frames(self, start_frame, end_frame, video_len, frames_len, container, labels):
+    def _some_valid_frames(self, start_frame, end_frame, video_len, frames_len, container, labels, filename):
         imgs = []
         small_frames_video_len = min(frames_len, video_len)
         frames_idx = self.sample(start_frame, video_len, self.sample_rate)
         label_frames_idx = self.sample(start_frame, small_frames_video_len, self.sample_rate)
         labels = self._labels_sample(labels, start_frame=start_frame, end_frame=small_frames_video_len, samples_idx=label_frames_idx).copy()
+        try:
+            frames_select = container.get_batch(frames_idx)
+        except:
+            print("file: " + filename + "sample frame index: " + ",".join([str(i) for i in frames_idx]) +" error!")
+            raise
         frames_select = container.get_batch(frames_idx)
         # dearray_to_img
         if not isinstance(frames_select, np.ndarray):
@@ -178,9 +187,9 @@ class VideoStreamSampler():
         start_frame = results['sample_sliding_idx'] * self.sliding_window
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
         if start_frame < small_frames_video_len and end_frame < small_frames_video_len:
-            imgs, labels, mask = self._all_valid_frames(start_frame, end_frame, video_len, container, labels)
+            imgs, labels, mask = self._all_valid_frames(start_frame, end_frame, video_len, container, labels, results["filename"])
         elif start_frame < small_frames_video_len and end_frame >= small_frames_video_len:
-            imgs, labels, mask = self._some_valid_frames(start_frame, end_frame, video_len, frames_len, container, labels)
+            imgs, labels, mask = self._some_valid_frames(start_frame, end_frame, video_len, frames_len, container, labels, results["filename"])
         else:
             imgs = []
             np_frames = np.zeros((240, 320, self.channel))
@@ -228,7 +237,7 @@ class RGBFlowVideoStreamSampler():
             self.channel = 2
         self.sample = VideoFrameSample(mode = sample_mode)
     
-    def _all_valid_frames(self, start_frame, end_frame, video_len, rgb_container, flow_container, labels):
+    def _all_valid_frames(self, start_frame, end_frame, video_len, rgb_container, flow_container, labels, filename):
         imgs = []
         flows = []
         vid_end_frame = end_frame
@@ -236,8 +245,17 @@ class RGBFlowVideoStreamSampler():
             vid_end_frame = video_len
         frames_idx = self.sample(start_frame, vid_end_frame, self.sample_rate)
         labels = self._labels_sample(labels, start_frame=start_frame, end_frame=end_frame, samples_idx=frames_idx).copy()
-        rgb_frames_select = rgb_container.get_batch(frames_idx)
-        flow_frames_select = flow_container.get_batch(frames_idx)
+        try:
+            rgb_frames_select = rgb_container.get_batch(frames_idx)
+        except:
+            print("file: " + filename + "sample frame index: " + ",".join([str(i) for i in frames_idx]) +" error!")
+            raise
+
+        try:
+            flow_frames_select = flow_container.get_batch(frames_idx)
+        except:
+            print("file: " + filename + "sample frame index: " + ",".join([str(i) for i in frames_idx]) +" error!")
+            raise
         # dearray_to_img
         if not isinstance(rgb_frames_select, np.ndarray):
             np_frames = rgb_frames_select.asnumpy()
@@ -245,7 +263,7 @@ class RGBFlowVideoStreamSampler():
                 imgbuf = np_frames[i].copy()
                 imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
             if len(imgs) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
+                np_frames = np_frames[-1].copy()
                 pad_len = self.clip_seg_num - len(imgs)
                 for i in range(pad_len):
                     imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
@@ -255,7 +273,7 @@ class RGBFlowVideoStreamSampler():
                 imgbuf = np_frames[i].copy()
                 imgs.append(imgbuf)
             if len(imgs) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
+                np_frames = np_frames[-1].copy()
                 pad_len = self.clip_seg_num - len(imgs)
                 for i in range(pad_len):
                     imgs.append(np_frames)
@@ -267,7 +285,7 @@ class RGBFlowVideoStreamSampler():
                 imgbuf = np_frames[i].copy()
                 flows.append(Image.fromarray(imgbuf, mode=self.channel_mode))
             if len(flows) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
+                np_frames = np_frames[-1].copy()
                 pad_len = self.clip_seg_num - len(flows)
                 for i in range(pad_len):
                     flows.append(Image.fromarray(np_frames, mode=self.channel_mode))
@@ -277,7 +295,7 @@ class RGBFlowVideoStreamSampler():
                 imgbuf = np_frames[i].copy()
                 flows.append(imgbuf)
             if len(flows) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
+                np_frames = np_frames[-1].copy()
                 pad_len = self.clip_seg_num - len(flows)
                 for i in range(pad_len):
                     flows.append(np_frames)
@@ -285,7 +303,7 @@ class RGBFlowVideoStreamSampler():
         mask = np.ones((labels.shape[0]))
         return imgs, flows, labels, mask
     
-    def _some_valid_frames(self, start_frame, end_frame, video_len, frames_len, rgb_container, flow_container, labels):
+    def _some_valid_frames(self, start_frame, end_frame, video_len, frames_len, rgb_container, flow_container, labels, filename):
         imgs = []
         flows = []
 
@@ -293,8 +311,17 @@ class RGBFlowVideoStreamSampler():
         flow_frames_idx = self.sample(start_frame, video_len - 1, self.sample_rate)
         label_frames_idx = self.sample(start_frame, frames_len, self.sample_rate)
         labels = self._labels_sample(labels, start_frame=start_frame, end_frame=frames_len, samples_idx=label_frames_idx).copy()
-        rgb_frames_select = rgb_container.get_batch(rgb_frames_idx)
-        flow_frames_select = flow_container.get_batch(flow_frames_idx)
+        try:
+            rgb_frames_select = rgb_container.get_batch(rgb_frames_idx)
+        except:
+            print("file: " + filename + "sample frame index: " + ",".join([str(i) for i in rgb_frames_idx]) +" error!")
+            raise
+
+        try:
+            flow_frames_select = flow_container.get_batch(flow_frames_idx)
+        except:
+            print("file: " + filename + "sample frame index: " + ",".join([str(i) for i in flow_frames_idx]) +" error!")
+            raise
         # dearray_to_img
         if not isinstance(rgb_frames_select, np.ndarray):
             np_frames = rgb_frames_select.asnumpy()
@@ -372,9 +399,9 @@ class RGBFlowVideoStreamSampler():
         start_frame = results['sample_sliding_idx'] * self.sliding_window
         end_frame = start_frame + self.clip_seg_num * self.sample_rate
         if start_frame < small_frames_video_len and end_frame < small_frames_video_len:
-            imgs, flows, labels, mask = self._all_valid_frames(start_frame, end_frame, video_len, rgb_container, flow_container, labels)
+            imgs, flows, labels, mask = self._all_valid_frames(start_frame, end_frame, video_len, rgb_container, flow_container, labels, results["filename"])
         elif start_frame < small_frames_video_len and end_frame >= small_frames_video_len:
-            imgs, flows, labels, mask = self._some_valid_frames(start_frame, end_frame, video_len, frames_len, rgb_container, flow_container, labels)
+            imgs, flows, labels, mask = self._some_valid_frames(start_frame, end_frame, video_len, frames_len, rgb_container, flow_container, labels, results["filename"])
         else:
             imgs = []
             flows = []
@@ -451,7 +478,11 @@ class VideoSampler():
         imgs = []
         frames_idx = self.sample(0, small_frames_video_len, self.clip_seg_num)
         labels = self._labels_sample(labels, start_frame=0, end_frame=small_frames_video_len, samples_idx=frames_idx).copy()
-        frames_select = container.get_batch(frames_idx)
+        try:
+            frames_select = container.get_batch(frames_idx)
+        except:
+            print("file: " + results["filename"] + "sample frame index: " + ",".join([str(i) for i in frames_idx]) +" error!")
+            raise
         # dearray_to_img
         if not isinstance(frames_select, np.ndarray):
             np_frames = frames_select.asnumpy()
@@ -460,7 +491,7 @@ class VideoSampler():
                 imgs.append(Image.fromarray(imgbuf, mode=self.channel_mode))
 
             if len(imgs) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
+                np_frames = np_frames[-1].copy()
                 pad_len = self.clip_seg_num - len(imgs)
                 for i in range(pad_len):
                     imgs.append(Image.fromarray(np_frames, mode=self.channel_mode))
@@ -471,7 +502,7 @@ class VideoSampler():
                 imgs.append(imgbuf)
 
             if len(imgs) < self.clip_seg_num:
-                np_frames = np_frames[-1].asnumpy().copy()
+                np_frames = np_frames[-1].copy()
                 pad_len = self.clip_seg_num - len(imgs)
                 for i in range(pad_len):
                     imgs.append(np_frames)

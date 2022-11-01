@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 16:07:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 20:18:41
+LastEditTime : 2022-10-31 21:24:34
 Description  : file content
 FilePath     : /SVTAS/config/tas/rgb/mobilev2_tsm_3dtcn_gtea.py
 '''
 _base_ = [
-    '../../_base_/schedules/adam_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
     '../../_base_/dataset/gtea/gtea_video.py'
 ]
@@ -17,13 +17,14 @@ sample_rate = 1
 clip_seg_num = 128
 ignore_index = -100
 batch_size = 1
+epochs = 50
 model_name = "MobileV2_TSM_3DTCN_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Segmentation2D",
     backbone = dict(
         name = "MobileNetV2TSM",
-        pretrained = "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
+        pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
         clip_seg_num = clip_seg_num,
         shift_div = 8,
         out_indices = (7, )
@@ -61,6 +62,10 @@ POSTPRECESSING = dict(
     name = "ScorePostProcessing",
     num_classes = num_classes,
     ignore_index = ignore_index
+)
+
+LRSCHEDULER = dict(
+    step_size = [epochs]
 )
 
 DATASET = dict(

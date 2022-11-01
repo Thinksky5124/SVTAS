@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 19:21:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:24:40
+LastEditTime : 2022-10-31 19:49:25
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/video/action_clip_segmentation.py
 '''
@@ -45,7 +45,7 @@ class ActionCLIPSegmentation(nn.Module):
             text_prompt['clip_model'] = self.image_prompt
             self.text_prompt = build_backbone(text_prompt)
         else:
-            self.neck = None
+            self.text_prompt = None
 
         if fusion_neck is not None:
             self.fusion_neck = build_neck(fusion_neck)
@@ -82,8 +82,9 @@ class ActionCLIPSegmentation(nn.Module):
             logger  = get_logger("SVTAS")
             checkpoint = torch.load(self.pretrained)
             load_state_dict(self.image_prompt, checkpoint['model_state_dict'], strict=False, logger=logger)
-            revise_state_dict = revise_keys_fn(checkpoint['fusion_model_state_dict'])
-            load_state_dict(self.fusion_neck, revise_state_dict, strict=False, logger=logger)
+            if self.fusion_neck is not None:
+                revise_state_dict = revise_keys_fn(checkpoint['fusion_model_state_dict'])
+                load_state_dict(self.fusion_neck, revise_state_dict, strict=False, logger=logger)
         else:
             if self.image_prompt is not None:
                 self.image_prompt.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])

@@ -22,7 +22,7 @@ PIPELINE = dict(
         transform = dict(
             name = "FeatureStreamTransform",
             transform_list = [
-                dict(FeatureToTensor = None)
+                dict(XToTensor = None)
             ]
         )
     ),
@@ -41,7 +41,7 @@ PIPELINE = dict(
         transform = dict(
             name = "FeatureStreamTransform",
             transform_list = [
-                dict(FeatureToTensor = None)
+                dict(XToTensor = None)
             ]
         )
     )
