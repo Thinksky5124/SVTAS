@@ -12,7 +12,8 @@
 
 Temporal action segmentation (TAS) is a critical step toward long-term video understanding. Recent studies follow a pattern that builds models based on features instead of raw video picture information. However, we claim those models are trained complicatedly and limit application scenarios. It is hard for them to segment human actions of video in real time because they must work after the full video features are extracted. As the real-time action segmentation task is different from TAS task, we define it as streaming video real-time temporal action segmentation (SVTAS) task.
 
-![demo](doc/image/demo.gif#pic_center)
+<div align="center">
+  <img src="doc/image/demo.gif" width=440/></div>
 
 # Framework Feature
 - [x] Distribution train
