@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-10-22 13:56:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-22 15:59:00
+LastEditTime : 2022-11-01 21:13:01
 Description  : Linear Head
-FilePath     : /SVTAS/model/heads/segmentation/linear_transformer.py
+FilePath     : /SVTAS/svtas/model/heads/segmentation/linear_transformer.py
 '''
 import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from .asformer import ConvFeedForward, AttentionHelper, exponential_descrease
+from .asformer import ConvFeedForward, exponential_descrease
 
 from ...builder import HEADS
 
@@ -33,25 +33,35 @@ def get_EF(input_size, dim, method="learnable", head_dim=None, bias=True):
     return lin
     
 class LinAttLayer(nn.Module):
-    def __init__(self, q_dim, k_dim, v_dim, bl, stage, att_type, method="learnable"): # r1 = r2
+    def __init__(self, q_dim, k_dim, v_dim, bl, stage, att_type, r1, r2, r3, method="learnable"): # r1 = r2
         super(LinAttLayer, self).__init__()
         
-        self.query_conv = nn.Conv1d(in_channels=q_dim, out_channels=q_dim, kernel_size=1)
-        self.key_conv = nn.Conv1d(in_channels=k_dim, out_channels=k_dim, kernel_size=1)
-        self.value_conv = nn.Conv1d(in_channels=v_dim, out_channels=v_dim, kernel_size=1)
+        self.query_conv = nn.Conv1d(in_channels=q_dim, out_channels=q_dim // r1, kernel_size=1)
+        self.key_conv = nn.Conv1d(in_channels=k_dim, out_channels=k_dim // r2, kernel_size=1)
+        self.value_conv = nn.Conv1d(in_channels=v_dim, out_channels=v_dim // r3, kernel_size=1)
         
-        self.conv_out = nn.Conv1d(in_channels=v_dim, out_channels=v_dim, kernel_size=1)
+        self.conv_out = nn.Conv1d(in_channels=v_dim // r3, out_channels=v_dim, kernel_size=1)
 
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout()
         self.P_bar = None
-        self.E = get_EF(k_dim, k_dim, method, q_dim)
-        self.F = get_EF(k_dim, k_dim, method, q_dim)
-
+        self.E = get_EF(k_dim // r1, k_dim // r1, method, q_dim // r1)
+        self.F = get_EF(v_dim // r3, v_dim // r3, method, q_dim // r1)
+        self.causal_mask = self.gen_causal_mask(q_dim // r1, k_dim // r2)
         self.bl = bl
         self.stage = stage
         self.att_type = att_type
+        self.is_proj_tensor = isinstance(self.E, torch.Tensor)
         assert self.att_type in ['linear_att']
         assert self.stage in ['encoder','decoder']
+    
+    def gen_causal_mask(self, input_size, dim_k, full_attention=False):
+        """
+        Generates a causal mask of size (input_size, dim_k) for linformer
+        Else, it generates (input_size, input_size) for full attention
+        """
+        if full_attention:
+            return (torch.triu(torch.ones(input_size, input_size))==1).transpose(0,1)
+        return (torch.triu(torch.ones(dim_k, input_size))==1).transpose(0,1)
     
     def forward(self, x1, x2, mask):
         # x1 from the encoder
@@ -78,42 +88,43 @@ class LinAttLayer(nn.Module):
 
         K = K.transpose(1,2)
 
-        ### 1
-        # self.E = self.E.to(K.device)
-        # K = torch.matmul(K, self.E)
-        ### 2
-        K = self.E(K)
+        if self.is_proj_tensor:
+            self.E = self.E.to(K.device)
+            K = torch.matmul(K, self.E)
+        else:
+            K = self.E(K)
 
 
         Q = torch.matmul(Q, K)
 
         P_bar = Q/torch.sqrt(torch.tensor(Q.shape[-1]).type(Q.type())).to(Q.device)
-        # if self.causal_mask is not None:
-        #     self.causal_mask = self.causal_mask.to(Q.device)
-        #     P_bar = P_bar.masked_fill_(~self.causal_mask, float('-inf'))
+        if self.causal_mask is not None:
+            self.causal_mask = self.causal_mask.to(Q.device)
+            P_bar = P_bar.masked_fill_(~self.causal_mask, float('-inf'))
         P_bar = P_bar.softmax(dim=-1)
 
         P_bar = self.dropout(P_bar)
 
         V = V.transpose(1,2)
-        ### 1
-        # self.F = self.F.to(V.device)
-        # V = torch.matmul(V, self.F)
-        ### 2
-        V = self.F(V)
+        if self.is_proj_tensor:
+            self.F = self.F.to(V.device)
+            V = torch.matmul(V, self.F)
+        else:
+            V = self.F(V)
 
         V = V.transpose(1,2)
         out_tensor = torch.matmul(P_bar, V)
 
+        out_tensor = self.conv_out(F.relu(out_tensor))
         return out_tensor * mask[:, 0:1, :]
 
 
 class AttModule(nn.Module):
-    def __init__(self, dilation, in_channels, out_channels, att_type, stage, alpha):
+    def __init__(self, dilation, in_channels, out_channels, r1, r2, att_type, stage, alpha):
         super(AttModule, self).__init__()
         self.feed_forward = ConvFeedForward(dilation, in_channels, out_channels)
         self.instance_norm = nn.InstanceNorm1d(in_channels, track_running_stats=False)
-        self.att_layer = LinAttLayer(in_channels, in_channels, out_channels, dilation, att_type=att_type, stage=stage) # dilation
+        self.att_layer = LinAttLayer(q_dim=in_channels, k_dim=in_channels, v_dim=out_channels, bl=dilation, r1=r1, r2=r1, r3=r2, att_type=att_type, stage=stage) # dilation
         self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
         self.dropout = nn.Dropout()
         self.alpha = alpha
@@ -126,11 +137,11 @@ class AttModule(nn.Module):
         return (x + out) * mask[:, 0:1, :]
 
 class Encoder(nn.Module):
-    def __init__(self, num_layers, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type, alpha):
+    def __init__(self, num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type, alpha):
         super(Encoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(input_dim, num_f_maps, 1) # fc layer
         self.layers = nn.ModuleList(
-            [AttModule(2 ** i, num_f_maps, num_f_maps, att_type, 'encoder', alpha) for i in # 2**i
+            [AttModule(2 ** i, num_f_maps, num_f_maps, r1, r2, att_type, 'encoder', alpha) for i in # 2**i
              range(num_layers)])
         
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
@@ -160,12 +171,12 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, num_layers, num_f_maps, input_dim, num_classes, att_type, alpha):
+    def __init__(self, num_layers, r1, r2, num_f_maps, input_dim, num_classes, att_type, alpha):
         super(Decoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(input_dim, num_f_maps, 1)
         # self.position_en = PositionalEncoding(d_model=num_f_maps)
         self.layers = nn.ModuleList(
-            [AttModule(2 ** i, num_f_maps, num_f_maps, att_type, 'decoder', alpha) for i in # 2 ** i
+            [AttModule(2 ** i, num_f_maps, num_f_maps, r1, r2, att_type, 'decoder', alpha) for i in # 2 ** i
              range(num_layers)])
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
 
@@ -192,13 +203,15 @@ class LinformerHead(nn.Module):
                  num_classes=11,
                  channel_masking_rate=0.5,
                  sample_rate=1,
+                 r1=2,
+                 r2=2,
                  out_feature=False):
         super(LinformerHead, self).__init__()
 
         self.sample_rate = sample_rate
         self.out_feature = out_feature
-        self.encoder = Encoder(num_layers, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='linear_att', alpha=1)
-        self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, num_f_maps, num_classes, num_classes, att_type='linear_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
+        self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='linear_att', alpha=1)
+        self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='linear_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
     
     def init_weights(self):
         pass

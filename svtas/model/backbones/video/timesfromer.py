@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:21:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:58:35
+LastEditTime : 2022-11-02 10:23:12
 Description  : Timesformer backbone ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/timesformer.py
-FilePath     : /ETESVS/model/backbones/video/timesfromer.py
+FilePath     : /SVTAS/svtas/model/backbones/video/timesfromer.py
 '''
 import numpy as np
 import torch
@@ -120,7 +120,7 @@ class TimeSformer(nn.Module):
             f'Unsupported Attention Type {attention_type}!')
         assert transformer_layers is None or isinstance(
             transformer_layers, (dict, list))
-        assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
+        assert pool in {'cls', 'mean_space', 'seg_cls'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
 
         self.pool = pool
         self.num_frames = num_frames
@@ -268,7 +268,7 @@ class TimeSformer(nn.Module):
         x = self.norm(x)
 
         if self.attention_type != 'space_only':
-            if self.pool == 'mean':
+            if self.pool == 'mean_space':
                 # [N, P+1, T, D]
                 x = torch.reshape(x[:, 1:], shape=[batches, -1, self.num_frames] + list(x.shape[-1:]))
                 # [N, T, D]

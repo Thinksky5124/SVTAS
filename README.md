@@ -1,6 +1,12 @@
-# SVTAS
-Streaming Video Temporal Action Segmentation In Real Time
-- [paper](https://arxiv.org/pdf/2209.13808.pdf)
+# **Important!**
+**Warning**
+- This repo **main** branch are under develop so it will have much bug, because it doesn't test completely!
+
+**Note**
+- If you want to reproduce [paper](https://arxiv.org/pdf/2209.13808.pdf), please checkout branch to **svtas-paper**!
+
+# Paper List
+- Streaming Video Temporal Action Segmentation In Real Time, [paper](https://arxiv.org/pdf/2209.13808.pdf), **statu**: under review 
 
 ## Abstract
 
