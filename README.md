@@ -1,6 +1,6 @@
 # **Important!**
 **Warning**
-- This repo **main** branch are under develop so it will have much bug, because it doesn't test completely!
+- This repo **main** branch are under development so it will have much bugs, because it doesn't test completely!
 
 **Note**
 - If you want to reproduce [paper](https://arxiv.org/pdf/2209.13808.pdf), please checkout branch to **svtas-paper**!
@@ -11,6 +11,8 @@
 ## Abstract
 
 Temporal action segmentation (TAS) is a critical step toward long-term video understanding. Recent studies follow a pattern that builds models based on features instead of raw video picture information. However, we claim those models are trained complicatedly and limit application scenarios. It is hard for them to segment human actions of video in real time because they must work after the full video features are extracted. As the real-time action segmentation task is different from TAS task, we define it as streaming video real-time temporal action segmentation (SVTAS) task.
+
+![demo](doc/image/demo.gif#pic_center)
 
 # Framework Feature
 - [x] Distribution train
@@ -67,3 +69,8 @@ Year = {2022},
 Eprint = {arXiv:2209.13808},
 }
 ```
+# Acknowledgement
+This repo borrowed code from many great open source libraries, thanks again for their selfless dedication.
+- [mmaction2](https://github.com/open-mmlab/mmaction2)
+- [paddlevideo](https://github.com/PaddlePaddle/PaddleVideo)
+- [Slowfast](https://github.com/facebookresearch/SlowFast)
