@@ -2,18 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:53:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 17:23:51
+LastEditTime : 2022-11-03 15:56:03
 Description  : TSM Config
-FilePath     : /SVTAS/config/extract_feature/mobilev2_tsm_gtea.py
+FilePath     : /SVTAS/config/extract/extract_feature/mobilev2_tsm_rgb_gtea.py
 '''
 _base_ = [
     '../../_base_/collater/stream_compose.py'
 ]
 
-sample_rate = 8
+sample_rate = 1
 ignore_index = -100
 sliding_window = 1
-clip_seg_num = 8
+clip_seg_num = 21
 
 MODEL = dict(
     architecture = "Recognition2D",

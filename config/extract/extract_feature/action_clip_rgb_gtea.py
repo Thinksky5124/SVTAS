@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:50:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 20:28:06
+LastEditTime : 2022-11-03 15:55:28
 Description  : Action Clip Config
 FilePath     : /SVTAS/config/extract/extract_feature/action_clip_rgb_gtea.py
 '''
@@ -10,10 +10,10 @@ _base_ = [
     '../../_base_/collater/stream_compose.py'
 ]
 
-sample_rate = 8
+sample_rate = 1
 ignore_index = -100
 sliding_window = 1
-clip_seg_num = 8
+clip_seg_num = 21
 
 MODEL = dict(
     architecture = "ActionCLIP",

@@ -10,7 +10,7 @@ MODEL = dict(
     architecture = "Recognition3D",
     backbone = dict(
         name = "I3D",
-        pretrained = "./data/i3d_rgb.pt",
+        pretrained = "./data/checkpoint/i3d_rgb.pt",
         in_channels = 3
     ),
     neck = None,

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 16:35:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 11:05:34
+LastEditTime : 2022-11-02 13:50:34
 Description  : Network utils
 FilePath     : /SVTAS/svtas/model/backbones/utils/__init__.py
 '''
@@ -15,6 +15,7 @@ from .clip import SimpleTokenizer, Transformer
 from .vit_tsm import TemporalShift_VIT
 from .mvit import (MultiScaleAttention, attention_pool, Mlp, TwoStreamFusion, drop_path, round_width,
                    get_3d_sincos_pos_embed, calc_mvit_feature_geometry, PatchEmbed, MultiScaleBlock)
+from .x3d import (get_norm, ResStage, VideoModelStem)
 
 __all__ = [
     'DividedSpatialAttentionWithNorm', 'DividedTemporalAttentionWithNorm',
@@ -23,5 +24,5 @@ __all__ = [
     'SimpleTokenizer', 'Transformer', "TemporalShift_VIT",
     "MultiScaleAttention", "attention_pool", "Mlp", "TwoStreamFusion", 
     "drop_path", "round_width", "get_3d_sincos_pos_embed", "calc_mvit_feature_geometry",
-    "PatchEmbed", "MultiScaleBlock"
+    "PatchEmbed", "MultiScaleBlock", "get_norm", "VideoModelStem", "ResStage"
 ]

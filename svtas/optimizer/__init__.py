@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:10:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 14:44:28
+LastEditTime : 2022-11-03 16:48:06
 Description  : optimizer module
 FilePath     : /SVTAS/svtas/optimizer/__init__.py
 '''
@@ -14,11 +14,13 @@ from .optim.tsm_adam_optimizer import TSMAdamOptimizer
 from .optim.adan_optimizer import AdanOptimizer
 from .optim.adamw_optimizer import AdamWOptimizer
 from .lr_scheduler.cosine_annealing_lr import CosineAnnealingLR
+from .lr_scheduler import WarmupMultiStepLR, WarmupCosineLR
 
 __all__ = [
     'MultiStepLR',
     'SGDOptimizer', 'TSMSGDOptimizer',
     'AdamOptimizer', 'TSMAdamOptimizer',
     'AdanOptimizer', 'AdamWOptimizer',
-    'CosineAnnealingLR'
+    'CosineAnnealingLR', 'WarmupMultiStepLR',
+    'WarmupCosineLR'
 ]

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 20:31:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 10:15:07
+LastEditTime : 2022-11-03 12:46:21
 Description: ms-tcn script ref: https://github.com/yabufarha/ms-tcn
-FilePath     : /SVTAS/model/heads/segmentation/mstcn.py
+FilePath     : /SVTAS/svtas/model/heads/segmentation/mstcn.py
 '''
 import torch
 import copy
@@ -54,7 +54,7 @@ class MultiStageModel(nn.Module):
         outputs = out.unsqueeze(0)
         for s in self.stages:
             if self.out_feature is True:
-                out, feature = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+                feature, out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
             else:
                 out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)

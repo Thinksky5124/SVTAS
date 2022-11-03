@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:01:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:06:43
+LastEditTime : 2022-11-03 10:57:03
 Description  : ImageCLIP ref:https://github.com/openai/CLIP/blob/main/clip/model.py
 FilePath     : /SVTAS/svtas/model/backbones/image/clip.py
 '''
@@ -258,8 +258,10 @@ class VisionTransformer(nn.Module):
                  T: int,
                  dropout = None,
                  joint=False,
-                 emb_dropout = 0.):
+                 emb_dropout = 0.,
+                 need_spatial=False):
         super().__init__()
+        self.need_spatial = need_spatial
         self.input_resolution = input_resolution
         self.output_dim = output_dim
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=width, kernel_size=patch_size, stride=patch_size, bias=False)
@@ -308,6 +310,8 @@ class VisionTransformer(nn.Module):
         x = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
 
+        if self.need_spatial:
+            return x[:, 1:, :]
         x = self.ln_post(x[:, 0, :])
 
         if self.proj is not None:
@@ -336,9 +340,11 @@ class CLIP(nn.Module):
                  clip_seg_num=8,
                  dropout = 0.,
                  emb_dropout = 0.,
-                 pretrained = None
+                 pretrained = None,
+                 need_spatial = False
                  ):
         super().__init__()
+        self.need_spatial = need_spatial
         self.pretrained = pretrained
         self.context_length = context_length
         self.tsm = tsm
@@ -369,7 +375,8 @@ class CLIP(nn.Module):
                 joint=joint,
                 dropout=dpr,
                 emb_dropout=emb_dropout,
-                T=clip_seg_num
+                T=clip_seg_num,
+                need_spatial=need_spatial
             )
             if tsm:
                 logger  = get_logger("SVTAS")

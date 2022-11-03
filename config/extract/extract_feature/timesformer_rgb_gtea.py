@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 17:15:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:26:31
+LastEditTime : 2022-11-03 15:56:06
 Description  : TimeSformer Config
 FilePath     : /SVTAS/config/extract/extract_feature/timesformer_rgb_gtea.py
 '''
@@ -10,10 +10,10 @@ _base_ = [
     '../../_base_/collater/stream_compose.py'
 ]
 
-sample_rate = 8
+sample_rate = 1
 ignore_index = -100
 sliding_window = 1
-clip_seg_num = 8
+clip_seg_num = 21
 
 MODEL = dict(
     architecture = "Recognition3D",

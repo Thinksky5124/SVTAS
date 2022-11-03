@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 21:28:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:26:27
+LastEditTime : 2022-11-03 15:56:25
 Description  : SwinTransformer Config
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_rgb_gtea.py
 '''
@@ -10,10 +10,10 @@ _base_ = [
     '../../_base_/collater/stream_compose.py'
 ]
 
-sample_rate = 2
+sample_rate = 1
 ignore_index = -100
 sliding_window = 1
-clip_seg_num = 32
+clip_seg_num = 16
 
 MODEL = dict(
     architecture = "Recognition3D",
@@ -38,7 +38,7 @@ MODEL = dict(
     head = dict(
         name = "FeatureExtractHead",
         in_channels = 768,
-        input_seg_num = 16,
+        input_seg_num = clip_seg_num // 2,
         output_seg_num = 1,
         sample_rate = sample_rate,
         pool_space = True,

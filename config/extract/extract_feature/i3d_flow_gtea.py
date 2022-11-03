@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:53:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 14:37:02
+LastEditTime : 2022-11-03 15:29:29
 Description  : I3D Extractor Config
 FilePath     : /SVTAS/config/extract/extract_feature/i3d_flow_gtea.py
 '''
@@ -15,14 +15,15 @@ _base_ = [
 sample_rate = 1
 ignore_index = -100
 sliding_window = 1
-clip_seg_num = 64
+clip_seg_num = 21
 
 MODEL = dict(
     backbone = dict(
-        pretrained = "./data/i3d_flow.pt",
+        pretrained = "./data/checkpoint/i3d_flow.pt",
         in_channels = 2
     ),
     head = dict(
+        input_seg_num = 3,
         sample_rate = sample_rate,
     ),
     loss = None
@@ -37,17 +38,17 @@ POSTPRECESSING = dict(
 )
 
 DATASET = dict(
-    video_batch_size = 1,
+    video_batch_size = 4,
     config = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/all_files.txt",
-        videos_path = "./data/gtea/Videos",
+        videos_path = "./data/gtea/flow",
         gt_path = "./data/gtea/groundTruth",
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = False,
-        sliding_window = 64
+        sliding_window = sliding_window
     )
 )
 

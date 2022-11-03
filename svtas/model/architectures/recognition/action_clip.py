@@ -2,10 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:57:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:49:30
+LastEditTime : 2022-11-03 10:57:34
 Description  : CLIP achitectures
 FilePath     : /SVTAS/svtas/model/architectures/recognition/action_clip.py
 '''
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -123,7 +124,10 @@ class ActionCLIP(nn.Module):
              # masks.shape [N * T, 1, 1, 1]
             imgs_masks = masks[:, :, ::self.sample_rate]
             image_embedding = self.image_prompt.encode_image(imgs)
-            image_embedding = image_embedding.view(b, t, -1).permute([0, 2, 1]) * imgs_masks
+            if self.image_prompt.need_spatial is True:
+                image_embedding = image_embedding.permute([0, 2, 1]).reshape(-1, image_embedding.shape[-1], int(math.sqrt(image_embedding.shape[1])), int(math.sqrt(image_embedding.shape[1])))
+            else:
+                image_embedding = image_embedding.view(b, t, -1).permute([0, 2, 1]) * imgs_masks
         else:
             image_embedding = imgs
 

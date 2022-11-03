@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 10:25:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 14:11:17
+LastEditTime : 2022-11-03 11:50:45
 Description  : Bridge Prompt
 FilePath     : /SVTAS/config/extract/extract_feature/bridge_prompt_rgb_gtea.py
 '''
@@ -37,6 +37,7 @@ MODEL = dict(
         clip_seg_num=clip_seg_num,
         dropout = 0.,
         emb_dropout = 0.,
+        need_spatial=True
     ),
     text_prompt = dict(
         name = "BridgePromptTextEncoder",
@@ -55,9 +56,9 @@ MODEL = dict(
         input_seg_num = clip_seg_num,
         output_seg_num = 1,
         sample_rate = sample_rate,
-        pool_space = True,
-        in_format = "N*T,C",
-        out_format = "NCT"
+        pool_space = False,
+        in_format = "N*T,C,H,W",
+        out_format = "NCTHW"
     ),
     loss = None
 )

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:20:26
+LastEditTime : 2022-11-03 12:59:30
 Description  : feature sampler
-FilePath     : /SVTAS/loader/sampler/feature_sampler.py
+FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
 '''
 import random
 
@@ -149,6 +149,7 @@ class FeatureSampler():
         self.sample_rate = sample_rate
         self.is_train = is_train
         self.ignore_index = ignore_index
+        assert format in ['NTC', 'NCT', 'NCTHW']
         self.format = format
         self.sample = FeatureFrameSample(mode = sample_mode)
 

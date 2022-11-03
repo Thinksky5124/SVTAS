@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-17 13:15:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 17:02:40
+LastEditTime : 2022-11-03 13:06:46
 Description  : 3D TCN model
 FilePath     : /SVTAS/svtas/model/heads/segmentation/tcn_3d_head.py
 '''
@@ -23,7 +23,6 @@ class TCN3DHead(nn.Module):
                  num_layers=4,
                  sample_rate=4,
                  seg_in_channels=2048,
-                 hidden_channels=128,
                  num_f_maps=64,
                  out_feature=False):
         super(TCN3DHead, self).__init__()
@@ -34,10 +33,8 @@ class TCN3DHead(nn.Module):
         self.sample_rate = sample_rate
         self.num_layers = num_layers
 
-        self.stage1 = SingleStage3DModel(num_layers, num_f_maps, seg_in_channels, hidden_channels, out_feature=out_feature)
-        self.stages = nn.ModuleList([copy.deepcopy(SingleStage3DModel(num_layers, num_f_maps, hidden_channels, hidden_channels)) for s in range(num_stages-1)])
-        self.head_avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.conv_out = nn.Conv1d(hidden_channels, num_classes, 1)
+        self.stage1 = SingleStage3DModel(num_layers, num_f_maps, seg_in_channels, num_classes)
+        self.stages = nn.ModuleList([copy.deepcopy(SingleStage3DModel(num_layers, num_f_maps, num_f_maps, num_classes)) for s in range(num_stages-1)])
 
     def init_weights(self):
         pass
@@ -57,37 +54,13 @@ class TCN3DHead(nn.Module):
         
         mask = mask[:, :, ::self.sample_rate]
         
-        output = self.stage1(seg_feature, mask)
-
-        if self.out_feature is True:
-            feature, out = output
-        else:
-            out = output
+        feature, out = self.stage1(seg_feature, mask)
         
         outputs = out.unsqueeze(0)
         for s in self.stages:
-            if self.out_feature is True:
-                out, feature = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
-            else:
-                out = s(F.softmax(out, dim=1) * mask[:, 0:1, :], mask)
+            feature, out = s(feature, mask)
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
-        
-        out = torch.permute(out, dims=[0, 2, 1, 3, 4])
-        # seg_feature [N, num_segs, 1280, 7, 7]
-        out = torch.reshape(out, shape=[-1] + list(out.shape[-3:]))
-        # seg_feature_pool.shape = [N * num_segs, 1280, 1, 1]
-        out = self.head_avgpool(out)
 
-        # seg_feature_pool.shape = [N, num_segs, 1280, 1, 1]
-        out = torch.reshape(out, shape=[-1, seg_feature.shape[2]] + list(out.shape[-3:]))
-
-        # segmentation feature branch
-        # [N, 2048, num_segs]
-        out = out.squeeze(-1).squeeze(-1).transpose(1, 2)
-
-        out = self.conv_out(out) * mask[:, 0:1, ::self.sample_rate]
-
-        outputs = out.unsqueeze(0)
         outputs = F.interpolate(
             input=outputs,
             scale_factor=[1, self.sample_rate],
@@ -98,23 +71,36 @@ class TCN3DHead(nn.Module):
         return outputs
 
 class SingleStage3DModel(nn.Module):
-    def __init__(self, num_layers, num_f_maps, dim, hidden_channels, out_feature=False):
+    def __init__(self, num_layers, num_f_maps, dim, output_channels):
         super(SingleStage3DModel, self).__init__()
-        self.out_feature = out_feature
         self.conv_1x1 = nn.Conv3d(dim, num_f_maps, (1, 1, 1))
         self.layers = nn.ModuleList([copy.deepcopy(DilatedResidual3DLayer(2 ** i, num_f_maps, num_f_maps)) for i in range(num_layers)])
-        self.conv_out = nn.Conv3d(num_f_maps, hidden_channels, (1, 1, 1))
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.conv_out = nn.Conv1d(num_f_maps, output_channels, 1)
 
     def forward(self, x, mask):
         feature_embedding = self.conv_1x1(x)
         feature = feature_embedding
         for layer in self.layers:
             feature = layer(feature, mask)
-        out = self.conv_out(feature) * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1)
-        if self.out_feature is True:
-            return feature_embedding * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1), out
 
-        return out
+        # [N C T H W]
+        out = torch.permute(feature, dims=[0, 2, 1, 3, 4])
+        # seg_feature [N, num_segs, C, 7, 7]
+        out = torch.reshape(out, shape=[-1] + list(out.shape[-3:]))
+        # seg_feature_pool.shape = [N * num_segs, C, 1, 1]
+        out = self.avgpool(out)
+
+        # seg_feature_pool.shape = [N, num_segs, 1280, 1, 1]
+        out = torch.reshape(out, shape=[-1, feature.shape[2]] + list(out.shape[-3:]))
+
+        # segmentation feature branch
+        # [N, C, num_segs]
+        out = out.squeeze(-1).squeeze(-1).transpose(1, 2)
+
+        out = self.conv_out(out) * mask[:, 0:1, :]
+
+        return feature * mask[:, 0:1, :].unsqueeze(-1).unsqueeze(-1), out
 
 
 class DilatedResidual3DLayer(nn.Module):

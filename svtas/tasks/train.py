@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:53:06
+LastEditTime : 2022-11-02 15:54:40
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -278,12 +278,14 @@ def train(cfg,
                 if use_amp is False:
                     checkpoint = {"model_state_dict": model_weight_dict,
                             "optimizer_state_dict": optimizer.state_dict(),
-                            "epoch": epoch}
+                            "epoch": epoch,
+                            "cfg": cfg}
                 else:
                     checkpoint = {"model_state_dict": model_weight_dict,
                             "optimizer_state_dict": optimizer.state_dict(),
                             "amp": amp.state_dict(),
-                            "epoch": epoch}
+                            "epoch": epoch,
+                            "cfg": cfg}
                 torch.save(checkpoint,
                     osp.join(output_dir, model_name + "_best.pkl"))
                 logger.info(
@@ -299,12 +301,14 @@ def train(cfg,
             if use_amp is False:
                 checkpoint = {"model_state_dict": model_weight_dict,
                         "optimizer_state_dict": optimizer.state_dict(),
-                        "epoch": epoch}
+                        "epoch": epoch,
+                        "cfg": cfg}
             else:
                 checkpoint = {"model_state_dict": model_weight_dict,
                         "optimizer_state_dict": optimizer.state_dict(),
                         "amp": amp.state_dict(),
-                        "epoch": epoch}
+                        "epoch": epoch,
+                        "cfg": cfg}
             torch.save(
                 checkpoint,
                 osp.join(output_dir,

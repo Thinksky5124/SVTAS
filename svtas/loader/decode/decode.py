@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-01 14:53:00
+LastEditTime : 2022-11-03 12:57:40
 Description  : feature decode
 FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
@@ -41,7 +41,7 @@ class FeatureDecoder():
         if "flow_feature_name" in list(results.keys()):
             flow_feature = np.load(results['flow_feature_name'])
             feature = np.concatenate([feature, flow_feature], axis=0)
-        feature_len = feature.shape[-1]
+        feature_len = feature.shape[1]
         results['frames'] = feature
         results['frames_len'] = results['raw_labels'].shape[0]
         results['feature_len'] = feature_len

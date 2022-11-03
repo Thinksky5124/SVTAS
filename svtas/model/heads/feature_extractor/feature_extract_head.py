@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 19:20:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 20:29:55
+LastEditTime : 2022-11-03 11:49:43
 Description  : Feature Extract Head
 FilePath     : /SVTAS/svtas/model/heads/feature_extractor/feature_extract_head.py
 '''
@@ -23,7 +23,7 @@ class FeatureExtractHead(nn.Module):
                  in_format="N,C,T,H,W",
                  out_format="NCT"):
         super().__init__()
-        assert out_format in ["NCT", "NTC"], "Unsupport output format!"
+        assert out_format in ["NCT", "NTC", "NCTHW"], "Unsupport output format!"
         assert in_format in ["N,C,T,H,W", "N*T,C,H,W", "N*T,C", "N,T,C", "N,C,T"], "Unsupport input format!"
         self.output_seg_num = output_seg_num
         self.input_seg_num = input_seg_num
@@ -35,6 +35,8 @@ class FeatureExtractHead(nn.Module):
         
         if self.pool_space:
             self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+        else:
+            self.avg_pool = None
 
     def init_weights(self):
         pass
@@ -59,6 +61,20 @@ class FeatureExtractHead(nn.Module):
         # feature.shape = [N * input_seg_num, in_channels, 1, 1]
         if self.avg_pool is not None:
             feature = self.avg_pool(feature)
+            
+        if self.pool_space is False:
+            # [N*T C H W]
+            feature = torch.reshape(feature, shape=[-1, self.input_seg_num] + list(feature.shape[1:]))
+            feature = feature.transpose(1, 2).contiguous()
+            # [stage_num, N, C, T, H, W]
+            feature = feature
+            masks = F.adaptive_max_pool2d(masks[:, 0:1, :], [1, self.output_seg_num]).unsqueeze(-1).unsqueeze(-1)
+            feature = F.adaptive_avg_pool3d(
+                feature, [self.output_seg_num, feature.shape[-2], feature.shape[-1]]) * masks
+            if self.out_format in ["NCTHW"]:
+                return feature.unsqueeze(0)
+            else:
+                raise NotImplementedError
         # [N * num_segs, in_channels]
         feature = feature.squeeze(-1).squeeze(-1)
         # [N, in_channels, num_segs]
