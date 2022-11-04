@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:59:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 20:04:06
+LastEditTime : 2022-11-04 20:41:38
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/conformer_gtea.py
 '''
@@ -19,6 +19,7 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
+batch_size = 1
 model_name = "Conformer_gtea_split" + str(split)
 
 MODEL = dict(
@@ -52,9 +53,8 @@ POSTPRECESSING = dict(
 )
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
-    video_batch_size = 2,
-    num_workers = 2,
+    temporal_clip_batch_size = batch_size,
+    video_batch_size = batch_size,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         feature_path = "./data/gtea/raw_features"

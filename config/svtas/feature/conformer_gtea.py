@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:04:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 21:12:15
+LastEditTime : 2022-11-04 20:41:45
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/conformer_gtea.py
 '''
@@ -44,6 +44,9 @@ POSTPRECESSING = dict(
 )
 
 DATASET = dict(
+    temporal_clip_batch_size = 3,
+    video_batch_size = 2,
+    num_workers = 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         flow_feature_path = "./data/gtea/flow_features"

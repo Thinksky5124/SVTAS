@@ -208,6 +208,7 @@ class LSTR(nn.Module):
     def stream_train(self, feature, masks):
         visual_inputs = feature[:, :self.visual_size, :].transpose(1, 2)
         motion_inputs = feature[:, self.motion_size:, :].transpose(1, 2)
+        masks = masks[:, 0:1, ::self.sample_rate]
 
         # Get memory key padding mask
         if self.long_memory_num_samples > 0:
@@ -284,7 +285,7 @@ class LSTR(nn.Module):
     def stream_inference(self, feature, masks=None):
         assert self.long_enabled, 'Long-term memory cannot be empty for stream inference'
         assert len(self.enc_modules) > 0, 'LSTR encoder cannot be disabled for stream inference'
-
+        masks = masks[:, 0:1, ::self.sample_rate]
         long_visual_inputs = feature[:, :self.visual_size, :self.long_memory_num_samples].transpose(1, 2)
         long_motion_inputs = feature[:, self.motion_size:, :self.long_memory_num_samples].transpose(1, 2)
         work_visual_inputs = feature[:, :self.visual_size, self.long_memory_num_samples:].transpose(1, 2)

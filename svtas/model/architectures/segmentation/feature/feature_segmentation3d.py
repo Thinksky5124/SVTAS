@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 13:02:05
+LastEditTime : 2022-11-04 20:48:50
 Description: feaeture segmentation model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature/feature_segmentation3d.py
 '''
@@ -77,7 +77,7 @@ class FeatureSegmentation3D(nn.Module):
         # step 3 extract memory feature
         if self.neck is not None:
             seg_feature, backbone_score, neck_score = self.neck(
-                feature, masks[:, :, ::self.sample_rate])
+                feature, masks)
             
         else:
             seg_feature = feature
@@ -88,7 +88,7 @@ class FeatureSegmentation3D(nn.Module):
         # seg_feature [N, H_dim, T]
         # cls_feature [N, F_dim, T]
         if self.head is not None:
-            head_score = self.head(seg_feature, masks[:, :, ::self.sample_rate])
+            head_score = self.head(seg_feature, masks)
         else:
             head_score = None
         # seg_score [stage_num, N, C, T]

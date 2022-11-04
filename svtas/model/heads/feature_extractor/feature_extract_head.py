@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 19:20:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 11:49:43
+LastEditTime : 2022-11-04 20:49:37
 Description  : Feature Extract Head
 FilePath     : /SVTAS/svtas/model/heads/feature_extractor/feature_extract_head.py
 '''
@@ -68,7 +68,7 @@ class FeatureExtractHead(nn.Module):
             feature = feature.transpose(1, 2).contiguous()
             # [stage_num, N, C, T, H, W]
             feature = feature
-            masks = F.adaptive_max_pool2d(masks[:, 0:1, :], [1, self.output_seg_num]).unsqueeze(-1).unsqueeze(-1)
+            masks = F.adaptive_max_pool2d(masks[:, 0:1, ::self.sample_rate], [1, self.output_seg_num]).unsqueeze(-1).unsqueeze(-1)
             feature = F.adaptive_avg_pool3d(
                 feature, [self.output_seg_num, feature.shape[-2], feature.shape[-1]]) * masks
             if self.out_format in ["NCTHW"]:
@@ -84,7 +84,7 @@ class FeatureExtractHead(nn.Module):
         feature = feature.unsqueeze(0)
         feature = F.adaptive_avg_pool3d(
             feature, [feature.shape[1], self.in_channels, self.output_seg_num]) * F.adaptive_max_pool2d(
-                masks[:, 0:1, :], [1, self.output_seg_num]).unsqueeze(0)
+                masks[:, 0:1, ::self.sample_rate], [1, self.output_seg_num]).unsqueeze(0)
             
         if self.out_format in ["NTC"]:
             feature = torch.permute(feature, dims=[0, 1, 3, 2])

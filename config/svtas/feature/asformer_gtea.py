@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 19:52:47
+LastEditTime : 2022-11-04 20:44:58
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_gtea.py
 '''
@@ -15,11 +15,11 @@ _base_ = [
 
 split = 1
 num_classes = 11
-sample_rate = 1
+sample_rate = 4
 ignore_index = -100
 epochs = 50
 clip_seg_num = 32
-sliding_window = 32
+sliding_window = 128
 model_name = "Stream_Asformer_gtea_split" + str(split)
 
 MODEL = dict(
@@ -48,6 +48,9 @@ POSTPRECESSING = dict(
 )
 
 DATASET = dict(
+    temporal_clip_batch_size = 3,
+    video_batch_size = 2,
+    num_workers = 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         feature_path = './data/gtea/raw_features'
