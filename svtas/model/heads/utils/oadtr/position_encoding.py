@@ -2,17 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 15:18:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-18 14:18:12
+LastEditTime : 2022-11-03 20:13:03
 Description  : PositionEncoding utils ref:https://github.com/wangxiang1230/OadTR/blob/main/transformer_models/PositionalEncoding.py
-FilePath     : /ETESVS/model/heads/utils/oadtr/position_encoding.py
+FilePath     : /SVTAS/svtas/model/heads/utils/oadtr/position_encoding.py
 '''
 import torch
 import torch.nn as nn
 
 
 class FixedPositionalEncoding(nn.Module):
-    def __init__(self, embedding_dim, max_length=5000):
+    def __init__(self, embedding_dim, dropout=0.1, max_length=5000):
         super(FixedPositionalEncoding, self).__init__()
+
+        self.dropout = nn.Dropout(p=dropout)
 
         pe = torch.zeros(max_length, embedding_dim)
         position = torch.arange(0, max_length, dtype=torch.float).unsqueeze(1)
@@ -25,9 +27,9 @@ class FixedPositionalEncoding(nn.Module):
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
 
-    def forward(self, x):
-        x = x + self.pe[: x.size(0), :]
-        return x
+    def forward(self, x, padding=0):
+        x = x + self.pe[padding: padding + x.shape[0], :]
+        return self.dropout(x)
 
 
 class LearnedPositionalEncoding(nn.Module):

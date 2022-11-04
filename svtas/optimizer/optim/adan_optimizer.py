@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 10:19:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 15:06:02
+LastEditTime : 2022-11-04 15:29:52
 Description  : Adan Optimizer ref:https://github.com/sail-sg/Adan
-FilePath     : /SVTAS/svtas/optimizer/adan_optimizer.py
+FilePath     : /SVTAS/svtas/optimizer/optim/adan_optimizer.py
 '''
 """ Adan Optimizer
 Adan: Adaptive Nesterov Momentum Algorithm for Faster Optimizing Deep Models[J]. arXiv preprint arXiv:2208.06677, 2022.
@@ -44,6 +44,7 @@ class AdanOptimizer(Optimizer):
             eps=1e-8,
             weight_decay=0.0,
             no_prox=False,
+            **kwargs
     ):
         if not 0.0 <= learning_rate:
             raise ValueError("Invalid learning rate: {}".format(learning_rate))

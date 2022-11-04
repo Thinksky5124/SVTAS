@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 15:59:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 16:31:33
+LastEditTime : 2022-11-04 16:37:35
 Description  : ref:https://github.com/amazon-science/long-short-term-transformer/blob/main/src/rekognition_online_action_detection/models/lstr.py
 FilePath     : /SVTAS/svtas/model/heads/online_action_detection/lstr.py
 '''
@@ -12,6 +12,7 @@ FilePath     : /SVTAS/svtas/model/heads/online_action_detection/lstr.py
 import math
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from ..utils import (FixedPositionalEncoding, TransformerDecoderLayer, TransformerDecoder,
                      layer_norm, TransformerEncoderLayer, TransformerEncoder, generate_square_subsequent_mask)
 
@@ -84,8 +85,14 @@ class LSTR(nn.Module):
                  enc_module=[
                             [16, 1, True], [32, 2, True]
                             ],
-                 dec_module=[-1, 2, True]):
+                 dec_module=[-1, 2, True],
+                 sample_rate=1,
+                 max_memory_length=2048):
         super(LSTR, self).__init__()
+        self.sample_rate = sample_rate
+        self.visual_size = visual_size
+        self.motion_size = motion_size
+        self.max_memory_length = max_memory_length
 
         # Build long feature heads
         self.long_memory_num_samples = long_memory_num_samples
@@ -159,8 +166,14 @@ class LSTR(nn.Module):
 
         # Build classifier
         self.classifier = nn.Linear(self.d_model, self.num_classes)
+
+        ############################
+        # Cache for stream inference
+        ############################
+        self.long_memories_cache = None
+        self.compressed_long_memories_cache = None
     
-    def weights_init(m):
+    def weights_init(self, m):
         if isinstance(m, nn.Linear):
             nn.init.kaiming_uniform_(m.weight.data, a=math.sqrt(5))
         elif isinstance(m, nn.Conv1d):
@@ -192,7 +205,16 @@ class LSTR(nn.Module):
     def _clear_memory_buffer(self):
         pass
 
-    def forward(self, visual_inputs, motion_inputs, memory_key_padding_mask=None):
+    def stream_train(self, feature, masks):
+        visual_inputs = feature[:, :self.visual_size, :].transpose(1, 2)
+        motion_inputs = feature[:, self.motion_size:, :].transpose(1, 2)
+
+        # Get memory key padding mask
+        if self.long_memory_num_samples > 0:
+            memory_key_padding_mask = masks[:, 0, :self.long_memory_num_samples]
+        else:
+            memory_key_padding_mask = None
+
         if self.long_enabled:
             # Compute long memories
             long_memories = self.pos_encoding(self.feature_head_long(
@@ -249,45 +271,44 @@ class LSTR(nn.Module):
                 )
 
         # Compute classification score
+        # [T N C]
         score = self.classifier(output)
-
-        return score.transpose(0, 1)
-
-
-@HEADS.register()
-class LSTRStream(LSTR):
-
-    def __init__(self, **kwargs):
-        super(LSTRStream, self).__init__(**kwargs)
-
-        ############################
-        # Cache for stream inference
-        ############################
-        self.long_memories_cache = None
-        self.compressed_long_memories_cache = None
-
-    def stream_inference(self,
-                         long_visual_inputs,
-                         long_motion_inputs,
-                         work_visual_inputs,
-                         work_motion_inputs,
-                         memory_key_padding_mask=None):
+        # [T N C] -> [stage_num， N, C, T]
+        score = torch.permute(score, dims=[1, 2, 0]).unsqueeze(0)
+        score = F.interpolate(
+            input=score,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
+        return score
+    
+    def stream_inference(self, feature, masks=None):
         assert self.long_enabled, 'Long-term memory cannot be empty for stream inference'
         assert len(self.enc_modules) > 0, 'LSTR encoder cannot be disabled for stream inference'
 
+        long_visual_inputs = feature[:, :self.visual_size, :self.long_memory_num_samples].transpose(1, 2)
+        long_motion_inputs = feature[:, self.motion_size:, :self.long_memory_num_samples].transpose(1, 2)
+        work_visual_inputs = feature[:, :self.visual_size, self.long_memory_num_samples:].transpose(1, 2)
+        work_motion_inputs = feature[:, self.motion_size:, self.long_memory_num_samples:].transpose(1, 2)
+        # Get memory key padding mask
+        if self.long_memory_num_samples > 0:
+            memory_key_padding_mask = masks[:, 0, :self.long_memory_num_samples]
+        else:
+            memory_key_padding_mask = None
+
         if (long_visual_inputs is not None) and (long_motion_inputs is not None):
-            # Compute long memories
+            # Compute long memories [T N C]
             long_memories = self.feature_head_long(
                 long_visual_inputs,
                 long_motion_inputs,
             ).transpose(0, 1)
 
             if self.long_memories_cache is None:
-                self.long_memories_cache = long_memories
+                self.long_memories_cache = long_memories.detach().clone()
             else:
                 self.long_memories_cache = torch.cat((
-                    self.long_memories_cache[1:], long_memories
-                ))
+                    self.long_memories_cache[self.work_memory_num_samples:], long_memories.detach().clone()
+                ))[max(0, self.long_memories_cache.shape[0] - self.max_memory_length):]
+                
 
             long_memories = self.long_memories_cache
             pos = self.pos_encoding.pe[:self.long_memory_num_samples, :]
@@ -301,7 +322,7 @@ class LSTRStream(LSTR):
             # Encode long memories
             long_memories = self.enc_modules[0].stream_inference(enc_queries[0], long_memories, pos,
                                                                  memory_key_padding_mask=memory_key_padding_mask)
-            self.compressed_long_memories_cache  = long_memories
+            self.compressed_long_memories_cache  = long_memories.detach().clone()
             for enc_query, enc_module in zip(enc_queries[1:], self.enc_modules[1:]):
                 if enc_query is not None:
                     long_memories = enc_module(enc_query, long_memories)
@@ -353,6 +374,18 @@ class LSTRStream(LSTR):
                 )
 
         # Compute classification score
+        # [T N C]
         score = self.classifier(output)
+        # [T N C] -> [stage_num， N, C, T]
+        score = torch.permute(score, dims=[1, 2, 0]).unsqueeze(0)
+        score = F.interpolate(
+            input=score,
+            scale_factor=[1, self.sample_rate],
+            mode="nearest")
+        return score
 
-        return score.transpose(0, 1)
+    def forward(self, feature, masks):
+        if self.training:
+            return self.stream_train(feature, masks)
+        else:
+            return self.stream_inference(feature, masks)

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:19:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 19:49:46
+LastEditTime : 2022-11-04 15:30:03
 Description  : TSM Adam optimizer
-FilePath     : /ETESVS/optimizer/tsm_adam_optimizer.py
+FilePath     : /SVTAS/svtas/optimizer/optim/tsm_adam_optimizer.py
 '''
 from ..builder import OPTIMIZER
 import torch
@@ -17,7 +17,8 @@ class TSMAdamOptimizer(torch.optim.Adam):
                  fc_lr5=True,
                  learning_rate=0.01,
                  betas=(0.9, 0.999),
-                 weight_decay=1e-4) -> None:
+                 weight_decay=1e-4,
+                 **kwargs) -> None:
         self.paramwise_cfg = dict(fc_lr5=fc_lr5)
         params = self.get_optim_policies(model)
         super().__init__(params=params, lr=learning_rate, betas=betas, weight_decay=weight_decay)

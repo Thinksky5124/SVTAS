@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:13:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:16:36
+LastEditTime : 2022-11-04 15:14:23
 Description: feature dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/feature_stream_segmentation_dataset.py
 '''
@@ -24,10 +24,12 @@ class FeatureStreamSegmentationDataset(StreamDataset):
                  feature_path,
                  sliding_window=60,
                  flow_feature_path=None,
+                 need_precise_grad_accumulate=True,
                  **kwargs):
         self.flow_feature_path = flow_feature_path
         self.feature_path = feature_path
         self.sliding_window = sliding_window
+        self.need_precise_grad_accumulate = need_precise_grad_accumulate
         super().__init__(**kwargs)
     
     def parse_file_paths(self, input_path):
@@ -72,9 +74,12 @@ class FeatureStreamSegmentationDataset(StreamDataset):
                     # caculate sliding num
                     if max_len < len(content):
                         max_len = len(content)
-                    precise_sliding_num = len(content) // self.sliding_window
-                    if len(content) % self.sliding_window != 0:
-                        precise_sliding_num = precise_sliding_num + 1
+                    if self.need_precise_grad_accumulate:
+                        precise_sliding_num = len(content) // self.sliding_window
+                        if len(content) % self.sliding_window != 0:
+                            precise_sliding_num = precise_sliding_num + 1
+                    else:
+                        precise_sliding_num = 1
 
                     if self.flow_feature_path is not None:
                         flow_feature_path = os.path.join(self.flow_feature_path, video_name + '.npy')

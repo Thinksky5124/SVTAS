@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:11:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:31:37
+LastEditTime : 2022-11-04 15:15:40
 Description  : file content
-FilePath     : /SVTAS/loader/dataset/stream_base_dataset/rgb_flow_frame_stream_segmentation_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/rgb_flow_frame_stream_segmentation_dataset.py
 '''
 import copy
 import os
@@ -105,9 +105,12 @@ class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
                      # caculate sliding num
                     if max_len < len(content):
                         max_len = len(content)
-                    precise_sliding_num = len(content) // self.sliding_window
-                    if len(content) % self.sliding_window != 0:
-                        precise_sliding_num = precise_sliding_num + 1
+                    if self.need_precise_grad_accumulate:
+                        precise_sliding_num = len(content) // self.sliding_window
+                        if len(content) % self.sliding_window != 0:
+                            precise_sliding_num = precise_sliding_num + 1
+                    else:
+                        precise_sliding_num = 1
 
                     info.append(
                         dict(filename=video_path,

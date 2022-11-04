@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:16:00
+LastEditTime : 2022-11-04 15:14:52
 Description: dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_stream_segmentation_dataset.py
 '''
@@ -50,9 +50,11 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
     def __init__(self,
                  videos_path,
                  sliding_window=60,
+                 need_precise_grad_accumulate=True,
                  **kwargs):
         self.videos_path = videos_path
         self.sliding_window = sliding_window
+        self.need_precise_grad_accumulate = need_precise_grad_accumulate
         super().__init__(**kwargs)
 
     def parse_file_paths(self, input_path):
@@ -130,9 +132,12 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
                     # caculate sliding num
                     if max_len < len(content):
                         max_len = len(content)
-                    precise_sliding_num = len(content) // self.sliding_window
-                    if len(content) % self.sliding_window != 0:
-                        precise_sliding_num = precise_sliding_num + 1
+                    if self.need_precise_grad_accumulate:
+                        precise_sliding_num = len(content) // self.sliding_window
+                        if len(content) % self.sliding_window != 0:
+                            precise_sliding_num = precise_sliding_num + 1
+                    else:
+                        precise_sliding_num = 1
 
                     info.append(
                         dict(filename=video_path,

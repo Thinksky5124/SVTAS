@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:36:31
+LastEditTime : 2022-11-04 15:10:31
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''
@@ -79,6 +79,50 @@ class ActionCLIPSegmentationLoss(SegmentationLoss):
                 (torch.mean(torch.reshape(torch.clamp(
                     self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1))
                     , min=0, max=16) * masks[:, 1:].unsqueeze(1), [b, -1]), dim=-1) / (precise_sliding_num + self.elps)))
+        
+        loss_dict={}
+        loss_dict["loss"] = loss * self.loss_weight
+        return loss_dict
+
+@LOSSES.register()
+class LSTRSegmentationLoss(nn.Module):
+    def __init__(self,
+                 num_classes,
+                 loss_weight=1.0,
+                 ignore_index=-100):
+            super().__init__()
+            self.num_classes = num_classes
+            self.ignore_index = ignore_index
+            self.loss_weight = loss_weight
+            self.logsoftmax = nn.LogSoftmax(dim=-1)
+            self.elps = 1e-10
+    
+    def forward(self, model_output, input_data):
+        # score shape [stage_num N C T]
+        # masks shape [N T]
+        head_score = model_output["output"]
+        masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
+        
+        _, b, _, t = head_score.shape
+
+        loss = 0.
+        for p in head_score:
+            # smooth label learning
+            with torch.no_grad():
+                device = head_score.device
+                # [N T]
+                raw_labels = labels[:, (-t):]
+                # deal label over num_classes
+                # [N, 1]
+                y = torch.zeros(raw_labels.shape, dtype=raw_labels.dtype, device=device)
+                refine_label = torch.where(raw_labels != self.ignore_index, raw_labels, y)
+                # [N C T]
+                ce_y = F.one_hot(refine_label, num_classes=self.num_classes)
+
+                raw_labels_repeat = torch.tile(raw_labels.unsqueeze(2), dims=[1, 1, self.num_classes])
+                ce_y = torch.where(raw_labels_repeat != self.ignore_index, ce_y, torch.zeros(ce_y.shape, device=device, dtype=ce_y.dtype)).float()
+            seg_cls_loss = torch.sum(-ce_y.view(-1, self.num_classes) * self.logsoftmax(p.transpose(2, 1).contiguous().view(-1, self.num_classes)),dim=1)
+            loss += torch.sum(torch.sum(torch.reshape(seg_cls_loss, shape=[b, t]), dim=-1) / (precise_sliding_num + self.elps)) / (torch.sum(labels != -100) + self.elps)
         
         loss_dict={}
         loss_dict["loss"] = loss * self.loss_weight

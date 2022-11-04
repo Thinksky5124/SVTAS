@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:13:28
+LastEditTime : 2022-11-04 15:26:58
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -39,7 +39,8 @@ class Runner():
                  use_amp=False,
                  nprocs=1,
                  local_rank=-1,
-                 runner_mode='train'):
+                 runner_mode='train',
+                 need_grad_accumulate=True):
         self.optimizer = optimizer
         self.logger = logger
         self.video_batch_size = video_batch_size
@@ -52,6 +53,7 @@ class Runner():
         self.nprocs = nprocs
         self.local_rank = local_rank
         self.use_amp = use_amp
+        self.need_grad_accumulate = need_grad_accumulate
 
         assert runner_mode in ['train', 'validation', 'test'], "Not support this runner mode: " + runner_mode
         self.runner_mode = runner_mode
@@ -201,7 +203,11 @@ class Runner():
                     scaled_loss.backward()
             else:
                 loss.backward()
-        
+            
+            if not self.need_grad_accumulate:
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+
         score = outputs['output']
         return score, loss_dict
 

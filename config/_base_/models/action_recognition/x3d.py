@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-02 14:21:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-02 21:26:58
+LastEditTime : 2022-11-04 09:39:07
 Description  : file content
-FilePath     : /SVTAS/config/_base_/models/action_recognition/x3d_m.py
+FilePath     : /SVTAS/config/_base_/models/action_recognition/x3d.py
 '''
 MODEL = dict(
     architecture = "Recognition3D",
@@ -25,7 +25,7 @@ MODEL = dict(
     neck = None,
     head = dict(
         name = "FeatureExtractHead",
-        in_channels = 1024,
+        in_channels = 192,
         input_seg_num = 8,
         output_seg_num = 1,
         sample_rate = 1,

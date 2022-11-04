@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-25 15:31:09
+LastEditTime : 2022-11-04 15:17:12
 Description: model postprecessing
-FilePath     : /SVTAS/model/post_precessings/stream_score_post_processing.py
+FilePath     : /SVTAS/svtas/model/post_precessings/stream_score_post_processing.py
 '''
 import numpy as np
 import torch
@@ -32,13 +32,13 @@ class StreamScorePostProcessing():
             if torch.is_tensor(seg_scores):
                 self.pred_scores.append(seg_scores[-1, :, :, 0:self.sliding_window].detach().cpu().numpy().copy())
                 self.video_gt.append(gt[:, 0:self.sliding_window].detach().cpu().numpy().copy())
-                pred = np.argmax(seg_scores[-1, :].detach().cpu().numpy(), axis=-2)
-                acc = np.mean((np.sum(pred == gt.detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+                pred = np.argmax(seg_scores[-1, :, :, 0:self.sliding_window].detach().cpu().numpy(), axis=-2)
+                acc = np.mean((np.sum(pred == gt[:, 0:self.sliding_window].detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
             else:
                 self.pred_scores.append(seg_scores[-1, :, :, 0:self.sliding_window].copy())
                 self.video_gt.append(gt[:, 0:self.sliding_window].copy())
-                pred = np.argmax(seg_scores[-1, :], axis=-2)
-                acc = np.mean((np.sum(pred == gt, axis=1) / (np.sum(gt != self.ignore_index, axis=1) + self.epls)))
+                pred = np.argmax(seg_scores[-1, :, :, 0:self.sliding_window].detach().cpu().numpy(), axis=-2)
+                acc = np.mean((np.sum(pred == gt[:, 0:self.sliding_window].detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
         return acc
 
     def output(self):

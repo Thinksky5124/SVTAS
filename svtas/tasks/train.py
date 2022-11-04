@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-02 15:54:40
+LastEditTime : 2022-11-04 15:27:44
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -47,7 +47,7 @@ def train(cfg,
         tensorboard_writer = get_logger("SVTAS", tensorboard=args.use_tensorboard)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    weight_decay = cfg.OPTIMIZER.get('weight_decay', 1e-4)
+    need_grad_accumulate = cfg.OPTIMIZER.get('need_grad_accumulate', True)
 
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)
@@ -185,7 +185,8 @@ def train(cfg,
                 post_processing=post_processing,
                 use_amp=use_amp,
                 nprocs=nprocs,
-                local_rank=local_rank)
+                local_rank=local_rank,
+                need_grad_accumulate=need_grad_accumulate)
     best = 0.0
     for epoch in range(0, cfg.epochs):
         if epoch < resume_epoch:

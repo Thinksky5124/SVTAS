@@ -24,7 +24,6 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 - [x] Pillow-SMID accelerate sample
 - [x] Onnxruntime Infer Suppport
 - [x] Support CAM Visualization
-- [ ] Multigrid train
 
 # Envirnment Prepare
 
@@ -53,7 +52,7 @@ pip install -r requirements.txt
 # export
 pip freeze > requirements.txt
 ```
-- If report `correlation_cuda package no found`, you should read [Install](model/backbones/utils/liteflownet_v3/README.md)
+- If report `correlation_cuda package no found`, you should read [Install](svtas/model/backbones/utils/liteflownet_v3/README.md)
 
 # Prepare Data
 
@@ -61,6 +60,9 @@ Read Doc [Prepare Datset](doc/prepare_dataset.md)
 
 # Usage
 Read Doc [Usage](doc/usage.md)
+
+# model zoo
+Read Doc [ModelZoo](doc/model_zoo.md)
 
 # Citation
 ```bib

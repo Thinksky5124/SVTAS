@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:24:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 14:39:06
+LastEditTime : 2022-11-03 21:35:26
 Description  : 50salads dataset config
-FilePath     : /SVTAS/config/_base_/dataset/50salads/50salads_video.py
+FilePath     : /SVTAS/config/_base_/dataset/50salads/50salads_stream_video.py
 '''
 DATASET = dict(
     temporal_clip_batch_size = 3,
@@ -18,7 +18,7 @@ DATASET = dict(
         gt_path = "./data/50salads/groundTruth",
         actions_map_file_path = "./data/50salads/mapping.txt",
         dataset_type = "50salads",
-        train_mode = False,
+        train_mode = True,
         sliding_window = 64
     ),
     test = dict(
