@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:04:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 15:16:12
+LastEditTime : 2022-11-04 20:55:51
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/lstr_gtea.py
 '''
@@ -64,12 +64,14 @@ DATASET = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         feature_path = "./data/gtea/raw_features",
         need_precise_grad_accumulate = False,
+        sliding_window = sliding_window
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         feature_path = "./data/gtea/raw_features",
         need_precise_grad_accumulate = False,
+        sliding_window = sliding_window
         # flow_feature_path = "./data/gtea/flow_features"
     )
 )

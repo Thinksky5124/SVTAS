@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:44:58
+LastEditTime : 2022-11-05 21:16:48
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/bridge_prompt_ms_tcn_gtea.py
 '''
@@ -77,8 +77,8 @@ MODEL = dict(
 )
 
 POSTPRECESSING = dict(
-    name = "ScorePostProcessing",
-    num_classes = num_classes,
+    name = "StreamScorePostProcessing",
+    sliding_window = sliding_window,
     ignore_index = ignore_index
 )
 

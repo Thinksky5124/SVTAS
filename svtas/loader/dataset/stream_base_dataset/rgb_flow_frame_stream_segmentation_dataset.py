@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:11:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 15:15:40
+LastEditTime : 2022-11-05 21:18:44
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/rgb_flow_frame_stream_segmentation_dataset.py
 '''
@@ -80,7 +80,7 @@ class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
                                 video_path = os.path.join(self.videos_path, video_name + '.npy')
                                 if not osp.isfile(video_path):
                                     raise NotImplementedError
-                        flow_path = os.path.join(self.flows_path, video_name + '.mp4')
+                        flows_path = os.path.join(self.flows_path, video_name + '.mp4')
 
                     elif self.dataset_type in ['breakfast']:
                         video_segment_name, video_segment_path = video_segment
@@ -94,7 +94,7 @@ class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
                                 video_path = os.path.join(self.videos_path, video_name + '.npy')
                                 if not osp.isfile(video_path):
                                     raise NotImplementedError
-                        flow_path = os.path.join(self.flows_path, video_segment_name + '.mp4')
+                        flows_path = os.path.join(self.flows_path, video_segment_name + '.mp4')
 
                     file_ptr = open(label_path, 'r')
                     content = file_ptr.read().split('\n')[:-1]
@@ -114,6 +114,7 @@ class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
 
                     info.append(
                         dict(filename=video_path,
+                            flows_path=flows_path,
                             raw_labels=classes,
                             video_name=video_name,
                             precise_sliding_num=precise_sliding_num))

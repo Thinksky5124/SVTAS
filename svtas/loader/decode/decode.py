@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 12:57:40
+LastEditTime : 2022-11-05 21:19:48
 Description  : feature decode
 FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
@@ -117,9 +117,11 @@ class RGBFlowVideoDecoder():
         filepath: the file path of mp4 file
     """
     def __init__(self,
-                 backend='decord'):
+                 rgb_backend='decord',
+                 flow_backend='numpy'):
 
-        self.backend = backend
+        self.rgb_backend = rgb_backend
+        self.flow_backend =flow_backend
 
     def __call__(self, results):
         """
@@ -128,18 +130,19 @@ class RGBFlowVideoDecoder():
             List where each item is a numpy array after decoder.
         """
         file_path = results['filename']
-        flow_path = results['flow_path']
+        flow_path = results['flows_path']
         results['format'] = 'video'
-        results['backend'] = self.backend
+        results['rgb_backend'] = self.rgb_backend
+        results['flow_backend'] = self.flow_backend
 
         try:
-            rgb_container = get_container(self.backend)(file_path)
+            rgb_container = get_container(self.rgb_backend)(file_path)
         except:
             print("file: " + file_path + " get error!")
             raise
         
         try:
-            flow_container = get_container(self.backend)(flow_path)
+            flow_container = get_container(self.flow_backend)(flow_path)
         except:
             print("file: " + flow_path + " get error!")
             raise
