@@ -2,24 +2,24 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 13:40:57
+LastEditTime : 2022-11-07 15:30:21
 Description  : file content
-FilePath     : /SVTAS/config/tas/feature/ms_tcn_gtea.py
+FilePath     : /SVTAS/config/tas/feature/ms_tcn_50salads.py
 '''
 
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/temporal_action_segmentation/ms_tcn.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
-    '../../_base_/dataset/gtea/gtea_feature.py'
+    '../../_base_/dataset/50salads/50salads_feature.py'
 ]
 
 split = 1
-num_classes = 11
+num_classes = 19
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-model_name = "MSTCN_gtea_split" + str(split)
+model_name = "MSTCN_50salads_split" + str(split)
 
 MODEL = dict(
     head = dict(
@@ -42,12 +42,12 @@ POSTPRECESSING = dict(
 
 DATASET = dict(
     train = dict(
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        # flow_feature_path = "./data/gtea/flow_features"
+        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
+        # flow_feature_path = "./data/50salads/flow_features"
     ),
     test = dict(
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        # flow_feature_path = "./data/gtea/flow_features"
+        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
+        # flow_feature_path = "./data/50salads/flow_features"
     )
 )
 

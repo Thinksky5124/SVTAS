@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 21:44:47
+LastEditTime : 2022-11-06 21:27:27
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_flow_asformer_gtea.py
 '''
@@ -13,13 +13,12 @@ _base_ = [
 split = 1
 num_classes = 11
 sample_rate = 1
-clip_seg_num = 32
-sliding_window = 32
+clip_seg_num = 256
+sliding_window = 256
 ignore_index = -100
 batch_size = 1
 epochs = 50
-cnt_max = 30
-model_name = "I3D_Flow_Rgb_Asformer_gtea_split" + str(split)
+model_name = "I3D_Flow_Rgb_Asformer_256x1_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "MultiModalityStreamSegmentation",

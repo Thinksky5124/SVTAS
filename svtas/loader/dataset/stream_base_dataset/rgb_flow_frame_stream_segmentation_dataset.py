@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 20:11:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 21:18:44
+LastEditTime : 2022-11-08 10:01:07
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/rgb_flow_frame_stream_segmentation_dataset.py
 '''
@@ -147,7 +147,7 @@ class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
             imgs_list.append(copy.deepcopy(sample_segment['imgs'].unsqueeze(0)))
             flow_imgs_list.append(copy.deepcopy(sample_segment['flows'].unsqueeze(0)))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
-            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
+            masks_list.append(np.expand_dims(sample_segment['masks'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
             precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 

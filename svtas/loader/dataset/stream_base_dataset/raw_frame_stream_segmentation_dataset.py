@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 15:14:52
+LastEditTime : 2022-11-08 10:01:03
 Description: dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_stream_segmentation_dataset.py
 '''
@@ -171,7 +171,7 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
             # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
             imgs_list.append(copy.deepcopy(sample_segment['imgs'].unsqueeze(0)))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
-            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
+            masks_list.append(np.expand_dims(sample_segment['masks'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
             precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 

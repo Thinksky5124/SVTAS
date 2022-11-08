@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 21:19:48
+LastEditTime : 2022-11-07 23:27:28
 Description  : feature decode
 FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
@@ -21,10 +21,14 @@ class FeatureDecoder():
     """
     def __init__(self,
                  backend='numpy',
-                 is_transpose=False):
+                 is_transpose=False,
+                 temporal_dim=0,
+                 revesive_name=[(r'(mp4|avi)', 'npy')]):
 
         self.backend = backend
         self.is_transpose = is_transpose
+        self.temporal_dim = temporal_dim
+        self.revesive_name = revesive_name
 
     def __call__(self, results):
         """
@@ -35,16 +39,24 @@ class FeatureDecoder():
         file_path = results['filename']
         results['format'] = 'feature'
 
-        feature = np.load(file_path)
-        if self.is_transpose is True:
-            feature = feature.T
+        try:
+            feature_container = get_container(self.backend)(file_path, temporal_dim=self.temporal_dim, is_transpose=self.is_transpose, revesive_name=self.revesive_name)
+        except:
+            print("file: " + file_path + " get error!")
+            raise
+        
         if "flow_feature_name" in list(results.keys()):
-            flow_feature = np.load(results['flow_feature_name'])
-            feature = np.concatenate([feature, flow_feature], axis=0)
-        feature_len = feature.shape[1]
-        results['frames'] = feature
-        results['frames_len'] = results['raw_labels'].shape[0]
-        results['feature_len'] = feature_len
+            try:
+                flow_container = get_container(self.backend)(results['flow_feature_name'])
+                feature_container = feature_container.concat(flow_container, dim=0)
+            except:
+                print("file: " + file_path + " get error!")
+                raise
+
+        feature_len = len(feature_container)
+        results['frames'] = feature_container
+        results['frames_len'] = int(results['raw_labels'].shape[0])
+        results['feature_len'] = int(feature_len)
         
         return results
 
@@ -77,7 +89,7 @@ class VideoDecoder():
             raise
         video_len = len(container)
         results['frames'] = container
-        results['frames_len'] = results['raw_labels'].shape[0]
+        results['frames_len'] = int(results['raw_labels'].shape[0])
         results['video_len'] = video_len
         
         return results
@@ -89,8 +101,12 @@ class FlowVideoDecoder(object):
     get flow from file
     """
     def __init__(self,
-                 backend='numpy'):
+                 backend='numpy',
+                 temporal_dim=0,
+                 revesive_name=[(r'(mp4|avi)', 'npy')]):
         self.backend = backend
+        self.temporal_dim = temporal_dim
+        self.revesive_name = revesive_name
 
     def __call__(self, results):
         file_path = results['filename']
@@ -98,13 +114,13 @@ class FlowVideoDecoder(object):
         results['backend'] = self.backend
 
         try:
-            container = get_container(self.backend)(file_path)
+            container = get_container(self.backend)(file_path, temporal_dim=self.temporal_dim, revesive_name=self.revesive_name)
         except:
             print("file: " + file_path + " get error!")
             raise
         video_len = len(container)
         results['frames'] = container
-        results['frames_len'] = results['raw_labels'].shape[0]
+        results['frames_len'] = int(results['raw_labels'].shape[0])
         results['video_len'] = video_len
         
         return results
@@ -118,10 +134,14 @@ class RGBFlowVideoDecoder():
     """
     def __init__(self,
                  rgb_backend='decord',
-                 flow_backend='numpy'):
+                 flow_backend='numpy',
+                 flow_temporal_dim=0,
+                 flow_revesive_name=[(r'(mp4|avi)', 'npy')]):
 
         self.rgb_backend = rgb_backend
         self.flow_backend =flow_backend
+        self.temporal_dim = flow_temporal_dim
+        self.revesive_name = flow_revesive_name
 
     def __call__(self, results):
         """
@@ -142,14 +162,14 @@ class RGBFlowVideoDecoder():
             raise
         
         try:
-            flow_container = get_container(self.flow_backend)(flow_path)
+            flow_container = get_container(self.flow_backend)(flow_path, temporal_dim=self.temporal_dim, revesive_name=self.revesive_name)
         except:
             print("file: " + flow_path + " get error!")
             raise
         video_len = len(rgb_container)
         results['rgb_frames'] = rgb_container
         results['flow_frames'] = flow_container
-        results['frames_len'] = results['raw_labels'].shape[0]
+        results['frames_len'] = int(results['raw_labels'].shape[0])
         results['video_len'] = video_len
         
         return results

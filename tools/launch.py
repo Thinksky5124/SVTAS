@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 14:03:52
+LastEditTime : 2022-11-07 10:16:08
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -20,6 +20,7 @@ from svtas.tasks.infer import infer
 from svtas.tasks.test import test
 from svtas.tasks.train import train
 from svtas.utils.config import get_config
+from svtas.utils.logger import get_logger
 
 
 def parse_args():
@@ -104,6 +105,8 @@ def main():
         torch.backends.cudnn.deterministic = True
         # weather accelerate conv op
         torch.backends.cudnn.benchmark = False
+        logger = get_logger("SVTAS")
+        logger.info("Current Seed is: " + str(seed))
 
     if args.mode in ["test"]:
         test(cfg,

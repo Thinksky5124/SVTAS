@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 15:27:44
+LastEditTime : 2022-11-07 10:14:44
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''

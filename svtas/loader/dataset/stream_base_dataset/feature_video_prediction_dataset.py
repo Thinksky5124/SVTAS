@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 16:14:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:15:12
+LastEditTime : 2022-11-08 10:00:56
 Description  : Feature Video Prediction dataset
-FilePath     : /SVTAS/loader/dataset/stream_base_dataset/feature_video_prediction_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/feature_video_prediction_dataset.py
 '''
 import copy
 
@@ -38,7 +38,7 @@ class FeatureVideoPredictionDataset(FeatureStreamSegmentationDataset):
             feature_list.append(copy.deepcopy(sample_segment['feature'].unsqueeze(0)))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
             pred_labels_list.append(np.expand_dims(sample_segment['pred_labels'], axis=0).copy())
-            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
+            masks_list.append(np.expand_dims(sample_segment['masks'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
             precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 

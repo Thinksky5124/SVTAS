@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 11:11:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:55:21
+LastEditTime : 2022-11-08 10:01:19
 Description  : Video CAM dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/video_cam_raw_frame_stream_dataset.py
 '''
@@ -38,7 +38,7 @@ class RawFrameStreamCAMDataset(RawFrameStreamSegmentationDataset):
             imgs_list.append(copy.deepcopy(sample_segment['imgs'].unsqueeze(0)))
             raw_imgs_list.append(copy.deepcopy(sample_segment['raw_imgs']))
             labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
-            masks_list.append(np.expand_dims(sample_segment['mask'], axis=0).copy())
+            masks_list.append(np.expand_dims(sample_segment['masks'], axis=0).copy())
             vid_list.append(copy.deepcopy(sample_segment['video_name']))
             precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
 

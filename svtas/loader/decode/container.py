@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-01 12:25:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-01 15:22:09
+LastEditTime : 2022-11-08 09:51:38
 Description  : video container
 FilePath     : /SVTAS/svtas/loader/decode/container.py
 '''
@@ -15,7 +15,7 @@ import copy
 
 def get_container(backend):
     if backend == "numpy":
-        return FlowNPYContainer
+        return NPYContainer
     elif backend == "decord":
         return DecordContainer
     elif backend == "pyav":
@@ -25,16 +25,29 @@ def get_container(backend):
     else:
         raise NotImplementedError("Not support " + backend + "!")
 
-class FlowNPYContainer(object):
-    def __init__(self, npy_file):
-        npy_file = re.sub("(mp4|avi)", "npy", npy_file)
-        self.data = np.load(npy_file)
+class NPYContainer(object):
+    def __init__(self, npy_file, temporal_dim=-1, is_transpose=False, revesive_name=[(r'(mp4|avi)', 'npy')]):
+        self.temporal_dim = temporal_dim
+        self.revesive_name = revesive_name
+        for p, r in revesive_name:
+            npy_file = re.sub(p, r, npy_file)
+        if is_transpose:
+            self.data = np.load(npy_file).T
+        else:
+            self.data = np.load(npy_file)
+    
+    def concat(self, rhs_container, dim=0):
+        self.data = np.concatenate([self.data, rhs_container.data], axis=dim)
+        return self
 
     def get_batch(self, frames_idx):
-        return self.data[frames_idx, :]
+        if self.temporal_dim == -1:
+            return self.data[:, frames_idx]
+        else:
+            return self.data[frames_idx, :]
     
     def __len__(self):
-        return self.data.shape[0]
+        return self.data.shape[self.temporal_dim]
 
 class DecordContainer(object):
     def __init__(self, video_file):

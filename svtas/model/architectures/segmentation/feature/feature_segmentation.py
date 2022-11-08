@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 20:48:43
+LastEditTime : 2022-11-07 15:33:28
 Description: feaeture segmentation model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature/feature_segmentation.py
 '''
@@ -79,13 +79,11 @@ class FeatureSegmentation(nn.Module):
         # feature [N, F_dim, T]
         # step 3 extract memory feature
         if self.neck is not None:
-            seg_feature, backbone_score, neck_score = self.neck(
+            seg_feature = self.neck(
                 feature, masks)
             
         else:
             seg_feature = feature
-            backbone_score = None
-            neck_score = None
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]

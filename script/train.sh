@@ -2,11 +2,11 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-05-22 17:05:58
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2022-11-05 21:48:09
+ # @LastEditTime : 2022-11-07 15:30:00
  # @Description  : train script
  # @FilePath     : /SVTAS/script/train.sh
 ### 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 ### gtea ###
-python tools/launch.py --mode train --validate -c config/svtas/rgb/i3d_rgb_flow_asformer_gtea.py --seed 1538574472
+python tools/launch.py --mode train --validate -c config/tas/feature/ms_tcn_ipb_50salads.py --seed 1538574472
