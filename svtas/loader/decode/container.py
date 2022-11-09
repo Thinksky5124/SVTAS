@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-01 12:25:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 16:20:52
+LastEditTime : 2022-11-09 21:25:22
 Description  : video container
 FilePath     : /SVTAS/svtas/loader/decode/container.py
 '''
@@ -168,7 +168,11 @@ class MVExtractor(object):
                  argument=False):
         video = cv2.VideoCapture(file_path)
         self.len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.data = MVVideoCap.open(file_path)
+        self.data = MVVideoCap()
+        ret = self.data.open(file_path)
+        if not ret:
+            raise RuntimeError(f"Could not open {file_path}")
+
         self.argument = argument
         self.need_residual = need_residual
         self.need_mvs = need_mvs
@@ -202,9 +206,9 @@ class MVExtractor(object):
 
     def _get_res_img(self, img, mvs, output_dict):
         res_img = np.full_like(img, 0)
-        if last_frame is None:
-            last_frame = img
-            self.last_frame = cv2.copyMakeBorder(last_frame, self.pad_factor, self.pad_factor, self.pad_factor, self.pad_factor, cv2.BORDER_CONSTANT, value=(0,0,0))
+        if self.last_frame is None:
+            self.last_frame = img
+            self.last_frame = cv2.copyMakeBorder(self.last_frame, self.pad_factor, self.pad_factor, self.pad_factor, self.pad_factor, cv2.BORDER_CONSTANT, value=(0,0,0))
         else:
             mv_compress = copy.deepcopy(self.last_frame)
             w = img.shape[1] + self.pad_factor
@@ -227,7 +231,7 @@ class MVExtractor(object):
                     src_y_min = self.pad_factor + block_y * block_h
                     src_y_max = self.pad_factor + (block_y + 1) * block_h
 
-                    mv_compress[dst_y_min:dst_y_max, dst_x_min:dst_x_max] = last_frame[src_y_min:src_y_max, src_x_min:src_x_max]
+                    mv_compress[dst_y_min:dst_y_max, dst_x_min:dst_x_max] = self.last_frame[src_y_min:src_y_max, src_x_min:src_x_max]
             res_img = img - mv_compress[self.pad_factor:h, self.pad_factor:w]
             res_img = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
             self.last_frame = cv2.copyMakeBorder(img, self.pad_factor, self.pad_factor, self.pad_factor, self.pad_factor, cv2.BORDER_CONSTANT, value=(0,0,0))
@@ -239,14 +243,12 @@ class MVExtractor(object):
 
     def _get_rgb_img(self, img, output_dict):
         rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        if 'imgs' not in output_dict.keys():
-            output_dict['imgs'] = [rgb_img]
-        else:
-            output_dict['imgs'].append(rgb_img)
+        output_dict['imgs'].append(rgb_img)
         return output_dict
 
     def get_batch(self, frames_idx):
-        output_dict = {}
+        output_dict = {'imgs':[]}
+        current_frame_idx = 0
         for i in range(0, len(self)):
             ret, img, motion_vectors, frame_type, timestamp = self.data.read() 
             if ret:

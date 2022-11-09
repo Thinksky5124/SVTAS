@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 16:24:48
+LastEditTime : 2022-11-09 21:24:11
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/i3d_compressed_video_asformer_gtea.py
 '''
@@ -14,7 +14,7 @@ _base_ = [
 split = 1
 num_classes = 11
 sample_rate = 1
-gop_size=16
+gop_size = 16
 clip_seg_num = 128
 sliding_window = 128
 
@@ -121,11 +121,12 @@ PIPELINE = dict(
         transform = dict(
             name = "CompressedVideoStreamTransform",
             rgb = [
-                dict(ResizeImproved = dict(size = 256)),
+                dict(XToTensor = None),
+                dict(ToFloat = None),
+                dict(TensorPermute = dict(permute_list = [2, 0, 1])),
+                dict(TensorImageResize = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
                 dict(RandomHorizontalFlip = None),
-                dict(PILToTensor = None),
-                dict(ToFloat = None),
                 dict(Normalize = dict(
                     mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                     std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
@@ -140,7 +141,11 @@ PIPELINE = dict(
                 dict(ScaleTo1_1 = None)
             ],
             res = [
-                dict()
+                dict(XToTensor = None),
+                dict(ToFloat = None),
+                dict(TensorPermute = dict(permute_list = [2, 0, 1])),
+                dict(TensorImageResize = dict(size = 256)),
+                dict(TensorCenterCrop = dict(crop_size = 224)),
             ]
         )
     ),
@@ -166,7 +171,7 @@ PIPELINE = dict(
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "RGBFlowVideoStreamTransform",
+            name = "CompressedVideoStreamTransform",
             rgb = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
@@ -187,7 +192,11 @@ PIPELINE = dict(
                 dict(ScaleTo1_1 = None)
             ],
             res = [
-                dict()
+                dict(XToTensor = None),
+                dict(ToFloat = None),
+                dict(TensorPermute = dict(permute_list = [2, 0, 1])),
+                dict(TensorImageResize = dict(size = 256)),
+                dict(TensorCenterCrop = dict(crop_size = 224)),
             ]
         )
     )

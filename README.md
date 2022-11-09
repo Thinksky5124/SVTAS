@@ -72,4 +72,4 @@ Eprint = {arXiv:2209.13808},
 This repo borrowed code from many great open source libraries, thanks again for their selfless dedication.
 - [mmaction2](https://github.com/open-mmlab/mmaction2)
 - [paddlevideo](https://github.com/PaddlePaddle/PaddleVideo)
-- [Slowfast](https://github.com/facebookresearch/SlowFast)
+- [SlowFast](https://github.com/facebookresearch/SlowFast)

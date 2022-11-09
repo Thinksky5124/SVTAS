@@ -1,6 +1,6 @@
 # Usage
 ## Pre-train weight
-- You can find some pre-train weight in [mmaction2](https://github.com/open-mmlab/mmaction2).
+- You can find some pre-train weight in [mmaction2](https://github.com/open-mmlab/mmaction2), [SlowFast](https://github.com/facebookresearch/SlowFast).
 
 ## Usage
 - There are some `.sh` example files in `script` dictory. 
