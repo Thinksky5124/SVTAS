@@ -3,10 +3,10 @@
 - This repo **main** branch are under development so it will have much bugs, because it doesn't test completely!
 
 **Note**
-- If you want to reproduce [paper](https://arxiv.org/pdf/2209.13808.pdf), please checkout branch to **svtas-paper**!
+- If you want to reproduce paper list, please checkout branch to **svtas-paper**!
 
 # Paper List
-- Streaming Video Temporal Action Segmentation In Real Time, [paper](https://arxiv.org/pdf/2209.13808.pdf), **statu**: under review 
+- Streaming Video Temporal Action Segmentation In Real Time, [![](https://img.shields.io/badge/arViv-@doi:2209.13808-orange.svg)](https://arxiv.org/pdf/2209.13808.pdf), **statu**: under review 
 
 ## Abstract
 
@@ -57,7 +57,7 @@ pip freeze > requirements.txt
 # Document Dictionary
 - [Prepare Datset](docs/prepare_dataset.md)
 - [Usage](docs/usage.md)
-- [ModelZoo](docs/model_zoo.md)
+- [Model Zoo](docs/model_zoo.md)
 
 # Citation
 ```bib

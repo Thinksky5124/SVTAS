@@ -2,10 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:13:37
+LastEditTime : 2022-11-09 15:07:56
 Description  : Transform module
 FilePath     : /SVTAS/svtas/loader/transform/transform.py
 '''
+from abc import abstractclassmethod
 import numpy as np
 import torch
 import copy
@@ -13,11 +14,13 @@ import torchvision.transforms as transforms
 from . import transform_fn as custom_transforms
 from ..builder import TRANSFORM
 
-@TRANSFORM.register()
-class FeatureStreamTransform():
-    def __init__(self, transform_list):
+class BaseTransform(object):
+    def __init__(self) -> None:
+        self.transforms_pipeline_dict = {}
+
+    def _get_transformers_pipline(self, cfg, key):
         transform_op_list = []
-        for transforms_op in transform_list:
+        for transforms_op in cfg:
             name = list(transforms_op.keys())[0]
             if list(transforms_op.values())[0] is None:
                 op = getattr(transforms, name, False)
@@ -32,97 +35,58 @@ class FeatureStreamTransform():
                 else:
                     op = op(**list(transforms_op.values())[0])
             transform_op_list.append(op)
-        self.feature_transforms_pipeline = transforms.Compose(transform_op_list)
+        self.transforms_pipeline_dict[key] = transforms.Compose(transform_op_list)
+    
+    @abstractclassmethod
+    def __call__(self, results):
+        raise NotImplementedError
+
+@TRANSFORM.register()
+class FeatureStreamTransform(BaseTransform):
+    def __init__(self, transform_list):
+        super().__init__()
+        self._get_transformers_pipline(transform_list, 'feature')
 
     def __call__(self, results):
         feature = results['feature'].astype(np.float32)
-        feature = self.feature_transforms_pipeline(feature).squeeze(0)
+        feature = self.transforms_pipeline_dict['feature'](feature).squeeze(0)
         results['feature'] = copy.deepcopy(feature)
         return results
 
 @TRANSFORM.register()
-class VideoStreamTransform():
+class VideoStreamTransform(BaseTransform):
     def __init__(self, transform_list):
-        transform_op_list = []
-        for transforms_op in transform_list:
-            name = list(transforms_op.keys())[0]
-            if list(transforms_op.values())[0] is None:
-                op = getattr(transforms, name, False)
-                if op is False:
-                    op = getattr(custom_transforms, name)()
-                else:
-                    op = op()
-            else:
-                op = getattr(transforms, name, False)
-                if op is False:
-                    op = getattr(custom_transforms, name)(**list(transforms_op.values())[0])
-                else:
-                    op = op(**list(transforms_op.values())[0])
-            transform_op_list.append(op)
-        self.imgs_transforms_pipeline = transforms.Compose(transform_op_list)
+        super().__init__()
+        self._get_transformers_pipline(transform_list, 'imgs')
 
     def __call__(self, results):
         imgs = []
         for img in results['imgs']:
-            img = self.imgs_transforms_pipeline(img)
+            img = self.transforms_pipeline_dict['imgs'](img)
             imgs.append(img.unsqueeze(0))
         imgs = torch.cat(imgs, dim=0)
         results['imgs'] = copy.deepcopy(imgs)
         return results
 
 @TRANSFORM.register()       
-class RGBFlowVideoStreamTransform():
+class RGBFlowVideoStreamTransform(BaseTransform):
     def __init__(self, rgb, flow):
-        self.imgs_transforms_pipeline_dict = {}
-        # rgb
-        transform_op_list = []
-        for transforms_op in rgb:
-            name = list(transforms_op.keys())[0]
-            if list(transforms_op.values())[0] is None:
-                op = getattr(transforms, name, False)
-                if op is False:
-                    op = getattr(custom_transforms, name)()
-                else:
-                    op = op()
-            else:
-                op = getattr(transforms, name, False)
-                if op is False:
-                    op = getattr(custom_transforms, name)(**list(transforms_op.values())[0])
-                else:
-                    op = op(**list(transforms_op.values())[0])
-            transform_op_list.append(op)
-        self.imgs_transforms_pipeline_dict['rgb'] = transforms.Compose(transform_op_list)
-        # flow
-        transform_op_list = []
-        for transforms_op in flow:
-            name = list(transforms_op.keys())[0]
-            if list(transforms_op.values())[0] is None:
-                op = getattr(transforms, name, False)
-                if op is False:
-                    op = getattr(custom_transforms, name)()
-                else:
-                    op = op()
-            else:
-                op = getattr(transforms, name, False)
-                if op is False:
-                    op = getattr(custom_transforms, name)(**list(transforms_op.values())[0])
-                else:
-                    op = op(**list(transforms_op.values())[0])
-            transform_op_list.append(op)
-        self.imgs_transforms_pipeline_dict['flow'] = transforms.Compose(transform_op_list)
+        super().__init__()
+        self._get_transformers_pipline(rgb, 'rgb')
+        self._get_transformers_pipline(flow, 'flow')
 
     def __call__(self, results):
         # rgb
         imgs = []
         for img in results['imgs']:
-            img = self.imgs_transforms_pipeline_dict['rgb'](img)
+            img = self.transforms_pipeline_dict['rgb'](img)
             imgs.append(img.unsqueeze(0))
         imgs = torch.cat(imgs, dim=0)
         results['imgs'] = copy.deepcopy(imgs)
         # flow
         flows = []
         for flow in results['flows']:
-            flow = self.imgs_transforms_pipeline_dict['flow'](flow)
+            flow = self.transforms_pipeline_dict['flow'](flow)
             flows.append(flow.unsqueeze(0))
         flows = torch.cat(flows, dim=0)
         results['flows'] = copy.deepcopy(flows)
@@ -137,8 +101,40 @@ class VideoStreamRawFrameStoreTransform(VideoStreamTransform):
         imgs = []
         results["raw_imgs"] = copy.deepcopy(results["imgs"])
         for img in results['imgs']:
-            img = self.imgs_transforms_pipeline(img)
+            img = self.transforms_pipeline_dict['imgs'](img)
             imgs.append(img.unsqueeze(0))
         imgs = torch.cat(imgs, dim=0)
         results['imgs'] = copy.deepcopy(imgs)
+        return results
+
+@TRANSFORM.register()       
+class CompressedVideoStreamTransform(BaseTransform):
+    def __init__(self, rgb, flow, res):
+        super().__init__()
+        self._get_transformers_pipline(rgb, 'rgb')
+        self._get_transformers_pipline(flow, 'flow')
+        self._get_transformers_pipline(res, 'res')
+
+    def __call__(self, results):
+        # rgb
+        imgs = []
+        for img in results['imgs']:
+            img = self.transforms_pipeline_dict['rgb'](img)
+            imgs.append(img.unsqueeze(0))
+        imgs = torch.cat(imgs, dim=0)
+        results['imgs'] = copy.deepcopy(imgs)
+        # flow
+        flows = []
+        for flow in results['flows']:
+            flow = self.transforms_pipeline_dict['flow'](flow)
+            flows.append(flow.unsqueeze(0))
+        flows = torch.cat(flows, dim=0)
+        results['flows'] = copy.deepcopy(flows)
+        # res
+        res = []
+        for res_img in results['res']:
+            res_img = self.transforms_pipeline_dict['res'](res_img)
+            res.append(res_img.unsqueeze(0))
+        res = torch.cat(res, dim=0)
+        results['res'] = copy.deepcopy(res)
         return results

@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-08 10:01:35
+LastEditTime : 2022-11-09 15:46:14
 Description  : feature sampler
 FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
 '''
 import numpy as np
-from .frame_sampler import FrameSample
+from .frame_sampler import FrameIndexSample
 
 from ..builder import SAMPLER
 
@@ -38,7 +38,7 @@ class FeatureStreamSampler():
         assert format in ['NTC', 'NCT', 'NCTHW']
         self.format = format
         self.feature_dim = feature_dim
-        self.sample = FrameSample(mode = sample_mode)
+        self.sample = FrameIndexSample(mode = sample_mode)
     
     def _sample_label(self, results, sample_rate, sample_num, sliding_windows, add_key='labels', sample_key='raw_labels'):
         container = results[sample_key]

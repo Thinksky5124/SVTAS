@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 13:59:12
+LastEditTime : 2022-11-09 14:39:09
 Description  : feature decode
 FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
@@ -128,7 +128,7 @@ class TwoPathwayVideoDecoder():
         flow_path = results['flows_path']
         results['format'] = 'video'
         self.rgb_backend['file_path'] = file_path
-        self.flow_backend['file_path'] = file_path
+        self.flow_backend['file_path'] = flow_path
 
         try:
             rgb_container = build_container(self.rgb_backend)

@@ -2,28 +2,26 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 16:17:25
+LastEditTime : 2022-11-09 16:24:48
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_flow_asformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/i3d_compressed_video_asformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/gtea/gtea_stream_rgb_flow_video.py'
+    '../../_base_/dataset/gtea/gtea_stream_compressed_video.py'
 ]
 split = 1
 num_classes = 11
 sample_rate = 1
 gop_size=16
-flow_clip_seg_num = 128
-flow_sliding_window = 128
-rgb_clip_seg_num = flow_clip_seg_num // gop_size
-rgb_sliding_window = flow_sliding_window
+clip_seg_num = 128
+sliding_window = 128
 
 ignore_index = -100
 batch_size = 1
 epochs = 50
-model_name = "I3D_Flow_Rgb_IPB_Asformer_128x1_gtea_split" + str(split)
+model_name = "I3D_Compressed_Video_Asformer_128x1_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "MultiModalityStreamSegmentation",
@@ -46,7 +44,7 @@ MODEL = dict(
             name = "AvgPoolNeck",
             num_classes = num_classes,
             in_channels = 2048,
-            clip_seg_num = flow_clip_seg_num // 8,
+            clip_seg_num = clip_seg_num // 8,
             drop_ratio = 0.5,
             need_pool = True
         )
@@ -74,7 +72,7 @@ MODEL = dict(
 
 POSTPRECESSING = dict(
     name = "StreamScorePostProcessing",
-    sliding_window = flow_sliding_window,
+    sliding_window = sliding_window,
     ignore_index = ignore_index
 )
 
@@ -83,13 +81,18 @@ LRSCHEDULER = dict(
 )
 
 DATASET = dict(
+    temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
     num_workers = batch_size * 2,
     train = dict(
-        sliding_window = flow_sliding_window,
+        sliding_window = sliding_window,
+        need_residual = True,
+        need_mvs = True
     ),
     test = dict(
-        sliding_window = flow_sliding_window,
+        sliding_window = sliding_window,
+        need_residual = True,
+        need_mvs = True
     )
 )
 
@@ -97,27 +100,26 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "TwoPathwayVideoDecoder",
-            rgb_backend=dict(
-                    name='DecordContainer'),
-            flow_backend=dict(
-            name='NPYContainer',
-            temporal_dim=0,
-            revesive_name=[(r'(mp4|avi)', 'npy')])
+            name = "VideoDecoder",
+            backend=dict(
+                    name='MVExtractor',
+                    need_residual=True,
+                    need_mvs=True,
+                    argument=False)
         ),
         sample = dict(
-            name = "RGBFlowIPBVideoStreamSampler",
+            name = "CompressedVideoStreamSampler",
             is_train = True,
-            gop_size=gop_size,
-            rgb_clip_seg_num=rgb_clip_seg_num,
-            flow_clip_seg_num=flow_clip_seg_num,
-            rgb_sliding_window=rgb_sliding_window,
-            flow_sliding_window=flow_sliding_window,
-            sample_rate = sample_rate,
+            gop_size = gop_size,
+            ipb_keys = ["imgs"],
+            sample_rate = sample_rate, 
+            clip_seg_num = clip_seg_num,
+            sliding_window = sliding_window,
+            ignore_index = ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "RGBFlowVideoStreamTransform",
+            name = "CompressedVideoStreamTransform",
             rgb = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
@@ -136,29 +138,31 @@ PIPELINE = dict(
                 dict(TensorImageResize = dict(size = 256)),
                 dict(TensorCenterCrop = dict(crop_size = 224)),
                 dict(ScaleTo1_1 = None)
+            ],
+            res = [
+                dict()
             ]
         )
     ),
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "TwoPathwayVideoDecoder",
-            rgb_backend=dict(
-                    name='DecordContainer'),
-            flow_backend=dict(
-            name='NPYContainer',
-            temporal_dim=0,
-            revesive_name=[(r'(mp4|avi)', 'npy')])
+            name = "VideoDecoder",
+            backend=dict(
+                    name='MVExtractor',
+                    need_residual=True,
+                    need_mvs=True,
+                    argument=False)
         ),
         sample = dict(
-            name = "RGBFlowIPBVideoStreamSampler",
+            name = "CompressedVideoStreamSampler",
             is_train = False,
-            gop_size=gop_size,
-            rgb_clip_seg_num=rgb_clip_seg_num,
-            flow_clip_seg_num=flow_clip_seg_num,
-            rgb_sliding_window=rgb_sliding_window,
-            flow_sliding_window=flow_sliding_window,
-            sample_rate = sample_rate,
+            gop_size = gop_size,
+            ipb_keys = ["imgs"],
+            sample_rate = sample_rate, 
+            clip_seg_num = clip_seg_num,
+            sliding_window = sliding_window,
+            ignore_index = ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -181,6 +185,9 @@ PIPELINE = dict(
                 dict(TensorImageResize = dict(size = 256)),
                 dict(TensorCenterCrop = dict(crop_size = 224)),
                 dict(ScaleTo1_1 = None)
+            ],
+            res = [
+                dict()
             ]
         )
     )
