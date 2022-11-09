@@ -2,13 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:48:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 21:42:11
+LastEditTime : 2022-11-08 10:07:39
 Description  : MultiModality Fusion Neck Model
 FilePath     : /SVTAS/svtas/model/necks/multimodality_fusion_neck.py
 '''
 import torch
-import copy
-import random
 import torch.nn as nn
 import torch.nn.functional as F
 from ..builder import build_neck
@@ -48,4 +46,7 @@ class MultiModalityFusionNeck(nn.Module):
         else:
             raise NotImplementedError
         masks = F.adaptive_max_pool1d(masks.squeeze(1), self.clip_seg_num, return_indices=False).unsqueeze(1)
-        return self.fusion_neck_module(feature, masks)
+        if self.fusion_neck_module is not None:
+            return self.fusion_neck_module(feature, masks)
+        else:
+            return feature * masks

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-08 10:01:42
+LastEditTime : 2022-11-09 13:47:01
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -119,7 +119,7 @@ class VideoStreamSampler():
         return start_frame, small_end_frame_idx
 
     
-    def _sample_frames(self, results, sample_rate, channel_mode, channel_num, sample_num, sliding_windows, add_key='imgs', sample_key='frames', backend_key='backend'):
+    def _sample_frames(self, results, sample_rate, channel_mode, channel_num, sample_num, sliding_windows, add_key='imgs', sample_key='frames'):
         imgs = []
         container = results[sample_key]
         filename = results['filename']
@@ -133,7 +133,7 @@ class VideoStreamSampler():
                 print("file: " + filename + " sample frame index: " + ",".join([str(i) for i in frames_idx]) +" error!")
                 raise
             # dearray_to_img
-            if not isinstance(frames_select, np.ndarray):
+            if container.out_dtype == "PIL":
                 np_frames = frames_select.asnumpy()
                 if np_frames.shape[0] > 0:
                     for i in range(np_frames.shape[0]):
@@ -146,7 +146,7 @@ class VideoStreamSampler():
                 if pad_len > 0:
                     for i in range(max(0, pad_len)):
                         imgs.append(Image.fromarray(np_frames, mode=channel_mode))
-            else:
+            elif container.out_dtype == "numpy":
                 np_frames = frames_select
                 if np_frames.shape[0] > 0:
                     for i in range(np_frames.shape[0]):
@@ -159,14 +159,22 @@ class VideoStreamSampler():
                 if pad_len > 0:
                     for i in range(max(0, pad_len)):
                         imgs.append(np_frames)
+            elif container.out_dtype == "dict":
+                pass
+            else:
+                raise NotImplementedError
         else:
             np_frames = np.zeros((224, 224, channel_num))
-            if results[backend_key] == "numpy":
+            if container.out_dtype == "numpy":
                 for i in range(sample_num):
                     imgs.append(np_frames)
-            else:
+            elif container.out_dtype == "PIL":
                 for i in range(sample_num):
                     imgs.append(Image.fromarray(np_frames, mode=channel_mode))
+            elif container.out_dtype == "dict":
+                pass
+            else:
+                raise NotImplementedError
 
         results[add_key] = imgs[:sample_num].copy()
         return results
@@ -255,8 +263,8 @@ class RGBFlowVideoStreamSampler(VideoStreamSampler):
             sampling id.
         """
 
-        results = self._sample_frames(results, self.sample_rate, self.channel_mode, self.channel, self.clip_seg_num, self.sliding_window, add_key='imgs', sample_key='rgb_frames', backend_key='rgb_backend')
-        results = self._sample_frames(results, self.sample_rate, self.flow_channel_mode, self.flow_channel, self.clip_seg_num, self.sliding_window, add_key='flows', sample_key='flow_frames', backend_key='flow_backend')
+        results = self._sample_frames(results, self.sample_rate, self.channel_mode, self.channel, self.clip_seg_num, self.sliding_window, add_key='imgs', sample_key='rgb_frames')
+        results = self._sample_frames(results, self.sample_rate, self.flow_channel_mode, self.flow_channel, self.clip_seg_num, self.sliding_window, add_key='flows', sample_key='flow_frames')
         results = self._sample_label(results, self.sample_rate, self.clip_seg_num, self.sliding_window, add_key='labels', sample_key='raw_labels')
 
         return results
@@ -300,7 +308,6 @@ class RGBMVIPBVideoStreamSampler(VideoStreamSampler):
         elif self.flow_channel_mode == "RGB":
             self.flow_channel = 3
 
-
     def __call__(self, results):
         """
         Args:
@@ -309,8 +316,8 @@ class RGBMVIPBVideoStreamSampler(VideoStreamSampler):
             sampling id.
         """
 
-        results = self._sample_frames(results, self.sample_rate * self.gop_size, self.rgb_channel_mode, self.channel,self.rgb_clip_seg_num, self.rgb_sliding_window, add_key='imgs', sample_key='rgb_frames', backend_key='rgb_backend')
-        results = self._sample_frames(results, self.sample_rate, self.channel_mode, self.flow_channel,self.clip_seg_num, self.sliding_window, add_key='flows', sample_key='flow_frames', backend_key='flow_backend')
+        results = self._sample_frames(results, self.sample_rate * self.gop_size, self.rgb_channel_mode, self.channel,self.rgb_clip_seg_num, self.rgb_sliding_window, add_key='imgs', sample_key='rgb_frames')
+        results = self._sample_frames(results, self.sample_rate, self.channel_mode, self.flow_channel,self.clip_seg_num, self.sliding_window, add_key='flows', sample_key='flow_frames')
         results = self._sample_label(results, self.sample_rate, self.clip_seg_num, self.sliding_window, add_key='labels', sample_key='raw_labels')
 
         return results

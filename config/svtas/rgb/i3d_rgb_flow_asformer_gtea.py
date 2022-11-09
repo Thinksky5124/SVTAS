@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-06 21:27:27
+LastEditTime : 2022-11-09 14:03:29
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_flow_asformer_gtea.py
 '''
@@ -13,12 +13,16 @@ _base_ = [
 split = 1
 num_classes = 11
 sample_rate = 1
-clip_seg_num = 256
-sliding_window = 256
+gop_size=16
+flow_clip_seg_num = 128
+flow_sliding_window = 128
+rgb_clip_seg_num = flow_clip_seg_num // gop_size
+rgb_sliding_window = flow_sliding_window
+
 ignore_index = -100
 batch_size = 1
 epochs = 50
-model_name = "I3D_Flow_Rgb_Asformer_256x1_gtea_split" + str(split)
+model_name = "I3D_Flow_Rgb_IPB_Asformer_128x1_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "MultiModalityStreamSegmentation",
@@ -33,14 +37,15 @@ MODEL = dict(
         in_channels = 2
     ),
     neck = dict(
-        name = "MultiModalityFusionNeck",
-        fusion_mode='stack',
-        clip_seg_num = clip_seg_num // 8,
+        name = "IPBFusionNeck",
+        gop_size = gop_size,
+        spatial_expan_mode ='trilinear',
+        parse_method ='separate',
         fusion_neck_module = dict(
             name = "AvgPoolNeck",
             num_classes = num_classes,
             in_channels = 2048,
-            clip_seg_num = clip_seg_num // 8,
+            clip_seg_num = flow_clip_seg_num // 8,
             drop_ratio = 0.5,
             need_pool = True
         )
@@ -68,7 +73,7 @@ MODEL = dict(
 
 POSTPRECESSING = dict(
     name = "StreamScorePostProcessing",
-    sliding_window = sliding_window,
+    sliding_window = flow_sliding_window,
     ignore_index = ignore_index
 )
 
@@ -90,7 +95,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = True,
-        sliding_window = sliding_window
+        sliding_window = flow_sliding_window
     ),
     test = dict(
         name = "RGBFlowFrameStreamSegmentationDataset",
@@ -102,7 +107,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = False,
-        sliding_window = sliding_window
+        sliding_window = flow_sliding_window
     )
 )
 
@@ -118,16 +123,22 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "RGBFlowVideoDecoder",
-            rgb_backend = "decord",
-            flow_backend = "numpy"
+            name = "VideoDecoder",
+            backend=dict(
+                    name='MVExtractor',
+                    need_residual=True,
+                    need_mvs=True,
+                    argument=False)
         ),
         sample = dict(
-            name = "RGBFlowVideoStreamSampler",
-            is_train = False,
+            name = "RGBMVIPBVideoStreamSampler",
+            is_train = True,
+            gop_size=gop_size,
+            rgb_clip_seg_num=rgb_clip_seg_num,
+            flow_clip_seg_num=flow_clip_seg_num,
+            rgb_sliding_window=rgb_sliding_window,
+            flow_sliding_window=flow_sliding_window,
             sample_rate = sample_rate,
-            clip_seg_num = clip_seg_num,
-            sliding_window = sliding_window,
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -156,16 +167,22 @@ PIPELINE = dict(
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "RGBFlowVideoDecoder",
-            rgb_backend = "decord",
-            flow_backend = "numpy"
+            name = "VideoDecoder",
+            backend=dict(
+                    name='MVExtractor',
+                    need_residual=True,
+                    need_mvs=True,
+                    argument=False)
         ),
         sample = dict(
-            name = "RGBFlowVideoStreamSampler",
+            name = "RGBMVIPBVideoStreamSampler",
             is_train = False,
+            gop_size=gop_size,
+            rgb_clip_seg_num=rgb_clip_seg_num,
+            flow_clip_seg_num=flow_clip_seg_num,
+            rgb_sliding_window=rgb_sliding_window,
+            flow_sliding_window=flow_sliding_window,
             sample_rate = sample_rate,
-            clip_seg_num = clip_seg_num,
-            sliding_window = sliding_window,
             sample_mode = "uniform"
         ),
         transform = dict(

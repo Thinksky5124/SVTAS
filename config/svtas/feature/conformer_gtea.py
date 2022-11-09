@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:04:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 14:52:31
+LastEditTime : 2022-11-08 17:20:34
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/conformer_gtea.py
 '''
@@ -18,9 +18,9 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-clip_seg_num = 128
+clip_seg_num = 512
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_Conformer_gtea_split" + str(split)
+model_name = "Stream_Conformer_512x1_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
@@ -77,8 +77,13 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureStreamSampler",
@@ -99,8 +104,13 @@ PIPELINE = dict(
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureStreamSampler",

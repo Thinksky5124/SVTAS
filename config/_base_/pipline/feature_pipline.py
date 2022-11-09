@@ -10,8 +10,13 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureSampler",
@@ -29,8 +34,13 @@ PIPELINE = dict(
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureSampler",

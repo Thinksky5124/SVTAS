@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-07 10:40:58
+LastEditTime : 2022-11-09 14:01:02
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_50salads.py
 '''
@@ -73,8 +73,13 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureStreamSampler",
@@ -95,8 +100,13 @@ PIPELINE = dict(
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureStreamSampler",

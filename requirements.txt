@@ -1,7 +1,9 @@
 absl-py==1.0.0
 addict==2.4.0
+antlr4-python3-runtime==4.9.3
 astroid==2.9.3
 asttokens==2.0.5
+av==10.0.0
 backcall==0.2.0
 backports.functools-lru-cache==1.6.4
 cachetools==5.0.0
@@ -45,12 +47,14 @@ matplotlib-inline==0.1.3
 mccabe==0.6.1
 memory-profiler==0.60.0
 mmcv-full==1.6.2
+motion-vector-extractor==1.0.6
 mpmath==1.2.1
 nest-asyncio==1.5.5
 networkx==2.5.1
 num2words==0.5.10
-numpy==1.22.3
+numpy==1.23.4
 oauthlib==3.2.1
+omegaconf==2.2.3
 onnx==1.12.0
 onnxruntime==1.12.1
 opencv-contrib-python==4.5.2.54
@@ -61,6 +65,7 @@ parso==0.8.3
 pexpect==4.8.0
 pickleshare==0.7.5
 Pillow==9.1.1
+pkgconfig==1.5.5
 platformdirs==2.5.1
 portalocker==2.4.0
 prompt-toolkit==3.0.29
@@ -84,7 +89,7 @@ requests-oauthlib==1.3.1
 rsa==4.8
 scikit-image==0.18.2
 scikit-learn==1.1.2
-scipy==1.7.0
+scipy==1.9.3
 six==1.16.0
 spatial-correlation-sampler==0.4.0
 stack-data==0.2.0

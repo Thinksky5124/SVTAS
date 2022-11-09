@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:04:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 20:55:51
+LastEditTime : 2022-11-08 10:04:34
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/lstr_gtea.py
 '''
@@ -84,8 +84,13 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureStreamSampler",
@@ -106,8 +111,13 @@ PIPELINE = dict(
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "FeatureDecoder",
-            backend = "numpy"
+            name='FeatureDecoder',
+            backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
             name = "FeatureStreamSampler",

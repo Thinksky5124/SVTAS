@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 15:27:42
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:03:45
+LastEditTime : 2022-11-09 13:22:09
 Description: dataset builder
 FilePath     : /SVTAS/svtas/loader/builder.py
 '''
@@ -12,6 +12,7 @@ from ..utils.build import build
 DATASET = Registry('dataset')
 PIPLINE = Registry('pipline')
 DECODE = Registry('decode')
+CONTAINER = Registry('container')
 SAMPLER = Registry('sampler')
 TRANSFORM = Registry('transform')
 
@@ -41,6 +42,15 @@ def build_decode(cfg):
         return build(cfg, DECODE)
     raise ValueError(f'{obj_type} is not registered in '
                      'DECODE')
+
+def build_container(cfg):
+    """Build container."""
+    args = cfg.copy()
+    obj_type = args.get('name')
+    if obj_type in CONTAINER:
+        return build(cfg, CONTAINER)
+    raise ValueError(f'{obj_type} is not registered in '
+                     'CONTAINER')
 
 def build_sampler(cfg):
     """Build sampler."""

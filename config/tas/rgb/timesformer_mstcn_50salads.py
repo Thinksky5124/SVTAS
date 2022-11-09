@@ -85,8 +85,9 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "VideoDecoder",
-            backend = "decord"
+            name="VideoDecoder",
+            backend=dict(
+                    name='DecordContainer')
         ),
         sample = dict(
             name = "VideoSampler",
@@ -113,8 +114,9 @@ PIPELINE = dict(
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "VideoDecoder",
-            backend = "decord"
+            name="VideoDecoder",
+            backend=dict(
+                    name='DecordContainer')
         ),
         sample = dict(
             name = "VideoSampler",

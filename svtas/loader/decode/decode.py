@@ -2,15 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-07 23:27:28
+LastEditTime : 2022-11-09 13:59:12
 Description  : feature decode
 FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
-import numpy as np
-
-from ..builder import DECODE
-
-from .container import get_container
+from ..builder import DECODE, build_container
 
 @DECODE.register()
 class FeatureDecoder():
@@ -20,15 +16,21 @@ class FeatureDecoder():
         filepath: the file path of mp4 file
     """
     def __init__(self,
-                 backend='numpy',
-                 is_transpose=False,
-                 temporal_dim=0,
-                 revesive_name=[(r'(mp4|avi)', 'npy')]):
+                 backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=0,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 ),
+                 flow_feature_backend=dict(
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=0,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )):
 
         self.backend = backend
-        self.is_transpose = is_transpose
-        self.temporal_dim = temporal_dim
-        self.revesive_name = revesive_name
+        self.flow_feature_backend = flow_feature_backend
 
     def __call__(self, results):
         """
@@ -38,16 +40,17 @@ class FeatureDecoder():
         """
         file_path = results['filename']
         results['format'] = 'feature'
-
+        self.backend['file_path'] = file_path
         try:
-            feature_container = get_container(self.backend)(file_path, temporal_dim=self.temporal_dim, is_transpose=self.is_transpose, revesive_name=self.revesive_name)
+            feature_container = build_container(self.backend)
         except:
             print("file: " + file_path + " get error!")
             raise
         
-        if "flow_feature_name" in list(results.keys()):
+        if "flow_feature_name" in list(results.keys()) and self.flow_feature_backend is not None:
+            self.flow_feature_backend['file_path'] = results['flow_feature_name']
             try:
-                flow_container = get_container(self.backend)(results['flow_feature_name'])
+                flow_container = build_container(self.flow_feature_backend)
                 feature_container = feature_container.concat(flow_container, dim=0)
             except:
                 print("file: " + file_path + " get error!")
@@ -68,7 +71,8 @@ class VideoDecoder():
         filepath: the file path of mp4 file
     """
     def __init__(self,
-                 backend='decord'):
+                 backend=dict(
+                    name='DecordContainer')):
 
         self.backend = backend
 
@@ -80,41 +84,10 @@ class VideoDecoder():
         """
         file_path = results['filename']
         results['format'] = 'video'
-        results['backend'] = self.backend
+        self.backend['file_path'] = file_path
         
         try:
-            container = get_container(self.backend)(file_path)
-        except:
-            print("file: " + file_path + " get error!")
-            raise
-        video_len = len(container)
-        results['frames'] = container
-        results['frames_len'] = int(results['raw_labels'].shape[0])
-        results['video_len'] = video_len
-        
-        return results
-
-    
-@DECODE.register()
-class FlowVideoDecoder(object):
-    """
-    get flow from file
-    """
-    def __init__(self,
-                 backend='numpy',
-                 temporal_dim=0,
-                 revesive_name=[(r'(mp4|avi)', 'npy')]):
-        self.backend = backend
-        self.temporal_dim = temporal_dim
-        self.revesive_name = revesive_name
-
-    def __call__(self, results):
-        file_path = results['filename']
-        results['format'] = 'video'
-        results['backend'] = self.backend
-
-        try:
-            container = get_container(self.backend)(file_path, temporal_dim=self.temporal_dim, revesive_name=self.revesive_name)
+            container = build_container(self.backend)
         except:
             print("file: " + file_path + " get error!")
             raise
@@ -126,22 +99,24 @@ class FlowVideoDecoder(object):
         return results
 
 @DECODE.register()
-class RGBFlowVideoDecoder():
+class TwoPathwayVideoDecoder():
     """
     Decode mp4 file to frames.
     Args:
         filepath: the file path of mp4 file
     """
     def __init__(self,
-                 rgb_backend='decord',
-                 flow_backend='numpy',
-                 flow_temporal_dim=0,
-                 flow_revesive_name=[(r'(mp4|avi)', 'npy')]):
+                 rgb_backend=dict(
+                    name='DecordContainer'
+                 ),
+                 flow_backend=dict(
+                    name='NPYContainer',
+                    temporal_dim=0,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )):
 
         self.rgb_backend = rgb_backend
         self.flow_backend =flow_backend
-        self.temporal_dim = flow_temporal_dim
-        self.revesive_name = flow_revesive_name
 
     def __call__(self, results):
         """
@@ -152,17 +127,17 @@ class RGBFlowVideoDecoder():
         file_path = results['filename']
         flow_path = results['flows_path']
         results['format'] = 'video'
-        results['rgb_backend'] = self.rgb_backend
-        results['flow_backend'] = self.flow_backend
+        self.rgb_backend['file_path'] = file_path
+        self.flow_backend['file_path'] = file_path
 
         try:
-            rgb_container = get_container(self.rgb_backend)(file_path)
+            rgb_container = build_container(self.rgb_backend)
         except:
             print("file: " + file_path + " get error!")
             raise
         
         try:
-            flow_container = get_container(self.flow_backend)(flow_path, temporal_dim=self.temporal_dim, revesive_name=self.revesive_name)
+            flow_container = build_container(self.flow_backend)
         except:
             print("file: " + flow_path + " get error!")
             raise

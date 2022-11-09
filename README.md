@@ -13,7 +13,7 @@
 Temporal action segmentation (TAS) is a critical step toward long-term video understanding. Recent studies follow a pattern that builds models based on features instead of raw video picture information. However, we claim those models are trained complicatedly and limit application scenarios. It is hard for them to segment human actions of video in real time because they must work after the full video features are extracted. As the real-time action segmentation task is different from TAS task, we define it as streaming video real-time temporal action segmentation (SVTAS) task.
 
 <div align="center">
-  <img src="doc/image/demo.gif" width=440/></div>
+  <img src="docs/image/demo.gif" width=440/></div>
 
 # Framework Feature
 - [x] Distribution train
@@ -54,15 +54,10 @@ pip freeze > requirements.txt
 ```
 - If report `correlation_cuda package no found`, you should read [Install](svtas/model/backbones/utils/liteflownet_v3/README.md)
 
-# Prepare Data
-
-Read Doc [Prepare Datset](doc/prepare_dataset.md)
-
-# Usage
-Read Doc [Usage](doc/usage.md)
-
-# model zoo
-Read Doc [ModelZoo](doc/model_zoo.md)
+# Document Dictionary
+- [Prepare Datset](docs/prepare_dataset.md)
+- [Usage](docs/usage.md)
+- [ModelZoo](docs/model_zoo.md)
 
 # Citation
 ```bib

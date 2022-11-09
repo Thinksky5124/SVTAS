@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 21:16:48
+LastEditTime : 2022-11-09 14:01:38
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/bridge_prompt_ms_tcn_gtea.py
 '''
@@ -104,8 +104,9 @@ PIPELINE = dict(
     train = dict(
         name = "BasePipline",
         decode = dict(
-            name = "VideoDecoder",
-            backend = "decord"
+            name="VideoDecoder",
+            backend=dict(
+                    name='DecordContainer')
         ),
         sample = dict(
             name = "VideoStreamSampler",
@@ -133,8 +134,9 @@ PIPELINE = dict(
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "VideoDecoder",
-            backend = "decord"
+            name="VideoDecoder",
+            backend=dict(
+                    name='DecordContainer')
         ),
         sample = dict(
             name = "VideoStreamSampler",
