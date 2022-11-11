@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 15:04:21
+LastEditTime : 2022-11-11 21:21:20
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_mvs_res_asformer_gtea copy.py
 '''
@@ -113,11 +113,11 @@ PIPELINE = dict(
             sample_rate_dict={"imgs":sample_rate * gop_size, "flows":sample_rate, "res":sample_rate, "labels":sample_rate},
             clip_seg_num_dict={"imgs":rgb_clip_seg_num, "flows":flow_clip_seg_num, "res":flow_clip_seg_num, "labels":flow_clip_seg_num},
             sliding_window_dict={"imgs":rgb_sliding_window, "flows":flow_sliding_window, "res":flow_sliding_window, "labels":flow_sliding_window},
-            sample_add_key_pair={"frames":"imgs", "flow_frames":"flows", "res_frames":"res"},
+            sample_add_key_pair={"rgb_frames":"imgs", "flow_frames":"flows", "res_frames":"res"},
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "RGBFlowVideoStreamTransform",
+            name = "CompressedVideoStreamTransform",
             rgb = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
@@ -136,19 +136,29 @@ PIPELINE = dict(
                 dict(TensorImageResize = dict(size = 256)),
                 dict(TensorCenterCrop = dict(crop_size = 224)),
                 dict(ScaleTo1_1 = None)
+            ],
+            res = [
+                dict(ResizeImproved = dict(size = 256)),
+                dict(RandomCrop = dict(size = 224)),
+                dict(RandomHorizontalFlip = None),
+                dict(PILToTensor = None),
+                dict(ToFloat = None),
+                dict(NormalizeColorTo1 = None)
             ]
         )
     ),
     test = dict(
         name = "BasePipline",
         decode = dict(
-            name = "TwoPathwayVideoDecoder",
+            name = "ThreePathwayVideoDecoder",
             rgb_backend=dict(
                     name='DecordContainer'),
             flow_backend=dict(
-            name='NPYContainer',
-            temporal_dim=0,
-            revesive_name=[(r'(mp4|avi)', 'npy')])
+                name='DecordContainer',
+                to_ndarray=True,
+                sample_dim=2),
+            res_backend=dict(
+                    name='DecordContainer'),
         ),
         sample = dict(
             name = "VideoStreamSampler",
@@ -156,15 +166,14 @@ PIPELINE = dict(
             sample_rate_dict={"imgs":sample_rate * gop_size, "flows":sample_rate, "res":sample_rate, "labels":sample_rate},
             clip_seg_num_dict={"imgs":rgb_clip_seg_num, "flows":flow_clip_seg_num, "res":flow_clip_seg_num, "labels":flow_clip_seg_num},
             sliding_window_dict={"imgs":rgb_sliding_window, "flows":flow_sliding_window, "res":flow_sliding_window, "labels":flow_sliding_window},
-            sample_add_key_pair={"frames":"imgs", "flow_frames":"flows", "res_frames":"res"},
+            sample_add_key_pair={"rgb_frames":"imgs", "flow_frames":"flows", "res_frames":"res"},
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "RGBFlowVideoStreamTransform",
+            name = "CompressedVideoStreamTransform",
             rgb = [
                 dict(ResizeImproved = dict(size = 256)),
-                dict(RandomCrop = dict(size = 224)),
-                dict(RandomHorizontalFlip = None),
+                dict(CenterCrop = dict(size = 224)),
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
@@ -179,6 +188,13 @@ PIPELINE = dict(
                 dict(TensorImageResize = dict(size = 256)),
                 dict(TensorCenterCrop = dict(crop_size = 224)),
                 dict(ScaleTo1_1 = None)
+            ],
+            res = [
+                dict(ResizeImproved = dict(size = 256)),
+                dict(CenterCrop = dict(size = 224)),
+                dict(PILToTensor = None),
+                dict(ToFloat = None),
+                dict(NormalizeColorTo1 = None)
             ]
         )
     )

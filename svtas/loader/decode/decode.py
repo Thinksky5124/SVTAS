@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 14:22:37
+LastEditTime : 2022-11-11 21:15:35
 Description  : feature decode
 FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
@@ -202,7 +202,7 @@ class ThreePathwayVideoDecoder():
             raise
 
         try:
-            res_container = build_container(self.flow_backend)
+            res_container = build_container(self.res_backend)
         except:
             print("file: " + flow_path + " get error!")
             raise

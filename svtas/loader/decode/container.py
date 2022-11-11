@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-01 12:25:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 14:00:52
+LastEditTime : 2022-11-11 21:14:41
 Description  : video container
 FilePath     : /SVTAS/svtas/loader/decode/container.py
 '''
@@ -53,7 +53,7 @@ class DecordContainer(object):
 
     def get_batch(self, frames_idx):
         if self.to_ndarray:
-            return self.data.get_batch(frames_idx).asnumpy()[:self.sample_dim, :]
+            return self.data.get_batch(frames_idx).asnumpy()[:, :, :, :self.sample_dim]
         else:
             return self.data.get_batch(frames_idx)
 
