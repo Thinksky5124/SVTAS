@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 14:01:38
+LastEditTime : 2022-11-11 15:11:06
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/bridge_prompt_ms_tcn_gtea.py
 '''
@@ -111,9 +111,10 @@ PIPELINE = dict(
         sample = dict(
             name = "VideoStreamSampler",
             is_train = False,
-            sample_rate = sample_rate,
-            clip_seg_num = clip_seg_num,
-            sliding_window = sliding_window,
+            sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
+            clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
+            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
+            sample_add_key_pair={"frames":"imgs"},
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -141,9 +142,10 @@ PIPELINE = dict(
         sample = dict(
             name = "VideoStreamSampler",
             is_train = False,
-            sample_rate = sample_rate,
-            clip_seg_num = clip_seg_num,
-            sliding_window = sliding_window,
+            sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
+            clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
+            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
+            sample_add_key_pair={"frames":"imgs"},
             sample_mode = "uniform"
         ),
         transform = dict(

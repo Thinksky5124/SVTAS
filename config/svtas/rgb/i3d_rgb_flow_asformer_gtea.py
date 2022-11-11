@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 16:17:25
+LastEditTime : 2022-11-11 15:09:40
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_flow_asformer_gtea.py
 '''
@@ -106,14 +106,12 @@ PIPELINE = dict(
             revesive_name=[(r'(mp4|avi)', 'npy')])
         ),
         sample = dict(
-            name = "RGBFlowIPBVideoStreamSampler",
+            name = "VideoStreamSampler",
             is_train = True,
-            gop_size=gop_size,
-            rgb_clip_seg_num=rgb_clip_seg_num,
-            flow_clip_seg_num=flow_clip_seg_num,
-            rgb_sliding_window=rgb_sliding_window,
-            flow_sliding_window=flow_sliding_window,
-            sample_rate = sample_rate,
+            sample_rate_dict={"imgs":sample_rate * gop_size, "flows":sample_rate, "labels":sample_rate},
+            clip_seg_num_dict={"imgs":rgb_clip_seg_num, "flows":flow_clip_seg_num, "labels":flow_clip_seg_num},
+            sliding_window_dict={"imgs":rgb_sliding_window, "flows":flow_sliding_window, "labels":flow_sliding_window},
+            sample_add_key_pair={"frames":"imgs", "flow_frames":"flows"},
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -151,14 +149,12 @@ PIPELINE = dict(
             revesive_name=[(r'(mp4|avi)', 'npy')])
         ),
         sample = dict(
-            name = "RGBFlowIPBVideoStreamSampler",
+            name = "VideoStreamSampler",
             is_train = False,
-            gop_size=gop_size,
-            rgb_clip_seg_num=rgb_clip_seg_num,
-            flow_clip_seg_num=flow_clip_seg_num,
-            rgb_sliding_window=rgb_sliding_window,
-            flow_sliding_window=flow_sliding_window,
-            sample_rate = sample_rate,
+            sample_rate_dict={"imgs":sample_rate * gop_size, "flows":sample_rate, "labels":sample_rate},
+            clip_seg_num_dict={"imgs":rgb_clip_seg_num, "flows":flow_clip_seg_num, "labels":flow_clip_seg_num},
+            sliding_window_dict={"imgs":rgb_sliding_window, "flows":flow_sliding_window, "labels":flow_sliding_window},
+            sample_add_key_pair={"frames":"imgs", "flow_frames":"flows"},
             sample_mode = "uniform"
         ),
         transform = dict(

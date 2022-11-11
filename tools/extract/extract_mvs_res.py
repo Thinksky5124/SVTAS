@@ -1,39 +1,33 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-05-04 14:37:08
+Date         : 2022-11-11 09:17:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 13:32:43
-Description  : Extract flow script
-FilePath     : /SVTAS/tools/extract/extract_flow.py
+LastEditTime : 2022-11-11 13:06:20
+Description  : file content
+FilePath     : /SVTAS/tools/extract/extract_mvs_res.py
 '''
-
 import os
 import sys
 path = os.path.join(os.getcwd())
 sys.path.append(path)
 import torch
+import numpy as np
 import svtas.model.builder as model_builder
-import argparse
-from svtas.utils.logger import get_logger, setup_logger
-from svtas.utils.config import Config
 import svtas.loader.builder as dataset_builder
-from svtas.runner.extract_runner import ExtractOpticalFlowRunner
+import argparse
+from svtas.utils.config import Config
+from svtas.utils.logger import get_logger, setup_logger
+from svtas.runner.extract_runner import ExtractMVResRunner
 
 @torch.no_grad()
-def extractor(cfg, args):
+def extractor(cfg, outpath, res_extract):
     logger = get_logger("SVTAS")
-    
-    # construct model
-    model = model_builder.build_model(cfg.MODEL).cuda()
 
     # construct dataloader
     num_workers = cfg.DATASET.get('num_workers', 0)
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATASET.get('video_batch_size', 1)
-
-    assert video_batch_size == 1, "Only support 1 batch size"
-
+    video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
     Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
     dataset_config = cfg.DATASET.config
@@ -45,10 +39,9 @@ def extractor(cfg, args):
         batch_size=temporal_clip_batch_size,
         num_workers=test_num_workers,
         collate_fn=sliding_concate_fn)
-    
-    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
 
-    runner = ExtractOpticalFlowRunner(logger=logger, model=model, post_processing=post_processing, out_path=args.out_path, logger_interval=cfg.get('logger_interval', 10))
+    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
+    runner = ExtractMVResRunner(logger=logger, post_processing=post_processing, out_path=outpath, res_extract=res_extract, logger_interval=cfg.get('logger_interval', 10))
 
     runner.epoch_init()
     for i, data in enumerate(dataloader):
@@ -57,7 +50,7 @@ def extractor(cfg, args):
     logger.info("Finish all extracting!")
 
 def parse_args():
-    parser = argparse.ArgumentParser("SVTAS extract optical flow script")
+    parser = argparse.ArgumentParser("SVTAS extract video feature script")
     parser.add_argument('-c',
                         '--config',
                         type=str,
@@ -67,16 +60,19 @@ def parse_args():
                         '--out_path',
                         type=str,
                         help='extract flow file out path')
+    parser.add_argument("--res_extract",
+                        action="store_true",
+                        help="wheather extract residual video")
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(0)
     return args
-
+        
 def main():
     args = parse_args()
+    setup_logger(f"./output/etract_mvs_res", name="SVTAS", level="INFO", tensorboard=False)
     cfg = Config.fromfile(args.config)
-    setup_logger(f"./output/etract_flow", name="SVTAS", level="INFO", tensorboard=False)
-    extractor(cfg, args)
+    extractor(cfg, args.out_path, args.res_extract)
 
 if __name__ == '__main__':
     main()

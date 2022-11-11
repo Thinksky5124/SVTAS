@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 11:09:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 14:36:18
+LastEditTime : 2022-11-11 20:15:57
 Description  : RAFT extract flow Config
 FilePath     : /SVTAS/config/extract/extract_flow/raft_gtea.py
 '''
@@ -25,7 +25,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = False,
-        sliding_window = 64
+        sliding_window = clip_seg_num
     )
 )
 
@@ -40,16 +40,16 @@ PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
         name = "VideoDecoder",
-        backend = "decord"
+        backend = dict(name='DecordContainer')
     ),
     sample = dict(
         name = "VideoStreamSampler",
         is_train = False,
-        sample_rate = sample_rate,
-        clip_seg_num = clip_seg_num,
-        sliding_window = sliding_window,
-        sample_mode = "uniform",
-        channel_mode = "RGB"
+        sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
+        clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
+        sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
+        sample_add_key_pair={"frames":"imgs"},
+        sample_mode = "uniform"
     ),
     transform = dict(
         name = "VideoStreamTransform",

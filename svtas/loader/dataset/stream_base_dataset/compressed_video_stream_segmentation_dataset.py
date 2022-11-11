@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-09 14:39:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 14:45:40
+LastEditTime : 2022-11-11 14:05:52
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/compressed_video_stream_segmentation_dataset.py
 '''
@@ -14,7 +14,7 @@ from .raw_frame_stream_segmentation_dataset import RawFrameStreamSegmentationDat
 
 @DATASET.register()
 class CompressedVideoStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
-    def __init__(self, videos_path, need_residual=True, need_mvs=True, sliding_window=60, need_precise_grad_accumulate=True, **kwargs):
+    def __init__(self, videos_path,need_residual=True, need_mvs=True, sliding_window=60, need_precise_grad_accumulate=True, **kwargs):
         super().__init__(videos_path, sliding_window, need_precise_grad_accumulate, **kwargs)
         self.need_residual = need_residual
         self.need_mvs = need_mvs

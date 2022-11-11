@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:28:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 09:45:56
+LastEditTime : 2022-11-11 19:45:04
 Description  : Optical Flow Post Processing
 FilePath     : /SVTAS/svtas/model/post_precessings/optical_flow_post_processing.py
 '''
@@ -11,6 +11,7 @@ import torch
 from ...utils.flow_vis import make_colorwheel
 from ..builder import POSTPRECESSING
 from ...loader.transform.transform import VideoStreamTransform
+from ...utils.stream_writer import VideoStreamWriter
 
 @POSTPRECESSING.register()
 class OpticalFlowPostProcessing():
@@ -36,19 +37,22 @@ class OpticalFlowPostProcessing():
         self.init_flag = True
 
     def update(self, flow_imgs, gt, idx):
-        # seg_scores [stage_num N C T]
+        # flow_imgs [N T C H W]
         # gt [N T]
+        self.video_gt.append(gt[:, 0:self.sliding_window].detach().cpu().numpy().copy())
         for bs in range(flow_imgs.shape[0]):
             results = {}
             results['imgs'] = flow_imgs[bs, :]
             flows = self.post_transforms(results)['imgs']
             flows = flows.cpu().permute(0, 2, 3, 1).numpy()
-            self.flow_img_list.append(np.expand_dims(flows, 0))
-            self.video_gt.append(gt[:, 0:self.sliding_window].detach().cpu().numpy().copy())
+            flows = np.concatenate([flows, np.zeros_like(flows[:, :, :, 0:1])], axis=-1)
+            if len(self.flow_img_list) < (bs + 1):
+                self.flow_img_list.append(VideoStreamWriter(self.fps))
+            self.flow_img_list[bs].stream_write(flows)
 
             if self.need_visualize:
-                u = flows[:, :, :, 0]
-                v = flows[:, :, :, 1]
+                u = flow_imgs[bs, :].cpu().permute(0, 2, 3, 1).numpy()[:, :, :, 0]
+                v = flow_imgs[bs, :].cpu().permute(0, 2, 3, 1).numpy()[:, :, :, 1]
                 rad = np.sqrt(np.square(u) + np.square(v))
                 rad_max = np.max(rad)
                 epsilon = 1e-5
@@ -75,32 +79,31 @@ class OpticalFlowPostProcessing():
                     col[~idx] = col[~idx] * 0.75   # out of range
                     # Note the 2-i => BGR instead of RGB
                     ch_idx = 2 - i
-                    flows_image[:, :, :, ch_idx] = np.floor(255 * col)
-                self.flow_visual_list.append(np.expand_dims(flows_image, 0))
+                    flows_image[:, :, :, ch_idx] = np.floor(255 * col)                
+                if len(self.flow_visual_list) < (bs + 1):
+                    self.flow_visual_list.append(VideoStreamWriter(self.fps))
+                self.flow_visual_list[bs].stream_write(flows)
 
 
     def output(self):
         # save flow imgs
         flow_imgs_list = []
-        flow_imgs = np.concatenate(self.flow_img_list, axis=1)
-        flow_imgs = np.concatenate([np.zeros_like(flow_imgs[:, 0:1, :]), flow_imgs], axis=1)
+
         video_gt = np.concatenate(self.video_gt, axis=1)
         if self.need_visualize:
             flow_visual_imgs_list = []
-            flow_visual_imgs = np.concatenate(self.flow_visual_list, axis=1)
-            flow_visual_imgs = np.concatenate([np.zeros_like(flow_visual_imgs[:, 0:1, :]), flow_visual_imgs], axis=1)
 
-        for bs in range(flow_imgs.shape[0]):
+        for bs in range(len(self.flow_img_list)):
             index = np.where(video_gt[bs, :] == self.ignore_index)
             ignore_start = min(list(index[0]) + [video_gt.shape[-1]])
-            imgs = flow_imgs[bs, :ignore_start]
-            flow_imgs_list.append(imgs.copy())
+            self.flow_img_list[bs].dump()
+            flow_imgs_list.append({"writer":self.flow_img_list[bs], "len":ignore_start})
 
             if self.need_visualize:
-                visual_imgs = flow_visual_imgs[bs, :ignore_start]
-                flow_visual_imgs_list.append(visual_imgs.copy())
+                self.flow_visual_list[bs].dump()
+                flow_visual_imgs_list.append({"writer":self.flow_visual_list[bs], "len":ignore_start})
             
         if self.need_visualize:
-            return flow_imgs_list, flow_visual_imgs_list, self.fps
+            return flow_imgs_list, flow_visual_imgs_list
         else:
             return flow_imgs_list

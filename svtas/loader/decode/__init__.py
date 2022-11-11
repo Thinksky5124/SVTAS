@@ -6,13 +6,14 @@ LastEditTime : 2022-11-09 13:58:38
 Description  : Decode module
 FilePath     : /SVTAS/svtas/loader/decode/__init__.py
 '''
-from .decode import (FeatureDecoder, VideoDecoder, TwoPathwayVideoDecoder)
+from .decode import (FeatureDecoder, VideoDecoder, TwoPathwayVideoDecoder, ThreePathwayVideoDecoder)
 from .container import (NPYContainer, DecordContainer, PyAVContainer, OpenCVContainer,
-                        MVExtractor)
+                        MVExtractor, PyAVMVExtractor)
 
 __all__ = [
     'FeatureDecoder', 'TwoPathwayVideoDecoder', 'VideoDecoder',
+    'ThreePathwayVideoDecoder',
 
     'NPYContainer', 'DecordContainer', 'PyAVContainer',
-    'OpenCVContainer', 'MVExtractor'
+    'OpenCVContainer', 'MVExtractor', 'PyAVMVExtractor'
 ]

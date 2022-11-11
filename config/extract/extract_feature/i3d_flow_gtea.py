@@ -61,9 +61,10 @@ PIPELINE = dict(
     sample = dict(
         name = "VideoStreamSampler",
         is_train = False,
-        sample_rate = sample_rate,
-        clip_seg_num = clip_seg_num,
-        sliding_window = sliding_window,
+        sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
+        clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
+        sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
+        sample_add_key_pair={"frames":"imgs"},
         sample_mode = "uniform",
         channel_mode = "XY"
     ),

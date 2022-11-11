@@ -2,11 +2,10 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 16:22:48
+LastEditTime : 2022-11-11 20:30:24
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
-from abc import abstractclassmethod
 import random
 
 import numpy as np
@@ -58,25 +57,27 @@ class VideoStreamSampler():
 
     def __init__(self,
                  is_train=False,
-                 sample_rate=4,
-                 clip_seg_num=15,
-                 sliding_window=60,
+                 sample_rate_dict={"imgs":4, "labels":4},
+                 clip_seg_num_dict={"imgs":15, "labels":15},
+                 sliding_window_dict={"imgs":60, "labels":60},
                  ignore_index=-100,
-                 channel_mode="RGB",
+                 sample_add_key_pair={"frames":"imgs"},
+                 channel_mode_dict={"imgs":"RGB", "res":"RGB", "flows":"XY"},
+                 channel_num_dict={"imgs":3, "res":3, "flows":2},
                  sample_mode='random',
                  frame_idx_key='sample_sliding_idx'
                  ):
-        self.sample_rate = sample_rate
+        assert len(sample_rate_dict)==len(clip_seg_num_dict)==len(sliding_window_dict)==(len(sample_add_key_pair)+1)
+
+        self.sample_rate_dict = sample_rate_dict
         self.is_train = is_train
-        self.clip_seg_num = clip_seg_num
-        self.sliding_window = sliding_window
+        self.clip_seg_num_dict = clip_seg_num_dict
+        self.sliding_window_dict = sliding_window_dict
         self.ignore_index = ignore_index
-        self.channel_mode = channel_mode
+        self.channel_mode_dict = channel_mode_dict
         self.frame_idx_key = frame_idx_key
-        if self.channel_mode == "RGB":
-            self.channel = 3
-        elif self.channel_mode == "XY":
-            self.channel = 2
+        self.sample_add_key_pair = sample_add_key_pair
+        self.channel_num_dict = channel_num_dict
         self.sample = FrameIndexSample(mode = sample_mode)
     
     def _sample_label(self, results, sample_rate, sample_num, sliding_windows, add_key='labels', sample_key='raw_labels'):
@@ -85,7 +86,7 @@ class VideoStreamSampler():
         
         if start_frame < end_frame:
             frames_idx = self.sample(start_frame, end_frame, sample_rate, sample_num)
-            labels = self._labels_sample(container, start_frame=start_frame, end_frame=end_frame, samples_idx=frames_idx).copy()
+            labels = self._labels_sample(container, start_frame=start_frame, end_frame=end_frame, samples_idx=frames_idx, sample_rate=sample_rate).copy()
 
             vaild_mask = np.ones((labels.shape[0]))
             mask_pad_len = sample_num * sample_rate - labels.shape[0]
@@ -165,13 +166,17 @@ class VideoStreamSampler():
             imgs.append(Image.fromarray(np_frames, mode=channel_mode))
         return imgs
     
-    @abstractclassmethod
-    def _sample_dict_2_frame(self, frames_select, results):
-        raise NotImplementedError
+    def _sample_dict_2_frame(self, frames_select, results, sample_num):
+        for k, v in frames_select.items():
+            frames = self._sample_2_numpy_frame(frames_select=v, channel_mode=self.channel_mode_dict[k], channel_num=self.channel_num_dict[k], sample_num=sample_num)
+            results[k] = frames.copy()
+        return results
     
-    @abstractclassmethod
-    def _sample_dict_2_frame_for_none(self, container, results):
-        raise NotImplementedError
+    def _sample_dict_2_frame_for_none(self, container, results, sample_num):
+        for key in container.dict_keys:
+            frames = self._sample_2_numpy_frame_for_none(channel_mode=self.channel_mode_dict[key], channel_num=self.channel_num_dict[key], sample_num=sample_num)
+            results[key] = frames.copy()
+        return results
     
     def _sample_frames(self, results, sample_rate, channel_mode, channel_num, sample_num, sliding_windows, add_key='imgs', sample_key='frames'):
         container = results[sample_key]
@@ -191,7 +196,7 @@ class VideoStreamSampler():
             elif container.out_dtype == "numpy":
                 imgs = self._sample_2_numpy_frame(frames_select=frames_select, channel_mode=channel_mode, channel_num=channel_num, sample_num=sample_num)
             elif container.out_dtype == "dict":
-                return self._sample_dict_2_frame(frames_select=frames_select, results=results)
+                return self._sample_dict_2_frame(frames_select=frames_select, results=results, sample_num=sample_num)
             else:
                 raise NotImplementedError
         else:
@@ -200,17 +205,17 @@ class VideoStreamSampler():
             elif container.out_dtype == "PIL":
                 imgs = self._sample_2_PIL_frame_for_none(channel_mode=channel_mode, channel_num=channel_num, sample_num=sample_num)
             elif container.out_dtype == "dict":
-                return self._sample_dict_2_frame_for_none(container=container, results=results)
+                return self._sample_dict_2_frame_for_none(container=container, results=results, sample_num=sample_num)
             else:
                 raise NotImplementedError
 
         results[add_key] = imgs[:sample_num].copy()
         return results
 
-    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[]):
+    def _labels_sample(self, labels, start_frame=0, end_frame=0, samples_idx=[], sample_rate=1):
         if self.is_train:
             sample_labels = labels[samples_idx]
-            sample_labels = np.repeat(sample_labels, repeats=self.sample_rate, axis=-1)
+            sample_labels = np.repeat(sample_labels, repeats=sample_rate, axis=-1)
         else:
             sample_labels = labels[start_frame:end_frame]
         return sample_labels
@@ -222,8 +227,17 @@ class VideoStreamSampler():
         return:
             sampling id.
         """
-        results = self._sample_frames(results, self.sample_rate, self.channel_mode, self.channel, self.clip_seg_num, self.sliding_window, add_key='imgs', sample_key='frames')
-        results = self._sample_label(results, self.sample_rate, self.clip_seg_num, self.sliding_window, add_key='labels', sample_key='raw_labels')
+        for sample_key, add_key in self.sample_add_key_pair.items():
+            channel_mode = self.channel_mode_dict[add_key]
+            channel = self.channel_num_dict[add_key]
+            sample_rate = self.sample_rate_dict[add_key]
+            clip_seg_num = self.clip_seg_num_dict[add_key]
+            sliding_window = self.sliding_window_dict[add_key]
+            results = self._sample_frames(results, sample_rate, channel_mode, channel, clip_seg_num, sliding_window, add_key=add_key, sample_key=sample_key)
+        sample_rate = self.sample_rate_dict["labels"]
+        clip_seg_num = self.clip_seg_num_dict["labels"]
+        sliding_window = self.sliding_window_dict["labels"]
+        results = self._sample_label(results, sample_rate, clip_seg_num, sliding_window, add_key='labels', sample_key='raw_labels')
 
         return results
 
@@ -237,132 +251,19 @@ class VideoSampler(VideoStreamSampler):
 
     def __init__(self,
                  is_train=False,
-                 clip_seg_num=15,
+                 clip_seg_num_dict={"imgs":15, "labels":15},
                  ignore_index=-100,
-                 channel_mode="RGB",
+                 sample_add_key_pair={"frames":"imgs"},
+                 channel_mode_dict={"imgs":"RGB"},
                  sample_mode='linspace',
                  frame_idx_key='sample_sliding_idx'):
         super().__init__(is_train=is_train,
-                         sample_rate=1,
-                         clip_seg_num=clip_seg_num,
-                         sliding_window=1000,
+                         sample_rate_dict={"imgs":1, "labels":1},
+                         clip_seg_num_dict=clip_seg_num_dict,
+                         sample_add_key_pair=sample_add_key_pair,
+                         sliding_window_dict={"imgs":1000, "labels":1000},
                          ignore_index=ignore_index,
-                         channel_mode=channel_mode,
+                         channel_mode_dict=channel_mode_dict,
                          sample_mode=sample_mode,
                          frame_idx_key=frame_idx_key)
-
-@SAMPLER.register()
-class RGBFlowIPBVideoStreamSampler(VideoStreamSampler):
-    """
-    Sample frames id.
-    Returns:
-        frames_idx: the index of sampled #frames.
-    """
-    def __init__(self,
-                 is_train=False,
-                 gop_size=1,
-                 sample_rate=4,
-                 rgb_clip_seg_num=1,
-                 flow_clip_seg_num=15,
-                 rgb_sliding_window=60,
-                 flow_sliding_window=60,
-                 ignore_index=-100,
-                 rgb_channel_mode="RGB",
-                 flow_channel_mode="XY",
-                 sample_mode='random',
-                 frame_idx_key='sample_sliding_idx'):
-        super().__init__(is_train,
-                         sample_rate,
-                         flow_clip_seg_num,
-                         flow_sliding_window, 
-                         ignore_index,
-                         rgb_channel_mode,
-                         sample_mode,
-                         frame_idx_key=frame_idx_key)
-        assert gop_size < self.clip_seg_num, "GOP size: " + str(gop_size) + " must samller than clip_seg_num: " + str(self.clip_seg_num) + " !"
-        self.gop_size = gop_size
-        self.rgb_clip_seg_num = rgb_clip_seg_num
-        self.rgb_channel_mode = rgb_channel_mode
-        self.rgb_sliding_window = rgb_sliding_window
-        self.flow_channel_mode = flow_channel_mode
-        if self.flow_channel_mode == "XY":
-            self.flow_channel = 2
-        elif self.flow_channel_mode == "RGB":
-            self.flow_channel = 3
-
-
-    def __call__(self, results):
-        """
-        Args:
-            frames_len: length of frames.
-        return:
-            sampling id.
-        """
-
-        results = self._sample_frames(results, self.sample_rate * self.gop_size, self.rgb_channel_mode, self.channel,self.rgb_clip_seg_num, self.rgb_sliding_window, add_key='imgs', sample_key='rgb_frames')
-        results = self._sample_frames(results, self.sample_rate, self.channel_mode, self.flow_channel,self.clip_seg_num, self.sliding_window, add_key='flows', sample_key='flow_frames')
-        results = self._sample_label(results, self.sample_rate, self.clip_seg_num, self.sliding_window, add_key='labels', sample_key='raw_labels')
-
-        return results
-
-@SAMPLER.register()
-class CompressedVideoStreamSampler(VideoStreamSampler):
-    """
-    Sample frames id.
-    Returns:
-        frames_idx: the index of sampled #frames.
-    """
-    def __init__(self,
-                 is_train=False,
-                 gop_size=1,
-                 ipb_keys=["imgs"],
-                 sample_rate=4, 
-                 clip_seg_num=15,
-                 sliding_window=60,
-                 ignore_index=-100,
-                 channel_mode_dict={"imgs":"RGB", "res":"RGB", "flows":"XY"},
-                 sample_mode='random',
-                 frame_idx_key='sample_sliding_idx'):
-        super().__init__(is_train,
-                         sample_rate,
-                         clip_seg_num,
-                         sliding_window,
-                         ignore_index,
-                         "RGB",
-                         sample_mode, 
-                        frame_idx_key)
-        assert gop_size < self.clip_seg_num, "GOP size: " + str(gop_size) + " must samller than clip_seg_num: " + str(self.clip_seg_num) + " !"
-        self.gop_size = gop_size
-        self.ipb_keys = ipb_keys
-        self.channel_mode_dict = channel_mode_dict
-        self.channel_num_dict = {"imgs":3, "res":3, "flows":2}
-    
-    def _sample_dict_2_frame(self, frames_select, results):
-        for k, v in frames_select.items():
-            frames = self._sample_2_numpy_frame(frames_select=v, channel_mode=self.channel_mode_dict[k], channel_num=self.channel_num_dict[k], sample_num=self.clip_seg_num)
-            if k in self.ipb_keys:
-                frames = frames[::self.gop_size]
-            results[k] = frames.copy()
-        return results
-    
-    def _sample_dict_2_frame_for_none(self, container, results):
-        for key in container.dict_keys:
-            frames = self._sample_2_numpy_frame_for_none(channel_mode=self.channel_mode_dict[key], channel_num=self.channel_num_dict[key], sample_num=self.clip_seg_num)
-            if key in self.ipb_keys:
-                frames = frames[::self.gop_size]
-            results[key] = frames.copy()
-        return results
-
-    def __call__(self, results):
-        """
-        Args:
-            frames_len: length of frames.
-        return:
-            sampling id.
-        """
-
-        results = self._sample_frames(results, self.sample_rate, self.channel_mode, self.channel, self.clip_seg_num, self.sliding_window, add_key='imgs', sample_key='frames')
-        results = self._sample_label(results, self.sample_rate, self.clip_seg_num, self.sliding_window, add_key='labels', sample_key='raw_labels')
-
-        return results
 

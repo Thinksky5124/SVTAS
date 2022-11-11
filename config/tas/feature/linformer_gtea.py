@@ -78,8 +78,9 @@ PIPELINE = dict(
         sample = dict(
             name = "FeatureSampler",
             is_train = True,
-            sample_rate = sample_rate,
-            sample_mode = "uniform"
+            sample_rate_dict={ "feature": sample_rate,"labels": sample_rate },
+            sample_add_key_pair={ "frames": "feature" },
+            sample_mode = "uniform",
         ),
         transform = dict(
             name = "FeatureStreamTransform",
@@ -102,8 +103,9 @@ PIPELINE = dict(
         sample = dict(
             name = "FeatureSampler",
             is_train = False,
-            sample_rate = sample_rate,
-            sample_mode = "uniform"
+            sample_rate_dict={ "feature": sample_rate,"labels": sample_rate },
+            sample_add_key_pair={ "frames": "feature" },
+            sample_mode = "uniform",
         ),
         transform = dict(
             name = "FeatureStreamTransform",

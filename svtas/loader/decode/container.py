@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-01 12:25:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 21:25:22
+LastEditTime : 2022-11-11 14:00:52
 Description  : video container
 FilePath     : /SVTAS/svtas/loader/decode/container.py
 '''
@@ -43,13 +43,20 @@ class NPYContainer(object):
 
 @CONTAINER.register()
 class DecordContainer(object):
-    def __init__(self, file_path):
+    def __init__(self, file_path, to_ndarray=False, sample_dim=2):
         self.data = de.VideoReader(file_path)
         self.out_dtype = 'PIL'
+        self.to_ndarray = to_ndarray
+        if to_ndarray is True:
+            self.out_dtype = 'numpy'
+            self.sample_dim = sample_dim
 
     def get_batch(self, frames_idx):
-        return self.data.get_batch(frames_idx)
-    
+        if self.to_ndarray:
+            return self.data.get_batch(frames_idx).asnumpy()[:self.sample_dim, :]
+        else:
+            return self.data.get_batch(frames_idx)
+
     def __len__(self):
         return len(self.data)
 
@@ -137,7 +144,7 @@ class OpenCVContainer(object):
 
     def get_batch(self, frames_idx):
         frames = []
-        margin = 128
+        margin = 1024
         current_frame_idx = max(0, min(frames_idx) - margin)
         start_frame_idx = current_frame_idx
         self.data.set(cv2.CAP_PROP_POS_FRAMES, start_frame_idx)
@@ -218,8 +225,8 @@ class MVExtractor(object):
                 for mv in np.split(mvs, num_mvs):
                     block_w = mv[0, 1]
                     block_h = mv[0, 2]
-                    block_x = mv[0, 3] // block_w
-                    block_y = mv[0, 4] // block_h
+                    block_x = max(min(mv[0][3] // block_w, img.shape[1] // block_w), 0)
+                    block_y = max(min(mv[0][4] // block_h, img.shape[0] // block_h), 0)
 
                     dst_x_min = self.pad_factor + block_x * block_w + mv[0, 5] - mv[0, 3]
                     dst_x_max = self.pad_factor + (block_x + 1) * block_w + mv[0, 5] - mv[0, 3]
@@ -273,3 +280,130 @@ class MVExtractor(object):
     
     def __len__(self):
         return self.len
+
+@CONTAINER.register()
+class PyAVMVExtractor(object):
+    def __init__(self,
+                 file_path,
+                 need_residual=True,
+                 need_mvs=True,
+                 argument=False,
+                 multi_thread_decode=False,
+                 bound=100):
+        container = av.open(file_path)
+        if multi_thread_decode:
+            # Enable multiple threads for decoding.
+            container.streams.video[0].thread_type = "AUTO"
+        container.streams.video[0].export_mvs = True
+        self.data = container
+        self.argument = argument
+        self.need_residual = need_residual
+        self.need_mvs = need_mvs
+        self.bound = bound
+        self.out_dtype = 'dict'
+        self.dict_keys = ['imgs']
+        if need_mvs:
+            self.dict_keys.append('flows')
+        if need_residual:
+            self.dict_keys.append('res')
+
+        self.last_frame = None
+        self.last_mvs_frame = None
+        self.pad_factor = 32
+    
+    def _get_mvs_img(self, mvs, w, h, output_dict):
+        mv_frame = np.zeros((h, w, 2))
+        if len(mvs) > 0:
+            num_mvs = np.shape(mvs)[0]
+            for mv in np.split(mvs, num_mvs):
+                block_w = mv[0][1]
+                block_h = mv[0][2]
+                block_x = mv[0][3] // block_w
+                block_y = mv[0][4] // block_h
+                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 0] = mv[0][3] - mv[0][5]
+                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 1] = mv[0][4] - mv[0][6]
+        if 'flows' not in output_dict.keys():
+            output_dict['flows'] = [mv_frame]
+        else:
+            output_dict['flows'].append(mv_frame)
+        return output_dict
+
+    def _get_res_img(self, img, mvs, output_dict):
+        res_img = np.full_like(img, 0)
+        if self.last_frame is None:
+            self.last_frame = img
+            self.last_frame = cv2.copyMakeBorder(self.last_frame, self.pad_factor, self.pad_factor, self.pad_factor, self.pad_factor, cv2.BORDER_CONSTANT, value=(0,0,0))
+        else:
+            mv_compress = copy.deepcopy(self.last_frame)
+            w = img.shape[1] + self.pad_factor
+            h = img.shape[0] + self.pad_factor
+            if len(mvs) > 0:
+                num_mvs = np.shape(mvs)[0]
+                for mv in np.split(mvs, num_mvs):
+                    block_w = mv[0][1]
+                    block_h = mv[0][2]
+                    block_x = max(min(mv[0][3] // block_w, img.shape[1] // block_w), 0)
+                    block_y = max(min(mv[0][4] // block_h, img.shape[0] // block_h), 0)
+
+                    dst_x_min = self.pad_factor + block_x * block_w + mv[0][5] - mv[0][3]
+                    dst_x_max = self.pad_factor + (block_x + 1) * block_w + mv[0][5] - mv[0][3]
+                    dst_y_min = self.pad_factor + block_y * block_h + mv[0][6] - mv[0][4]
+                    dst_y_max = self.pad_factor + (block_y + 1) * block_h + mv[0][6] - mv[0][4]
+
+                    src_x_min = self.pad_factor + block_x * block_w
+                    src_x_max = self.pad_factor + (block_x + 1) * block_w
+                    src_y_min = self.pad_factor + block_y * block_h
+                    src_y_max = self.pad_factor + (block_y + 1) * block_h
+
+                    mv_compress[dst_y_min:dst_y_max, dst_x_min:dst_x_max] = self.last_frame[src_y_min:src_y_max, src_x_min:src_x_max]
+
+            res_img = img.astype(np.float16) - mv_compress[self.pad_factor:h, self.pad_factor:w].astype(np.float16)
+            res_img = (res_img + self.bound) * (255.0 / (2 * self.bound))
+            res_img = res_img.round().astype(np.uint8)
+
+            res_img = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
+            self.last_frame = cv2.copyMakeBorder(img, self.pad_factor, self.pad_factor, self.pad_factor, self.pad_factor, cv2.BORDER_CONSTANT, value=(0,0,0))
+        if 'res' not in output_dict.keys():
+            output_dict['res'] = [res_img]
+        else:
+            output_dict['res'].append(res_img)
+        return output_dict
+
+    def _get_rgb_img(self, img, output_dict):
+        rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        output_dict['imgs'].append(rgb_img)
+        return output_dict
+
+    def get_batch(self, frames_idx):
+        output_dict = {'imgs':[]}
+        margin = 1024
+        seek_offset = max(min(frames_idx) - margin, 0)
+
+        self.data.seek(seek_offset, any_frame=False, backward=True)
+        for pi, packet in enumerate(self.data.demux()):
+            if packet.stream.type == 'video':
+                for fi, frame in enumerate(packet.decode()):
+                    if frame.index in frames_idx:
+                        img = frame.to_ndarray(format='bgr24')
+                        h, w = img.shape[0], img.shape[1]
+                        output_dict = self._get_rgb_img(img=img, output_dict=output_dict)
+                        for di, data in enumerate(frame.side_data):
+                            if data.type.value == 8:
+                                motion_vectors = data.to_ndarray()
+                                if self.need_mvs:
+                                    output_dict = self._get_mvs_img(mvs=motion_vectors, w=w, h=h, output_dict=output_dict)
+                                if self.need_residual:
+                                    output_dict = self._get_res_img(img=img, mvs=motion_vectors, output_dict=output_dict)
+                    if len(output_dict['imgs']) == len(frames_idx):
+                        break
+            if len(output_dict['imgs']) == len(frames_idx):
+                break
+        return_dict = {}
+        for k, v in output_dict.items():
+            frames = copy.deepcopy(np.stack(v))
+            return_dict[k] = frames
+        self.data.close()
+        return return_dict
+    
+    def __len__(self):
+        return self.data.streams.video[0].frames

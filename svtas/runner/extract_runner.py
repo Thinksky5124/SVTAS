@@ -2,11 +2,10 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:00:31
+LastEditTime : 2022-11-11 20:24:51
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
-from abc import abstractclassmethod
 import cv2
 import numpy as np
 import os
@@ -15,11 +14,9 @@ import torch
 class ExtractRunner():
     def __init__(self,
                  logger,
-                 model,
                  post_processing,
                  out_path,
                  logger_interval=10):
-        self.model = model
         self.logger = logger
         self.post_processing = post_processing
         self.out_path = out_path
@@ -30,47 +27,39 @@ class ExtractRunner():
         self.post_processing.init_flag = False
         self.current_step = 0
         self.current_step_vid_list = None
-        self.model.eval()
         self.init_file_dir()
     
-    @abstractclassmethod
+    @classmethod
     def init_file_dir(self):
         pass
     
-    @abstractclassmethod
+    @classmethod
+    def duil_will_iter_end_extract(self, extract_output, current_vid_list):
+        pass
+    
+    @classmethod
     def duil_will_end_extract(self, extract_output, current_vid_list):
-        raise NotImplementedError()
+        pass
     
     @torch.no_grad()
     def batch_end_step(self, sliding_num, vid_list, step):
-        self.model._clear_memory_buffer()
         # get extract feature
         extract_output = self.post_processing.output()
         
         # save feature file
         self.duil_will_end_extract(extract_output, self.current_step_vid_list)
 
-        self.logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(self.current_step_vid_list))
-        self.current_step_vid_list = vid_list
-        
         if len(self.current_step_vid_list) > 0:
             self.post_processing.init_scores(sliding_num, len(vid_list))
+
+        self.logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(self.current_step_vid_list))
+        self.current_step_vid_list = vid_list
 
         self.current_step = step
     
     @torch.no_grad()
     def _model_forward(self, data_dict):
-        # move data
-        input_data = {}
-        for key, value in data_dict.items():
-            if torch.is_tensor(value):
-                input_data[key] = value.cuda()
-
-        outputs = self.model(input_data)
-        
-        score = outputs['output']
-            
-        return score
+        return data_dict
     
     @torch.no_grad()
     def run_one_clip(self, data_dict):
@@ -86,7 +75,10 @@ class ExtractRunner():
                 self.post_processing.init_scores(sliding_num, len(vid_list))
                 self.current_step_vid_list = vid_list
                 self.logger.info("Current process video: " + ",".join(vid_list))
-            self.post_processing.update(score, labels, idx)
+            extract_output = self.post_processing.update(score, labels, idx)
+        
+            # save feature file
+            self.duil_will_iter_end_extract(extract_output, self.current_step_vid_list)
         
         if idx % self.logger_interval == 0:
             self.logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
@@ -106,7 +98,41 @@ class ExtractRunner():
             if idx >= 0: 
                 self.run_one_clip(sliding_seg)
 
-class ExtractFeatureRunner(ExtractRunner):
+class ExtractModelRunner(ExtractRunner):
+    def __init__(self,
+                 logger,
+                 model,
+                 post_processing,
+                 out_path,
+                 logger_interval=10):
+        super().__init__(
+            logger = logger,
+            post_processing = post_processing,
+            out_path = out_path,
+            logger_interval = logger_interval
+        )
+        self.model = model
+        
+    
+    def epoch_init(self):
+        super().epoch_init()
+        self.model.eval()
+    
+    @torch.no_grad()
+    def _model_forward(self, data_dict):
+        # move data
+        input_data = {}
+        for key, value in data_dict.items():
+            if torch.is_tensor(value):
+                input_data[key] = value.cuda()
+
+        outputs = self.model(input_data)
+        
+        score = outputs['output']
+            
+        return score
+
+class ExtractFeatureRunner(ExtractModelRunner):
 
     def init_file_dir(self):
         pass
@@ -116,7 +142,7 @@ class ExtractFeatureRunner(ExtractRunner):
             feature_save_path = os.path.join(self.out_path, vid + ".npy")
             np.save(feature_save_path, extract_feature)
 
-class ExtractOpticalFlowRunner(ExtractRunner):
+class ExtractOpticalFlowRunner(ExtractModelRunner):
 
     def init_file_dir(self):
         self.flow_out_path = os.path.join(self.out_path, "flow")
@@ -126,7 +152,7 @@ class ExtractOpticalFlowRunner(ExtractRunner):
             print(self.flow_out_path + ' created successful')
 
         if self.post_processing.need_visualize:
-            self.video_out_path = os.path.join(self.out_path, "flow_video")
+            self.video_out_path = os.path.join(self.out_path, "flow_videos")
             isExists = os.path.exists(self.video_out_path)
             if not isExists:
                 os.makedirs(self.video_out_path)
@@ -134,21 +160,101 @@ class ExtractOpticalFlowRunner(ExtractRunner):
 
     def duil_will_end_extract(self, extract_output, current_vid_list):
         if len(extract_output) > 1:
-            flow_imgs_list, flow_visual_imgs_list, fps = extract_output
+            flow_imgs_list, flow_visual_imgs_list = extract_output
             for extract_flow, flow_visual_imgs, vid in zip(flow_imgs_list, flow_visual_imgs_list, current_vid_list):
-                optical_flow_save_path = os.path.join(self.flow_out_path, vid + ".npy")
-                np.save(optical_flow_save_path, extract_flow)
+                optical_flow_save_path = os.path.join(self.flow_out_path, vid + ".mp4")
+                stream_writer, v_len = extract_flow["writer"], extract_flow["len"]
+                stream_writer.save(optical_flow_save_path, v_len)
 
-                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-                flow_video_path = os.path.join(self.video_out_path, vid + '.mp4')
-                videoWrite = cv2.VideoWriter(flow_video_path, fourcc, fps, (flow_visual_imgs.shape[-2], flow_visual_imgs.shape[-3]))
-
-                for flow_img in flow_visual_imgs:
-                    videoWrite.write(flow_img)
-                
-                videoWrite.release()
+                video_out_path = os.path.join(self.video_out_path, vid + ".mp4")
+                stream_writer, v_len = flow_visual_imgs["writer"], extract_flow["len"]
+                stream_writer.save(video_out_path, v_len)
                 
         else:
             for extract_flow, vid in zip(extract_output, current_vid_list):
-                optical_flow_save_path = os.path.join(self.flow_out_path, vid + ".npy")
-                np.save(optical_flow_save_path, extract_flow)
+                optical_flow_save_path = os.path.join(self.flow_out_path, vid + ".mp4")
+                stream_writer, v_len = extract_flow["writer"], extract_flow["len"]
+                stream_writer.save(optical_flow_save_path, v_len)
+
+class ExtractMVResRunner(ExtractRunner):
+    def __init__(self,
+                 logger,
+                 post_processing,
+                 out_path,
+                 res_extract=True,
+                 logger_interval=10):
+        self.logger = logger
+        self.post_processing = post_processing
+        self.out_path = out_path
+        self.logger_interval = logger_interval
+        self.res_extract = res_extract
+    
+    def init_file_dir(self):
+        if self.res_extract:
+            res_out_path = os.path.join(self.out_path, "res_videos")
+        mvs_outpath = os.path.join(self.out_path, "mvs_videos")
+        if self.post_processing.need_visualize:
+            mvs_vis_outpath = os.path.join(self.out_path, "mvs_vis_videos")
+            isExists = os.path.exists(mvs_vis_outpath)
+            if not isExists:
+                os.makedirs(mvs_vis_outpath)
+                print(mvs_outpath + ' created successful')
+            self.mvs_vis_outpath = mvs_vis_outpath
+
+        isExists = os.path.exists(res_out_path)
+        if not isExists:
+            os.makedirs(res_out_path)
+            print(res_out_path + ' created successful')
+        isExists = os.path.exists(mvs_outpath)
+        if not isExists:
+            os.makedirs(mvs_outpath)
+            print(mvs_outpath + ' created successful')
+        self.mvs_outpath = mvs_outpath
+        self.res_out_path = res_out_path
+    
+    def duil_will_iter_end_extract(self, extract_output, current_vid_list):
+        pass
+    
+    def duil_will_end_extract(self, extract_output, current_vid_list):
+        if len(extract_output) == 1:
+            flow_imgs_list = extract_output
+            for extract_flow, vid in zip(flow_imgs_list, current_vid_list):
+                mvs_outpath = os.path.join(self.mvs_outpath, vid + ".mp4")
+                stream_writer, v_len = extract_flow["writer"], extract_flow["len"]
+                stream_writer.save(mvs_outpath, v_len)
+
+        elif len(extract_output) == 2:
+            if self.post_processing.need_visualize:
+                flow_imgs_list, flow_visual_imgs_list = extract_output
+                for extract_flow, extract_flow_vis, vid in zip(flow_imgs_list, flow_visual_imgs_list, current_vid_list):
+                    mvs_outpath = os.path.join(self.mvs_outpath, vid + ".mp4")
+                    stream_writer, v_len = extract_flow["writer"], extract_flow["len"]
+                    stream_writer.save(mvs_outpath, v_len)
+
+                    mvs_vis_outpath = os.path.join(self.mvs_vis_outpath, vid + ".mp4")
+                    stream_writer, v_len = extract_flow_vis["writer"], extract_flow_vis["len"]
+                    stream_writer.save(mvs_vis_outpath, v_len)
+            else:
+                flow_imgs_list, res_imgs_list = extract_output
+                for extract_flow, extract_res, vid in zip(flow_imgs_list, res_imgs_list, current_vid_list):
+                    mvs_outpath = os.path.join(self.mvs_outpath, vid + ".mp4")
+                    stream_writer, v_len = extract_flow["writer"], extract_flow["len"]
+                    stream_writer.save(mvs_outpath, v_len)
+
+                    res_out_path = os.path.join(self.res_out_path, vid + ".mp4")
+                    stream_writer, v_len = extract_res["writer"], extract_res["len"]
+                    stream_writer.save(res_out_path, v_len)
+        elif len(extract_output) == 3:
+            flow_imgs_list, res_imgs_list, flow_visual_imgs_list = extract_output
+            for extract_flow, extract_res, extract_flow_vis, vid in zip(flow_imgs_list, res_imgs_list, flow_visual_imgs_list, current_vid_list):
+                mvs_outpath = os.path.join(self.mvs_outpath, vid + ".mp4")
+                stream_writer, v_len = extract_flow["writer"], extract_flow["len"]
+                stream_writer.save(mvs_outpath, v_len)
+
+                mvs_vis_outpath = os.path.join(self.mvs_vis_outpath, vid + ".mp4")
+                stream_writer, v_len = extract_flow_vis["writer"], extract_flow_vis["len"]
+                stream_writer.save(mvs_vis_outpath, v_len)
+
+                res_out_path = os.path.join(self.res_out_path, vid + ".mp4")
+                stream_writer, v_len = extract_res["writer"], extract_res["len"]
+                stream_writer.save(res_out_path, v_len)

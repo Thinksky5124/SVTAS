@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 20:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-08 09:37:21
+LastEditTime : 2022-11-11 10:38:48
 Description  : Transform Class Function
 FilePath     : /SVTAS/svtas/loader/transform/transform_fn/transform_fn.py
 '''
@@ -26,8 +26,14 @@ __all__ = [
     "TensorImageResize",
     "TensorPermute",
     "OpencvToPIL",
-    "RandomShortSideScaleJitter"
+    "RandomShortSideScaleJitter",
+    "DtypeToUInt8"
 ]
+
+class DtypeToUInt8(object):
+    def __call__(self, flow_tensor: torch.FloatTensor) -> torch.FloatTensor:
+        # dtype -> uint8
+        return flow_tensor.to(torch.uint8)
 
 class ToUInt8(object):
     def __init__(self, bound=20):

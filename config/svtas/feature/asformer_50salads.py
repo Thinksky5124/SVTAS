@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 14:01:02
+LastEditTime : 2022-11-11 15:13:33
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_50salads.py
 '''
@@ -84,11 +84,12 @@ PIPELINE = dict(
         sample = dict(
             name = "FeatureStreamSampler",
             is_train = True,
-            sample_rate = sample_rate,
-            sample_mode = "uniform",
-            sliding_window = sliding_window,
-            clip_seg_num = clip_seg_num,
-            feature_dim = 2048
+            sample_rate_dict={"feature":sample_rate, "labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
+            sample_add_key_pair={"frames":"feature"},
+            feature_dim_dict={"feature":2048},
+            sample_mode = "uniform"
         ),
         transform = dict(
             name = "FeatureStreamTransform",
@@ -111,11 +112,12 @@ PIPELINE = dict(
         sample = dict(
             name = "FeatureStreamSampler",
             is_train = False,
-            sample_rate = sample_rate,
-            sample_mode = "uniform",
-            sliding_window = sliding_window,
-            clip_seg_num = clip_seg_num,
-            feature_dim = 2048
+            sample_rate_dict={"feature":sample_rate, "labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
+            sample_add_key_pair={"frames":"feature"},
+            feature_dim_dict={"feature":2048},
+            sample_mode = "uniform"
         ),
         transform = dict(
             name = "FeatureStreamTransform",

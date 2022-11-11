@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 15:37:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-02 10:47:38
+LastEditTime : 2022-11-11 15:20:32
 Description  : MViTV2 Config
 FilePath     : /SVTAS/config/extract/extract_feature/mvitv2_rgb_gtea.py
 '''
@@ -62,9 +62,10 @@ PIPELINE = dict(
     sample = dict(
         name = "VideoStreamSampler",
         is_train = False,
-        sample_rate = 3,
-        clip_seg_num = clip_seg_num,
-        sliding_window = sliding_window,
+        sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
+        clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
+        sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
+        sample_add_key_pair={"frames":"imgs"},
         sample_mode = "uniform"
     ),
     transform = dict(

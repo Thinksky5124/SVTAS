@@ -95,8 +95,8 @@ PIPELINE = dict(
             name = "VideoSampler",
             is_train = True,
             sample_mode = 'linspace',
-            clip_seg_num = clip_seg_num,
-            channel_mode="RGB"
+            clip_seg_num_dict={"imgs":clip_seg_num, "labels":clip_seg_num},
+            sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
             name = "VideoStreamTransform",
@@ -124,8 +124,8 @@ PIPELINE = dict(
             name = "VideoSampler",
             is_train = False,
             sample_mode = 'linspace',
-            clip_seg_num = clip_seg_num,
-            channel_mode = "RGB"
+            clip_seg_num_dict={"imgs":clip_seg_num, "labels":clip_seg_num},
+            sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
             name = "VideoStreamTransform",

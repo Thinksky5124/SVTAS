@@ -2,11 +2,10 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 15:07:56
+LastEditTime : 2022-11-11 19:47:10
 Description  : Transform module
 FilePath     : /SVTAS/svtas/loader/transform/transform.py
 '''
-from abc import abstractclassmethod
 import numpy as np
 import torch
 import copy
@@ -37,7 +36,7 @@ class BaseTransform(object):
             transform_op_list.append(op)
         self.transforms_pipeline_dict[key] = transforms.Compose(transform_op_list)
     
-    @abstractclassmethod
+    @classmethod
     def __call__(self, results):
         raise NotImplementedError
 
@@ -124,17 +123,19 @@ class CompressedVideoStreamTransform(BaseTransform):
         imgs = torch.cat(imgs, dim=0)
         results['imgs'] = copy.deepcopy(imgs)
         # flow
-        flows = []
-        for flow in results['flows']:
-            flow = self.transforms_pipeline_dict['flow'](flow)
-            flows.append(flow.unsqueeze(0))
-        flows = torch.cat(flows, dim=0)
-        results['flows'] = copy.deepcopy(flows)
+        if 'flows' in results.keys():
+            flows = []
+            for flow in results['flows']:
+                flow = self.transforms_pipeline_dict['flow'](flow)
+                flows.append(flow.unsqueeze(0))
+            flows = torch.cat(flows, dim=0)
+            results['flows'] = copy.deepcopy(flows)
         # res
-        res = []
-        for res_img in results['res']:
-            res_img = self.transforms_pipeline_dict['res'](res_img)
-            res.append(res_img.unsqueeze(0))
-        res = torch.cat(res, dim=0)
-        results['res'] = copy.deepcopy(res)
+        if 'res' in results.keys():
+            res = []
+            for res_img in results['res']:
+                res_img = self.transforms_pipeline_dict['res'](res_img)
+                res.append(res_img.unsqueeze(0))
+            res = torch.cat(res, dim=0)
+            results['res'] = copy.deepcopy(res)
         return results

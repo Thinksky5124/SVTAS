@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 20:09:55
+LastEditTime : 2022-11-11 15:18:08
 Description  : file content
 FilePath     : /SVTAS/config/tas/rgb/bridge_prompt_ms_tcn_50salads.py
 '''
@@ -100,8 +100,8 @@ PIPELINE = dict(
             name = "VideoSampler",
             is_train = True,
             sample_mode = 'linspace',
-            clip_seg_num = clip_seg_num,
-            channel_mode="RGB"
+            clip_seg_num_dict={"imgs":clip_seg_num, "labels":clip_seg_num},
+            sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
             name = "VideoStreamTransform",
@@ -129,8 +129,8 @@ PIPELINE = dict(
             name = "VideoSampler",
             is_train = False,
             sample_mode = 'linspace',
-            clip_seg_num = clip_seg_num,
-            channel_mode = "RGB"
+            clip_seg_num_dict={"imgs":clip_seg_num, "labels":clip_seg_num},
+            sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
             name = "VideoStreamTransform",

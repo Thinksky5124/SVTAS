@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 12:59:59
+LastEditTime : 2022-11-11 15:16:19
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/3d_tcn_gtea.py
 '''
@@ -74,9 +74,10 @@ PIPELINE = dict(
         sample = dict(
             name = "FeatureSampler",
             is_train = True,
-            sample_rate = sample_rate,
+            sample_rate_dict={ "feature": sample_rate,"labels": sample_rate },
+            sample_add_key_pair={ "frames": "feature" },
             sample_mode = "uniform",
-            format = "NCTHW"
+            format = "NCTHW",
         ),
         transform = dict(
             name = "FeatureStreamTransform",
@@ -99,9 +100,10 @@ PIPELINE = dict(
         sample = dict(
             name = "FeatureSampler",
             is_train = False,
-            sample_rate = sample_rate,
+            sample_rate_dict={ "feature": sample_rate,"labels": sample_rate },
+            sample_add_key_pair={ "frames": "feature" },
             sample_mode = "uniform",
-            format = "NCTHW"
+            format = "NCTHW",
         ),
         transform = dict(
             name = "FeatureStreamTransform",
