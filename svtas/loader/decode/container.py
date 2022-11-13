@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-01 12:25:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 21:14:41
+LastEditTime : 2022-11-13 15:11:15
 Description  : video container
 FilePath     : /SVTAS/svtas/loader/decode/container.py
 '''
@@ -53,7 +53,7 @@ class DecordContainer(object):
 
     def get_batch(self, frames_idx):
         if self.to_ndarray:
-            return self.data.get_batch(frames_idx).asnumpy()[:, :, :, :self.sample_dim]
+            return self.data.get_batch(frames_idx).asnumpy()[:, :, :, 1:(self.sample_dim+1)]
         else:
             return self.data.get_batch(frames_idx)
 
@@ -203,8 +203,8 @@ class MVExtractor(object):
                 block_h = mv[0, 2]
                 block_x = mv[0, 3] // block_w
                 block_y = mv[0, 4] // block_h
-                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 0] = mv[0, 3] - mv[0, 5]
-                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 1] = mv[0, 4] - mv[0, 6]
+                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 0] = mv[0, 5] - mv[0, 3]
+                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 1] = mv[0, 6] - mv[0, 4]
         if 'flows' not in output_dict.keys():
             output_dict['flows'] = [mv_frame]
         else:
@@ -320,8 +320,8 @@ class PyAVMVExtractor(object):
                 block_h = mv[0][2]
                 block_x = mv[0][3] // block_w
                 block_y = mv[0][4] // block_h
-                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 0] = mv[0][3] - mv[0][5]
-                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 1] = mv[0][4] - mv[0][6]
+                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 0] = (mv[0][8] / mv[0][10]) * mv[0][0]
+                mv_frame[(block_y * block_h):((block_y + 1) * block_h), (block_x * block_w):((block_x + 1) * block_w), 1] = (mv[0][9] / mv[0][10]) * mv[0][0]
         if 'flows' not in output_dict.keys():
             output_dict['flows'] = [mv_frame]
         else:

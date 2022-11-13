@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 10:25:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 11:50:45
+LastEditTime : 2022-11-12 15:50:23
 Description  : Bridge Prompt
 FilePath     : /SVTAS/config/extract/extract_feature/bridge_prompt_rgb_gtea.py
 '''
@@ -92,7 +92,7 @@ PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
         name = "VideoDecoder",
-        backend = "decord"
+        backend = dict(name="DecordContainer")
     ),
     sample = dict(
         name = "VideoStreamSampler",

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:50:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 15:20:20
+LastEditTime : 2022-11-12 15:50:26
 Description  : Action Clip Config
 FilePath     : /SVTAS/config/extract/extract_feature/action_clip_rgb_gtea.py
 '''
@@ -92,7 +92,7 @@ PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
         name = "VideoDecoder",
-        backend = "decord"
+        backend = dict(name="DecordContainer")
     ),
     sample = dict(
         name = "VideoStreamSampler",

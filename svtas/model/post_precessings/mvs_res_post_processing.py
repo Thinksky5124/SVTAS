@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 09:48:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 20:21:42
+LastEditTime : 2022-11-12 15:19:49
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_precessings/mvs_res_post_processing.py
 '''
@@ -110,6 +110,7 @@ class MVsResPostProcessing():
     def output(self):
         # save flow imgs
         flow_imgs_list = []
+        need_res = False
         if len(self.res_img_list) > 0:
             need_res = True
             res_imgs_list = []
@@ -139,4 +140,4 @@ class MVsResPostProcessing():
             if need_res:
                 return flow_imgs_list, res_imgs_list
             else:
-                return flow_imgs_list
+                return [flow_imgs_list]

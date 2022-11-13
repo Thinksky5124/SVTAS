@@ -72,7 +72,7 @@ PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
         name = "VideoDecoder",
-        backend = "decord"
+        backend = dict(name="DecordContainer")
     ),
     sample = dict(
         name = "VideoStreamSampler",

@@ -56,7 +56,10 @@ PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
         name = "FlowVideoDecoder",
-        backend = "numpy"
+        backend = dict(
+                name='DecordContainer',
+                to_ndarray=True,
+                sample_dim=2)
     ),
     sample = dict(
         name = "VideoStreamSampler",

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 20:24:51
+LastEditTime : 2022-11-12 15:21:38
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
@@ -192,6 +192,11 @@ class ExtractMVResRunner(ExtractRunner):
     def init_file_dir(self):
         if self.res_extract:
             res_out_path = os.path.join(self.out_path, "res_videos")
+            isExists = os.path.exists(res_out_path)
+            if not isExists:
+                os.makedirs(res_out_path)
+                print(res_out_path + ' created successful')
+            self.res_out_path = res_out_path
         mvs_outpath = os.path.join(self.out_path, "mvs_videos")
         if self.post_processing.need_visualize:
             mvs_vis_outpath = os.path.join(self.out_path, "mvs_vis_videos")
@@ -201,23 +206,18 @@ class ExtractMVResRunner(ExtractRunner):
                 print(mvs_outpath + ' created successful')
             self.mvs_vis_outpath = mvs_vis_outpath
 
-        isExists = os.path.exists(res_out_path)
-        if not isExists:
-            os.makedirs(res_out_path)
-            print(res_out_path + ' created successful')
         isExists = os.path.exists(mvs_outpath)
         if not isExists:
             os.makedirs(mvs_outpath)
             print(mvs_outpath + ' created successful')
         self.mvs_outpath = mvs_outpath
-        self.res_out_path = res_out_path
     
     def duil_will_iter_end_extract(self, extract_output, current_vid_list):
         pass
     
     def duil_will_end_extract(self, extract_output, current_vid_list):
         if len(extract_output) == 1:
-            flow_imgs_list = extract_output
+            flow_imgs_list = extract_output[0]
             for extract_flow, vid in zip(flow_imgs_list, current_vid_list):
                 mvs_outpath = os.path.join(self.mvs_outpath, vid + ".mp4")
                 stream_writer, v_len = extract_flow["writer"], extract_flow["len"]

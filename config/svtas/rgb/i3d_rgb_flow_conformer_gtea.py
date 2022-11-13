@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 22:27:16
+LastEditTime : 2022-11-12 14:24:43
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_flow_asformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_flow_conformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -15,15 +15,15 @@ split = 1
 num_classes = 11
 sample_rate = 1
 gop_size=16
-flow_clip_seg_num = 128
-flow_sliding_window = 128
+flow_clip_seg_num = 512
+flow_sliding_window = 512
 rgb_clip_seg_num = flow_clip_seg_num // gop_size
 rgb_sliding_window = flow_sliding_window
 
 ignore_index = -100
-batch_size = 1
+batch_size = 2
 epochs = 50
-model_name = "I3D_Flow_Rgb_IPB_Asformer_128x1_gtea_split" + str(split)
+model_name = "I3D_Flow_Rgb_Freeze_IPB_Conformer_128x1_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "MultiModalityStreamSegmentation",
@@ -52,16 +52,21 @@ MODEL = dict(
         )
     ),
     head = dict(
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 2048,
-        channel_masking_rate = 0.5,
+        name = "Conformer",
         num_classes = num_classes,
-        sample_rate = sample_rate * 8
+        sample_rate = sample_rate * 8,
+        input_dim = 2048,
+        encoder_dim = 64,
+        num_encoder_layers = 8,
+        input_dropout_p = 0.5,
+        num_attention_heads = 8,
+        feed_forward_expansion_factor = 4,
+        conv_expansion_factor = 2,
+        feed_forward_dropout_p = 0.1,
+        attention_dropout_p = 0.1,
+        conv_dropout_p = 0.1,
+        conv_kernel_size = 31,
+        half_step_residual = True
     ),
     loss = dict(
         name = "SegmentationLoss",
@@ -80,6 +85,17 @@ POSTPRECESSING = dict(
 
 LRSCHEDULER = dict(
     step_size = [epochs]
+)
+
+OPTIMIZER = dict(
+    learning_rate = 0.0005,
+    weight_decay = 1e-4,
+    betas = (0.9, 0.999),
+    need_grad_accumulate = True,
+    finetuning_scale_factor=0.1,
+    no_decay_key = [],
+    finetuning_key = [],
+    freeze_key = ["rgb_backbone", "flow_backbone"],
 )
 
 DATASET = dict(

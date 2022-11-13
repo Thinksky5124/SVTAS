@@ -19,6 +19,7 @@ einops==0.4.1
 entrypoints==0.4
 executing==0.8.3
 fastrlock==0.6
+ffmpy==0.3.0
 flatbuffers==22.9.24
 ftfy==6.1.1
 fvcore==0.1.5.post20220512

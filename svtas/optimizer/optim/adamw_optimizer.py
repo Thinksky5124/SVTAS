@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 16:10:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 21:02:46
+LastEditTime : 2022-11-12 14:03:12
 Description  : AdamW optimizer
 FilePath     : /SVTAS/svtas/optimizer/optim/adamw_optimizer.py
 '''

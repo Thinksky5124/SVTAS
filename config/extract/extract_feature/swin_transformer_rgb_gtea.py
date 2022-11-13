@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 21:28:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 15:56:25
+LastEditTime : 2022-11-12 15:49:55
 Description  : SwinTransformer Config
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_rgb_gtea.py
 '''
@@ -79,7 +79,7 @@ PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
         name = "VideoDecoder",
-        backend = "decord"
+        backend = dict(name="DecordContainer")
     ),
     sample = dict(
         name = "VideoStreamSampler",

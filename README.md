@@ -53,6 +53,7 @@ pip install -r requirements.txt
 pip freeze > requirements.txt
 ```
 - If report `correlation_cuda package no found`, you should read [Install](svtas/model/backbones/utils/liteflownet_v3/README.md)
+- If you want to extract montion vector and residual image to video, you should install ffmpeg, for example, in ubuntu `sudo apt install ffmpeg`
 
 # Document Dictionary
 - [Prepare Datset](docs/prepare_dataset.md)

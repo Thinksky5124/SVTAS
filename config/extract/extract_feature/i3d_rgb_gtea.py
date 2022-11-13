@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:53:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 15:26:52
+LastEditTime : 2022-11-12 15:48:24
 Description  : I3D Extractor Config
 FilePath     : /SVTAS/config/extract/extract_feature/i3d_rgb_gtea.py
 '''
@@ -51,7 +51,7 @@ PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
         name = "VideoDecoder",
-        backend = "decord"
+        backend = dict(name="DecordContainer")
     ),
     sample = dict(
         name = "VideoStreamSampler",

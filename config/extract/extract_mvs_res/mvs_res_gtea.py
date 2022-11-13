@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 09:31:23
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 20:35:04
+LastEditTime : 2022-11-12 15:12:31
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_mvs_res/mvs_res_gtea.py
 '''
@@ -13,6 +13,7 @@ _base_ = [
 
 sliding_window = 64
 sample_rate = 1
+need_residual = False
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
@@ -28,7 +29,7 @@ DATASET = dict(
         dataset_type = "gtea",
         train_mode = False,
         sliding_window = sliding_window,
-        need_residual = True,
+        need_residual = need_residual,
         need_mvs = True
     )
 )
@@ -46,16 +47,16 @@ PIPELINE = dict(
         name = "VideoDecoder",
         backend=dict(
                 name='PyAVMVExtractor',
-                need_residual=True,
+                need_residual=need_residual,
                 need_mvs=True,
                 argument=False)
     ),
     sample = dict(
         name = "VideoStreamSampler",
         is_train = False,
-        sample_rate_dict={"imgs":sample_rate, "labels":sample_rate},
-        clip_seg_num_dict={"imgs":sliding_window, "labels":sliding_window},
-        sliding_window_dict={"imgs":sliding_window, "labels":sliding_window},
+        sample_rate_dict={"imgs":sample_rate , "flows":sample_rate, "res":sample_rate, "labels":sample_rate},
+        clip_seg_num_dict={"imgs":sliding_window, "flows":sliding_window, "res":sliding_window, "labels":sliding_window},
+        sliding_window_dict={"imgs":sliding_window, "flows":sliding_window, "res":sliding_window, "labels":sliding_window},
         sample_add_key_pair={"frames":"imgs"},
         sample_mode = "uniform"
     ),

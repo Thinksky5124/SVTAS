@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 20:30:24
+LastEditTime : 2022-11-12 15:08:46
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -67,7 +67,7 @@ class VideoStreamSampler():
                  sample_mode='random',
                  frame_idx_key='sample_sliding_idx'
                  ):
-        assert len(sample_rate_dict)==len(clip_seg_num_dict)==len(sliding_window_dict)==(len(sample_add_key_pair)+1)
+        # assert len(sample_rate_dict)==len(clip_seg_num_dict)==len(sliding_window_dict)==(len(sample_add_key_pair)+1)
 
         self.sample_rate_dict = sample_rate_dict
         self.is_train = is_train
