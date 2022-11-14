@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 15:01:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 15:25:07
+LastEditTime : 2022-11-13 20:54:20
 Description  : ConFormer utils ref:https://github.com/sooftware/conformer/blob/main/conformer/attention.py
-FilePath     : /ETESVS/model/heads/utils/conformer/attention.py
+FilePath     : /SVTAS/svtas/model/heads/utils/conformer/attention.py
 '''
 import math
 import torch

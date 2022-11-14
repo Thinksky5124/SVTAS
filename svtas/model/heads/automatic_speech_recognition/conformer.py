@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 14:42:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 20:50:07
+LastEditTime : 2022-11-14 09:52:31
 Description  : ConFormer Head for Action Segmentation ref:https://github.com/sooftware/conformer/blob/main/conformer/model.py
 FilePath     : /SVTAS/svtas/model/heads/automatic_speech_recognition/conformer.py
 '''
@@ -10,6 +10,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from ..utils.conformer import ConformerEncoder, ConFormerLinear
+
+from ..segmentation.asformer import Decoder, exponential_descrease
+import copy
 
 from ...builder import HEADS
 
@@ -61,9 +64,10 @@ class Conformer(nn.Module):
         self.sample_rate = sample_rate
         self.out_feature = out_feature
         self.num_classes = num_classes
+        self.embedding = nn.Conv1d(in_channels=input_dim, out_channels=encoder_dim, kernel_size=1)
         
         self.encoder = ConformerEncoder(
-            input_dim=input_dim,
+            input_dim=encoder_dim,
             encoder_dim=encoder_dim,
             num_layers=num_encoder_layers,
             num_attention_heads=num_attention_heads,
@@ -73,11 +77,10 @@ class Conformer(nn.Module):
             feed_forward_dropout_p=feed_forward_dropout_p,
             attention_dropout_p=attention_dropout_p,
             conv_dropout_p=conv_dropout_p,
-
             conv_kernel_size=conv_kernel_size,
             half_step_residual=half_step_residual,
         )
-        self.fc = ConFormerLinear(encoder_dim, num_classes, bias=False)
+        self.decode = ConFormerLinear(encoder_dim, num_classes, bias=False)
 
     def init_weights(self):
         pass
@@ -105,11 +108,12 @@ class Conformer(nn.Module):
         """
         # inputs [N D T]
         # masks [N D T]
+        inputs = self.embedding(inputs)
         inputes_T = torch.permute(inputs, dims=[0, 2, 1])
         input_lengths = torch.tensor([inputs.shape[-1] for _ in range(inputs.shape[0])]).to(inputs.device)
         encoder_outputs, encoder_output_lengths = self.encoder(inputes_T, input_lengths)
-        outputs = self.fc(encoder_outputs)
-        outputs = torch.permute(outputs, dims=[0, 2, 1])
+        out = self.decode(encoder_outputs)
+        outputs = torch.permute(out, dims=[0, 2, 1])
 
         # pool shape
         outputs = outputs.unsqueeze(0)
@@ -118,6 +122,7 @@ class Conformer(nn.Module):
             size=(self.num_classes, inputs.shape[-1]),
             mode="nearest"
         ).squeeze(0)
+
         outputs = outputs * masks[:, 0:1, ::self.sample_rate]
         outputs = outputs.unsqueeze(0)
         outputs = F.interpolate(

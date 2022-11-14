@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:04:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-12 18:03:05
+LastEditTime : 2022-11-13 15:27:09
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/conformer_ipb_gtea.py
 '''
@@ -19,9 +19,9 @@ sample_rate = 1
 ignore_index = -100
 epochs = 50
 clip_seg_num = 512
-gop_size = 16
+gop_size = 8
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_Conformer_512x1_IPB_16_gtea_split" + str(split)
+model_name = "Stream_Conformer_512x1_IPB_8_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",

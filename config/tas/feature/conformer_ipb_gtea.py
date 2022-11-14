@@ -1,15 +1,15 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-10-25 16:24:30
+Date         : 2022-11-03 20:59:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-13 15:35:31
+LastEditTime : 2022-11-13 21:09:58
 Description  : file content
-FilePath     : /SVTAS/config/tas/feature/ms_tcn_ipb_gtea.py
+FilePath     : /SVTAS/config/tas/feature/conformer_ipb_gtea.py
 '''
 
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
-    # '../../_base_/models/temporal_action_segmentation/ms_tcn.py',
+    # '../../_base_/models/temporal_action_segmentation/conformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
     '../../_base_/dataset/gtea/gtea_feature.py'
 ]
@@ -19,32 +19,42 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-gop_size = 15
-model_name = "MSTCN_IPB_gtea_split" + str(split)
+gop_size = 16
+batch_size = 2
+model_name = "Conformer_IPB_16_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
     backbone = None,
-    neck = dict(
-        name = "IPBFusionNeck",
-        gop_size=gop_size,
-        spatial_expan_mode='bilinear'
-    ),
+    # neck = dict(
+    #     name = "IPBFusionNeck",
+    #     gop_size=gop_size,
+    #     spatial_expan_mode='bilinear'
+    # ),
+    neck=None,
     head = dict(
-        name = "MultiStageModel",
-        num_stages = 4,
-        num_layers = 10,
-        num_f_maps = 64,
-        dim = 2048,
+        name = "Conformer",
         num_classes = num_classes,
-        sample_rate = sample_rate
+        sample_rate = sample_rate,
+        input_dim = 2048,
+        encoder_dim = 64,
+        num_encoder_layers = 2,
+        input_dropout_p = 0.5,
+        num_attention_heads = 8,
+        feed_forward_expansion_factor = 4,
+        conv_expansion_factor = 2,
+        feed_forward_dropout_p = 0.1,
+        attention_dropout_p = 0.1,
+        conv_dropout_p = 0.1,
+        conv_kernel_size = 25,
+        half_step_residual = True
     ),
     loss = dict(
         name = "SegmentationLoss",
-        smooth_weight = 0.15,
         num_classes = num_classes,
         sample_rate = sample_rate,
-        ignore_index = ignore_index
+        smooth_weight = 0.15,
+        ignore_index = -100
     )
 )
 
@@ -55,14 +65,16 @@ POSTPRECESSING = dict(
 )
 
 DATASET = dict(
+    temporal_clip_batch_size = batch_size,
+    video_batch_size = batch_size,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = './data/gtea/raw_features',
+        feature_path = "./data/gtea/raw_features"
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = './data/gtea/raw_features',
+        feature_path = "./data/gtea/raw_features"
         # flow_feature_path = "./data/gtea/flow_features"
     )
 )

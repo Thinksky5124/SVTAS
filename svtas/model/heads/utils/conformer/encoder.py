@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 14:58:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 15:25:26
+LastEditTime : 2022-11-13 20:57:20
 Description  : Conformer Encoder Layer ref:https://github.com/sooftware/conformer/blob/main/conformer/encoder.py
-FilePath     : /ETESVS/model/heads/utils/conformer/encoder.py
+FilePath     : /SVTAS/svtas/model/heads/utils/conformer/encoder.py
 '''
 import torch
 import torch.nn as nn

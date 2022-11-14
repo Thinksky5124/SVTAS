@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-07 10:14:44
+LastEditTime : 2022-11-13 15:55:50
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -53,6 +53,7 @@ def train(cfg,
     num_workers = cfg.DATASET.get('num_workers', 0)
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output/{model_name}")
+    criterion_metric_name = cfg.get("criterion_metric_name", "F1@0.50")
     mkdir(output_dir)
 
     # wheather use amp
@@ -253,8 +254,8 @@ def train(cfg,
                 # metric output
                 Metric_dict = runner.Metric.accumulate()
                 
-                if Metric_dict["Acc"] > best:
-                    best = Metric_dict["Acc"]
+                if Metric_dict[criterion_metric_name] > best:
+                    best = Metric_dict[criterion_metric_name]
                     best_flag = True
 
             ips = "avg_ips: {:.5f} instance/sec.".format(
@@ -290,7 +291,7 @@ def train(cfg,
                 torch.save(checkpoint,
                     osp.join(output_dir, model_name + "_best.pkl"))
                 logger.info(
-                        f"Already save the best model (Acc){int(best * 10000) / 10000}"
+                        "Already save the best model (" + criterion_metric_name + f"){int(best * 10000) / 10000}"
                     )
 
         # 6. Save model and optimizer

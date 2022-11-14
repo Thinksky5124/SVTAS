@@ -65,7 +65,7 @@ class FeatureStreamSampler():
             mask = np.zeros((sample_num * sample_rate))
 
         results[add_key] = labels.copy()
-        results['masks'] = mask.copy()
+        results['masks'] = mask.astype(np.float32).copy()
         return results
     
     def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 15:00:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-13 15:35:32
+LastEditTime : 2022-11-13 20:35:37
 Description  : Conformer utils ref:https://github.com/sooftware/conformer/blob/main/conformer/convolution.py
-FilePath     : /ETESVS/model/heads/utils/conformer/convolution.py
+FilePath     : /SVTAS/svtas/model/heads/utils/conformer/convolution.py
 '''
 import torch
 import torch.nn as nn
