@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 21:22:49
+LastEditTime : 2022-11-14 21:53:09
 Description  : Multi Modality stream segmentation
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/multi_modality_stream_segmentation.py
 '''
@@ -79,8 +79,10 @@ class MultiModalityStreamSegmentation(nn.Module):
             x = x.transpose(1, 2).contiguous()
             # masks.shape [N, 1, T, 1, 1]
             masks = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
+            masks = nn.functional.adaptive_max_pool3d(masks, output_size=[x.shape[2], 1, 1])
         elif self.flow_backbone_type == '2d':
             # x.shape=[N,T,C,H,W], for most commonly case
+            masks = nn.functional.adaptive_max_pool1d(masks, output_size=[x.shape[1]])
             x = torch.reshape(x, [-1] + list(x.shape[2:])).contiguous()
             # x [N * T, C, H, W]
             # masks.shape [N * T, 1, 1, 1]
@@ -95,7 +97,9 @@ class MultiModalityStreamSegmentation(nn.Module):
             x = x.transpose(1, 2).contiguous()
             # masks.shape [N, 1, T, 1, 1]
             masks = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
+            masks = nn.functional.adaptive_max_pool3d(masks, output_size=[x.shape[2], 1, 1])
         elif self.rgb_backbone_type == '2d':
+            masks = nn.functional.adaptive_max_pool1d(masks, output_size=[x.shape[1]])
             # x.shape=[N,T,C,H,W], for most commonly case
             x = torch.reshape(x, [-1] + list(x.shape[2:])).contiguous()
             # x [N * T, C, H, W]

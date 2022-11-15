@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 15:00:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-13 20:35:37
+LastEditTime : 2022-11-14 20:12:40
 Description  : Conformer utils ref:https://github.com/sooftware/conformer/blob/main/conformer/convolution.py
 FilePath     : /SVTAS/svtas/model/heads/utils/conformer/convolution.py
 '''

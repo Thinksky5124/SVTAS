@@ -3,9 +3,9 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:58:56
+LastEditTime : 2022-11-15 10:06:02
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
-FilePath     : /ETESVS/model/backbones/video/resnet_3d.py
+FilePath     : /SVTAS/svtas/model/backbones/video/resnet_3d.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
@@ -868,7 +868,7 @@ class ResNet3d(nn.Module):
         outs = []
         for i, layer_name in enumerate(self.res_layers):
             res_layer = getattr(self, layer_name)
-            x = res_layer(x) * masks
+            x = res_layer(x)
             if i == 0 and self.with_pool2:
                 x = self.pool2(x)
             if i in self.out_indices:

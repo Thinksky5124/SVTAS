@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 15:10:31
+LastEditTime : 2022-11-14 15:40:12
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''
@@ -34,8 +34,14 @@ class SegmentationLoss(nn.Module):
             self.ce = nn.CrossEntropyLoss(weight=class_weight, ignore_index=self.ignore_index, reduction='none')
         else:
             self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
-        self.mse = nn.MSELoss(reduction='none')
+        self.sm_loss = nn.MSELoss(reduction='none')
     
+    def _compute_smooth_loss(self, p, labels, masks, b, precise_sliding_num):
+        return torch.mean(
+            (torch.mean(torch.reshape(torch.clamp(
+                self.sm_loss(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1))
+                , min=0, max=16) * masks[:, 1:].unsqueeze(1), [b, -1]), dim=-1) / (precise_sliding_num + self.elps)))
+
     def forward(self, model_output, input_data):
         # score shape [stage_num N C T]
         # masks shape [N T]
@@ -48,10 +54,7 @@ class SegmentationLoss(nn.Module):
         for p in head_score:
             seg_cls_loss = self.ce(p.transpose(2, 1).contiguous().view(-1, self.num_classes), labels.view(-1))
             loss += torch.sum(torch.sum(torch.reshape(seg_cls_loss, shape=[b, t]), dim=-1) / (precise_sliding_num + self.elps)) / (torch.sum(labels != -100) + self.elps)
-            loss += self.smooth_weight * torch.mean(
-                (torch.mean(torch.reshape(torch.clamp(
-                    self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1))
-                    , min=0, max=16) * masks[:, 1:].unsqueeze(1), [b, -1]), dim=-1) / (precise_sliding_num + self.elps)))
+            loss += self.smooth_weight * self._compute_smooth_loss(p, labels, masks, b, precise_sliding_num)
         
         loss_dict={}
         loss_dict["loss"] = loss * self.loss_weight

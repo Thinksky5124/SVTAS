@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:44:15
+LastEditTime : 2022-11-14 21:40:53
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v2.py
 '''
@@ -172,7 +172,8 @@ class MobileNetV2(nn.Module):
                  norm_cfg=dict(type='BN2d', requires_grad=True),
                  act_cfg=dict(type='ReLU6', inplace=True),
                  norm_eval=False,
-                 with_cp=False):
+                 with_cp=False,
+                 in_channels=3):
         super().__init__()
         self.pretrained = pretrained
         self.widen_factor = widen_factor
@@ -196,7 +197,7 @@ class MobileNetV2(nn.Module):
         self.in_channels = make_divisible(32 * widen_factor, 8)
 
         self.conv1 = ConvModule(
-            in_channels=3,
+            in_channels=in_channels,
             out_channels=self.in_channels,
             kernel_size=3,
             stride=2,

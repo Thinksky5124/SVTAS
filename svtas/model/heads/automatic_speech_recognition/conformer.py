@@ -2,17 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 14:42:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-14 09:52:31
+LastEditTime : 2022-11-14 21:26:22
 Description  : ConFormer Head for Action Segmentation ref:https://github.com/sooftware/conformer/blob/main/conformer/model.py
 FilePath     : /SVTAS/svtas/model/heads/automatic_speech_recognition/conformer.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..utils.conformer import ConformerEncoder, ConFormerLinear
-
-from ..segmentation.asformer import Decoder, exponential_descrease
-import copy
+from ..utils.conformer import ConformerEncoder, ConFormerLinear, ConformerDecoder
 
 from ...builder import HEADS
 
@@ -50,6 +47,7 @@ class Conformer(nn.Module):
             input_dim: int = 80,
             encoder_dim: int = 512,
             num_encoder_layers: int = 17,
+            num_stages: int = 3,
             num_attention_heads: int = 8,
             feed_forward_expansion_factor: int = 4,
             conv_expansion_factor: int = 2,
@@ -59,6 +57,7 @@ class Conformer(nn.Module):
             conv_dropout_p: float = 0.1,
             conv_kernel_size: int = 31,
             half_step_residual: bool = True,
+            need_subsampling = True,
     ) -> None:
         super(Conformer, self).__init__()
         self.sample_rate = sample_rate
@@ -79,8 +78,22 @@ class Conformer(nn.Module):
             conv_dropout_p=conv_dropout_p,
             conv_kernel_size=conv_kernel_size,
             half_step_residual=half_step_residual,
+            need_subsampling = need_subsampling,
         )
-        self.decode = ConFormerLinear(encoder_dim, num_classes, bias=False)
+        self.decoders = nn.ModuleList([ConformerDecoder(
+            input_dim=num_classes,
+            encoder_dim=encoder_dim,
+            num_layers=num_encoder_layers,
+            num_attention_heads=num_attention_heads,
+            feed_forward_expansion_factor=feed_forward_expansion_factor,
+            conv_expansion_factor=conv_expansion_factor,
+            feed_forward_dropout_p=feed_forward_dropout_p,
+            attention_dropout_p=attention_dropout_p,
+            conv_dropout_p=conv_dropout_p,
+            conv_kernel_size=conv_kernel_size,
+            half_step_residual=half_step_residual,
+        ) for _ in range(num_stages - 1)])
+        self.cls = ConFormerLinear(encoder_dim, num_classes, bias=False)
 
     def init_weights(self):
         pass
@@ -112,23 +125,18 @@ class Conformer(nn.Module):
         inputes_T = torch.permute(inputs, dims=[0, 2, 1])
         input_lengths = torch.tensor([inputs.shape[-1] for _ in range(inputs.shape[0])]).to(inputs.device)
         encoder_outputs, encoder_output_lengths = self.encoder(inputes_T, input_lengths)
-        out = self.decode(encoder_outputs)
-        outputs = torch.permute(out, dims=[0, 2, 1])
+        out = self.cls(encoder_outputs)
+        outputs = out.unsqueeze(0)
+        for decoder in self.decoders:
+            out = decoder(F.softmax(out, dim=2), encoder_outputs)
+            outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
+        outputs = torch.permute(outputs, dims=[0, 1, 3, 2])
 
         # pool shape
-        outputs = outputs.unsqueeze(0)
         outputs = F.interpolate(
             input=outputs,
-            size=(self.num_classes, inputs.shape[-1]),
-            mode="nearest"
-        ).squeeze(0)
-
-        outputs = outputs * masks[:, 0:1, ::self.sample_rate]
-        outputs = outputs.unsqueeze(0)
-        outputs = F.interpolate(
-            input=outputs,
-            scale_factor=[1, self.sample_rate],
-            mode="nearest")
+            size=[self.num_classes, masks.shape[-1]],
+            mode="nearest") * masks[:, 0:1, :]
             
         if self.out_feature is True:
             return inputs, outputs

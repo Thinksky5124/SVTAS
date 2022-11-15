@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:04:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 15:13:57
+LastEditTime : 2022-11-14 20:57:34
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/conformer_gtea.py
 '''
@@ -18,14 +18,17 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-clip_seg_num = 512
+clip_seg_num = 128
+batch_size = 2
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_Conformer_512x1_gtea_split" + str(split)
+model_name = "Stream_Conformer_128x1_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
         input_dim = 2048,
-        num_encoder_layers = 4,
+        encoder_dim = 64,
+        num_stages = 3,
+        num_encoder_layers = 1,
         input_dropout_p = 0.5,
         num_attention_heads = 8,
         feed_forward_expansion_factor = 4,
@@ -33,7 +36,7 @@ MODEL = dict(
         feed_forward_dropout_p = 0.1,
         attention_dropout_p = 0.1,
         conv_dropout_p = 0.1,
-        conv_kernel_size = 31,
+        conv_kernel_size = 21,
         half_step_residual = True,
         num_classes = num_classes,
         sample_rate = sample_rate
@@ -53,18 +56,18 @@ POSTPRECESSING = dict(
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
-    video_batch_size = 2,
-    num_workers = 2,
+    video_batch_size = batch_size,
+    num_workers = batch_size * 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        # flow_feature_path = "./data/gtea/flow_features",
+        feature_path = "./data/gtea/features",
+        flow_feature_path = "./data/gtea/flow_features",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        # flow_feature_path = "./data/gtea/flow_features",
+        feature_path = "./data/gtea/features",
+        flow_feature_path = "./data/gtea/flow_features",
         sliding_window = sliding_window
     )
 )

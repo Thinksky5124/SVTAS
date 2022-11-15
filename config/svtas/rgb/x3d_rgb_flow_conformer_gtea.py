@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-11-05 20:27:29
+Date         : 2022-11-14 21:16:31
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-14 21:09:53
+LastEditTime : 2022-11-14 21:46:03
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/i3d_rgb_flow_conformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/x3d_rgb_flow_conformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -14,7 +14,7 @@ _base_ = [
 split = 1
 num_classes = 11
 sample_rate = 1
-gop_size=1
+gop_size=16
 flow_clip_seg_num = 128
 flow_sliding_window = 128
 rgb_clip_seg_num = flow_clip_seg_num // gop_size
@@ -23,19 +23,26 @@ rgb_sliding_window = flow_sliding_window
 ignore_index = -100
 batch_size = 2
 epochs = 50
-model_name = "I3D_Flow_Rgb_Freeze_IPB_Conformer_128x1_gtea_split" + str(split)
+model_name = "X3D_Flow_Rgb_Freeze_IPB_Conformer_128x1_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "MultiModalityStreamSegmentation",
+    rgb_backbone_type='2d',
+    flow_backbone_type='2d',
     rgb_backbone = dict(
-        name = "I3D",
-        pretrained = "./data/checkpoint/i3d_rgb.pt",
-        in_channels = 3
+        name = "MobileNetV2TSM",
+        pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
+        clip_seg_num = rgb_clip_seg_num,
+        shift_div = 8,
+        out_indices = (7, )
     ),
     flow_backbone = dict(
-        name = "I3D",
-        pretrained = "./data/checkpoint/i3d_flow.pt",
-        in_channels = 2
+        name = "MobileNetV2TSM",
+        # pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
+        clip_seg_num = flow_clip_seg_num,
+        in_channels = 2,
+        shift_div = 8,
+        out_indices = (7, )
     ),
     # neck = dict(
     #     name = "IPBFusionNeck",
@@ -53,13 +60,13 @@ MODEL = dict(
     # ),
     neck = dict(
         name = "MultiModalityFusionNeck",
-        clip_seg_num = flow_clip_seg_num // 8,
+        clip_seg_num = flow_clip_seg_num,
         fusion_mode ='stack',
         fusion_neck_module = dict(
             name = "AvgPoolNeck",
             num_classes = num_classes,
-            in_channels = 2048,
-            clip_seg_num = flow_clip_seg_num // 8,
+            in_channels = 384,
+            clip_seg_num = flow_clip_seg_num,
             drop_ratio = 0.5,
             need_pool = True
         )
@@ -67,8 +74,8 @@ MODEL = dict(
     head = dict(
         name = "Conformer",
         num_classes = num_classes,
-        sample_rate = sample_rate * 8,
-        input_dim = 2048,
+        sample_rate = sample_rate,
+        input_dim = 384,
         encoder_dim = 64,
         num_stages = 3,
         num_encoder_layers = 1,
@@ -79,8 +86,9 @@ MODEL = dict(
         feed_forward_dropout_p = 0.1,
         attention_dropout_p = 0.1,
         conv_dropout_p = 0.1,
-        conv_kernel_size = 3,
+        conv_kernel_size = 7,
         half_step_residual = True,
+        need_subsampling = False,
     ),
     loss = dict(
         name = "SegmentationLoss",
@@ -109,7 +117,7 @@ OPTIMIZER = dict(
     finetuning_scale_factor=0.1,
     no_decay_key = [],
     finetuning_key = [],
-    freeze_key = ["rgb_backbone", "flow_backbone"],
+    freeze_key = [],
 )
 
 DATASET = dict(
