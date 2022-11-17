@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:48:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-08 10:07:39
+LastEditTime : 2022-11-15 16:19:23
 Description  : MultiModality Fusion Neck Model
 FilePath     : /SVTAS/svtas/model/necks/multimodality_fusion_neck.py
 '''

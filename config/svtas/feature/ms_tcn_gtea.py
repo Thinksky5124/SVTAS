@@ -1,17 +1,16 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-10-25 16:24:30
+Date         : 2022-11-16 20:17:28
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-16 10:48:11
+LastEditTime : 2022-11-16 20:39:44
 Description  : file content
-FilePath     : /SVTAS/config/tas/feature/ms_tcn_gtea.py
+FilePath     : /SVTAS/config/svtas/feature/ms_tcn_gtea.py
 '''
-
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/temporal_action_segmentation/ms_tcn.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
-    '../../_base_/dataset/gtea/gtea_feature.py'
+    '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
+    '../../_base_/dataset/gtea/gtea_stream_feature.py'
 ]
 
 split = 1
@@ -19,11 +18,17 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-in_channels = 512
-model_name = "MSTCN_gtea_split" + str(split)
+clip_seg_num = 512
+batch_size = 2
+in_channels = 2048
+sliding_window = clip_seg_num * sample_rate
+model_name = "Stream_MS_TCN_512x1_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
+        num_stages = 4,
+        num_layers = 10,
+        num_f_maps = 64,
         dim = in_channels,
         num_classes = num_classes,
         sample_rate = sample_rate
@@ -36,19 +41,26 @@ MODEL = dict(
 )
 
 POSTPRECESSING = dict(
-    name = "ScorePostProcessing",
-    num_classes = num_classes,
+    name = "StreamScorePostProcessing",
+    sliding_window = sliding_window,
     ignore_index = ignore_index
 )
 
 DATASET = dict(
+    temporal_clip_batch_size = 3,
+    video_batch_size = batch_size,
+    num_workers = batch_size * 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        # flow_feature_path = "./data/gtea/flow_features"
+        feature_path = "./data/gtea/raw_features",
+        # flow_feature_path = "./data/gtea/flow_features",
+        sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        # flow_feature_path = "./data/gtea/flow_features"
+        feature_path = "./data/gtea/raw_features",
+        # flow_feature_path = "./data/gtea/flow_features",
+        sliding_window = sliding_window
     )
 )
 
@@ -69,11 +81,14 @@ PIPELINE = dict(
                  )
         ),
         sample = dict(
-            name = "FeatureSampler",
+            name = "FeatureStreamSampler",
             is_train = True,
-            sample_rate_dict={ "feature": sample_rate,"labels": sample_rate },
-            sample_add_key_pair={ "frames": "feature" },
-            sample_mode = "uniform",
+            sample_rate_dict={"feature":sample_rate, "labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
+            sample_add_key_pair={"frames":"feature"},
+            feature_dim_dict={"feature":in_channels},
+            sample_mode = "uniform"
         ),
         transform = dict(
             name = "FeatureStreamTransform",
@@ -94,11 +109,14 @@ PIPELINE = dict(
                  )
         ),
         sample = dict(
-            name = "FeatureSampler",
+            name = "FeatureStreamSampler",
             is_train = False,
-            sample_rate_dict={ "feature": sample_rate,"labels": sample_rate },
-            sample_add_key_pair={ "frames": "feature" },
-            sample_mode = "uniform",
+            sample_rate_dict={"feature":sample_rate, "labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
+            sample_add_key_pair={"frames":"feature"},
+            feature_dim_dict={"feature":in_channels},
+            sample_mode = "uniform"
         ),
         transform = dict(
             name = "FeatureStreamTransform",

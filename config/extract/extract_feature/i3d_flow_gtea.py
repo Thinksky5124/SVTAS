@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:53:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 15:29:29
+LastEditTime : 2022-11-15 14:04:22
 Description  : I3D Extractor Config
 FilePath     : /SVTAS/config/extract/extract_feature/i3d_flow_gtea.py
 '''
@@ -55,7 +55,7 @@ DATASET = dict(
 PIPELINE = dict(
     name = "BasePipline",
     decode = dict(
-        name = "FlowVideoDecoder",
+        name = "VideoDecoder",
         backend = dict(
                 name='DecordContainer',
                 to_ndarray=True,
@@ -69,7 +69,6 @@ PIPELINE = dict(
         sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
         sample_add_key_pair={"frames":"imgs"},
         sample_mode = "uniform",
-        channel_mode = "XY"
     ),
     transform = dict(
         name = "VideoStreamTransform",

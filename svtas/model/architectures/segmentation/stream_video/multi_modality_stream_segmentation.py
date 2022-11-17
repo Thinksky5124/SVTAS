@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-14 21:53:09
+LastEditTime : 2022-11-15 18:53:43
 Description  : Multi Modality stream segmentation
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/multi_modality_stream_segmentation.py
 '''

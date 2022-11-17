@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:04:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-14 20:57:34
+LastEditTime : 2022-11-16 21:26:38
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/conformer_gtea.py
 '''
@@ -20,12 +20,13 @@ ignore_index = -100
 epochs = 50
 clip_seg_num = 128
 batch_size = 2
+in_channels = 2048
 sliding_window = clip_seg_num * sample_rate
 model_name = "Stream_Conformer_128x1_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
-        input_dim = 2048,
+        input_dim = in_channels,
         encoder_dim = 64,
         num_stages = 3,
         num_encoder_layers = 1,
@@ -36,7 +37,7 @@ MODEL = dict(
         feed_forward_dropout_p = 0.1,
         attention_dropout_p = 0.1,
         conv_dropout_p = 0.1,
-        conv_kernel_size = 21,
+        conv_kernel_size = 15,
         half_step_residual = True,
         num_classes = num_classes,
         sample_rate = sample_rate
@@ -60,14 +61,14 @@ DATASET = dict(
     num_workers = batch_size * 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/features",
-        flow_feature_path = "./data/gtea/flow_features",
+        feature_path = "./data/gtea/raw_features",
+        # flow_feature_path = "./data/gtea/flow_features",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/features",
-        flow_feature_path = "./data/gtea/flow_features",
+        feature_path = "./data/gtea/raw_features",
+        # flow_feature_path = "./data/gtea/flow_features",
         sliding_window = sliding_window
     )
 )
@@ -95,7 +96,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":2048},
+            feature_dim_dict={"feature":in_channels},
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -123,7 +124,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":2048},
+            feature_dim_dict={"feature":in_channels},
             sample_mode = "uniform"
         ),
         transform = dict(

@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 15:13:45
+LastEditTime : 2022-11-16 21:35:32
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_gtea.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/cosine_warmup_restart_50e.py',
     '../../_base_/models/temporal_action_segmentation/asformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_feature.py'
@@ -19,7 +19,7 @@ sample_rate = 1
 ignore_index = -100
 epochs = 50
 clip_seg_num = 512
-sliding_window = 512
+sliding_window = clip_seg_num * sample_rate
 dim = 2048
 model_name = "Stream_Asformer_512x1_gtea_split" + str(split)
 
@@ -66,9 +66,9 @@ DATASET = dict(
     )
 )
 
-LRSCHEDULER = dict(
-    step_size = [epochs]
-)
+# LRSCHEDULER = dict(
+#     step_size = [epochs]
+# )
 
 PIPELINE = dict(
     train = dict(
@@ -89,7 +89,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":2048},
+            feature_dim_dict={"feature":dim},
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -117,7 +117,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":2048},
+            feature_dim_dict={"feature":dim},
             sample_mode = "uniform"
         ),
         transform = dict(
