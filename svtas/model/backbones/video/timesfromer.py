@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:21:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-02 10:23:12
+LastEditTime : 2022-11-19 13:19:12
 Description  : Timesformer backbone ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/timesformer.py
 FilePath     : /SVTAS/svtas/model/backbones/video/timesfromer.py
 '''
@@ -104,7 +104,7 @@ class TimeSformer(nn.Module):
                  num_frames,
                  img_size,
                  patch_size,
-                 pool='mean',
+                 pool='mean_space',
                  pretrained=None,
                  embed_dims=768,
                  num_heads=12,

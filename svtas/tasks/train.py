@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-13 15:55:50
+LastEditTime : 2022-11-17 14:09:20
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -138,11 +138,12 @@ def train(cfg,
 
     # wheather batch train
     batch_train = False
-    if cfg.COLLATE.name in ["BatchCompose"]:
+    if cfg.COLLATE.train.name in ["BatchCompose"]:
         batch_train = True
-
+    batch_test = False
+    if cfg.COLLATE.test.name in ["BatchCompose"]:
+        batch_test = True
     # 5. Construct Dataset
-    sliding_concate_fn = build_pipline(cfg.COLLATE)
     train_dataset_config = cfg.DATASET.train
     train_dataset_config['pipeline'] = train_Pipeline
     train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -153,7 +154,7 @@ def train(cfg,
         build_dataset(train_dataset_config),
         batch_size=temporal_clip_batch_size,
         num_workers=num_workers,
-        collate_fn=sliding_concate_fn)
+        collate_fn=build_pipline(cfg.COLLATE.train))
     
     if validate:
         val_dataset_config = cfg.DATASET.test
@@ -166,7 +167,7 @@ def train(cfg,
             build_dataset(val_dataset_config),
             batch_size=temporal_clip_batch_size,
             num_workers=num_workers,
-            collate_fn=sliding_concate_fn)
+            collate_fn=build_pipline(cfg.COLLATE.test))
 
     # 6. Train Model
     record_dict = build_recod(cfg.MODEL.architecture, mode="train")
@@ -204,8 +205,10 @@ def train(cfg,
         for i, data in enumerate(train_dataloader):
             if batch_train is True:
                 runner.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
-            else:
+            elif len(data) == temporal_clip_batch_size or len(data[0]['labels'].shape) != 0:
                 runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+            else:
+                break
             r_tic = time.time()
             
         if local_rank <= 0:
@@ -243,10 +246,12 @@ def train(cfg,
             runner.epoch_init()
             r_tic = time.time()
             for i, data in enumerate(val_dataloader):
-                if batch_train is True:
+                if batch_test is True:
                     runner.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
-                else:
+                elif len(data) == temporal_clip_batch_size or len(data[0]['labels'].shape) != 0:
                     runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+                else:
+                    break
                 r_tic = time.time()
 
             best_flag = False

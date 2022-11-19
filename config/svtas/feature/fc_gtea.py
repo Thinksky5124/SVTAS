@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-11-03 20:04:41
+Date         : 2022-11-18 15:23:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-18 15:12:31
+LastEditTime : 2022-11-18 15:24:26
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/conformer_gtea.py
+FilePath     : /SVTAS/config/svtas/feature/fc_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -26,22 +26,12 @@ model_name = "Stream_Conformer_16x4_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
-        input_dim = in_channels,
-        encoder_dim = 64,
-        num_stages = 3,
-        num_encoder_layers = 1,
-        input_dropout_p = 0.5,
-        num_attention_heads = 8,
-        feed_forward_expansion_factor = 4,
-        conv_expansion_factor = 2,
-        feed_forward_dropout_p = 0.1,
-        attention_dropout_p = 0.1,
-        conv_dropout_p = 0.1,
-        conv_kernel_size = 3,
-        half_step_residual = True,
-        need_subsampling = True,
+        name = "FCHead",
         num_classes = num_classes,
-        sample_rate = sample_rate
+        sample_rate = sample_rate,
+        clip_seg_num = clip_seg_num,
+        drop_ratio=0.5,
+        in_channels=in_channels
     ),
     loss = dict(
         num_classes = num_classes,

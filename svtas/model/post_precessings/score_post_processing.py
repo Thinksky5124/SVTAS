@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 18:50:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 19:30:38
+LastEditTime : 2022-11-17 14:18:08
 Description  : Score Post precessing Module
 FilePath     : /SVTAS/svtas/model/post_precessings/score_post_processing.py
 '''
@@ -13,9 +13,7 @@ from ..builder import POSTPRECESSING
 @POSTPRECESSING.register()
 class ScorePostProcessing():
     def __init__(self,
-                 num_classes,
                  ignore_index=-100):
-        self.num_classes = num_classes
         self.ignore_index = ignore_index
         self.init_flag = False
         self.epls = 1e-10

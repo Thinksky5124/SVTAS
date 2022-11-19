@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 14:04:30
+LastEditTime : 2022-11-18 14:06:18
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -79,9 +79,9 @@ def test(cfg,
             model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
     # wheather batch train
-    batch_train = False
-    if cfg.COLLATE.name in ["BatchCompose"]:
-        batch_train = True
+    batch_test = False
+    if cfg.COLLATE.test.name in ["BatchCompose"]:
+        batch_test = True
 
     # 2. Construct dataset and dataloader.
     # default num worker: 0, which means no subprocess will be created
@@ -89,7 +89,7 @@ def test(cfg,
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    sliding_concate_fn = build_pipline(cfg.COLLATE)
+    sliding_concate_fn = build_pipline(cfg.COLLATE.test)
     test_Pipeline = build_pipline(cfg.PIPELINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_Pipeline
@@ -143,22 +143,27 @@ def test(cfg,
     runner.epoch_init()
     r_tic = time.time()
     for i, data in enumerate(test_dataloader):
-        if batch_train is True:
+        if batch_test is True:
             runner.run_one_batch(data=data, r_tic=r_tic)
-        else:
+        elif len(data) == temporal_clip_batch_size or len(data[0]['labels'].shape) != 0:
             runner.run_one_iter(data=data, r_tic=r_tic)
+        else:
+            break
         r_tic = time.time()
 
     if local_rank <= 0:
         # metric output
         runner.Metric.accumulate()
-
+        clip_seg_num = list(cfg.PIPELINE.test.sample.clip_seg_num_dict.values())[0]
+        sample_rate = list(cfg.PIPELINE.test.sample.sample_rate_dict.values())[0]
         # model param flops caculate
         if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-            image_size = cfg.PIPELINE.test.transform.transform_list[1]['CenterCrop']['size']
-            x_shape = [cfg.DATASET.test.clip_seg_num, 3, image_size, image_size]
-            mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-            labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+            for transform_op in cfg.PIPELINE.test.transform.transform_list:
+                if list(transform_op.keys())[0] in ['CenterCrop']:
+                    image_size = transform_op['CenterCrop']['size']
+            x_shape = [clip_seg_num, 3, image_size, image_size]
+            mask_shape = [clip_seg_num * sample_rate]
+            labels_shape = [clip_seg_num * sample_rate]
             input_shape = (x_shape, mask_shape, labels_shape)
             def input_constructor(input_shape, optimal_batch_size=1):
                 x_shape, mask_shape, labels_shape = input_shape
@@ -168,9 +173,9 @@ def test(cfg,
                 return dict(input_data=dict(imgs=x, masks=mask, labels=label))
             dummy_input = input_constructor(input_shape)
         else:
-            x_shape = [cfg.DATASET.test.clip_seg_num, 2048]
-            mask_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
-            labels_shape = [cfg.DATASET.test.clip_seg_num * cfg.DATASET.test.sample_rate]
+            x_shape = [clip_seg_num, 2048]
+            mask_shape = [clip_seg_num * sample_rate]
+            labels_shape = [clip_seg_num * sample_rate]
             input_shape = (x_shape, mask_shape, labels_shape)
             def input_constructor(input_shape, optimal_batch_size=1):
                 x_shape, mask_shape, labels_shape = input_shape
@@ -186,10 +191,10 @@ def test(cfg,
         logger.info("="*20)
         logger.info('Use mmcv get_model_complexity_info function')
         flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)
-        flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
+        flops_per_image_number = flops_number / clip_seg_num
         flops, params = clever_format([flops_number, params_number], "%.6f")
         flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.6f")
-        logger.info("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
+        logger.info("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=clip_seg_num))
         logger.info("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops + ", Total params:" + params)
         logger.info("="*20)
 
@@ -199,10 +204,10 @@ def test(cfg,
         flops = FlopCountAnalysis(model, inputs)
         logger.info("flop_count_table: \n" + flop_count_table(flops))
         flops_number = flops.total()
-        flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
+        flops_per_image_number = flops_number / clip_seg_num
         flops = clever_format([flops_number], "%.6f")
         flops_per_image = clever_format([flops_per_image_number], "%.6f")
-        logger.info("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
+        logger.info("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=clip_seg_num))
         logger.info("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops)
         logger.info("="*20)
 
@@ -229,7 +234,7 @@ def test(cfg,
                 timings[rep] = curr_time
         mean_syn = np.sum(timings) / repetitions
         std_syn = np.std(timings)
-        mean_fps = 1000. / mean_syn * cfg.DATASET.test.clip_seg_num
+        mean_fps = 1000. / mean_syn * clip_seg_num
         logger.info('Mean@1 {mean_syn:.3f}ms, Std@5 {std_syn:.3f}ms, FPS@1 {mean_fps:.2f}'.format(mean_syn=mean_syn, std_syn=std_syn, mean_fps=mean_fps))
         logger.info('Model single forward test time(ms) {mean_syn:.3f}ms'.format(mean_syn=mean_syn))
         logger.info("="*20)

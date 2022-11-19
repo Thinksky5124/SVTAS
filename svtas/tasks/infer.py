@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:49:56
+LastEditTime : 2022-11-18 14:07:23
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
@@ -56,9 +56,9 @@ def infer(cfg,
         model = build_model(cfg.MODEL).to(device)
 
     # wheather batch train
-    batch_train = False
-    if cfg.COLLATE.name in ["BatchCompose"]:
-        batch_train = True
+    batch_infer = False
+    if cfg.COLLATE.infer.name in ["BatchCompose"]:
+        batch_infer = True
 
     # 2. Construct dataset and dataloader.
     # default num worker: 0, which means no subprocess will be created
@@ -67,7 +67,7 @@ def infer(cfg,
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     assert video_batch_size == 1, "Only Support video_batch_size equal to 1!"
-    sliding_concate_fn = build_pipline(cfg.COLLATE)
+    sliding_concate_fn = build_pipline(cfg.COLLATE.infer)
     infer_Pipeline = build_pipline(cfg.PIPELINE.infer)
     infer_dataset_config = cfg.DATASET.infer
     infer_dataset_config['pipeline'] = infer_Pipeline
@@ -100,7 +100,9 @@ def infer(cfg,
         
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        image_size = cfg.PIPELINE.infer.transform.transform_list[1]['CenterCrop']['size']
+        for transform_op in cfg.PIPELINE.test.transform.transform_list:
+                if list(transform_op.keys())[0] in ['CenterCrop']:
+                    image_size = transform_op['CenterCrop']['size']
         x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]
         mask_shape = [cfg.DATASET.infer.clip_seg_num * cfg.DATASET.infer.sample_rate]
         input_shape = (x_shape, mask_shape)
@@ -180,7 +182,7 @@ def infer(cfg,
     runner.epoch_init()
     r_tic = time.time()
     for i, data in enumerate(infer_dataloader):
-        if batch_train is True:
+        if batch_infer is True:
             runner.run_one_batch(data=data, r_tic=r_tic)
         else:
             runner.run_one_iter(data=data, r_tic=r_tic)

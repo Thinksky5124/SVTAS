@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-12 15:08:46
+LastEditTime : 2022-11-17 13:47:22
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -267,3 +267,40 @@ class VideoSampler(VideoStreamSampler):
                          sample_mode=sample_mode,
                          frame_idx_key=frame_idx_key)
 
+@SAMPLER.register()
+class VideoClipSampler(VideoStreamSampler):
+    """
+    Sample frames id.
+    Returns:
+        frames_idx: the index of sampled #frames.
+    """
+
+    def __init__(self,
+                 is_train=False,
+                 clip_seg_num_dict={"imgs":15, "labels":15},
+                 sample_rate_dict={"imgs":1, "labels":1},
+                 ignore_index=-100,
+                 sample_add_key_pair={"frames":"imgs"},
+                 channel_mode_dict={"imgs":"RGB"},
+                 sample_mode='linspace',
+                 frame_idx_key='sample_sliding_idx'):
+        super().__init__(is_train=is_train,
+                         sample_rate_dict=sample_rate_dict,
+                         clip_seg_num_dict=clip_seg_num_dict,
+                         sample_add_key_pair=sample_add_key_pair,
+                         sliding_window_dict={"imgs":1000, "labels":1000},
+                         ignore_index=ignore_index,
+                         channel_mode_dict=channel_mode_dict,
+                         sample_mode=sample_mode,
+                         frame_idx_key=frame_idx_key)
+
+    def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):
+        frames_len = int(results['frames_len'])
+        video_len = int(results['video_len'])
+        small_frames_video_len = min(frames_len, video_len)
+
+        # generate sample index
+        start_frame = random.randint(0, small_frames_video_len - sample_num * sample_rate)
+        end_frame = start_frame + sample_num * sample_rate
+
+        return start_frame, end_frame

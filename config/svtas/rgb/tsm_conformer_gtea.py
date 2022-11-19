@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-16 16:18:28
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-17 10:09:33
+LastEditTime : 2022-11-19 11:17:07
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/tsm_asformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/tsm_conformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -21,7 +21,7 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "TSM_Asformer_256x1_gtea_split" + str(split)
+model_name = "TSM_Conformer_32x2_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
@@ -41,22 +41,28 @@ MODEL = dict(
         need_pool = True
     ),
     head = dict(
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 1280,
-        channel_masking_rate = 0.5,
+        name = "Conformer",
         num_classes = num_classes,
-        sample_rate = sample_rate
+        sample_rate = sample_rate,
+        input_dim = 1280,
+        encoder_dim = 64,
+        num_stages = 3,
+        num_encoder_layers = 1,
+        input_dropout_p = 0.5,
+        num_attention_heads = 8,
+        feed_forward_expansion_factor = 4,
+        conv_expansion_factor = 2,
+        feed_forward_dropout_p = 0.1,
+        attention_dropout_p = 0.1,
+        conv_dropout_p = 0.1,
+        conv_kernel_size = 3,
+        half_step_residual = True,
     ),
     loss = dict(
         name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 0.15,
+        smooth_weight = 1.0,
         ignore_index = -100
     )      
 )
@@ -72,28 +78,33 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005,
-    weight_decay = 1e-4,
+    learning_rate = 0.001,
+    weight_decay = 1e-5,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
     finetuning_scale_factor=0.1,
     no_decay_key = [],
-    finetuning_key = ["backbone"],
+    finetuning_key = [],
     freeze_key = [],
 )
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = batch_size * 2,
+    num_workers = batch_size,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        sliding_window = sliding_window,
+        sliding_window = sliding_window
     )
+)
+
+METRIC = dict(
+    file_output = True,
+    score_output = True
 )
 
 PIPELINE = dict(
@@ -106,7 +117,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = False,
+            is_train = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},

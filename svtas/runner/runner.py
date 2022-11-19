@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 15:26:58
+LastEditTime : 2022-11-17 10:36:52
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''

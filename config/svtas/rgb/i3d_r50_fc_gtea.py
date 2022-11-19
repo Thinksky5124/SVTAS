@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-11-16 16:18:28
+Date         : 2022-11-19 11:14:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-17 10:09:33
+LastEditTime : 2022-11-19 14:30:09
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/tsm_asformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/i3d_r50_fc_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -21,42 +21,53 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "TSM_Asformer_256x1_gtea_split" + str(split)
+model_name = "I3D_R50_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "Recognition2D",
+    architecture = "Recognition3D",
     backbone = dict(
-        name = "MobileNetV2TSM",
-        pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
-        clip_seg_num = clip_seg_num,
-        shift_div = 8,
-        out_indices = (7, ),
-        frozen_stages = 2,
+        name = "ResNet3d",
+        pretrained = "./data/checkpoint/i3d_r50_256p_32x2x1_100e_kinetics400_rgb_20200801-7d9f44de.pth",
+        in_channels=3,
+        pretrained2d=False,
+        depth=50,
+        conv1_kernel=(5, 7, 7),
+        conv1_stride_t=2,
+        pool1_stride_t=1,
+        conv_cfg=dict(type='Conv3d'),
+        norm_eval=False,
+        inflate=((1, 1, 1), (1, 0, 1, 0), (1, 0, 1, 0, 1, 0), (0, 1, 0)),
+        zero_init_residual=False,
+        with_pool1=False,
+        with_pool2=True,
     ),
     neck = dict(
         name = "AvgPoolNeck",
         num_classes = num_classes,
-        in_channels = 1280,
-        clip_seg_num = clip_seg_num,
+        in_channels = 2048,
+        clip_seg_num = clip_seg_num // 8,
         need_pool = True
     ),
     head = dict(
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
+        # name = "FCHead",
+        # num_classes = num_classes,
+        # sample_rate = sample_rate * 8,
+        # clip_seg_num = clip_seg_num // 8,
+        # drop_ratio=0.5,
+        # in_channels=2048
+        name = "MultiStageModel",
+        num_stages = 1,
+        num_layers = 4,
         num_f_maps = 64,
-        input_dim = 1280,
-        channel_masking_rate = 0.5,
+        dim = 2048,
         num_classes = num_classes,
-        sample_rate = sample_rate
+        sample_rate = sample_rate * 8
     ),
     loss = dict(
         name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 0.15,
+        smooth_weight = 1.0,
         ignore_index = -100
     )      
 )
@@ -72,28 +83,33 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005,
-    weight_decay = 1e-4,
+    learning_rate = 0.001,
+    weight_decay = 1e-5,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
     finetuning_scale_factor=0.1,
     no_decay_key = [],
-    finetuning_key = ["backbone"],
+    finetuning_key = [],
     freeze_key = [],
 )
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = batch_size * 2,
+    num_workers = batch_size,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        sliding_window = sliding_window,
+        sliding_window = sliding_window
     )
+)
+
+METRIC = dict(
+    file_output = True,
+    score_output = True
 )
 
 PIPELINE = dict(
@@ -106,7 +122,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = False,
+            is_train = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},

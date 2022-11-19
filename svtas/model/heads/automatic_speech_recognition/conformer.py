@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 14:42:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-14 21:26:22
+LastEditTime : 2022-11-18 14:14:34
 Description  : ConFormer Head for Action Segmentation ref:https://github.com/sooftware/conformer/blob/main/conformer/model.py
 FilePath     : /SVTAS/svtas/model/heads/automatic_speech_recognition/conformer.py
 '''
@@ -57,7 +57,7 @@ class Conformer(nn.Module):
             conv_dropout_p: float = 0.1,
             conv_kernel_size: int = 31,
             half_step_residual: bool = True,
-            need_subsampling = True,
+            need_subsampling: bool = True,
     ) -> None:
         super(Conformer, self).__init__()
         self.sample_rate = sample_rate
