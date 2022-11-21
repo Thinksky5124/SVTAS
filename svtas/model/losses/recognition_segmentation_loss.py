@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:34:43
+LastEditTime : 2022-11-21 15:22:19
 Description: Action recognition model loss
 FilePath     : /SVTAS/svtas/model/losses/recognition_segmentation_loss.py
 '''
@@ -40,7 +40,6 @@ class RecognitionSegmentationLoss(nn.Module):
             raise NotImplementedError
 
     def forward(self, model_output, input_data):
-        score = model_output["output"]
         masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
         # seg_score [stage_num, N, C, T]
         # masks [N, T]
@@ -57,7 +56,7 @@ class RecognitionSegmentationLoss(nn.Module):
             masks = torch.repeat_interleave(masks, self.sample_rate, dim=-1)
 
         loss_info = {"masks": masks, "labels": labels, "precise_sliding_num": precise_sliding_num}
-        loss = self.criteria(score, loss_info)['loss']
+        loss = self.criteria(model_output, loss_info)['loss']
 
         loss_dict={}
         loss_dict["loss"] = loss

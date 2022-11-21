@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-15 18:53:43
+LastEditTime : 2022-11-20 20:22:25
 Description  : Multi Modality stream segmentation
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/multi_modality_stream_segmentation.py
 '''
@@ -82,11 +82,12 @@ class MultiModalityStreamSegmentation(nn.Module):
             masks = nn.functional.adaptive_max_pool3d(masks, output_size=[x.shape[2], 1, 1])
         elif self.flow_backbone_type == '2d':
             # x.shape=[N,T,C,H,W], for most commonly case
+            masks = masks[:, :, ::self.sample_rate]
             masks = nn.functional.adaptive_max_pool1d(masks, output_size=[x.shape[1]])
             x = torch.reshape(x, [-1] + list(x.shape[2:])).contiguous()
             # x [N * T, C, H, W]
             # masks.shape [N * T, 1, 1, 1]
-            masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            masks = torch.reshape(masks.transpose(1, 2), [-1, 1, 1, 1])
         else:
             raise NotImplementedError
         return x, masks
@@ -99,12 +100,13 @@ class MultiModalityStreamSegmentation(nn.Module):
             masks = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
             masks = nn.functional.adaptive_max_pool3d(masks, output_size=[x.shape[2], 1, 1])
         elif self.rgb_backbone_type == '2d':
-            masks = nn.functional.adaptive_max_pool1d(masks, output_size=[x.shape[1]])
             # x.shape=[N,T,C,H,W], for most commonly case
+            masks = masks[:, :, ::self.sample_rate]
+            masks = nn.functional.adaptive_max_pool1d(masks, output_size=[x.shape[1]])
             x = torch.reshape(x, [-1] + list(x.shape[2:])).contiguous()
             # x [N * T, C, H, W]
             # masks.shape [N * T, 1, 1, 1]
-            masks = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            masks = torch.reshape(masks.transpose(1, 2), [-1, 1, 1, 1])
         else:
             raise NotImplementedError
         return x, masks

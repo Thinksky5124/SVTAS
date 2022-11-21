@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:16:02
+LastEditTime : 2022-11-21 14:44:20
 Description: Action Recognition 2D framework
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition2d.py
 '''

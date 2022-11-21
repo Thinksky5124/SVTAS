@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-11-15 15:02:52
+Date         : 2022-11-05 20:27:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-15 18:54:30
+LastEditTime : 2022-11-20 20:23:43
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/i3d_r50_rgb_flow_mstcn_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/tsm_rgb_flow_conformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -13,88 +13,77 @@ _base_ = [
 ]
 split = 1
 num_classes = 11
-sample_rate = 4
-gop_size = 1
-flow_clip_seg_num = 512
-flow_sliding_window = flow_clip_seg_num * sample_rate
+sample_rate = 2
+gop_size=1
+flow_clip_seg_num = 32
+flow_sliding_window = sample_rate * flow_clip_seg_num
 rgb_clip_seg_num = flow_clip_seg_num // gop_size
 rgb_sliding_window = flow_sliding_window
 
 ignore_index = -100
 batch_size = 2
 epochs = 50
-model_name = "I3D_R50_Flow_Rgb_Freeze_Asformer_512x1_gtea_split" + str(split)
+model_name = "TSM_Flow_Rgb_Freeze_IPB_Conformer_"+str(flow_clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "MultiModalityStreamSegmentation",
+    rgb_backbone_type='2d',
+    flow_backbone_type='2d',
     rgb_backbone = dict(
-        name = "ResNet3d",
-        pretrained = "./data/checkpoint/slowonly_r50_256p_4x16x1_256e_kinetics400_rgb_20200820-bea7701f.pth",
-        depth=50,
-        pretrained2d=False,
+        name = "MobileNetV2TSM",
+        pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
         in_channels=3,
-        conv1_kernel=(1,7,7),
-        conv1_stride_t=1,
-        pool1_stride_t=1,
-        inflate=(0, 0, 1, 1),
-        norm_eval=False
+        clip_seg_num = rgb_clip_seg_num,
+        shift_div = 8,
+        out_indices = (7, ),
+        frozen_stages = 2,
     ),
     flow_backbone = dict(
-        name = "ResNet3d",
-        pretrained = "./data/checkpoint/slowonly_r50_4x16x1_256e_kinetics400_flow_20200704-decb8568.pth",
-        depth=50,
-        pretrained2d=False,
+        name = "MobileNetV2TSM",
+        # pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
         in_channels=2,
-        conv1_kernel=(1,7,7),
-        conv1_stride_t=1,
-        pool1_stride_t=1,
-        inflate=(0, 0, 1, 1),
-        norm_eval=False
+        clip_seg_num = flow_clip_seg_num,
+        shift_div = 8,
+        out_indices = (7, ),
+        # frozen_stages = 2,
     ),
-    # neck = dict(
-    #     name = "IPBFusionNeck",
-    #     gop_size = gop_size,
-    #     spatial_expan_mode ='trilinear',
-    #     parse_method ='separate',
-    #     fusion_neck_module = dict(
-    #         name = "AvgPoolNeck",
-    #         num_classes = num_classes,
-    #         in_channels = 2048,
-    #         clip_seg_num = flow_clip_seg_num // 8,
-    #         drop_ratio = 0.5,
-    #         need_pool = True
-    #     )
-    # ),
     neck = dict(
         name = "MultiModalityFusionNeck",
-        clip_seg_num = flow_clip_seg_num // 2,
+        clip_seg_num = flow_clip_seg_num,
         fusion_mode ='stack',
         fusion_neck_module = dict(
             name = "AvgPoolNeck",
             num_classes = num_classes,
-            in_channels = 2048+2048,
-            clip_seg_num = flow_clip_seg_num // 2,
+            in_channels = 2560,
+            clip_seg_num = flow_clip_seg_num,
             drop_ratio = 0.5,
             need_pool = True
         )
     ),
     head = dict(
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 2048+2048,
-        channel_masking_rate = 0.5,
+        name = "Conformer",
         num_classes = num_classes,
-        sample_rate = sample_rate * 2
+        sample_rate = sample_rate,
+        input_dim = 2560,
+        encoder_dim = 64,
+        num_stages = 1,
+        num_encoder_layers = 1,
+        input_dropout_p = 0.5,
+        num_attention_heads = 8,
+        feed_forward_expansion_factor = 4,
+        conv_expansion_factor = 2,
+        feed_forward_dropout_p = 0.1,
+        attention_dropout_p = 0.1,
+        conv_dropout_p = 0.1,
+        conv_kernel_size = 11,
+        half_step_residual = True,
+        need_subsampling = False,
     ),
     loss = dict(
         name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 0.15,
+        smooth_weight = 1.0,
         ignore_index = -100
     )
 )
@@ -117,7 +106,7 @@ OPTIMIZER = dict(
     finetuning_scale_factor=0.1,
     no_decay_key = [],
     finetuning_key = [],
-    freeze_key = ["rgb_backbone", "flow_backbone"],
+    freeze_key = [],
 )
 
 DATASET = dict(

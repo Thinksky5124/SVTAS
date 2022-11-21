@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-07 10:16:08
+LastEditTime : 2022-11-21 12:10:45
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -58,8 +58,7 @@ def parse_args():
         help='whether to use amp to accelerate')
     parser.add_argument(
         '--use_tensorboard',
-        type=bool,
-        default=False,
+        action='store_true',
         help='whether to use tensorboard to visualize train')
     parser.add_argument(
         '--seed',

@@ -3,7 +3,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-15 10:06:02
+LastEditTime : 2022-11-19 14:34:10
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet_3d.py
 '''
@@ -407,6 +407,7 @@ class ResNet3d(nn.Module):
                  num_stages=4,
                  base_channels=64,
                  out_indices=(3, ),
+                 pool2_indices=(0, ),
                  spatial_strides=(1, 2, 2, 2),
                  temporal_strides=(1, 1, 1, 1),
                  dilations=(1, 1, 1, 1),
@@ -471,6 +472,7 @@ class ResNet3d(nn.Module):
         self.zero_init_residual = zero_init_residual
 
         self.block, stage_blocks = self.arch_settings[depth]
+        self.pool2_indices = pool2_indices
 
         if self.stage_blocks is None:
             self.stage_blocks = stage_blocks[:num_stages]
@@ -869,7 +871,7 @@ class ResNet3d(nn.Module):
         for i, layer_name in enumerate(self.res_layers):
             res_layer = getattr(self, layer_name)
             x = res_layer(x)
-            if i == 0 and self.with_pool2:
+            if i in self.pool2_indices and self.with_pool2:
                 x = self.pool2(x)
             if i in self.out_indices:
                 outs.append(x)

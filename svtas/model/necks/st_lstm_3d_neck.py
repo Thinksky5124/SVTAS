@@ -17,7 +17,7 @@ from .memory_layer import ConvLSTMResidualLayer
 from ..builder import NECKS
 
 @NECKS.register()
-class ST3DNeck(nn.Module):
+class LSTMST3DNeck(nn.Module):
     def __init__(self,
                  num_classes=11,
                  num_layers=1,

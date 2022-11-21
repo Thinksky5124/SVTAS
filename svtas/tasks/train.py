@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-17 14:09:20
+LastEditTime : 2022-11-21 10:58:23
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -135,6 +135,11 @@ def train(cfg,
     scheduler_cfg = cfg.LRSCHEDULER
     scheduler_cfg['optimizer'] = optimizer
     scheduler = build_lr_scheduler(scheduler_cfg)
+    grad_clip_cfg = cfg.get("GRADCLIP", None)
+    if grad_clip_cfg is not None:
+        grad_clip = build_optimizer(grad_clip_cfg)
+    else:
+        grad_clip = None
 
     # wheather batch train
     batch_train = False
@@ -177,6 +182,7 @@ def train(cfg,
 
     # construct train runner
     runner = Runner(optimizer=optimizer,
+                grad_clip=grad_clip,
                 logger=logger,
                 video_batch_size=video_batch_size,
                 Metric=Metric,

@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-11-19 11:14:54
+Date         : 2022-11-20 11:02:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-19 14:44:45
+LastEditTime : 2022-11-20 11:12:32
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/i3d_r50_fc_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/timesformer_fc_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -14,7 +14,7 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 32
+clip_seg_num = 8
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
@@ -26,42 +26,27 @@ model_name = "I3D_R50_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" 
 MODEL = dict(
     architecture = "Recognition3D",
     backbone = dict(
-        name = "ResNet3d",
-        pretrained = "./data/checkpoint/i3d_r50_256p_32x2x1_100e_kinetics400_rgb_20200801-7d9f44de.pth",
-        in_channels=3,
-        pretrained2d=False,
-        depth=50,
-        conv1_kernel=(5, 7, 7),
-        conv1_stride_t=2,
-        pool1_stride_t=1,
-        conv_cfg=dict(type='Conv3d'),
-        norm_eval=False,
-        inflate=((1, 1, 1), (1, 0, 1, 0), (1, 0, 1, 0, 1, 0), (0, 1, 0)),
-        zero_init_residual=False,
-        with_pool1=True,
-        with_pool2=True,
+        name = "TimeSformer",
+        pretrained = "./data/checkpoint/timesformer_divST_8x32x1_15e_kinetics400_rgb-3f8e5d03.pth",
+        num_frames = clip_seg_num,
+        img_size = 224,
+        patch_size = 16,
+        embed_dims = 768
     ),
     neck = dict(
         name = "AvgPoolNeck",
         num_classes = num_classes,
-        in_channels = 2048,
-        clip_seg_num = clip_seg_num // 8,
+        in_channels = 768,
+        clip_seg_num = clip_seg_num,
         need_pool = True
     ),
     head = dict(
-        # name = "FCHead",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 8,
-        # clip_seg_num = clip_seg_num // 8,
-        # drop_ratio=0.5,
-        # in_channels=2048
-        name = "MultiStageModel",
-        num_stages = 1,
-        num_layers = 4,
-        num_f_maps = 64,
-        dim = 2048,
+        name = "FCHead",
         num_classes = num_classes,
-        sample_rate = sample_rate * 8
+        sample_rate = sample_rate,
+        clip_seg_num = clip_seg_num,
+        drop_ratio=0.5,
+        in_channels=768
     ),
     loss = dict(
         name = "SegmentationLoss",
@@ -83,7 +68,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.001,
+    learning_rate = 0.0005,
     weight_decay = 1e-5,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,

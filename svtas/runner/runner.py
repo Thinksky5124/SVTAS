@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-17 10:36:52
+LastEditTime : 2022-11-21 14:26:57
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -36,12 +36,14 @@ class Runner():
                  record_dict=None,
                  criterion=None,
                  optimizer=None,
+                 grad_clip=None,
                  use_amp=False,
                  nprocs=1,
                  local_rank=-1,
                  runner_mode='train',
                  need_grad_accumulate=True):
         self.optimizer = optimizer
+        self.grad_clip = grad_clip
         self.logger = logger
         self.video_batch_size = video_batch_size
         self.Metric = Metric
@@ -203,6 +205,9 @@ class Runner():
                     scaled_loss.backward()
             else:
                 loss.backward()
+                if self.grad_clip is not None:
+                    for param_group in self.optimizer.param_groups:
+                        self.grad_clip(param_group['params'])
             
             if not self.need_grad_accumulate:
                 self.optimizer.step()

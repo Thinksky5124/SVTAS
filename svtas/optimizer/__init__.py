@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:10:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-16 20:00:45
+LastEditTime : 2022-11-21 10:54:44
 Description  : optimizer module
 FilePath     : /SVTAS/svtas/optimizer/__init__.py
 '''
@@ -15,6 +15,7 @@ from .optim.adan_optimizer import AdanOptimizer
 from .optim.adamw_optimizer import AdamWOptimizer
 from .lr_scheduler.cosine_annealing_lr import CosineAnnealingLR
 from .lr_scheduler import WarmupMultiStepLR, WarmupCosineLR, CosineAnnealingWarmupRestarts
+from .grad_clip import GradClip
 
 __all__ = [
     'MultiStepLR',
@@ -22,5 +23,6 @@ __all__ = [
     'AdamOptimizer', 'TSMAdamOptimizer',
     'AdanOptimizer', 'AdamWOptimizer',
     'CosineAnnealingLR', 'WarmupMultiStepLR',
-    'WarmupCosineLR', 'CosineAnnealingWarmupRestarts'
+    'WarmupCosineLR', 'CosineAnnealingWarmupRestarts',
+    'GradClip'
 ]

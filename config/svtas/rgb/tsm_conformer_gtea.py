@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-16 16:18:28
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-19 11:17:07
+LastEditTime : 2022-11-20 19:36:04
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/tsm_conformer_gtea.py
 '''
@@ -21,7 +21,7 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "TSM_Conformer_32x2_gtea_split" + str(split)
+model_name = "TSM_Conformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
@@ -46,7 +46,7 @@ MODEL = dict(
         sample_rate = sample_rate,
         input_dim = 1280,
         encoder_dim = 64,
-        num_stages = 3,
+        num_stages = 1,
         num_encoder_layers = 1,
         input_dropout_p = 0.5,
         num_attention_heads = 8,
@@ -55,8 +55,9 @@ MODEL = dict(
         feed_forward_dropout_p = 0.1,
         attention_dropout_p = 0.1,
         conv_dropout_p = 0.1,
-        conv_kernel_size = 3,
+        conv_kernel_size = 11,
         half_step_residual = True,
+        need_subsampling = False,
     ),
     loss = dict(
         name = "SegmentationLoss",
@@ -78,7 +79,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.001,
+    learning_rate = 0.0005,
     weight_decay = 1e-5,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,

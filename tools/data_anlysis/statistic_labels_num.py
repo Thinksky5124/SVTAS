@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-10 10:15:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-19 10:21:28
+LastEditTime : 2022-11-20 19:18:35
 Description  : statistic labels number for dataset
-FilePath     : /ETESVS/tools/statistic_labels_num.py
+FilePath     : /SVTAS/tools/data_anlysis/statistic_labels_num.py
 '''
 import argparse
 import os
@@ -69,12 +69,26 @@ def main() -> None:
 
     num_dict = {}
     total_frame_cnt = {}
+    duration_list = []
 
     for file_name in tqdm(file_list, desc="label count"):
         video_name = file_name.split('.')[0]
         label_path = os.path.join(args.labels_path, video_name + '.txt')
         file_ptr = open(label_path, 'r')
         content = file_ptr.read().split('\n')[:-1]
+
+        # save action duration
+        boundary_index_list = [0]
+        before_action_name = content[0]
+        for index in range(1, len(content)):
+            if before_action_name != content[index]:
+                boundary_index_list.append(index)
+                before_action_name = content[index]
+        boundary_index_list.append(len(content) - 1)
+        for index in range(len(boundary_index_list) - 1):
+            start_frame = float(boundary_index_list[index])
+            end_frame = float(boundary_index_list[index + 1] - 1)
+            duration_list.append(end_frame - start_frame)
 
         count_dict = pd.value_counts(content)
 
@@ -85,6 +99,16 @@ def main() -> None:
             else:
                 num_dict[key] = num_dict[key] + value
                 total_frame_cnt[key] = total_frame_cnt[key] + len(content)
+    
+    num_duraction = np.array(duration_list)
+    
+    plt.hist(num_duraction, bins=100, density = True, range=(0, 400))
+    plt.vlines(32, 0, 0.03, color="red")
+    plt.title('hist for action duration')
+    plt.xlabel("Frame duration")
+    plt.ylabel('Density')
+    plt.savefig(os.path.join(args.output_dir, "action_duration_count.png"), bbox_inches='tight', dpi=500)
+    plt.close()
     
     print(num_dict)
 
