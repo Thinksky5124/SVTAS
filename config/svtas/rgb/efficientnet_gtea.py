@@ -2,19 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 19:19:35
+LastEditTime : 2022-11-21 16:26:13
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/efficientnet_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
-    '../../_base_/models/image_classification/mobilenet_v2.py',
+    '../../_base_/models/image_classification/efficientnet.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
 
 num_classes = 11
-sample_rate = 1
+sample_rate = 2
 clip_seg_num = 32
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
@@ -22,14 +22,14 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "MobileNetV2_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "EfficientNet_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
     backbone = dict(
-        name = "MobileNetV2",
-        pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
-        out_indices = (7, )
+        name = "EfficientNet",
+        arch='b1',
+        pretrained="data/checkpoint/efficientnet-b1_3rdparty_8xb32_in1k_20220119-002556d9.pth",
     ),
     neck = dict(
         name = "AvgPoolNeck",
@@ -47,12 +47,12 @@ MODEL = dict(
         in_channels=1280
     ),
     loss = dict(
-        name = "LovaszSegmentationLoss",
+        name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 1.0,
+        smooth_weight = 0.15,
         ignore_index = -100
-    )  
+    )        
 )
 
 POSTPRECESSING = dict(

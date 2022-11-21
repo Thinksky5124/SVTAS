@@ -254,7 +254,7 @@ class MobileNetV2TMM(MobileNetV2TSM):
         if issubclass(type(m), TemporalMemoryBlock):
             m._resert_memory()
 
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         if self.is_memory:
             self.make_temporal_memory()
         

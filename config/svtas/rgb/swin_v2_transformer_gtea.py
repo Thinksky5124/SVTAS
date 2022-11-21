@@ -2,19 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 19:19:35
+LastEditTime : 2022-11-21 20:37:16
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_v2_transformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
-    '../../_base_/models/image_classification/mobilenet_v2.py',
+    '../../_base_/models/image_classification/swin_v2_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
 
 num_classes = 11
-sample_rate = 1
+sample_rate = 2
 clip_seg_num = 32
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
@@ -22,19 +22,25 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "MobileNetV2_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformerV2_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
     backbone = dict(
-        name = "MobileNetV2",
-        pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
-        out_indices = (7, )
-    ),
+        name = "SwinTransformerV2",
+        pretrained = "./data/checkpoint/swinv2_tiny_patch4_window8_256.pth",
+        img_size=256,
+        in_chans=3,
+        embed_dim=96,
+        depths=[2, 2, 6, 2],
+        num_heads=[3, 6, 12, 24],
+        window_size=8,
+        drop_path_rate=0.2,
+    ), 
     neck = dict(
         name = "AvgPoolNeck",
         num_classes = num_classes,
-        in_channels = 1280,
+        in_channels = 768,
         clip_seg_num = clip_seg_num,
         need_pool = True
     ),
@@ -44,15 +50,15 @@ MODEL = dict(
         sample_rate = sample_rate,
         clip_seg_num = clip_seg_num,
         drop_ratio=0.5,
-        in_channels=1280
+        in_channels=768
     ),
     loss = dict(
-        name = "LovaszSegmentationLoss",
+        name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 1.0,
+        smooth_weight = 0.15,
         ignore_index = -100
-    )  
+    )        
 )
 
 POSTPRECESSING = dict(
@@ -111,7 +117,7 @@ PIPELINE = dict(
             name = "VideoStreamTransform",
             transform_list = [
                 dict(ResizeImproved = dict(size = 256)),
-                dict(RandomCrop = dict(size = 224)),
+                dict(RandomCrop = dict(size = 256)),
                 dict(RandomHorizontalFlip = None),
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
@@ -142,7 +148,7 @@ PIPELINE = dict(
             name = "VideoStreamTransform",
             transform_list = [
                 dict(ResizeImproved = dict(size = 256)),
-                dict(CenterCrop = dict(size = 224)),
+                dict(CenterCrop = dict(size = 256)),
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(

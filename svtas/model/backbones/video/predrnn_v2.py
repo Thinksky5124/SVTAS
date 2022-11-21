@@ -46,7 +46,7 @@ class PredRNNV2(nn.Module):
     def _clear_memory_buffer(self):
         self.init_hidden_state_falg = True
     
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")

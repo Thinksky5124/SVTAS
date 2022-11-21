@@ -624,7 +624,7 @@ class SwinTransformer3D(nn.Module):
     def _clear_memory_buffer(self):
         pass
 
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         """Initialize the weights in backbone.
 
         Args:

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 15:23:34
+LastEditTime : 2022-11-21 16:27:04
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/efficientformer_gtea.py
 '''
@@ -22,7 +22,7 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "EfficientFormer_FC"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "EfficientFormer_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",

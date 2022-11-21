@@ -2,11 +2,11 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-02 14:20:12
+LastEditTime : 2022-11-21 18:55:05
 Description: file content
 FilePath     : /SVTAS/svtas/model/backbones/__init__.py
 '''
-from .image import ResNet, MobileNetV2, MobileViT, ViT, SLViT, CLIP
+from .image import ResNet, MobileNetV2, MobileViT, VisionTransformer, SLViT, CLIP
 from .flow import FastFlowNet, RAFT, LiteFlowNetV3
 from .video import (ResNet2Plus1d, ResNet3d, PredRNNV2, I3D, X3D,
                     MobileNetV2TSM, MoViNet, TimeSformer, ResNetTSM,
@@ -18,8 +18,8 @@ __all__ = [
     'ResNet', 'ResNetTSM', 'CLIP',
     'MobileNetV2', 'MobileNetV2TSM', 'MobileNetV2TMM',
     'ResNet3d', 'FastFlowNet', 'RAFT', 'I3D', 'X3D',
-    'MoViNet',
-    'MobileViT', 'ViT', 'TimeSformer', 'SLViT',
+    'MoViNet', 'LiteFlowNetV3',
+    'MobileViT', 'VisionTransformer', 'TimeSformer', 'SLViT',
     'ResNet3d', 'ResNet2Plus1d',
     'PredRNNV2',
     'TransducerTextEncoder', 'TransducerAudioEncoder'

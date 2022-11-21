@@ -2,14 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 13:55:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 14:24:44
+LastEditTime : 2022-11-21 21:01:59
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientformer.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientformer.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import itertools
 from typing import Optional, Sequence
-import math
 
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
@@ -596,8 +595,14 @@ class EfficientFormer(BaseBackbone):
     
     def _clear_memory_buffer(self):
         pass
-    
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
+        revise_keys.append((r'network.1.0.proj', r'network.1.0.conv'))
+        revise_keys.append((r'network.1.0.norm', r'network.1.0.bn'))
+        revise_keys.append((r'network.2.0.proj', r'network.2.0.conv'))
+        revise_keys.append((r'network.2.0.norm', r'network.2.0.bn'))
+        revise_keys.append((r'network.3.0.proj', r'network.3.0.conv'))
+        revise_keys.append((r'network.3.0.norm', r'network.3.0.bn'))
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")

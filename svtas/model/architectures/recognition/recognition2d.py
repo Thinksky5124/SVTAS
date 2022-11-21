@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:59:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 14:44:20
+LastEditTime : 2022-11-21 20:56:08
 Description: Action Recognition 2D framework
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition2d.py
 '''
@@ -48,7 +48,7 @@ class Recognition2D(nn.Module):
 
     def init_weights(self):
         if self.backbone is not None:
-            self.backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
+            self.backbone.init_weights(child_model=False)
         if self.neck is not None:
             self.neck.init_weights()
         if self.head is not None:

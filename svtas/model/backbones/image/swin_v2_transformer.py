@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:55:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:06:36
+LastEditTime : 2022-11-21 20:47:24
 Description  : Swin Transformer V2 model ref:https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer_v2.py
 FilePath     : /SVTAS/svtas/model/backbones/image/swin_v2_transformer.py
 '''
@@ -19,7 +19,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import numpy as np
-from mmcv.runner import load_checkpoint
+from mmcv.runner import load_state_dict
 from ....utils.logger import get_logger
 from ...builder import BACKBONES
 
@@ -164,7 +164,7 @@ class WindowAttention(nn.Module):
 
         # cosine attention
         attn = (F.normalize(q, dim=-1) @ F.normalize(k, dim=-1).transpose(-2, -1))
-        logit_scale = torch.clamp(self.logit_scale, max=torch.log(torch.tensor(1. / 0.01))).exp()
+        logit_scale = torch.clamp(self.logit_scale, max=torch.log(torch.tensor(1. / 0.01, device=attn.device))).exp()
         attn = attn * logit_scale
 
         relative_position_bias_table = self.cpb_mlp(self.relative_coords_table).view(-1, self.num_heads)
@@ -555,9 +555,10 @@ class SwinTransformerV2(nn.Module):
                  patch_norm=True,
                  use_checkpoint=False,
                  pretrained_window_sizes=[0, 0, 0, 0],
+                 pretrained=None,
                  **kwargs):
         super().__init__()
-
+        self.pretrained = pretrained
         self.num_layers = len(depths)
         self.embed_dim = embed_dim
         self.ape = ape
@@ -603,34 +604,27 @@ class SwinTransformerV2(nn.Module):
             self.layers.append(layer)
 
         self.norm = norm_layer(self.num_features)
+        self.avgpool = nn.AdaptiveAvgPool1d(1)
     
     def _clear_memory_buffer(self):
         pass
-
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
-        def _init_weights(self, m):
-            if isinstance(m, nn.Linear):
-                trunc_normal_(m.weight, std=.02)
-                if isinstance(m, nn.Linear) and m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.LayerNorm):
+    
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-                nn.init.constant_(m.weight, 1.0)
-        
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
+
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
-                self.apply(self._init_weights)
-                for bly in self.layers:
-                    bly._init_respostnorm()
-                logger = get_logger()
+                logger = get_logger("SVTAS")
                 logger.info(f'load model from: {self.pretrained}')
-
-                if self.pretrained2d:
-                    # Inflate 2D model into 3D model.
-                    self.inflate_weights(logger)
-                else:
-                    # Directly load 3D model.
-                    load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                state_dict = torch.load(self.pretrained)['model']
+                load_state_dict(self, state_dict, strict=False, logger=logger)
             elif self.pretrained is None:
                 self.apply(self._init_weights)
                 for bly in self.layers:
@@ -660,6 +654,7 @@ class SwinTransformerV2(nn.Module):
             x = layer(x)
 
         x = self.norm(x)  # B L C
+        x = self.avgpool(x.transpose(1, 2)).squeeze(-1)  # B C 1
         return x
     
     def flops(self):

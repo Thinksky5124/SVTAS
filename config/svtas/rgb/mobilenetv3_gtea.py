@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 19:19:35
+LastEditTime : 2022-11-21 19:22:24
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/mobilenetv3_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
-    '../../_base_/models/image_classification/mobilenet_v2.py',
+    '../../_base_/models/image_classification/mobilenet_v3.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
@@ -22,19 +22,19 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "MobileNetV2_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "MobileNetV3_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
     backbone = dict(
-        name = "MobileNetV2",
-        pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
+        name = "MobileNetV3",
+        pretrained = "./data/checkpoint/mobilenet_v3_large-3ea3c186.pth",
         out_indices = (7, )
     ),
     neck = dict(
         name = "AvgPoolNeck",
         num_classes = num_classes,
-        in_channels = 1280,
+        in_channels = 80,
         clip_seg_num = clip_seg_num,
         need_pool = True
     ),
@@ -44,7 +44,7 @@ MODEL = dict(
         sample_rate = sample_rate,
         clip_seg_num = clip_seg_num,
         drop_ratio=0.5,
-        in_channels=1280
+        in_channels=80
     ),
     loss = dict(
         name = "LovaszSegmentationLoss",

@@ -46,7 +46,7 @@ class ResNet2Plus1d(ResNet3d):
     def _clear_memory_buffer(self):
         pass
 
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
             

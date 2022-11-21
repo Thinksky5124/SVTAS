@@ -147,7 +147,7 @@ class FastFlowNet(nn.Module):
         output = F.grid_sample(x, vgrid, mode='bilinear')
         return output
     
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")

@@ -107,7 +107,7 @@ class X3D(nn.Module):
                            spatial_dilations=spatial_dilations,
                            dropcounnect_rate=dropcounnect_rate)
     
-    def init_weights(self, child_model=False, revise_keys=[(r'^module\.', '')]):
+    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
