@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 21:09:29
+LastEditTime : 2022-11-22 14:32:22
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_v2_transformer_gtea.py
 '''

@@ -86,7 +86,10 @@ def setup_logger(output=None, name="SVTAS", level="INFO", tensorboard=False):
         if output.endswith(".txt") or output.endswith(".log"):
             filename = output
         else:
-            filename = os.path.join(output, name + ".log")
+            # aviod cover
+            filename = os.path.join(output, name + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") +".log")
+            if(os.path.exists(filename)):
+                filename = os.path.join(output, name + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") +".log")
         if local_rank > 0:
             filename = filename + ".rank{}".format(local_rank) + ".log"
 

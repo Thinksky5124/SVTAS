@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 10:58:23
+LastEditTime : 2022-11-22 16:01:39
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -103,8 +103,10 @@ def train(cfg,
 
     # 3. build metirc
     metric_cfg = cfg.METRIC
-    metric_cfg['train_mode'] = True
-    Metric = build_metric(metric_cfg)
+    Metric = dict()
+    for k, v in metric_cfg.items():
+        v['train_mode'] = True
+        Metric[k] = build_metric(v)
 
     # Resume
     resume_epoch = cfg.get("resume_epoch", 0)
@@ -219,7 +221,8 @@ def train(cfg,
             
         if local_rank <= 0:
             # metric output
-            runner.Metric.accumulate()
+            for k, v in runner.Metric.items():
+                v.accumulate()
         
         if local_rank >= 0:
             torch.distributed.barrier()
@@ -263,7 +266,11 @@ def train(cfg,
             best_flag = False
             if local_rank <= 0:
                 # metric output
-                Metric_dict = runner.Metric.accumulate()
+                for k, v in runner.Metric.items():
+                    if k == "TAS":
+                        Metric_dict = v.accumulate()
+                    else:
+                        v.accumulate()
                 
                 if Metric_dict[criterion_metric_name] > best:
                     best = Metric_dict[criterion_metric_name]

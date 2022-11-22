@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-18 14:06:18
+LastEditTime : 2022-11-22 16:01:10
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -121,7 +121,11 @@ def test(cfg,
         amp.load_state_dict(checkpoint['amp'])
 
     # add params to metrics
-    Metric = build_metric(cfg.METRIC)
+    metric_cfg = cfg.METRIC
+    Metric = dict()
+    for k, v in metric_cfg.items():
+        v['train_mode'] = True
+        Metric[k] = build_metric(v)
     
     record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
 
@@ -153,7 +157,8 @@ def test(cfg,
 
     if local_rank <= 0:
         # metric output
-        runner.Metric.accumulate()
+        for k, v in runner.Metric.items():
+            v.accumulate()
         clip_seg_num = list(cfg.PIPELINE.test.sample.clip_seg_num_dict.values())[0]
         sample_rate = list(cfg.PIPELINE.test.sample.sample_rate_dict.values())[0]
         # model param flops caculate

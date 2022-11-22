@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 21:17:47
+LastEditTime : 2022-11-22 15:19:20
 Description: recorder construct function
 FilePath     : /SVTAS/svtas/utils/recorder.py
 '''

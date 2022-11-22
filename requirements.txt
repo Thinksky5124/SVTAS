@@ -69,6 +69,7 @@ Pillow==9.1.1
 pkgconfig==1.5.5
 platformdirs==2.5.1
 portalocker==2.4.0
+prettytable==3.5.0
 prompt-toolkit==3.0.29
 protobuf==3.20.1
 psutil==5.9.0

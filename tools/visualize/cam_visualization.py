@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 11:13:02
+LastEditTime : 2022-11-22 15:08:36
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
@@ -131,7 +131,8 @@ if __name__ == '__main__':
     post_processing = CAMPostProcessing(sample_rate=visualize_cfg.sample_rate,
                                         ignore_index=visualize_cfg.ignore_index,
                                         fps=visualize_cfg.fps,
-                                        output_frame_size=visualize_cfg.output_frame_size)
+                                        output_frame_size=visualize_cfg.output_frame_size,
+                                        need_label=cfg.VISUALIZE.get('need_label', True))
 
     if args.method not in methods:
         raise Exception(f"Method {args.method} not implemented")

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-18 14:07:23
+LastEditTime : 2022-11-22 15:54:58
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
@@ -124,7 +124,11 @@ def infer(cfg,
         dummy_input = input_constructor(input_shape)
 
     # add params to metrics
-    Metric = build_metric(cfg.METRIC)
+    metric_cfg = cfg.METRIC
+    Metric = dict()
+    for k, v in metric_cfg.items():
+        v['train_mode'] = True
+        Metric[k] = build_metric(v)
     
     record_dict = {'batch_time': AverageMeter('batch_cost', '.5f'),
                     'reader_time': AverageMeter('reader_time', '.5f')}

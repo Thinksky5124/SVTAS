@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 21:08:48
+LastEditTime : 2022-11-22 14:24:06
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''
@@ -29,9 +29,9 @@ class SegmentationLoss(nn.Module):
         self.sample_rate = sample_rate
         self.elps = 1e-10
         self.loss_weight = loss_weight
-        if class_weight is not None:
-            class_weight = torch.tensor(class_weight)
-            self.ce = nn.CrossEntropyLoss(weight=class_weight, ignore_index=self.ignore_index, reduction='none')
+        self.class_weight = class_weight
+        if self.class_weight is not None:
+            self.ce = nn.CrossEntropyLoss(weight=torch.tensor(self.class_weight), ignore_index=self.ignore_index, reduction='none')
         else:
             self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.sm_loss = nn.MSELoss(reduction='none')

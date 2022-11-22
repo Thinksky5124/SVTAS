@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-14 15:25:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-14 15:59:11
+LastEditTime : 2022-11-22 14:17:06
 Description  : ref:https://github.com/bermanmaxim/LovaszSoftmax/blob/master/pytorch/lovasz_losses.py
 FilePath     : /SVTAS/svtas/model/losses/lovasz_softmax_loss.py
 '''
@@ -312,6 +312,8 @@ class LovaszSegmentationLoss(SegmentationLoss):
         # p [N C T]
         # labels [N T]
         loss = []
+        # sfotmax to 0-1
+        pred = F.softmax(pred, dim=1)
         for p, l, mask in zip(pred, labels, masks):
             loss.append(self.sm_loss(p.transpose(0, 1).contiguous() * mask.unsqueeze(1), l * mask).unsqueeze(0))
         loss = torch.concat(loss, dim=0) / (precise_sliding_num + self.elps)

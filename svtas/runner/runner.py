@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 14:26:57
+LastEditTime : 2022-11-22 15:56:43
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -146,8 +146,12 @@ class Runner():
                                 output_np=pred_score_list_i)
                 ground_truth_list = ground_truth_list_i
                 vid = vid_i
-
-        f1, acc = self.Metric.update(vid, ground_truth_list, outputs)
+        
+        for k, v in self.Metric.items():
+            if k == "TAS":
+                f1, acc = v.update(vid, ground_truth_list, outputs)
+            else:
+                v.update(vid, ground_truth_list, outputs)
 
         self.current_step_vid_list = vid_list
         if len(self.current_step_vid_list) > 0:
@@ -194,6 +198,8 @@ class Runner():
                     input_data[key] = value.cuda()
                 else:
                     input_data[key] = value
+        if not self.need_grad_accumulate:
+            input_data['precise_sliding_num'] = torch.ones_like(input_data['precise_sliding_num'])
 
         outputs = self.model(input_data)
         loss_dict = self.criterion(outputs, input_data)

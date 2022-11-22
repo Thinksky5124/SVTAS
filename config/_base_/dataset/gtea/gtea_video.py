@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:30:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 16:47:00
+LastEditTime : 2022-11-22 15:50:22
 Description  : file content
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_video.py
 '''
@@ -32,9 +32,16 @@ DATASET = dict(
 )
 
 METRIC = dict(
+    TAS = dict(
     name = "TASegmentationMetric",
     overlap = [.1, .25, .5],
     actions_map_file_path = "./data/gtea/mapping.txt",
     file_output = False,
-    score_output = False
+    score_output = False),
+    ACC = dict(
+    name = "ConfusionMatrix",
+    actions_map_file_path = "./data/gtea/mapping.txt",
+    img_save_path = "./output",
+    plot = True,
+    need_color_bar = True,),
 )
