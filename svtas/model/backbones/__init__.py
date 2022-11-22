@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 18:55:05
+LastEditTime : 2022-11-21 21:38:01
 Description: file content
 FilePath     : /SVTAS/svtas/model/backbones/__init__.py
 '''
@@ -16,7 +16,7 @@ from .audio import TransducerAudioEncoder
 
 __all__ = [
     'ResNet', 'ResNetTSM', 'CLIP',
-    'MobileNetV2', 'MobileNetV2TSM', 'MobileNetV2TMM',
+    'MobileNetV2', 'MobileNetV2TSM',
     'ResNet3d', 'FastFlowNet', 'RAFT', 'I3D', 'X3D',
     'MoViNet', 'LiteFlowNetV3',
     'MobileViT', 'VisionTransformer', 'TimeSformer', 'SLViT',

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:09:43
+LastEditTime : 2022-11-22 11:13:02
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
@@ -21,6 +21,7 @@ from mmcv.runner import load_state_dict
 from svtas.utils.logger import get_logger, setup_logger
 from tools.visualize.cam_forward_fn import cam_forward
 from svtas.runner.visual_runner import VisualRunner
+from svtas.model.post_precessings import CAMPostProcessing
 
 from pytorch_grad_cam import GradCAM, \
     ScoreCAM, \
@@ -31,47 +32,6 @@ from pytorch_grad_cam import GradCAM, \
     EigenGradCAM, \
     LayerCAM, \
     FullGrad
-
-class CAMPostProcessing():
-    def __init__(self,
-                 sample_rate,
-                 ignore_index=-100):
-        self.init_flag = False
-        self.ignore_index = ignore_index
-        self.sample_rate = sample_rate
-    
-    def init_scores(self):
-        self.imgs_list = []
-        self.labels_list = []
-        self.score_lsit = []
-        self.init_flag = True
-
-    def update(self, cam_images, labels, score, idx):
-        # seg_scores [stage_num N C T]
-        # gt [N T]
-        self.labels_list.append(labels)
-        self.imgs_list.append(cam_images)
-        with torch.no_grad():
-            pred = np.argmax(score.reshape([labels.shape[0], labels.shape[1], -1]).detach().cpu().numpy(), axis=-1)
-            self.score_lsit.append(pred)
-
-    def output(self):
-        imags_list = []
-        labels_list = []
-        preds_list = []
-
-        labels = np.concatenate(self.labels_list, axis=1)
-        imags = np.concatenate(self.imgs_list, axis=1)
-        preds = np.concatenate(self.score_lsit, axis=1)
-
-        for bs in range(imags.shape[0]):
-            index = np.where(labels[bs, :] == self.ignore_index)
-            ignore_start = min(list(index[0]) + [labels[bs].shape[-1]]) // self.sample_rate
-            imags_list.append(imags[bs, :ignore_start, :])
-            labels_list.append(labels[bs, ::self.sample_rate][:ignore_start])
-            preds_list.append(preds[bs, ::self.sample_rate][:ignore_start])
-
-        return imags_list, labels_list, preds_list
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -155,7 +115,7 @@ if __name__ == '__main__':
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
+    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.test)
     Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
     dataset_config = cfg.DATASET.config
     dataset_config['pipeline'] = Pipeline
@@ -169,7 +129,9 @@ if __name__ == '__main__':
     
     visualize_cfg = cfg.VISUALIZE
     post_processing = CAMPostProcessing(sample_rate=visualize_cfg.sample_rate,
-                                        ignore_index=visualize_cfg.ignore_index)
+                                        ignore_index=visualize_cfg.ignore_index,
+                                        fps=visualize_cfg.fps,
+                                        output_frame_size=visualize_cfg.output_frame_size)
 
     if args.method not in methods:
         raise Exception(f"Method {args.method} not implemented")

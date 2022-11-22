@@ -76,7 +76,7 @@ MODEL = dict(
         name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 0.15,
+        smooth_weight = 0.0,
         ignore_index = -100
     )      
 )

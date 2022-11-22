@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 19:26:20
+LastEditTime : 2022-11-22 09:53:38
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/visual_transformer_gtea.py
 '''
@@ -22,15 +22,15 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "VisualTransformer_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "VisualTransformer_B_32_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
     backbone = dict(
         name = "VisionTransformer",
-        pretrained = "./data/checkpoint/vit_b_16-c867db91.pth",
+        pretrained = "./data/checkpoint/vit_b_32-d86f8d99.pth",
         image_size = 224,
-        patch_size = 16,
+        patch_size = 32,
         num_layers = 12,
         num_heads = 12,
         hidden_dim = 768,
@@ -55,7 +55,7 @@ MODEL = dict(
         name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 0.15,
+        smooth_weight = 0.0,
         ignore_index = -100
     )        
 )

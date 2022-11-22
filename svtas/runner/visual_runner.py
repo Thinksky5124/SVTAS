@@ -2,12 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 19:02:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:13:33
+LastEditTime : 2022-11-22 11:12:17
 Description  : file content
 FilePath     : /SVTAS/svtas/runner/visual_runner.py
 '''
 import os
 import cv2
+import math
 import queue
 import numpy as np
 import torch
@@ -31,9 +32,13 @@ def reshape_transform(transform_form):
         return result
 
     # feature activation transform [N P C]
-    def reshape_transform_NPT(tensor, height=7, width=7):
-        result = tensor[:, 1:, :].reshape(tensor.size(0),
-                                        height, width, tensor.size(2))
+    def reshape_transform_NPC(tensor):
+        # for padding cls_token
+        # result = tensor[:, 1:, :].reshape(tensor.size(0), int(math.sqrt(tensor.size(1))),
+        #                                   int(math.sqrt(tensor.size(1))), tensor.size(2))
+        # for image
+        result = tensor.reshape(tensor.size(0), int(math.sqrt(tensor.size(1))),
+                                          int(math.sqrt(tensor.size(1))), tensor.size(2))
 
         # Bring the channels to the first dimension,
         # like in CNNs.
@@ -52,7 +57,7 @@ def reshape_transform(transform_form):
     if transform_form == "NCT":
         return reshape_transform_NCT
     elif transform_form == "NPC":
-        return reshape_transform_NPT
+        return reshape_transform_NPC
     elif transform_form == "NCTHW":
         return reshape_transform_NCTHW
     else:
@@ -130,50 +135,10 @@ class VisualRunner():
         
         # save feature file
         current_vid_list = self.current_step_vid_list
-        frame_height = self.visualize_cfg.output_frame_size[1]
-        frame_width = self.visualize_cfg.output_frame_size[0]
         for cam_imgs, vid, labels, preds in zip(cam_imgs_list, current_vid_list, labels_list, preds_list):
             cam_imgs_save_path = os.path.join(self.cam_imgs_out_path, vid + ".mp4")
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            
-            video = cv2.VideoWriter(cam_imgs_save_path, fourcc, self.visualize_cfg.fps, (frame_width, frame_height))
-            pred_queue = queue.Queue(maxsize=32)
-            label_queue = queue.Queue(maxsize=32)
-            for idx in range(cam_imgs.shape[0]):
-                img = cam_imgs[idx]
-                img = cv2.resize(img, (frame_width, frame_height))
-                # add pred and gt info
-                cv2.putText(img, "Prediction: " + self.actions_dict[preds[idx]], (0, frame_height - 100), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 255, 0), 2)
-                cv2.putText(img, "Groundtruth: " + self.actions_dict[labels[idx]], (0, frame_height - 80), cv2.FONT_HERSHEY_COMPLEX, 0.75, (0, 255, 0), 2)
-                if pred_queue.full():
-                    pred_queue.get()
-                    label_queue.get()
-                pred_queue.put([preds[idx]])
-                label_queue.put([labels[idx]])
-                pred_img = label_arr2img(pred_queue, self.palette).convert('RGB')
-                label_img = label_arr2img(label_queue, self.palette).convert('RGB')
-                past_width = int((label_img.size[0] / 32) * (frame_width - 40))
-                pred_img = cv2.cvtColor(np.asarray(pred_img),cv2.COLOR_RGB2BGR)
-                label_img = cv2.cvtColor(np.asarray(label_img),cv2.COLOR_RGB2BGR)
-                pred_img = cv2.resize(pred_img, (past_width, 20))
-                label_img = cv2.resize(label_img, (past_width, 20))
-                cv2.putText(img, "Pr: ", (0, frame_height - 35), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
-                img[(frame_height - 50):(frame_height - 30), 30:(30 + past_width), :] = pred_img
-                cv2.putText(img, "GT: ", (0, frame_height - 15), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
-                img[(frame_height - 30):(frame_height - 10), 30:(30 + past_width), :] = label_img
-                # Line 1 prediction Line 2 groundtruth
-                img = cv2.rectangle(img, (20 + past_width, frame_height - 10), (30 + past_width, frame_height - 50), (255, 255, 255), thickness=-1)
-                cv2.line(img, (30, frame_height - 30), (30 + past_width, frame_height - 30), (255,255,255), 1)
-                cv2.putText(img, "Current Frame", (max(past_width - 110, 0), frame_height - 55), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
-
-                data_pred = list(copy.deepcopy(pred_queue.queue))
-                data_label = list(copy.deepcopy(label_queue.queue))
-                array_pred = np.array(data_pred).transpose()
-                array_label = np.array(data_label).transpose()
-                label = list(set(array_pred[0, :].tolist()) | set(array_label[0, :].tolist()))
-                img = draw_action_label(img, self.palette, self.actions_dict, label)
-                video.write(img)
-            video.release()
+            stream_writer, v_len = cam_imgs["writer"], cam_imgs["len"]
+            stream_writer.save(cam_imgs_save_path, v_len, labels, preds, self.actions_dict, self.palette)
 
         self.logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(current_vid_list))
         self.current_step_vid_list = vid_list
@@ -195,7 +160,7 @@ class VisualRunner():
         input_tensor = input_data['imgs'].reshape([-1]+list(input_data['imgs'].shape[-3:]))
         with torch.no_grad():
             outputs = self.model(input_tensor)
-            score = outputs['output']
+            score = outputs
 
         grayscale_cam = self.cam(input_tensor=input_tensor,
                             targets=self.targets,

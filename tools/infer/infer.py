@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-21 16:30:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-24 13:20:18
+LastEditTime : 2022-11-22 10:53:11
 Description  : Multi Device Infer Script with visualize program
 FilePath     : /SVTAS/tools/infer/infer.py
 '''

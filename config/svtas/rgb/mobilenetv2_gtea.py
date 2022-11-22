@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 19:19:35
+LastEditTime : 2022-11-21 21:09:54
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_gtea.py
 '''
@@ -50,7 +50,7 @@ MODEL = dict(
         name = "LovaszSegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 1.0,
+        smooth_weight = 0.0,
         ignore_index = -100
     )  
 )

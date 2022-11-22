@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-14 15:40:12
+LastEditTime : 2022-11-21 21:08:48
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''
@@ -54,7 +54,8 @@ class SegmentationLoss(nn.Module):
         for p in head_score:
             seg_cls_loss = self.ce(p.transpose(2, 1).contiguous().view(-1, self.num_classes), labels.view(-1))
             loss += torch.sum(torch.sum(torch.reshape(seg_cls_loss, shape=[b, t]), dim=-1) / (precise_sliding_num + self.elps)) / (torch.sum(labels != -100) + self.elps)
-            loss += self.smooth_weight * self._compute_smooth_loss(p, labels, masks, b, precise_sliding_num)
+            if(self.smooth_weight> 0.0):
+                loss += self.smooth_weight * self._compute_smooth_loss(p, labels, masks, b, precise_sliding_num)
         
         loss_dict={}
         loss_dict["loss"] = loss * self.loss_weight
