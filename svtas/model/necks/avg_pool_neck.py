@@ -2,13 +2,12 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-05 21:40:01
+LastEditTime : 2022-11-22 20:47:03
 Description: avg pooling 3d to 2d neck
 FilePath     : /SVTAS/svtas/model/necks/avg_pool_neck.py
 '''
 import torch
-import copy
-import random
+import math
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -54,6 +53,9 @@ class AvgPoolNeck(nn.Module):
             # [N C T H W] -> [N * T, C, H, W]
             feature = feature.transpose(1, 2)
             feature = torch.reshape(feature, [-1] + list(feature.shape[-3:]))
+        elif len(list(feature.shape)) == 3 and feature.shape[-1] != self.clip_seg_num:
+            # [N C L]
+            feature = torch.reshape(feature, [feature.shape[0], feature.shape[1], int(math.sqrt(feature.shape[-1])), int(math.sqrt(feature.shape[-1]))])
 
         # backbone branch
         # x.shape = [N * num_segs, in_channels, 1, 1]

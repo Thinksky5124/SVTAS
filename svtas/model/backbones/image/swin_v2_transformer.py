@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:55:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 20:47:24
+LastEditTime : 2022-11-22 18:06:57
 Description  : Swin Transformer V2 model ref:https://github.com/microsoft/Swin-Transformer/blob/main/models/swin_transformer_v2.py
 FilePath     : /SVTAS/svtas/model/backbones/image/swin_v2_transformer.py
 '''
@@ -604,7 +604,6 @@ class SwinTransformerV2(nn.Module):
             self.layers.append(layer)
 
         self.norm = norm_layer(self.num_features)
-        self.avgpool = nn.AdaptiveAvgPool1d(1)
     
     def _clear_memory_buffer(self):
         pass
@@ -654,7 +653,7 @@ class SwinTransformerV2(nn.Module):
             x = layer(x)
 
         x = self.norm(x)  # B L C
-        x = self.avgpool(x.transpose(1, 2)).squeeze(-1)  # B C 1
+        x = x.transpose(1, 2) # B C L
         return x
     
     def flops(self):

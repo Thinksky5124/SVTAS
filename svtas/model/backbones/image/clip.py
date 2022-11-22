@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:01:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 10:57:03
+LastEditTime : 2022-11-22 18:05:38
 Description  : ImageCLIP ref:https://github.com/openai/CLIP/blob/main/clip/model.py
 FilePath     : /SVTAS/svtas/model/backbones/image/clip.py
 '''
@@ -477,7 +477,7 @@ class CLIP(nn.Module):
         logits_per_text = logits_per_image.t()
 
         # shape = [global_batch_size, global_batch_size]
-        return logits_per_image, 
+        return logits_per_image, logits_per_text
     
     def make_temporal_shift_vit(self, n_segment, n_div=8, place='block', temporal_pool=False):
         if temporal_pool:

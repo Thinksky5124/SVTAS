@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:08:16
+LastEditTime : 2022-11-22 20:59:25
 Description: Mobilenet V2 TSM model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2_tsm.py
 FilePath     : /SVTAS/svtas/model/backbones/video/mobilenet_v2_tsm.py
 '''

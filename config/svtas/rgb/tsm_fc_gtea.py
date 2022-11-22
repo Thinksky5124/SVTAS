@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-11-19 11:15:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-19 13:45:48
+LastEditTime : 2022-11-22 21:07:46
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/tsm_fc_gtea.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
@@ -25,35 +25,44 @@ model_name = "TSM_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + st
 
 MODEL = dict(
     architecture = "Recognition2D",
+    # backbone = dict(
+    #     name = "MobileNetV2TSM",
+    #     pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
+    #     clip_seg_num = clip_seg_num,
+    #     shift_div = 8,
+    #     out_indices = (7, ),
+    #     frozen_stages = 2,
+    # ),
     backbone = dict(
-        name = "MobileNetV2TSM",
-        pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
-        clip_seg_num = clip_seg_num,
+        name = "ResNetTSM",
+        pretrained = "./data/checkpoint/tsm_r50_256p_1x1x8_50e_kinetics400_rgb_20200726-020785e2.pth",
+        depth=50,
+        clip_seg_num = 8,
         shift_div = 8,
-        out_indices = (7, ),
-        frozen_stages = 2,
+        norm_eval=False,
+        torchvision_pretrain=False,
     ),
     neck = dict(
         name = "AvgPoolNeck",
         num_classes = num_classes,
-        in_channels = 1280,
+        in_channels = 2048,
         clip_seg_num = clip_seg_num,
         need_pool = True
     ),
     head = dict(
-        # name = "FCHead",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate,
-        # clip_seg_num = clip_seg_num,
-        # drop_ratio=0.5,
-        # in_channels=1280
-        name = "MultiStageModel",
-        num_stages = 1,
-        num_layers = 4,
-        num_f_maps = 64,
-        dim = 1280,
+        name = "FCHead",
         num_classes = num_classes,
-        sample_rate = sample_rate
+        sample_rate = sample_rate,
+        clip_seg_num = clip_seg_num,
+        drop_ratio=0.5,
+        in_channels=2048
+        # name = "MultiStageModel",
+        # num_stages = 1,
+        # num_layers = 4,
+        # num_f_maps = 64,
+        # dim = 1280,
+        # num_classes = num_classes,
+        # sample_rate = sample_rate
     ),
     loss = dict(
         name = "SegmentationLoss",
@@ -75,7 +84,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.001,
+    learning_rate = 0.0005,
     weight_decay = 1e-5,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
@@ -100,8 +109,9 @@ DATASET = dict(
 )
 
 METRIC = dict(
-    file_output = True,
-    score_output = True
+    TAS = dict(
+    file_output = False,
+    score_output = False),
 )
 
 PIPELINE = dict(

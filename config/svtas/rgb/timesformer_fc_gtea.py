@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-20 11:02:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-20 11:12:32
+LastEditTime : 2022-11-22 20:45:58
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/timesformer_fc_gtea.py
 '''
@@ -93,8 +93,9 @@ DATASET = dict(
 )
 
 METRIC = dict(
-    file_output = True,
-    score_output = True
+    TAS = dict(
+    file_output = False,
+    score_output = False),
 )
 
 PIPELINE = dict(

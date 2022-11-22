@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 18:39:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 19:29:31
+LastEditTime : 2022-11-22 18:07:59
 Description  : ref:https://github.com/pytorch/vision/blob/main/torchvision/models/vision_transformer.py
 FilePath     : /SVTAS/svtas/model/backbones/image/vision_transformer.py
 '''
@@ -303,6 +303,5 @@ class VisionTransformer(nn.Module):
         x = self.encoder(x)
 
         # Classifier "token" as used by standard language architectures
-        x = x[:, 0]
-
-        return x * masks.squeeze(-1).squeeze(-1)
+        x = x[:, 1:] * masks.squeeze(-1)
+        return x.transpose(1, 2)

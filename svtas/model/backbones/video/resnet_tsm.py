@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:58:51
+LastEditTime : 2022-11-22 21:04:50
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
-FilePath     : /ETESVS/model/backbones/video/resnet_tsm.py
+FilePath     : /SVTAS/svtas/model/backbones/video/resnet_tsm.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
@@ -311,7 +311,7 @@ class ResNetTSM(ResNet):
             
         if child_model is False:
             if isinstance(self.pretrained, str):
-                logger = get_logger("SVYAS")
+                logger = get_logger("SVTAS")
                 if self.torchvision_pretrain:
                     # torchvision's
                     self._load_torchvision_checkpoint(logger)

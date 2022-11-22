@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-16 16:18:28
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-20 19:36:04
+LastEditTime : 2022-11-22 20:45:50
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/tsm_conformer_gtea.py
 '''
@@ -104,8 +104,9 @@ DATASET = dict(
 )
 
 METRIC = dict(
-    file_output = True,
-    score_output = True
+    TAS = dict(
+    file_output = False,
+    score_output = False),
 )
 
 PIPELINE = dict(
