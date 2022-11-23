@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 16:01:10
+LastEditTime : 2022-11-23 15:19:23
 Description: test script api
-FilePath     : /SVTAS/svtas/tasks/test.py
+FilePath     : \ETESVS\svtas\tasks\test.py
 '''
 import torch
 from ..utils.logger import get_logger
@@ -124,7 +124,6 @@ def test(cfg,
     metric_cfg = cfg.METRIC
     Metric = dict()
     for k, v in metric_cfg.items():
-        v['train_mode'] = True
         Metric[k] = build_metric(v)
     
     record_dict = build_recod(cfg.MODEL.architecture, mode="validation")

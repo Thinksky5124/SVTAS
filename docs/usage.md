@@ -126,11 +126,3 @@ python -m paddle.distributed.launch \
     -c ./configs/example.yaml \
     --weights=./output/example/path_to_weights
 ```
-
-# Visualization
-```bash
-# gtea
-python tools/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 128
-# 50salads
-python tools/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
-```

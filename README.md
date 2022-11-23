@@ -60,6 +60,7 @@ pip freeze > requirements.txt
 - [Usage](docs/usage.md)
 - [Model Zoo](docs/model_zoo.md)
 - [Tools Usage](docs/tools_usage.md)
+- [Infer Guideline](docs/infer_guideline.md)
 
 # Citation
 ```bib
