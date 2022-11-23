@@ -59,6 +59,7 @@ pip freeze > requirements.txt
 - [Prepare Datset](docs/prepare_dataset.md)
 - [Usage](docs/usage.md)
 - [Model Zoo](docs/model_zoo.md)
+- [Tools Usage](docs/tools_usage.md)
 
 # Citation
 ```bib

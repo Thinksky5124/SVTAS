@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:30:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 18:01:30
+LastEditTime : 2022-11-23 11:56:28
 Description  : file content
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_stream_video.py
 '''

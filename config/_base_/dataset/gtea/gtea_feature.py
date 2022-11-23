@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:25:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:30:00
+LastEditTime : 2022-11-23 11:57:17
 Description  : gtea Dataset
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_feature.py
 '''
@@ -31,9 +31,10 @@ DATASET = dict(
 )
 
 METRIC = dict(
+    TAS = dict(
     name = "TASegmentationMetric",
     overlap = [.1, .25, .5],
     actions_map_file_path = "./data/gtea/mapping.txt",
     file_output = False,
-    score_output = False
+    score_output = False),
 )

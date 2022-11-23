@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:26:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 14:33:40
+LastEditTime : 2022-11-23 11:57:01
 Description  : EGTEA dataset config
 FilePath     : /SVTAS/config/_base_/dataset/egtea/egtea_feature.py
 '''
@@ -31,9 +31,10 @@ DATASET = dict(
 )
 
 METRIC = dict(
+    TAS = dict(
     name = "TASegmentationMetric",
     overlap = [.1, .25, .5],
     actions_map_file_path = "./data/egtea/mapping.txt",
     file_output = False,
-    score_output = False
+    score_output = False),
 )
