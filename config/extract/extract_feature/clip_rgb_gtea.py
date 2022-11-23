@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-16 09:53:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-16 09:53:46
+LastEditTime : 2022-11-23 11:42:35
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_feature/clip_rgb_gtea.py
 '''

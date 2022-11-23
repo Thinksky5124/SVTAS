@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:37:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 13:32:43
+LastEditTime : 2022-11-23 11:33:09
 Description  : Extract flow script
 FilePath     : /SVTAS/tools/extract/extract_flow.py
 '''
@@ -34,7 +34,7 @@ def extractor(cfg, args):
 
     assert video_batch_size == 1, "Only support 1 batch size"
 
-    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
+    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.test)
     Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
     dataset_config = cfg.DATASET.config
     dataset_config['pipeline'] = Pipeline

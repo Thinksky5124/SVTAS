@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 17:52:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 15:06:44
+LastEditTime : 2022-11-23 11:41:16
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/stream_writer.py
 '''
@@ -33,6 +33,34 @@ class StreamWriter(object):
     def dump(self, path):
         pass
 
+class NPYStreamWriter(StreamWriter):
+    def __init__(self):
+        super().__init__()
+        self.cnt = 0
+    
+    def stream_write(self, data):
+        npy_path = os.path.join(self.tempdir.name, str(self.cnt) + '.npy')
+        self.cnt = self.cnt + 1
+        np.save(npy_path, data)
+        self.concat_file_list.append(npy_path)
+    
+    def save(self, path, len):
+        temp_npy = np.load(self.dump_tem_file)
+        temp_npy = temp_npy[:, :len]
+        np.save(path, temp_npy)
+
+        self.cnt = 0
+        self.tempdir.cleanup()
+
+    def dump(self):        
+        self.dump_tem_file = os.path.join(self.tempdir.name, 'temp.npy')
+        
+        temp = []
+        for file_npy in self.concat_file_list:
+            temp_data = np.load(file_npy, allow_pickle=True)
+            temp.append(temp_data)
+        temp = np.concatenate(temp, axis=-1)
+        np.save(self.dump_tem_file, temp)
 
 class VideoStreamWriter(StreamWriter):
     def __init__(self,

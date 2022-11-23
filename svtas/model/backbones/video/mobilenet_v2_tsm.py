@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 20:59:25
+LastEditTime : 2022-11-22 22:47:53
 Description: Mobilenet V2 TSM model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2_tsm.py
 FilePath     : /SVTAS/svtas/model/backbones/video/mobilenet_v2_tsm.py
 '''
@@ -53,9 +53,6 @@ class MobileNetV2TSM(MobileNetV2):
     def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
-        if self.is_shift:
-            self.make_temporal_shift()
-            
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
@@ -74,3 +71,5 @@ class MobileNetV2TSM(MobileNetV2):
                         kaiming_init(m)
                     elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
                         constant_init(m, 1)
+        if self.is_shift:
+            self.make_temporal_shift()

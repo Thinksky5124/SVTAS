@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-19 11:15:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 21:07:46
+LastEditTime : 2022-11-22 22:48:17
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/tsm_fc_gtea.py
 '''
@@ -25,27 +25,26 @@ model_name = "TSM_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + st
 
 MODEL = dict(
     architecture = "Recognition2D",
-    # backbone = dict(
-    #     name = "MobileNetV2TSM",
-    #     pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
-    #     clip_seg_num = clip_seg_num,
-    #     shift_div = 8,
-    #     out_indices = (7, ),
-    #     frozen_stages = 2,
-    # ),
     backbone = dict(
-        name = "ResNetTSM",
-        pretrained = "./data/checkpoint/tsm_r50_256p_1x1x8_50e_kinetics400_rgb_20200726-020785e2.pth",
-        depth=50,
-        clip_seg_num = 8,
+        name = "MobileNetV2TSM",
+        pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
+        clip_seg_num = clip_seg_num,
         shift_div = 8,
-        norm_eval=False,
-        torchvision_pretrain=False,
+        out_indices = (7, ),
     ),
+    # backbone = dict(
+    #     name = "ResNetTSM",
+    #     pretrained = "./data/checkpoint/resnet50-0676ba61.pth",
+    #     depth=50,
+    #     clip_seg_num = 8,
+    #     shift_div = 8,
+    #     norm_eval=False,
+    #     torchvision_pretrain=True,
+    # ),
     neck = dict(
         name = "AvgPoolNeck",
         num_classes = num_classes,
-        in_channels = 2048,
+        in_channels = 1280,
         clip_seg_num = clip_seg_num,
         need_pool = True
     ),
@@ -55,7 +54,7 @@ MODEL = dict(
         sample_rate = sample_rate,
         clip_seg_num = clip_seg_num,
         drop_ratio=0.5,
-        in_channels=2048
+        in_channels=1280
         # name = "MultiStageModel",
         # num_stages = 1,
         # num_layers = 4,

@@ -2,14 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 15:07:40
+LastEditTime : 2022-11-23 10:54:54
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_precessings/cam_post_processing.py
 '''
 import numpy as np
 import torch
 from ..builder import POSTPRECESSING
-from ...loader.transform.transform import VideoStreamTransform
 from ...utils.stream_writer import CAMVideoStreamWriter
 
 @POSTPRECESSING.register()

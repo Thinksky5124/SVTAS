@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 19:37:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 21:04:50
+LastEditTime : 2022-11-22 22:46:56
 Description: TSM ref: https://github.com/open-mmlab/mmaction2
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet_tsm.py
 '''
@@ -302,13 +302,6 @@ class ResNetTSM(ResNet):
     def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
-        if self.is_shift:
-            self.make_temporal_shift()
-        if len(self.non_local_cfg) != 0:
-            self.make_non_local()
-        if self.temporal_pool:
-            self.make_temporal_pool()
-            
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
@@ -333,3 +326,9 @@ class ResNetTSM(ResNet):
                         kaiming_init(m)
                     elif isinstance(m, nn.BatchNorm2d):
                         constant_init(m, 1)
+        if self.is_shift:
+            self.make_temporal_shift()
+        if len(self.non_local_cfg) != 0:
+            self.make_non_local()
+        if self.temporal_pool:
+            self.make_temporal_pool()

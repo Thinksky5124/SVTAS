@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-12 15:21:38
+LastEditTime : 2022-11-23 11:31:01
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
@@ -140,7 +140,8 @@ class ExtractFeatureRunner(ExtractModelRunner):
     def duil_will_end_extract(self, extract_output, current_vid_list):
         for extract_feature, vid in zip(extract_output, current_vid_list):
             feature_save_path = os.path.join(self.out_path, vid + ".npy")
-            np.save(feature_save_path, extract_feature)
+            stream_writer, v_len = extract_feature["writer"], extract_feature["len"]
+            stream_writer.save(feature_save_path, v_len)
 
 class ExtractOpticalFlowRunner(ExtractModelRunner):
 

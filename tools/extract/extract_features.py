@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:43:16
+LastEditTime : 2022-11-23 11:32:57
 Description  : Extract video feature script
 FilePath     : /SVTAS/tools/extract/extract_features.py
 '''
@@ -47,7 +47,7 @@ def extractor(cfg, outpath, flow_extract):
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE)
+    sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.test)
     Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
     dataset_config = cfg.DATASET.config
     dataset_config['pipeline'] = Pipeline
