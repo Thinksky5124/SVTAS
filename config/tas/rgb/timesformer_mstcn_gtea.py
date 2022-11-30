@@ -33,7 +33,7 @@ MODEL = dict(
         pool="mean_space"
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num,

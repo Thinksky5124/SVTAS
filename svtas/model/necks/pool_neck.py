@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 20:47:03
+LastEditTime : 2022-11-23 16:54:34
 Description: avg pooling 3d to 2d neck
-FilePath     : /SVTAS/svtas/model/necks/avg_pool_neck.py
+FilePath     : /SVTAS/svtas/model/necks/pool_neck.py
 '''
 import torch
 import math
@@ -14,14 +14,15 @@ import torch.nn.functional as F
 from ..builder import NECKS
 
 @NECKS.register()
-class AvgPoolNeck(nn.Module):
+class PoolNeck(nn.Module):
     def __init__(self,
                  num_classes=11,
                  in_channels=1280,
                  clip_seg_num=30,
                  drop_ratio=0.5,
                  need_pool=True,
-                 need_pre_cls=False):
+                 need_pre_cls=False,
+                 pool_type='mean'):
         super().__init__()
         self.clip_seg_num = clip_seg_num
         self.in_channels = in_channels
@@ -29,8 +30,14 @@ class AvgPoolNeck(nn.Module):
         self.drop_ratio = drop_ratio
         self.need_pool = need_pool
         self.need_pre_cls = need_pre_cls
+        assert pool_type in ['mean', 'max'], "f{pool_type} doesn't support!"
         
-        self.backbone_avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        if pool_type =='mean':
+            self.backbone_pool = nn.AdaptiveAvgPool2d((1, 1))
+        elif pool_type == 'max':
+            self.backbone_pool = nn.AdaptiveMaxPool2d((1, 1))
+        else:
+            raise NotImplementedError
 
         if self.need_pre_cls is True:
             self.backbone_dropout = nn.Dropout(p=self.drop_ratio)
@@ -59,7 +66,7 @@ class AvgPoolNeck(nn.Module):
 
         # backbone branch
         # x.shape = [N * num_segs, in_channels, 1, 1]
-        backbone_x = self.backbone_avgpool(feature)
+        backbone_x = self.backbone_pool(feature)
 
         # [N * num_segs, in_channels]
         backbone_x = torch.squeeze(backbone_x)

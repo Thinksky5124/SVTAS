@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 16:01:39
+LastEditTime : 2022-11-28 12:17:27
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -24,13 +24,13 @@ from ..optimizer.builder import build_optimizer
 from ..optimizer.builder import build_lr_scheduler
 
 from ..runner.runner import Runner
-
+import warnings
 try:
     from apex import amp
     from apex.parallel import convert_syncbn_model
     from apex.parallel import DistributedDataParallel as DDP
 except:
-    pass
+    warnings.warn("Can't use apex to accelerate")
 
 def train(cfg,
           args,

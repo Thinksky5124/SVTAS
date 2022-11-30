@@ -24,14 +24,15 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 - [x] Pillow-SMID accelerate sample
 - [x] Onnxruntime Infer Suppport
 - [x] Support CAM Visualization
+- [x] Assemble the `pytest` testing framework
 
 # Envirnment Prepare
 
 - Linux Ubuntu 20.04+
 - Python 3.8+
-- PyTorch 1.11+
-- CUDA 11.3+
-- Cudnn 8.2+
+- PyTorch 1.13+
+- CUDA 11.7+ 
+- Cudnn 8.6+ (optional): Only need if you want to use apex accelerate
 - Pillow-SIMD (optional): Install it by the following scripts.
 
 ```bash
@@ -61,6 +62,7 @@ pip freeze > requirements.txt
 - [Model Zoo](docs/model_zoo.md)
 - [Tools Usage](docs/tools_usage.md)
 - [Infer Guideline](docs/infer_guideline.md)
+- [Add Test Case Guideline](docs/add_testcase_guideline.md)
 
 # Citation
 ```bib

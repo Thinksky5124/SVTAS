@@ -1,10 +1,19 @@
+'''
+Author       : Thyssen Wen
+Date         : 2022-10-17 13:15:41
+LastEditors  : Thyssen Wen
+LastEditTime : 2022-11-28 12:18:13
+Description  : file content
+FilePath     : /SVTAS/svtas/model/backbones/utils/liteflownet_v3/correlation_package/correlation.py
+'''
 import torch
 from torch.nn.modules.module import Module
 from torch.autograd import Function
+import warnings
 try:
     import correlation_cuda
 except:
-    print("Can't not use LiteFlowNetV3")
+    warnings.warn("Can't not use LiteFlowNetV3")
 
 class CorrelationFunction(Function):
 

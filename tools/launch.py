@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 12:10:45
+LastEditTime : 2022-11-30 11:34:36
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -53,8 +53,7 @@ def parse_args():
         help='whether to evaluate the checkpoint during training')
     parser.add_argument(
         '--use_amp',
-        type=bool,
-        default=False,
+        action='store_true',
         help='whether to use amp to accelerate')
     parser.add_argument(
         '--use_tensorboard',

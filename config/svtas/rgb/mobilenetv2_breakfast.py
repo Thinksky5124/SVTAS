@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 11:58:20
+LastEditTime : 2022-11-23 15:57:34
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_breakfast.py
 '''
@@ -21,7 +21,7 @@ sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
 epochs = 50
-
+log_interval = 100
 model_name = "MobileNetV2_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
@@ -32,7 +32,7 @@ MODEL = dict(
         out_indices = (7, )
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 1280,
         clip_seg_num = clip_seg_num,

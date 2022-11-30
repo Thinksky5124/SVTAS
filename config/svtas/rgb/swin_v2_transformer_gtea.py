@@ -38,7 +38,7 @@ MODEL = dict(
         drop_path_rate=0.2,
     ), 
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num,

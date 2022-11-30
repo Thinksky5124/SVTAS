@@ -2,19 +2,20 @@
 Author       : Thyssen Wen
 Date         : 2022-05-19 18:56:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 13:37:04
+LastEditTime : 2022-11-28 12:15:43
 Description  : flow net
-FilePath     : \ETESVS\model\backbones\flow\fastflownet.py
+FilePath     : /SVTAS/svtas/model/backbones/flow/fastflownet.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from mmcv.runner import load_checkpoint
+import warnings
 try:
     from spatial_correlation_sampler import SpatialCorrelationSampler
 except:
-    print("Can't not use FastFlowNet")
+    warnings.warn("Can't not use FastFlowNet")
 from ....utils.logger import get_logger
 from ...builder import BACKBONES
 

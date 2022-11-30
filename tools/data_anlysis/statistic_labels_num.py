@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-10 10:15:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 14:44:27
+LastEditTime : 2022-11-23 15:59:06
 Description  : statistic labels number for dataset
 FilePath     : /SVTAS/tools/data_anlysis/statistic_labels_num.py
 '''
@@ -103,7 +103,7 @@ def main() -> None:
     num_duraction = np.array(duration_list)
     
     plt.hist(num_duraction, bins=100, density = True, range=(0, 400))
-    plt.vlines(128, 0, 0.008, color="red")
+    plt.vlines(64, 0, 0.008, color="red")
     plt.title('hist for action duration')
     plt.xlabel("Frame duration")
     plt.ylabel('Density')

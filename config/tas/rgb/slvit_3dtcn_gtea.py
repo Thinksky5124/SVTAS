@@ -32,7 +32,7 @@ MODEL = dict(
         emb_dropout = 0.5
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 1024,
         clip_seg_num = clip_seg_num,

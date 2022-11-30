@@ -32,7 +32,7 @@ MODEL = dict(
         out_indices = (7, )
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 1280,
         clip_seg_num = clip_seg_num,

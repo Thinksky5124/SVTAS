@@ -20,7 +20,7 @@ MODEL = dict(
         # pretrained = 
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = 11,
         in_channels = 1024,
         clip_seg_num = 8,

@@ -32,7 +32,7 @@ MODEL = dict(
         pretrained="data/checkpoint/efficientnet-b1_3rdparty_8xb32_in1k_20220119-002556d9.pth",
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 1280,
         clip_seg_num = clip_seg_num,

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 15:19:23
+LastEditTime : 2022-11-28 12:16:33
 Description: test script api
-FilePath     : \ETESVS\svtas\tasks\test.py
+FilePath     : /SVTAS/svtas/tasks/test.py
 '''
 import torch
 from ..utils.logger import get_logger
@@ -23,13 +23,13 @@ from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
 from ..utils.collect_env import collect_env
-
+import warnings
 try:
     from apex import amp
     from apex.parallel import convert_syncbn_model
     from apex.parallel import DistributedDataParallel as DDP
 except:
-    print("Can't use apex to accelerate")
+    warnings.warn("Can't use apex to accelerate")
 
 @torch.no_grad()
 def test(cfg,

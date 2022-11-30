@@ -47,3 +47,22 @@ python tools/visualize/cam_visualization.py -c config/cam_visualize/swin_v2_tran
 ### Example
 <div align="center">
   <img src="./image/cam_visualization.gif" width=500/></div>
+
+# Check Videos
+This tools will check all video file wheather borken or not, and report borken video filename.
+```bash
+python tools/dataset_transform/check_videos_file.py -c config/svtas/rgb/efficientformer_breakfast.py
+```
+### Example
+- if report error video file, user can read logger to find
+```txt
+# error example
+...
+[11/23 21:53:10] Error Step: 114 now check file: P15_cam01_P15_pancake,P15_cam01_P15_salat
+...
+# normal example
+...
+[11/23 21:53:15] Step: 123 now check file: P15_webcam01_P15_juice,P15_webcam01_P15_milk
+...
+
+```

@@ -42,7 +42,7 @@ MODEL = dict(
     #     torchvision_pretrain=True,
     # ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 1280,
         clip_seg_num = clip_seg_num,

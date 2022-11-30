@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 11:58:15
+LastEditTime : 2022-11-24 11:17:39
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/efficientformer_breakfast.py
 '''
@@ -21,7 +21,7 @@ sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
 epochs = 50
-
+log_interval = 100
 model_name = "EfficientFormer_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
@@ -43,7 +43,7 @@ MODEL = dict(
         ]
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 448,
         clip_seg_num = clip_seg_num,
@@ -90,7 +90,7 @@ OPTIMIZER = dict(
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 2,
+    num_workers = 4,
     train = dict(
         file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window

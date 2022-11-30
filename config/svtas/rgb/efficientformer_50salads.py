@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 11:58:09
+LastEditTime : 2022-11-23 15:51:25
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/efficientformer_50salads.py
 '''
@@ -14,8 +14,8 @@ _base_ = [
 ]
 
 num_classes = 19
-sample_rate = 2
-clip_seg_num = 64
+sample_rate = 4
+clip_seg_num = 32
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
@@ -43,7 +43,7 @@ MODEL = dict(
         ]
     ),
     neck = dict(
-        name = "AvgPoolNeck",
+        name = "PoolNeck",
         num_classes = num_classes,
         in_channels = 448,
         clip_seg_num = clip_seg_num,
@@ -90,7 +90,7 @@ OPTIMIZER = dict(
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 2,
+    num_workers = 4,
     train = dict(
         file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window
