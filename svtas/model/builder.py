@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:16:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:45:15
+LastEditTime : 2022-11-30 19:16:36
 Description: registry and builder model
 FilePath     : /SVTAS/svtas/model/builder.py
 '''
@@ -18,15 +18,39 @@ POSTPRECESSING = Registry('post_precessing')
 
 def build_backbone(cfg):
     """Build backbone."""
-    return build(cfg, BACKBONES)
+    if 'sbp_build' in cfg.keys():
+        sbp_build = cfg.pop('sbp_build')
+    else:
+        sbp_build = False
+    if 'keep_ratio' in cfg.keys():
+        keep_ratio = cfg.pop('keep_ratio')
+    else:
+        keep_ratio = 0.125
+    return build(cfg, BACKBONES, sbp_build=sbp_build, keep_ratio=keep_ratio)
 
 def build_head(cfg):
     """Build head."""
-    return build(cfg, HEADS)
+    if 'sbp_build' in cfg.keys():
+        sbp_build = cfg.pop('sbp_build')
+    else:
+        sbp_build = False
+    if 'keep_ratio' in cfg.keys():
+        keep_ratio = cfg.pop('keep_ratio')
+    else:
+        keep_ratio = 0.125
+    return build(cfg, HEADS, sbp_build=sbp_build, keep_ratio=keep_ratio)
 
 def build_neck(cfg):
     """Build neck."""
-    return build(cfg, NECKS)
+    if 'sbp_build' in cfg.keys():
+        sbp_build = cfg.pop('sbp_build')
+    else:
+        sbp_build = False
+    if 'keep_ratio' in cfg.keys():
+        keep_ratio = cfg.pop('keep_ratio')
+    else:
+        keep_ratio = 0.125
+    return build(cfg, NECKS, sbp_build=sbp_build, keep_ratio=keep_ratio)
 
 def build_post_precessing(cfg):
     """Build loss."""

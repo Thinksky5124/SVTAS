@@ -2,14 +2,67 @@
 Author       : Thyssen Wen
 Date         : 2022-11-23 20:14:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-30 14:47:26
+LastEditTime : 2022-12-01 15:10:39
 Description  : Stochastic Backpropagation Decorator Module And Test Script
 FilePath     : /SVTAS/svtas/utils/sbp.py
 '''
 import torch
 import torch.nn as nn
 from typing import Any
+from functools import partial
 
+WRAPPER_ASSIGNMENTS = ('__module__', '__name__', '__qualname__', '__doc__',
+                       '__annotations__')
+WRAPPER_UPDATES = ('__dict__',)
+def update_wrapper(wrapper,
+                   wrapped,
+                   assigned = WRAPPER_ASSIGNMENTS,
+                   updated = WRAPPER_UPDATES):
+    """Update a wrapper function to look like the wrapped function
+
+       wrapper is the function to be updated
+       wrapped is the original function
+       assigned is a tuple naming the attributes assigned directly
+       from the wrapped function to the wrapper function (defaults to
+       functools.WRAPPER_ASSIGNMENTS)
+       updated is a tuple naming the attributes of the wrapper that
+       are updated with the corresponding attribute from the wrapped
+       function (defaults to functools.WRAPPER_UPDATES)
+    """
+    for attr in assigned:
+        try:
+            value = getattr(wrapped, attr)
+        except AttributeError:
+            pass
+        else:
+            setattr(wrapper, attr, value)
+
+    # Issue #17482: set __wrapped__ last so we don't inadvertently copy it
+    # from the wrapped function when updating __dict__
+    wrapper.__wrapped__ = wrapped
+    # Return the wrapper so this can be used as a decorator via partial()
+    return wrapper
+
+def wraps(wrapped,
+          assigned = WRAPPER_ASSIGNMENTS,
+          updated = WRAPPER_UPDATES):
+    """Decorator factory to apply update_wrapper() to a wrapper function
+
+       Returns a decorator that invokes update_wrapper() with the decorated
+       function as the wrapper argument and the arguments to wraps() as the
+       remaining arguments. Default arguments are as for update_wrapper().
+       This is a convenience function to simplify applying partial() to
+       update_wrapper().
+    """
+    return partial(update_wrapper, wrapped=wrapped,
+                   assigned=assigned, updated=updated)
+
+def generate_grad_mask(grad_mask, mode='uniform'):
+    if mode == 'uniform':
+        pass
+    elif mode == 'random':
+        pass
+    
 def grad_mask_sample(x: torch.Tensor, keep_ratio: int, return_mask: bool = True):
     if len(x.shape) == 2:
         BT, C = x.shape
@@ -99,12 +152,32 @@ class SBPOP(torch.autograd.Function):
         return (None, None, None) + tuple(input_grad_list)
 
 class StochasticBackpropagation(object):
+    """Stochastic Backpropagation Class
+    
+    This class will overwrite nn.Module class to support stochastic backpropagation.
+    It can use as a decorator or funtion.
+    
+    For example:
+
+    case 1:
+    ``` 
+    @StochasticBackpropagation()
+    class Module(nn.Module):
+        ....
+    ```
+    case 2:
+    ``` 
+    sbp = StochasticBackpropagation()
+    sbo_module = sbp(Module)
+    ```
+    """
     def __init__(self,
                  keep_ratio: float = 0.125) -> None:
         assert keep_ratio <= 1., f"keep_ratio must not grate than 1., now {keep_ratio:.2f}."
         self.keep_ratio = int(1 / keep_ratio)
 
     def __call__(decorate_self, Module: nn.Module) -> nn.Module:
+        @wraps(Module)
         class SBPModule(Module):
             def __init__(self, *args: Any, **kwargs: Any) -> None:
                 super().__init__(*args, **kwargs)
@@ -126,5 +199,4 @@ class StochasticBackpropagation(object):
             def forward(self, *args: Any):
                 args_len = len(args)
                 return SBPOP.apply(self.grad_mask_fn, super().forward, args_len, *args, *tuple(self.parameters()))
-
         return SBPModule

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 21:20:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 22:53:03
+LastEditTime : 2022-11-30 19:40:57
 Description  : file content
 FilePath     : /SVTAS/config/cam_visualize/swin_v2_transformer_fc_visualize.py
 '''
@@ -57,7 +57,7 @@ MODEL = dict(
     )        
 )
 
-PRETRAINED = "./output/SwinTransformerV2_FC_32x2_gtea_split1/SwinTransformerV2_FC_32x2_gtea_split1_epoch_00001.pkl"
+PRETRAINED = "./output/SwinTransformerV2_FC_32x2_gtea_split1/SwinTransformerV2_FC_32x2_gtea_split1_epoch_00001.pt"
 
 VISUALIZE = dict(
     layer_name = ["backbone.norm"],

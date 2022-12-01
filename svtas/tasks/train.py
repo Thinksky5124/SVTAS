@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-28 12:17:27
+LastEditTime : 2022-12-01 15:12:14
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -112,7 +112,7 @@ def train(cfg,
     resume_epoch = cfg.get("resume_epoch", 0)
     if resume_epoch:
         path_checkpoint = osp.join(output_dir,
-                            model_name + f"_epoch_{resume_epoch:05d}" + ".pkl")
+                            model_name + f"_epoch_{resume_epoch:05d}" + ".pt")
         
         if local_rank < 0:
             checkpoint = torch.load(path_checkpoint)
@@ -299,15 +299,15 @@ def train(cfg,
                     checkpoint = {"model_state_dict": model_weight_dict,
                             "optimizer_state_dict": optimizer.state_dict(),
                             "epoch": epoch,
-                            "cfg": cfg}
+                            "cfg": cfg.text}
                 else:
                     checkpoint = {"model_state_dict": model_weight_dict,
                             "optimizer_state_dict": optimizer.state_dict(),
                             "amp": amp.state_dict(),
                             "epoch": epoch,
-                            "cfg": cfg}
+                            "cfg": cfg.text}
                 torch.save(checkpoint,
-                    osp.join(output_dir, model_name + "_best.pkl"))
+                    osp.join(output_dir, model_name + "_best.pt"))
                 logger.info(
                         "Already save the best model (" + criterion_metric_name + f"){int(best * 10000) / 10000}"
                     )
@@ -322,17 +322,17 @@ def train(cfg,
                 checkpoint = {"model_state_dict": model_weight_dict,
                         "optimizer_state_dict": optimizer.state_dict(),
                         "epoch": epoch,
-                        "cfg": cfg}
+                        "cfg": cfg.text}
             else:
                 checkpoint = {"model_state_dict": model_weight_dict,
                         "optimizer_state_dict": optimizer.state_dict(),
                         "amp": amp.state_dict(),
                         "epoch": epoch,
-                        "cfg": cfg}
+                        "cfg": cfg.text}
             torch.save(
                 checkpoint,
                 osp.join(output_dir,
-                         model_name + f"_epoch_{epoch + 1:05d}.pkl"))
+                         model_name + f"_epoch_{epoch + 1:05d}.pt"))
         
         if local_rank >= 0:
             torch.distributed.barrier()      

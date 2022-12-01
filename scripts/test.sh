@@ -2,14 +2,14 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-06-13 16:04:40
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2022-11-18 13:57:38
+ # @LastEditTime : 2022-12-01 15:11:37
  # @Description  : Test script
- # @FilePath     : /SVTAS/script/test.sh
+ # @FilePath     : /SVTAS/scripts/test.sh
 ### 
 
 export CUDA_VISIBLE_DEVICES=0
 
-python tools/launch.py  --mode test -c config/svtas/rgb/tsm_conformer_gtea.py --weights=output/TSM_Conformer_32x2_gtea_split1/TSM_Conformer_32x2_gtea_split1_best.pkl
+python tools/launch.py  --mode test -c config/svtas/rgb/mobilenetv2_gtea.py --weights=output/MobileNetV2_MSTCN_32x2_gtea_split1/MobileNetV2_MSTCN_32x2_gtea_split1_epoch_00050.pt
 
 # #### GTEA ####
 # python tools/launch.py  --mode test -c config/gtea/transeger/transeger_split1.yaml --weights=output/Transeger_gtea_split1/Transeger_gtea_split1_best.pkl

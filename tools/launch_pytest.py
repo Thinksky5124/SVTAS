@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-30 10:00:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-30 14:40:46
+LastEditTime : 2022-12-01 10:49:37
 Description  : Launch Pytest
 FilePath     : /SVTAS/tools/launch_pytest.py
 '''
@@ -51,4 +51,4 @@ if __name__ == '__main__':
     else:
         from tests.test_cases.test_sbp import TestSBP
         test_class = TestSBP()
-        test_class.test_sbp_backward()
+        test_class.test_save_load_model()

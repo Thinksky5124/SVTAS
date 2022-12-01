@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-28 12:16:33
+LastEditTime : 2022-11-30 15:10:59
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -29,7 +29,7 @@ try:
     from apex.parallel import convert_syncbn_model
     from apex.parallel import DistributedDataParallel as DDP
 except:
-    warnings.warn("Can't use apex to accelerate")
+    pass
 
 @torch.no_grad()
 def test(cfg,
