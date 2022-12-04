@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 09:48:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-12 15:19:49
+LastEditTime : 2022-12-03 21:32:22
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_precessings/mvs_res_post_processing.py
 '''
@@ -10,25 +10,25 @@ import numpy as np
 import torch
 from ...utils.flow_vis import make_colorwheel
 from ..builder import POSTPRECESSING
-from ...loader.transform.transform import VideoStreamTransform
+from ...loader.transform.transform import VideoTransform
 from ...utils.stream_writer import VideoStreamWriter
 
 @POSTPRECESSING.register()
 class MVsResPostProcessing():
     def __init__(self,
                  sliding_window,
-                 mvs_post_transforms=[dict(Clamp = dict(min_val=-20, max_val=20)),
-                                      dict(ToUInt8 = None)],
-                 res_post_transforms=[dict(Clamp = dict(min_val=0, max_val=255)),
-                                      dict(DtypeToUInt8 = None)],
+                 mvs_post_transforms=dict(imgs=[dict(Clamp = dict(min_val=-20, max_val=20)),
+                                      dict(ToUInt8 = None)]),
+                 res_post_transforms=dict(imgs=[dict(Clamp = dict(min_val=0, max_val=255)),
+                                      dict(DtypeToUInt8 = None)]),
                  fps=15,
                  need_visualize=False,
                  ignore_index=-100):
         self.sliding_window = sliding_window
         self.fps = fps
         self.need_visualize = need_visualize
-        self.mvs_post_transforms = VideoStreamTransform(mvs_post_transforms)
-        self.res_post_transforms = VideoStreamTransform(res_post_transforms)
+        self.mvs_post_transforms = VideoTransform(mvs_post_transforms)
+        self.res_post_transforms = VideoTransform(res_post_transforms)
         self.init_flag = False
         self.colorwheel = make_colorwheel()  # shape [55x3]
         self.ignore_index = ignore_index

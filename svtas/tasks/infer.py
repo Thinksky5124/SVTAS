@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 15:54:58
+LastEditTime : 2022-12-01 16:11:43
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
@@ -16,8 +16,9 @@ import numpy as np
 import onnx
 import onnxruntime
 import os
-from types import MethodType 
+from types import MethodType
 
+from ..utils.save_load import mkdir
 from ..model.builder import build_model
 from ..loader.builder import build_dataset
 from ..loader.builder import build_pipline
@@ -96,7 +97,7 @@ def infer(cfg,
     export_path = os.path.join("output", cfg.model_name, cfg.model_name + ".onnx")
 
     if os.path.exists(os.path.join("output", cfg.model_name)) is False:
-        os.mkdir(os.path.join("output", cfg.model_name))
+        mkdir(os.path.join("output", cfg.model_name))
         
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:

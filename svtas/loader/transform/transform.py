@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 19:47:10
+LastEditTime : 2022-12-04 20:49:19
 Description  : Transform module
 FilePath     : /SVTAS/svtas/loader/transform/transform.py
 '''
@@ -14,8 +14,15 @@ from . import transform_fn as custom_transforms
 from ..builder import TRANSFORM
 
 class BaseTransform(object):
-    def __init__(self) -> None:
+    """Transform config to transform function
+
+    Args:
+        transform_dict: Dict[Literl|List] config of transform
+    """
+    def __init__(self, transform_dict={}) -> None:
         self.transforms_pipeline_dict = {}
+        for key, cfg in transform_dict.items():
+            self._get_transformers_pipline(cfg=cfg, key=key)
 
     def _get_transformers_pipline(self, cfg, key):
         transform_op_list = []
@@ -37,105 +44,51 @@ class BaseTransform(object):
         self.transforms_pipeline_dict[key] = transforms.Compose(transform_op_list)
     
     @classmethod
-    def __call__(self, results):
+    def transform(self, inputs, transforms_pipeline):
+        """Another Class Should overwrite this method and return a output
+        """
         raise NotImplementedError
+    
+    def __call__(self, results):
+        for key, transforms_pipeline in self.transforms_pipeline_dict.items():
+            output = self.transform(results[key], transforms_pipeline=transforms_pipeline)
+            results[key] = output
+        return results
 
 @TRANSFORM.register()
 class FeatureStreamTransform(BaseTransform):
-    def __init__(self, transform_list):
-        super().__init__()
-        self._get_transformers_pipline(transform_list, 'feature')
+    def transform(self, inputs, transforms_pipeline):
+        inputs = inputs.astype(np.float32)
+        feature = transforms_pipeline(inputs).squeeze(0)
+        return feature
 
+@TRANSFORM.register()
+class VideoTransform(BaseTransform):
+    def transform(self, inputs, transforms_pipeline):
+        outputs = []
+        for input in inputs:
+            input = transforms_pipeline(input)
+            outputs.append(input.unsqueeze(0))
+        outputs = torch.cat(outputs, dim=0)
+        return outputs
+
+@TRANSFORM.register()
+class VideoRawStoreTransform(VideoTransform):
     def __call__(self, results):
-        feature = results['feature'].astype(np.float32)
-        feature = self.transforms_pipeline_dict['feature'](feature).squeeze(0)
-        results['feature'] = copy.deepcopy(feature)
+        for key, transforms_pipeline in self.transforms_pipeline_dict.items():
+            results["raw_" + key] = copy.deepcopy(results[key])
+            output = self.transform(results[key], transforms_pipeline=transforms_pipeline)
+            results[key] = output
         return results
 
 @TRANSFORM.register()
-class VideoStreamTransform(BaseTransform):
-    def __init__(self, transform_list):
-        super().__init__()
-        self._get_transformers_pipline(transform_list, 'imgs')
-
+class VideoClipTransform(VideoTransform):
+    
     def __call__(self, results):
-        imgs = []
-        for img in results['imgs']:
-            img = self.transforms_pipeline_dict['imgs'](img)
-            imgs.append(img.unsqueeze(0))
-        imgs = torch.cat(imgs, dim=0)
-        results['imgs'] = copy.deepcopy(imgs)
-        return results
-
-@TRANSFORM.register()       
-class RGBFlowVideoStreamTransform(BaseTransform):
-    def __init__(self, rgb, flow):
-        super().__init__()
-        self._get_transformers_pipline(rgb, 'rgb')
-        self._get_transformers_pipline(flow, 'flow')
-
-    def __call__(self, results):
-        # rgb
-        imgs = []
-        for img in results['imgs']:
-            img = self.transforms_pipeline_dict['rgb'](img)
-            imgs.append(img.unsqueeze(0))
-        imgs = torch.cat(imgs, dim=0)
-        results['imgs'] = copy.deepcopy(imgs)
-        # flow
-        flows = []
-        for flow in results['flows']:
-            flow = self.transforms_pipeline_dict['flow'](flow)
-            flows.append(flow.unsqueeze(0))
-        flows = torch.cat(flows, dim=0)
-        results['flows'] = copy.deepcopy(flows)
-        return results
-
-@TRANSFORM.register()
-class VideoStreamRawFrameStoreTransform(VideoStreamTransform):
-    def __init__(self, transform_list):
-        super().__init__(transform_list)
-
-    def __call__(self, results):
-        imgs = []
-        results["raw_imgs"] = copy.deepcopy(results["imgs"])
-        for img in results['imgs']:
-            img = self.transforms_pipeline_dict['imgs'](img)
-            imgs.append(img.unsqueeze(0))
-        imgs = torch.cat(imgs, dim=0)
-        results['imgs'] = copy.deepcopy(imgs)
-        return results
-
-@TRANSFORM.register()       
-class CompressedVideoStreamTransform(BaseTransform):
-    def __init__(self, rgb, flow, res):
-        super().__init__()
-        self._get_transformers_pipline(rgb, 'rgb')
-        self._get_transformers_pipline(flow, 'flow')
-        self._get_transformers_pipline(res, 'res')
-
-    def __call__(self, results):
-        # rgb
-        imgs = []
-        for img in results['imgs']:
-            img = self.transforms_pipeline_dict['rgb'](img)
-            imgs.append(img.unsqueeze(0))
-        imgs = torch.cat(imgs, dim=0)
-        results['imgs'] = copy.deepcopy(imgs)
-        # flow
-        if 'flows' in results.keys():
-            flows = []
-            for flow in results['flows']:
-                flow = self.transforms_pipeline_dict['flow'](flow)
-                flows.append(flow.unsqueeze(0))
-            flows = torch.cat(flows, dim=0)
-            results['flows'] = copy.deepcopy(flows)
-        # res
-        if 'res' in results.keys():
-            res = []
-            for res_img in results['res']:
-                res_img = self.transforms_pipeline_dict['res'](res_img)
-                res.append(res_img.unsqueeze(0))
-            res = torch.cat(res, dim=0)
-            results['res'] = copy.deepcopy(res)
+        for key, transforms_pipeline in self.transforms_pipeline_dict.items():
+            outputs = []
+            for input in results[key]:
+                output = self.transform(input, transforms_pipeline=transforms_pipeline)
+                outputs.append(output)
+            results[key] = outputs
         return results

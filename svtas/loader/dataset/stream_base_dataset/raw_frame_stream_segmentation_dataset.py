@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-08 10:01:03
+LastEditTime : 2022-12-03 20:08:42
 Description: dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_stream_segmentation_dataset.py
 '''
@@ -20,11 +20,13 @@ from .stream_base_dataset import StreamDataset
 @DATASET.register()
 class RawFrameStreamSegmentationDataset(StreamDataset):
     """Video dataset for action recognition
-       The dataset loads raw videos and apply specified transforms on them.
-       The index file is a file with multiple lines, and each line indicates
-       a sample video with the filepath and label, which are split with a whitesapce.
-       Example of a inde file:
+        The dataset loads raw videos and apply specified transforms on them.
+        The index file is a file with multiple lines, and each line indicates
+        a sample video with the filepath and label, which are split with a whitesapce.
+        Example of a inde file:
         file tree:
+
+        ```
         ─── gtea
             ├── Videos
             │   ├── S1_Cheese_C1.mp4
@@ -42,10 +44,12 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
             │   ├── test.split3.bundle
             │   └── ...
             └── mapping.txt
-       Args:
-           file_path(str): Path to the index file.
-           pipeline(XXX): A sequence of data transforms.
-           **kwargs: Keyword arguments for ```BaseDataset```.
+        ```
+        
+        Args:
+            file_path(str): Path to the index file.
+            pipeline(XXX): A sequence of data transforms.
+            **kwargs: Keyword arguments for ```BaseDataset```.
     """
     def __init__(self,
                  videos_path,

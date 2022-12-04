@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:28:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 19:45:04
+LastEditTime : 2022-12-03 21:31:52
 Description  : Optical Flow Post Processing
 FilePath     : /SVTAS/svtas/model/post_precessings/optical_flow_post_processing.py
 '''
@@ -10,22 +10,22 @@ import numpy as np
 import torch
 from ...utils.flow_vis import make_colorwheel
 from ..builder import POSTPRECESSING
-from ...loader.transform.transform import VideoStreamTransform
+from ...loader.transform.transform import VideoTransform
 from ...utils.stream_writer import VideoStreamWriter
 
 @POSTPRECESSING.register()
 class OpticalFlowPostProcessing():
     def __init__(self,
                  sliding_window,
-                 post_transforms=[dict(Clamp = dict(min_val=-20, max_val=20)),
-                                            dict(ToUInt8 = None)],
+                 post_transforms=dict(imgs=[dict(Clamp = dict(min_val=-20, max_val=20)),
+                                            dict(ToUInt8 = None)]),
                  fps=15,
                  need_visualize=False,
                  ignore_index=-100):
         self.sliding_window = sliding_window
         self.fps = fps
         self.need_visualize = need_visualize
-        self.post_transforms = VideoStreamTransform(post_transforms)
+        self.post_transforms = VideoTransform(post_transforms)
         self.init_flag = False
         self.colorwheel = make_colorwheel()  # shape [55x3]
         self.ignore_index = ignore_index

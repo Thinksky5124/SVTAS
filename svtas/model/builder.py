@@ -2,12 +2,13 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:16:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-30 19:16:36
+LastEditTime : 2022-12-01 16:31:03
 Description: registry and builder model
 FilePath     : /SVTAS/svtas/model/builder.py
 '''
 from ..utils.build import Registry
 from ..utils.build import build
+from ..utils.sbp import StochasticBackpropagation
 
 BACKBONES = Registry('backbone')
 NECKS = Registry('neck')
@@ -18,39 +19,27 @@ POSTPRECESSING = Registry('post_precessing')
 
 def build_backbone(cfg):
     """Build backbone."""
-    if 'sbp_build' in cfg.keys():
-        sbp_build = cfg.pop('sbp_build')
-    else:
-        sbp_build = False
-    if 'keep_ratio' in cfg.keys():
-        keep_ratio = cfg.pop('keep_ratio')
-    else:
-        keep_ratio = 0.125
-    return build(cfg, BACKBONES, sbp_build=sbp_build, keep_ratio=keep_ratio)
+    kwargs=dict()
+    for key in StochasticBackpropagation.SBP_ARGUMENTS:
+        if key in cfg.keys():
+            kwargs[key] = cfg.pop(key)
+    return build(cfg, BACKBONES, **kwargs)
 
 def build_head(cfg):
     """Build head."""
-    if 'sbp_build' in cfg.keys():
-        sbp_build = cfg.pop('sbp_build')
-    else:
-        sbp_build = False
-    if 'keep_ratio' in cfg.keys():
-        keep_ratio = cfg.pop('keep_ratio')
-    else:
-        keep_ratio = 0.125
-    return build(cfg, HEADS, sbp_build=sbp_build, keep_ratio=keep_ratio)
+    kwargs=dict()
+    for key in StochasticBackpropagation.SBP_ARGUMENTS:
+        if key in cfg.keys():
+            kwargs[key] = cfg.pop(key)
+    return build(cfg, HEADS, **kwargs)
 
 def build_neck(cfg):
     """Build neck."""
-    if 'sbp_build' in cfg.keys():
-        sbp_build = cfg.pop('sbp_build')
-    else:
-        sbp_build = False
-    if 'keep_ratio' in cfg.keys():
-        keep_ratio = cfg.pop('keep_ratio')
-    else:
-        keep_ratio = 0.125
-    return build(cfg, NECKS, sbp_build=sbp_build, keep_ratio=keep_ratio)
+    kwargs=dict()
+    for key in StochasticBackpropagation.SBP_ARGUMENTS:
+        if key in cfg.keys():
+            kwargs[key] = cfg.pop(key)
+    return build(cfg, NECKS, **kwargs)
 
 def build_post_precessing(cfg):
     """Build loss."""

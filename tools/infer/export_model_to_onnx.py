@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-03 15:05:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:04:34
+LastEditTime : 2022-12-01 16:12:08
 Description  : Export torch model to ONNX
 FilePath     : /SVTAS/tools/infer/export_model_to_onnx.py
 '''
@@ -18,6 +18,7 @@ import numpy as np
 import onnx
 import onnxruntime
 
+from svtas.utils.save_load import mkdir
 from svtas.utils.config import get_config
 
 @torch.no_grad()
@@ -35,7 +36,7 @@ def export_model_to_onnx(cfg,
     export_path = os.path.join(args.export_path, cfg.model_name, cfg.model_name + ".onnx")
 
     if os.path.exists(os.path.join(args.export_path, cfg.model_name)) is False:
-        os.mkdir(os.path.join(args.export_path, cfg.model_name))
+        mkdir(os.path.join(args.export_path, cfg.model_name))
 
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:

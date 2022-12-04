@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-01 14:39:38
+LastEditTime : 2022-12-03 21:27:59
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_gtea.py
 '''
@@ -31,7 +31,7 @@ MODEL = dict(
         pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
         out_indices = (7, ),
         sbp_build=True,
-        keep_ratio=0.5
+        keep_ratio_list=[0.25]
     ),
     neck = dict(
         name = "PoolNeck",
@@ -111,8 +111,9 @@ PIPELINE = dict(
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "VideoStreamTransform",
-            transform_list = [
+            name = "VideoTransform",
+            transform_dict = dict(
+                imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
                 dict(RandomHorizontalFlip = None),
@@ -121,8 +122,8 @@ PIPELINE = dict(
                 dict(Normalize = dict(
                     mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                     std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
-                ))
-            ]
+                ))]
+            )
         )
     ),
     test = dict(
@@ -142,17 +143,18 @@ PIPELINE = dict(
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "VideoStreamTransform",
-            transform_list = [
-                dict(ResizeImproved = dict(size = 256)),
-                dict(CenterCrop = dict(size = 224)),
-                dict(PILToTensor = None),
-                dict(ToFloat = None),
-                dict(Normalize = dict(
-                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
-                ))
-            ]
+            name = "VideoTransform",
+            transform_dict = dict(
+                imgs = [
+                    dict(ResizeImproved = dict(size = 256)),
+                    dict(CenterCrop = dict(size = 224)),
+                    dict(PILToTensor = None),
+                    dict(ToFloat = None),
+                    dict(Normalize = dict(
+                        mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                        std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                    ))]
+            )
         )
     )
 )

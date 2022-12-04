@@ -97,7 +97,7 @@ PIPELINE = dict(
             sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
-            name = "VideoStreamTransform",
+            name = "VideoTransform",
             transform_list = [
                 dict(OpencvToPIL = dict(in_channel_model = "RGB")),
                 dict(ResizeImproved = dict(size = 256)),
@@ -126,7 +126,7 @@ PIPELINE = dict(
             sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
-            name = "VideoStreamTransform",
+            name = "VideoTransform",
             transform_list = [
                 dict(OpencvToPIL = dict(in_channel_model = "RGB")),
                 dict(ResizeImproved = dict(size = 256)),

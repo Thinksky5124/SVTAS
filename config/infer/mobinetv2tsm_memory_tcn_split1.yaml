@@ -71,7 +71,7 @@ PIPELINE: #PIPELINE field
             sliding_window: 128
             sample_mode: "uniform"
         transform:
-            name: "VideoStreamTransform"
+            name: "VideoTransform"
             transform_list:
                 - Resize:
                     size: [256, 320]

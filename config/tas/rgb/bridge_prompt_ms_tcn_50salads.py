@@ -104,7 +104,7 @@ PIPELINE = dict(
             sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
-            name = "VideoStreamTransform",
+            name = "VideoTransform",
             transform_list = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
@@ -133,7 +133,7 @@ PIPELINE = dict(
             sample_add_key_pair={"frames":"imgs"},
         ),
         transform = dict(
-            name = "VideoStreamTransform",
+            name = "VideoTransform",
             transform_list = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(CenterCrop = dict(size = 224)),

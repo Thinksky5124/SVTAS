@@ -2,18 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-24 11:17:39
+LastEditTime : 2022-12-04 21:24:55
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/efficientformer_breakfast.py
+FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_clip_train_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
-    '../../_base_/models/image_classification/efficientformer.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/breakfast/breakfast_stream_video.py'
+    '../../_base_/models/image_classification/mobilenet_v2.py',
+    '../../_base_/default_runtime.py', '../../_base_/collater/batch_stream_compose.py',
+    '../../_base_/dataset/gtea/gtea_video_clip.py'
 ]
 
-num_classes = 48
+num_classes = 11
 sample_rate = 2
 clip_seg_num = 32
 ignore_index = -100
@@ -21,49 +21,41 @@ sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
 epochs = 50
-log_interval = 100
-model_name = "EfficientFormer_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
+
+model_name = "MobileNetV2_MSTCN_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
     backbone = dict(
-        name = "EfficientFormer",
-        arch='l1',
-        pretrained="data/checkpoint/efficientformer-l1_3rdparty_in1k_20220803-d66e61df.pth",
-        reshape_last_feat=True,
-        drop_path_rate=0,
-        init_cfg=[
-            dict(
-                type='TruncNormal',
-                layer=['Conv2d', 'Linear'],
-                std=.02,
-                bias=0.),
-            dict(type='Constant', layer=['GroupNorm'], val=1., bias=0.),
-            dict(type='Constant', layer=['LayerScale'], val=1e-5)
-        ]
+        name = "MobileNetV2",
+        pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
+        out_indices = (7, ),
+        sbp_build=True,
+        keep_ratio_list=[0.25]
     ),
     neck = dict(
         name = "PoolNeck",
         num_classes = num_classes,
-        in_channels = 448,
+        in_channels = 1280,
         clip_seg_num = clip_seg_num,
         need_pool = True
     ),
     head = dict(
-        name = "FCHead",
+        name = "MultiStageModel",
+        num_stages = 1,
+        num_layers = 4,
+        num_f_maps = 64,
+        dim = 1280,
         num_classes = num_classes,
-        sample_rate = sample_rate,
-        clip_seg_num = clip_seg_num,
-        drop_ratio=0.5,
-        in_channels=448
+        sample_rate = sample_rate
     ),
     loss = dict(
-        name = "SegmentationLoss",
+        name = "LovaszSegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
         smooth_weight = 0.0,
         ignore_index = -100
-    )        
+    )  
 )
 
 POSTPRECESSING = dict(
@@ -90,14 +82,19 @@ OPTIMIZER = dict(
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 4,
+    num_workers = 2,
     train = dict(
-        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
-        sliding_window = sliding_window
+        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
     ),
     test = dict(
-        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         sliding_window = sliding_window,
+    )
+)
+
+COLLATE = dict(
+    train = dict(
+        clip_compress_keys = ["imgs", "masks", "labels"]
     )
 )
 
@@ -110,27 +107,28 @@ PIPELINE = dict(
                     name='DecordContainer')
         ),
         sample = dict(
-            name = "VideoStreamSampler",
+            name = "VideoClipSampler",
             is_train = False,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
-            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
+            clip_num=2,
             sample_add_key_pair={"frames":"imgs"},
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "VideoTransform",
-            transform_list = [
+            name = "VideoClipTransform",
+            transform_dict = dict(
+                imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
                 dict(RandomHorizontalFlip = None),
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
-                    std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
-                ))
-            ]
+                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                ))]
+            )
         )
     ),
     test = dict(
@@ -151,16 +149,17 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_list = [
-                dict(ResizeImproved = dict(size = 256)),
-                dict(CenterCrop = dict(size = 224)),
-                dict(PILToTensor = None),
-                dict(ToFloat = None),
-                dict(Normalize = dict(
-                    mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
-                    std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
-                ))
-            ]
+            transform_dict = dict(
+                imgs = [
+                    dict(ResizeImproved = dict(size = 256)),
+                    dict(CenterCrop = dict(size = 224)),
+                    dict(PILToTensor = None),
+                    dict(ToFloat = None),
+                    dict(Normalize = dict(
+                        mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                        std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                    ))]
+            )
         )
     )
 )

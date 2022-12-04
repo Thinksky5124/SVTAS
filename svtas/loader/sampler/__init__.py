@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:06:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-17 13:52:39
+LastEditTime : 2022-12-03 20:22:19
 Description  : Sample pipline module
 FilePath     : /SVTAS/svtas/loader/sampler/__init__.py
 '''
@@ -16,5 +16,5 @@ __all__ = [
     'FeatureStreamSampler', 'VideoStreamSampler',
     'FeatureSampler', 'VideoClipSampler',
     'VideoPredictionFeatureStreamSampler', 'VideoPredictionVideoStreamSampler',
-    'FrameIndexSample', 'VideoSampler'
+    'FrameIndexSample', 'VideoSampler',
 ]

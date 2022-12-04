@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 20:55:37
+LastEditTime : 2022-12-04 21:23:45
 Description  : Collect function
 FilePath     : /SVTAS/svtas/loader/pipline/collect_fn.py
 '''
@@ -40,12 +40,14 @@ class BatchCompose():
                  max_keys=[""],
                  compress_keys=[""],
                  dropout_keys=[""],
-                 to_tensor_keys=["imgs", "masks", "labels"]):
+                 to_tensor_keys=["imgs", "masks", "labels"],
+                 clip_compress_keys=[]):
         self.to_tensor_keys = to_tensor_keys
         self.max_keys = max_keys
         self.compress_keys = compress_keys
         self.dropout_keys = dropout_keys
         self.ignore_index = ignore_index
+        self.clip_compress_keys = clip_compress_keys
     
     def _compose_list(self, batch, key):
         output_list = []
@@ -81,6 +83,11 @@ class BatchCompose():
                 out_tensor = torch.nn.utils.rnn.pad_sequence(output_list, batch_first=True, padding_value=0.0)
         else:
             out_tensor = output_list[0].unsqueeze(0)
+        if key in self.clip_compress_keys:
+            out_tensor_shape = list(out_tensor.shape)
+            del out_tensor_shape[0]
+            out_tensor_shape[0] = -1
+            out_tensor = out_tensor.reshape(out_tensor_shape)
         return out_tensor
 
     def __call__(self, batch):

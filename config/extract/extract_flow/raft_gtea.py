@@ -52,7 +52,7 @@ PIPELINE = dict(
         sample_mode = "uniform"
     ),
     transform = dict(
-        name = "VideoStreamTransform",
+        name = "VideoTransform",
         transform_list = [
             dict(PILToTensor = None),
             dict(ToFloat = None),
