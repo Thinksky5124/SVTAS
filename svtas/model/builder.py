@@ -2,13 +2,13 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:16:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-01 16:31:03
+LastEditTime : 2022-12-07 20:12:18
 Description: registry and builder model
 FilePath     : /SVTAS/svtas/model/builder.py
 '''
 from ..utils.build import Registry
 from ..utils.build import build
-from ..utils.sbp import StochasticBackpropagation
+from ..utils.sbp import StochasticBackPropagation
 
 BACKBONES = Registry('backbone')
 NECKS = Registry('neck')
@@ -20,7 +20,7 @@ POSTPRECESSING = Registry('post_precessing')
 def build_backbone(cfg):
     """Build backbone."""
     kwargs=dict()
-    for key in StochasticBackpropagation.SBP_ARGUMENTS:
+    for key in StochasticBackPropagation.SBP_ARGUMENTS:
         if key in cfg.keys():
             kwargs[key] = cfg.pop(key)
     return build(cfg, BACKBONES, **kwargs)
@@ -28,7 +28,7 @@ def build_backbone(cfg):
 def build_head(cfg):
     """Build head."""
     kwargs=dict()
-    for key in StochasticBackpropagation.SBP_ARGUMENTS:
+    for key in StochasticBackPropagation.SBP_ARGUMENTS:
         if key in cfg.keys():
             kwargs[key] = cfg.pop(key)
     return build(cfg, HEADS, **kwargs)
@@ -36,7 +36,7 @@ def build_head(cfg):
 def build_neck(cfg):
     """Build neck."""
     kwargs=dict()
-    for key in StochasticBackpropagation.SBP_ARGUMENTS:
+    for key in StochasticBackPropagation.SBP_ARGUMENTS:
         if key in cfg.keys():
             kwargs[key] = cfg.pop(key)
     return build(cfg, NECKS, **kwargs)

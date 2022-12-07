@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-04 20:44:01
+LastEditTime : 2022-12-05 09:17:54
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -309,8 +309,8 @@ class VideoClipSampler(VideoStreamSampler):
         small_frames_video_len = min(frames_len, video_len)
 
         # generate sample index
-        clip_start_frame_idx = min(self.sampled_clip_index * (small_frames_video_len // self.clip_num), small_frames_video_len - sample_num * sample_rate - 1)
-        clip_end_frame_idx = min((self.sampled_clip_index + 1) * (small_frames_video_len // self.clip_num), small_frames_video_len - sample_num * sample_rate)
+        clip_start_frame_idx = min(self.sampled_clip_index * (small_frames_video_len // self.clip_num), max(small_frames_video_len - sample_num * sample_rate - 1, 0))
+        clip_end_frame_idx = min((self.sampled_clip_index + 1) * (small_frames_video_len // self.clip_num), max(small_frames_video_len - sample_num * sample_rate, 0))
         start_frame = random.randint(clip_start_frame_idx, clip_end_frame_idx)
         end_frame = start_frame + sample_num * sample_rate
 

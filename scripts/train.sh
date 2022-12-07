@@ -2,7 +2,7 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-05-22 17:05:58
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2022-11-30 15:10:25
+ # @LastEditTime : 2022-12-05 09:20:25
  # @Description  : train script
  # @FilePath     : /SVTAS/scripts/train.sh
 ### 

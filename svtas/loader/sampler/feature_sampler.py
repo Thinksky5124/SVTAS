@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-04 21:21:36
+LastEditTime : 2022-12-05 09:18:19
 Description  : feature sampler
 FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
 '''
@@ -196,8 +196,8 @@ class FeatureClipSampler(FeatureStreamSampler):
         small_frames_video_len = min(frames_len, video_len)
 
         # generate sample index
-        clip_start_frame_idx = min(self.sampled_clip_index * (small_frames_video_len // self.clip_num), small_frames_video_len - sample_num * sample_rate - 1)
-        clip_end_frame_idx = min((self.sampled_clip_index + 1) * (small_frames_video_len // self.clip_num), small_frames_video_len - sample_num * sample_rate)
+        clip_start_frame_idx = min(self.sampled_clip_index * (small_frames_video_len // self.clip_num), max(small_frames_video_len - sample_num * sample_rate - 1, 0))
+        clip_end_frame_idx = min((self.sampled_clip_index + 1) * (small_frames_video_len // self.clip_num), max(small_frames_video_len - sample_num * sample_rate, 0))
         start_frame = random.randint(clip_start_frame_idx, clip_end_frame_idx)
         end_frame = start_frame + sample_num * sample_rate
 

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-09-24 14:41:16
+LastEditTime : 2022-12-05 09:42:39
 Description: metric class
-FilePath     : /ETESVS/metric/temporal_action_segmentation/temporal_action_segmentation_metric.py
+FilePath     : /SVTAS/svtas/metric/temporal_action_segmentation/temporal_action_segmentation_metric.py
 '''
 import numpy as np
 import os
@@ -45,6 +45,10 @@ class TASegmentationMetric(BaseTASegmentationMetric):
 
         single_batch_f1 = 0.
         single_batch_acc = 0.
+
+        if len(vid) != len(predicted_batch):
+            repet_rate = len(predicted_batch) // len(vid)
+            vid = [val for val in vid for i in range(repet_rate)]
         for bs in range(len(predicted_batch)):
             predicted = predicted_batch[bs]
             output_np = output_np_batch[bs]

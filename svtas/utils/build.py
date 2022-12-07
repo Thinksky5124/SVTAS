@@ -6,7 +6,7 @@ LastEditTime: 2022-04-27 15:30:52
 Description: build tools
 FilePath: /ETESVS/utils/build.py
 '''
-from .sbp import StochasticBackpropagation
+from .sbp import StochasticBackPropagation
 # Refence:https://github.com/open-mmlab/mmaction2/blob/f3d4817d781b45fa02447a2181db5c87eccc3335/mmaction/models/builder.py
 # Refence:https://github.com/Thinksky5124/PaddleVideo/blob/develop/paddlevideo/utils/registry.py
 
@@ -105,7 +105,7 @@ def build(cfg, registry, key='name', **kwargs):
         raise KeyError('{} is not in the {} registry'.format(
                 obj_type, registry.name))
     if 'sbp_build' in kwargs.keys() and kwargs['sbp_build']:
-        sbp = StochasticBackpropagation(**kwargs)
+        sbp = StochasticBackPropagation(**kwargs)
         obj_cls = sbp(obj_cls)
     
     return obj_cls(**cfg_copy)

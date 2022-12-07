@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-23 20:14:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-04 20:20:42
+LastEditTime : 2022-12-07 21:00:19
 Description  : Stochastic Backpropagation Decorator Module
 FilePath     : /SVTAS/svtas/utils/sbp.py
 '''
@@ -11,7 +11,7 @@ import torch
 import random
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Any, Literal, List
+from typing import Any, List
 from functools import partial
 
 WRAPPER_ASSIGNMENTS = ('__module__', '__name__', '__qualname__', '__doc__',
@@ -61,7 +61,7 @@ def wraps(wrapped,
     return partial(update_wrapper, wrapped=wrapped,
                    assigned=assigned, updated=updated)
 
-class SBPOP(torch.autograd.Function):
+class StochasticBackPropagationOperator(torch.autograd.Function):
     @staticmethod
     def forward(ctx: Any, forward_fn, args_len: int, *input: Any) -> torch.Tensor:
         args = input[:args_len]
@@ -70,10 +70,11 @@ class SBPOP(torch.autograd.Function):
         with torch.no_grad():
             y = forward_fn(*args)
         
-        input_w_grad, grad_mask_tuple = StochasticBackpropagation.grad_mask_fn(*args)
+        input_w_grad, grad_mask_tuple, sample_index_tuple = StochasticBackPropagation.grad_mask_fn(*args)
         ctx.save_for_backward(*input_w_grad)
         ctx.save_forward = forward_fn
         ctx.grad_mask_tuple = grad_mask_tuple
+        ctx.sample_index_tuple = sample_index_tuple
         ctx.params = params
         ctx.args_len = args_len
         return y
@@ -90,8 +91,9 @@ class SBPOP(torch.autograd.Function):
             y = ctx.save_forward(*input_w_grad_list)
 
         grad_outputs_list = []
-        for dy, grad_mask in zip(grad_outputs, ctx.grad_mask_tuple):
-            dy = StochasticBackpropagation.mismatch_grad_mask_sample(dy, grad_mask=grad_mask)
+        for dy, sample_index_list, grad_mask in zip(grad_outputs, ctx.sample_index_tuple, ctx.grad_mask_tuple):
+            assert len(list(y.shape)) == len(list(grad_mask.shape)), "x and y must be equal dim length"
+            dy = StochasticBackPropagation.mismatch_grad_mask_sample(dy, sample_shape=list(y.shape), sample_index_list=sample_index_list, raw_sample_shape=list(grad_mask.shape))
             grad_outputs_list.append(dy)
         input_tuple = (input_w_grad_list[0], ) if len(input_w_grad_list) == 1 else tuple(input_w_grad_list[:ctx.args_len])
         input_grads = list(torch.autograd.grad(y, input_tuple + ctx.params, grad_outputs_list, allow_unused=True))
@@ -106,11 +108,11 @@ class SBPOP(torch.autograd.Function):
         for param_grad in input_grads[ctx.args_len:]:
             input_grad_list.append(param_grad)
 
-        del ctx.save_forward, ctx.grad_mask_tuple, ctx.params, ctx.args_len
+        del ctx.save_forward, ctx.grad_mask_tuple, ctx.sample_index_tuple, ctx.params, ctx.args_len
         return (None, None) + tuple(input_grad_list)
 
-class StochasticBackpropagation(object):
-    """Stochastic Backpropagation Decorator
+class StochasticBackPropagation(object):
+    """Stochastic Back Propagation Decorator
     
     This class will overwrite nn.Module class to support stochastic backpropagation.
     It can use as a decorator or funtion.
@@ -130,24 +132,26 @@ class StochasticBackpropagation(object):
 
     case 1:
     ``` 
-    @StochasticBackpropagation()
+    @StochasticBackPropagation()
     class Module(nn.Module):
         ...
     ```
     case 2:
     ``` 
-    sbp = StochasticBackpropagation()
+    sbp = StochasticBackPropagation()
     sbo_module = sbp(Module)
     ```
     """
-    SBP_ARGUMENTS = ('sbp_build', 'keep_ratio_list', 'grad_mask_mode', 'sample_dims')
+    SBP_ARGUMENTS = ('sbp_build', 'keep_ratio_list', 'grad_mask_mode_lsit', 'sample_dims')
     KEEP_RATIO_LIST = [1]
-    GRAD_MASK_MODE = 'uniform'
+    GRAD_MASK_MODE_LIST = 'uniform'
     SAMPLE_DIMS = [0]
+    SUPPORT_SAMPLE_MODE = ['uniform', 'random', 'random_shift', 'uniform_random', 'uniform_grid',
+                            'uniform_grid_shift', 'random_grid']
     def __init__(self,
                  keep_ratio_list: List[float] = [0.125],
                  sample_dims: List[int] = [0],
-                 grad_mask_mode: Literal = 'uniform',
+                 grad_mask_mode_lsit: List[str] = ['uniform'],
                  **kwargs) -> None:
         if isinstance(keep_ratio_list, float):
             assert keep_ratio_list <= 1., f"keep_ratio must not grater than 1., now {keep_ratio_list:.2f}."
@@ -157,55 +161,86 @@ class StochasticBackpropagation(object):
                 assert keep_ratio <= 1., f"keep_ratio must not grater than 1., now {keep_ratio:.2f}."
         if len(keep_ratio_list) != len(sample_dims):
             if len(keep_ratio_list) == 1:
-                keep_ratio_list = keep_ratio_list[0]*len(sample_dims)
+                keep_ratio_list = keep_ratio_list*len(sample_dims)
             else:
                 raise ValueError("keep_ratio_list len must be equal to sample_dims len!")
         keep_ratio_list_t = []
         for keep_ratio in keep_ratio_list:
             keep_ratio_list_t.append(int(1 / keep_ratio))
-        StochasticBackpropagation.KEEP_RATIO_LIST = keep_ratio_list_t
+        StochasticBackPropagation.KEEP_RATIO_LIST = keep_ratio_list_t
 
-        assert grad_mask_mode in ['uniform', 'random', 'random_shift', 'uniform_random'], f"grad_mask_mode: {grad_mask_mode} is not support!"
-        StochasticBackpropagation.GRAD_MASK_MODE = grad_mask_mode
+        if isinstance(grad_mask_mode_lsit, str):
+            assert grad_mask_mode_lsit in StochasticBackPropagation.SUPPORT_SAMPLE_MODE, f"grad_mask_mode: {grad_mask_mode_lsit} is not support!"
+            grad_mask_mode_lsit = [grad_mask_mode_lsit]
+        else:
+            for grad_mask_mode in grad_mask_mode_lsit:
+                assert grad_mask_mode in StochasticBackPropagation.SUPPORT_SAMPLE_MODE, f"grad_mask_mode: {grad_mask_mode} is not support!"
+
+        if len(grad_mask_mode_lsit) != len(sample_dims):
+            if len(grad_mask_mode_lsit) == 1:
+                grad_mask_mode_lsit = grad_mask_mode_lsit*len(sample_dims)
+            else:
+                raise ValueError("grad_mask_mode_lsit len must be equal to sample_dims len!")
+        
+        StochasticBackPropagation.GRAD_MASK_MODE_LIST = grad_mask_mode_lsit
         # sort dims accelerate sample
         sample_dims.sort()
-        StochasticBackpropagation.SAMPLE_DIMS = sample_dims
+        StochasticBackPropagation.SAMPLE_DIMS = sample_dims
     
     @staticmethod
-    def generate_sample(original_num, sample_num):
-        if StochasticBackpropagation.GRAD_MASK_MODE == 'uniform':
+    def generate_sample(sample_mode, original_num, sample_num):
+        if sample_mode == 'uniform':
             index = torch.arange(0, original_num, original_num // sample_num)
-        elif StochasticBackpropagation.GRAD_MASK_MODE == 'random':
+        elif sample_mode == 'random':
             sample_index = list(random.sample(list(range(0, original_num)), sample_num))
             sample_index.sort()
             index = torch.tensor(sample_index)
-        elif StochasticBackpropagation.GRAD_MASK_MODE == 'random_shift':
+        elif sample_mode == 'random_shift':
             index = torch.arange(0, original_num, original_num // sample_num) + torch.randint(0, high=original_num // sample_num)
-        elif StochasticBackpropagation.GRAD_MASK_MODE == 'uniform_random':
+        elif sample_mode == 'uniform_random':
+            index = torch.arange(0, original_num, original_num // sample_num)
+            index = index + torch.randint_like(index, high=original_num // sample_num)
+        elif sample_mode == 'uniform_grid':
+            #!
+            index = torch.arange(0, original_num, original_num // sample_num)
+            index = index + torch.randint_like(index, high=original_num // sample_num)
+        elif sample_mode == 'uniform_grid_shift':
+            #!
+            index = torch.arange(0, original_num, original_num // sample_num)
+            index = index + torch.randint_like(index, high=original_num // sample_num)
+        elif sample_mode == 'random_grid':
+            #!
             index = torch.arange(0, original_num, original_num // sample_num)
             index = index + torch.randint_like(index, high=original_num // sample_num)
         return index
     
     @staticmethod
-    def mismatch_grad_mask_sample(x: torch.Tensor, grad_mask: torch.Tensor):
-        re_grad_mask = grad_mask.float()
-        for x_dim, mask_dim, i in zip(x.shape, grad_mask.shape, range(len(x.shape))):
-            if i == 0 and i in StochasticBackpropagation.SAMPLE_DIMS:
-                batch_mask = torch.sum(re_grad_mask, dim=torch.arange(1, len(grad_mask.shape)).tolist(),keepdim=True).bool()
-                re_grad_mask = re_grad_mask * batch_mask
-            elif x_dim != mask_dim and i < 2:
-                re_grad_mask = torch.sum(re_grad_mask, dim=i, keepdim=True)
-            else:
-                re_grad_mask = F.interpolate(re_grad_mask, size=x.shape[2:])
+    def mismatch_grad_mask_sample(x: torch.Tensor, sample_shape: List[int], sample_index_list: List[torch.Tensor], raw_sample_shape: List[int]):
+        # regenrate
+        grad_mask_false = torch.zeros_like(x, dtype=torch.bool)
+        grad_mask_true = torch.ones_like(grad_mask_false)
+        grad_mask = None
 
-        re_grad_mask = re_grad_mask.bool()
-        x_keep_shape = list(x.shape)
-        for dim in range(len(re_grad_mask.shape)):
-            sum_dim = list(range(len(re_grad_mask.shape)))
-            del sum_dim[dim]
-            x_keep_shape[dim] = int(torch.sum(torch.sum(re_grad_mask, dim=sum_dim, keepdim=True).squeeze().bool()))
-        x_keep_shape[1] = int(x.shape[1])
-        x = x.masked_select(re_grad_mask).reshape(x_keep_shape)
+        for dim, sample_index in zip(StochasticBackPropagation.SAMPLE_DIMS, sample_index_list):
+
+            index = sample_index * (x.shape[dim] / raw_sample_shape[dim])
+            sample_sample_index = torch.arange(0, index.shape[0], index.shape[0] // sample_shape[dim])
+            index = index[sample_sample_index].long()
+
+            index_dims = torch.ones(len(x.shape), dtype=torch.int32)
+            index_dims[dim] = sample_shape[dim]
+            index = index.reshape(index_dims.tolist())
+            expand_dims = copy.deepcopy(list(x.shape))
+            expand_dims[dim] = 1
+            grad_mask_index = index.repeat(expand_dims).to(device=x.device)
+            
+            if grad_mask is None:
+                grad_mask = torch.scatter(grad_mask_false, dim, grad_mask_index, grad_mask_true)
+            else:
+                grad_mask = grad_mask * torch.scatter(grad_mask_false, dim, grad_mask_index, grad_mask_true)
+
+        grad_mask = grad_mask.bool()
+        x = x.masked_select(grad_mask).reshape(sample_shape)
         return x
     
     @staticmethod
@@ -216,12 +251,16 @@ class StochasticBackpropagation(object):
         x_keep_shape = list(x.shape)
         grad_mask = None
 
-        for dim, keep_ratio in zip(StochasticBackpropagation.SAMPLE_DIMS, StochasticBackpropagation.KEEP_RATIO_LIST):
+        sample_index_list = []
+
+        for dim, keep_ratio, sample_mode in zip(StochasticBackPropagation.SAMPLE_DIMS, StochasticBackPropagation.KEEP_RATIO_LIST,
+                                   StochasticBackPropagation.GRAD_MASK_MODE_LIST):
             T = x_keep_shape[dim]
-            d_T = T // keep_ratio
+            d_T = 1 if T // keep_ratio <= 0 else T // keep_ratio
             x_keep_shape[dim] = d_T
             
-            index = StochasticBackpropagation.generate_sample(original_num=T, sample_num=d_T)
+            index = StochasticBackPropagation.generate_sample(sample_mode=sample_mode, original_num=T, sample_num=d_T)
+            sample_index_list.append(index)
 
             index_dims = torch.ones(len(x.shape), dtype=torch.int32)
             index_dims[dim] = d_T
@@ -239,7 +278,7 @@ class StochasticBackpropagation(object):
 
         if not return_mask:
             return x_w_grad
-        return x_w_grad, grad_mask
+        return x_w_grad, grad_mask, sample_index_list
     
     @staticmethod
     def grad_mask_fn(*input: Any):
@@ -247,14 +286,17 @@ class StochasticBackpropagation(object):
         """
         input_w_grad = []
         grad_mask_tuple = []
+        sample_index_tuple = []
         for x in input:
-            x_w_grad, grad_mask = StochasticBackpropagation.grad_mask_sample(x, return_mask=True)
+            x_w_grad, grad_mask, sample_indexes = StochasticBackPropagation.grad_mask_sample(x, return_mask=True)
             input_w_grad.append(x_w_grad)
             grad_mask_tuple.append(grad_mask)
+            sample_index_tuple.append(sample_indexes)
         input_w_grad = tuple(input_w_grad)
         grad_mask_tuple = tuple(grad_mask_tuple)
+        sample_index_tuple = tuple(sample_index_tuple)
 
-        return input_w_grad, grad_mask_tuple
+        return input_w_grad, grad_mask_tuple, sample_index_tuple
 
     def __call__(decorate_self, Module: nn.Module) -> nn.Module:
         @wraps(Module)
@@ -264,5 +306,5 @@ class StochasticBackpropagation(object):
 
             def forward(self, *args: Any):
                 args_len = len(args)
-                return SBPOP.apply(super().forward, args_len, *args, *tuple(self.parameters()))
+                return StochasticBackPropagationOperator.apply(super().forward, args_len, *args, *tuple(self.parameters()))
         return SBPModule

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-03 19:59:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-04 21:17:17
+LastEditTime : 2022-12-06 16:28:05
 Description  : Raw Frame Clip Segmentation Dataset
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/raw_frame_clip_segmentation_dataset.py
 '''
@@ -13,12 +13,37 @@ import os.path as osp
 
 import numpy as np
 from ...builder import DATASET
-from .raw_frame_segmentation_dataset import RawFrameSegmentationDataset
+from .item_base_dataset import ItemDataset
 
 @DATASET.register()
-class RawFrameClipSegmentationDataset(RawFrameSegmentationDataset):
+class RawFrameClipSegmentationDataset(ItemDataset):
     def __init__(self, videos_path, **kwargs):
         super().__init__(videos_path, **kwargs)
+    
+    def load_file(self):
+        """Load index file to get video information."""
+        if self.dataset_type in ['gtea', '50salads', 'thumos14', 'egtea']:
+            file_ptr = open(self.file_path, 'r')
+            info = file_ptr.read().split('\n')[:-1]
+            file_ptr.close()
+        elif self.dataset_type in ['breakfast']:
+            file_ptr = open(self.file_path, 'r')
+            info = file_ptr.read().split('\n')[:-1]
+            file_ptr.close()
+            refine_info = []
+            for info_name in info:
+                video_ptr = info_name.split('.')[0].split('_')
+                file_name = ''
+                for j in range(2):
+                    if video_ptr[j] == 'stereo01':
+                        video_ptr[j] = 'stereo'
+                    file_name = file_name + video_ptr[j] + '/'
+                file_name = file_name + video_ptr[2] + '_' + video_ptr[3]
+                if 'stereo' in file_name:
+                    file_name = file_name + '_ch0'
+                refine_info.append([info_name, file_name])
+            info = refine_info
+        return info
     
     def __getitem__(self, index):
         output_data_dict = {}

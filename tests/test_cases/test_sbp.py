@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-29 21:02:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-01 11:03:21
+LastEditTime : 2022-12-07 20:12:03
 Description  : Auto Test launch script use `Pytest`
 FilePath     : /SVTAS/tests/test_cases/test_sbp.py
 '''
@@ -14,7 +14,7 @@ import torch.nn as nn
 import numpy as np
 from logging import getLogger
 from ..common.hook import TorchHook
-from svtas.utils.sbp import StochasticBackpropagation
+from svtas.utils.sbp import StochasticBackPropagation
 from svtas.model import backbones, necks, heads
 from svtas.model.builder import BACKBONES
 
@@ -72,7 +72,7 @@ class TestSBP:
                       num_classes = 11,
                       clip_seg_num = 32,
                       sample_rate = 1):
-        sbp = StochasticBackpropagation(0.5)
+        sbp = StochasticBackPropagation(0.5)
         SBPModule = sbp(BACKBONES.get("MobileNetV2"))
         backbone = SBPModule(pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
                     out_indices = (7, ))
@@ -95,7 +95,7 @@ class TestSBP:
                       num_classes = 11,
                       clip_seg_num = 32,
                       sample_rate = 1):
-        @StochasticBackpropagation(0.5)
+        @StochasticBackPropagation(0.5)
         class BackboneModule(nn.Module):
             def __init__(self):
                 super().__init__()
