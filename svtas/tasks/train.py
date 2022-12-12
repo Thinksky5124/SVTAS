@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-01 15:12:14
+LastEditTime : 2022-12-12 23:02:48
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -266,11 +266,10 @@ def train(cfg,
             best_flag = False
             if local_rank <= 0:
                 # metric output
+                Metric_dict = dict()
                 for k, v in runner.Metric.items():
-                    if k == "TAS":
-                        Metric_dict = v.accumulate()
-                    else:
-                        v.accumulate()
+                    temp_Metric_dict = v.accumulate()
+                    Metric_dict.update(temp_Metric_dict)
                 
                 if Metric_dict[criterion_metric_name] > best:
                     best = Metric_dict[criterion_metric_name]

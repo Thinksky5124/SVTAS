@@ -2,13 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:11:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 20:54:12
+LastEditTime : 2022-12-12 22:46:28
 Description  : Temporal action segmentation base class
 FilePath     : /SVTAS/svtas/metric/temporal_action_segmentation/temporal_action_segmentation_base_class.py
 '''
 import os
 import numpy as np
-import pandas as pd
 from ..base_metric import BaseMetric
 from ...utils.config import get_logger
 from ..builder import METRIC
@@ -81,7 +80,6 @@ class BaseTASegmentationMetric(BaseMetric):
         # cls score
         correct = 0
         total = 0
-        edit = 0
 
         for i in range(len(gt_content)):
             total += 1
@@ -94,7 +92,6 @@ class BaseTASegmentationMetric(BaseMetric):
                 self.total_correct += 1
 
         edit_num = edit_score(recog_content, gt_content)
-        edit += edit_num
         self.total_edit += edit_num
 
         for s in range(self.overlap_len):

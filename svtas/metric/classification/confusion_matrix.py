@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 15:19:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 21:09:31
+LastEditTime : 2022-12-12 23:10:19
 Description  : file content
 FilePath     : /SVTAS/svtas/metric/classification/confusion_matrix.py
 '''
@@ -102,7 +102,7 @@ class ConfusionMatrix(BaseMetric):
 
             table.add_row([self.labels[i], Precision, Recall, Specificity])
         logger = get_logger("SVTAS")
-        logger.info("Classification confusion Matrix: \n" + str(table))
+        logger.info("Model performence in Classification task (Confusion Matrix): \n" + str(table))
         if self.plot and self.train_mode is False:
             self.plot(acc)
         
