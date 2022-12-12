@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 15:19:20
+LastEditTime : 2022-12-12 19:41:23
 Description: recorder construct function
 FilePath     : /SVTAS/svtas/utils/recorder.py
 '''
@@ -16,7 +16,6 @@ def build_recod(architecture_type, mode):
                     'reader_time': AverageMeter('reader_time', '.5f'),
                     'loss': AverageMeter('loss', '7.5f'),
                     'lr': AverageMeter('lr', 'f', need_avg=False),
-                    'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                     'Acc': AverageMeter("Acc", '.5f'),
                     'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
                     'backbone_loss': AverageMeter("backbone_loss", '.5f'),
@@ -27,7 +26,6 @@ def build_recod(architecture_type, mode):
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                    'Acc': AverageMeter("Acc", '.5f'),
                    'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
                    'backbone_loss': AverageMeter("backbone_loss", '.5f'),
@@ -41,7 +39,6 @@ def build_recod(architecture_type, mode):
                     'reader_time': AverageMeter('reader_time', '.5f'),
                     'loss': AverageMeter('loss', '7.5f'),
                     'lr': AverageMeter('lr', 'f', need_avg=False),
-                    'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                     'Acc': AverageMeter("Acc", '.5f'),
                     'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
                     'backbone_loss': AverageMeter("backbone_loss", '.5f'),
@@ -51,7 +48,6 @@ def build_recod(architecture_type, mode):
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                    'Acc': AverageMeter("Acc", '.5f'),
                    'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
                    'backbone_loss': AverageMeter("backbone_loss", '.5f'),
@@ -65,7 +61,6 @@ def build_recod(architecture_type, mode):
                     'reader_time': AverageMeter('reader_time', '.5f'),
                     'loss': AverageMeter('loss', '7.5f'),
                     'lr': AverageMeter('lr', 'f', need_avg=False),
-                    'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                     'Acc': AverageMeter("Acc", '.5f'),
                     'Seg_Acc': AverageMeter("Seg_Acc", '.5f')
                     }
@@ -73,7 +68,6 @@ def build_recod(architecture_type, mode):
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                    'Acc': AverageMeter("Acc", '.5f'),
                    'Seg_Acc': AverageMeter("Seg_Acc", '.5f')
                   }
@@ -83,7 +77,6 @@ def build_recod(architecture_type, mode):
                     'reader_time': AverageMeter('reader_time', '.5f'),
                     'loss': AverageMeter('loss', '7.5f'),
                     'lr': AverageMeter('lr', 'f', need_avg=False),
-                    'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                     'Acc': AverageMeter("Acc", '.5f'),
                     'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
                     'img_seg_loss': AverageMeter("img_seg_loss", '.5f'),
@@ -93,7 +86,6 @@ def build_recod(architecture_type, mode):
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                    'reader_time': AverageMeter('reader_time', '.5f'),
                    'loss': AverageMeter('loss', '7.5f'),
-                   'F1@0.5': AverageMeter("F1@0.50", '.5f'),
                    'Acc': AverageMeter("Acc", '.5f'),
                    'Seg_Acc': AverageMeter("Seg_Acc", '.5f'),
                    'img_seg_loss': AverageMeter("img_seg_loss", '.5f'),

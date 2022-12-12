@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 15:19:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 17:14:13
+LastEditTime : 2022-12-12 21:09:31
 Description  : file content
 FilePath     : /SVTAS/svtas/metric/classification/confusion_matrix.py
 '''
@@ -53,9 +53,17 @@ class ConfusionMatrix(BaseMetric):
         self.matrix = np.zeros((self.num_classes, self.num_classes))
 
     def update(self, vid, ground_truth_list, outputs):
+        acc = 0.
+        total = 1
         for labels, preds in zip(ground_truth_list, outputs['predict']):
             for p, t in zip(preds, labels):
                 self.matrix[p, t] += 1
+                if p != t:
+                    total += 1
+                elif p == t:
+                    total += 1
+                    acc += 1
+        return acc / total
 
     def accumulate(self):
         # calculate accuracy
@@ -94,7 +102,7 @@ class ConfusionMatrix(BaseMetric):
 
             table.add_row([self.labels[i], Precision, Recall, Specificity])
         logger = get_logger("SVTAS")
-        logger.info("Confusion Matrix: \n" + str(table))
+        logger.info("Classification confusion Matrix: \n" + str(table))
         if self.plot and self.train_mode is False:
             self.plot(acc)
         

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-05 09:42:39
+LastEditTime : 2022-12-12 20:12:57
 Description: metric class
 FilePath     : /SVTAS/svtas/metric/temporal_action_segmentation/temporal_action_segmentation_metric.py
 '''
@@ -21,8 +21,6 @@ class TASegmentationMetric(BaseTASegmentationMetric):
                  overlap,
                  actions_map_file_path,
                  train_mode=False,
-                 max_proposal=100,
-                 tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
                  score_output=False,
                  gt_file_need=True,
@@ -32,7 +30,6 @@ class TASegmentationMetric(BaseTASegmentationMetric):
         """prepare for metrics
         """
         super().__init__(overlap, actions_map_file_path, train_mode,
-                         max_proposal, tiou_thresholds,
                          file_output, score_output, gt_file_need, output_format, output_dir, score_output_dir)
     
     def update(self, vid, ground_truth_batch, outputs):
@@ -69,11 +66,10 @@ class TASegmentationMetric(BaseTASegmentationMetric):
 
             result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result
-            single_f1, acc = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
-                            gt_detection)
+            single_f1, acc = self._update_score(recog_content, gt_content)
             single_batch_f1 += single_f1
             single_batch_acc += acc
-        return single_batch_f1 / len(predicted_batch), single_batch_acc / len(predicted_batch)
+        return single_batch_acc / len(predicted_batch)
 
     def accumulate(self):
         """accumulate metrics when finished all iters.

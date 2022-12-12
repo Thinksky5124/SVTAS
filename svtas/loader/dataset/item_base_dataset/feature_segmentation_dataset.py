@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 15:43:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:16:11
+LastEditTime : 2022-12-09 21:03:58
 Description  : feature dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/feature_segmentation_dataset.py
 '''
@@ -11,7 +11,6 @@ import os
 import os.path as osp
 
 import numpy as np
-import torch.utils.data as data
 
 from ...builder import DATASET
 from .item_base_dataset import ItemDataset

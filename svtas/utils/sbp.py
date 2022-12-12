@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-23 20:14:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-07 21:00:19
+LastEditTime : 2022-12-07 22:17:43
 Description  : Stochastic Backpropagation Decorator Module
 FilePath     : /SVTAS/svtas/utils/sbp.py
 '''
@@ -223,7 +223,7 @@ class StochasticBackPropagation(object):
 
         for dim, sample_index in zip(StochasticBackPropagation.SAMPLE_DIMS, sample_index_list):
 
-            index = sample_index * (x.shape[dim] / raw_sample_shape[dim])
+            index = torch.floor(sample_index * (x.shape[dim] / raw_sample_shape[dim]))
             sample_sample_index = torch.arange(0, index.shape[0], index.shape[0] // sample_shape[dim])
             index = index[sample_sample_index].long()
 

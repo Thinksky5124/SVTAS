@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 15:56:43
+LastEditTime : 2022-12-12 20:12:42
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -148,10 +148,7 @@ class Runner():
                 vid = vid_i
         
         for k, v in self.Metric.items():
-            if k == "TAS":
-                f1, acc = v.update(vid, ground_truth_list, outputs)
-            else:
-                v.update(vid, ground_truth_list, outputs)
+            acc = v.update(vid, ground_truth_list, outputs)
 
         self.current_step_vid_list = vid_list
         if len(self.current_step_vid_list) > 0:
@@ -168,7 +165,6 @@ class Runner():
         
         self._log_loss_dict()
         self.record_dict['batch_time'].update(time.time() - self.b_tic)
-        self.record_dict['F1@0.5'].update(f1, self.video_batch_size)
         self.record_dict['Acc'].update(acc, self.video_batch_size)
         self.record_dict['Seg_Acc'].update(self.seg_acc, self.video_batch_size)
 

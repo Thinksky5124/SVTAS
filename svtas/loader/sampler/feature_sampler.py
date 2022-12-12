@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-05 09:18:19
+LastEditTime : 2022-12-09 21:42:40
 Description  : feature sampler
 FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
 '''
@@ -173,7 +173,7 @@ class FeatureClipSampler(FeatureStreamSampler):
     def __init__(self,
                 feature_dim_dict={ "feature": 2048},
                 is_train=False,
-                clip_num=1,
+                random_temporal_agument=False,
                 sample_rate_dict={ "feature": 1,"labels": 1 },
                 sample_add_key_pair={ "frames": "feature" },
                 ignore_index=-100,
@@ -188,60 +188,25 @@ class FeatureClipSampler(FeatureStreamSampler):
                          ignore_index=ignore_index,
                          sample_mode=sample_mode,
                          format=format)
-        self.clip_num = clip_num
+        self.random_temporal_agument = random_temporal_agument
 
     def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):
         frames_len = int(results['frames_len'])
-        video_len = int(results['video_len'])
-        small_frames_video_len = min(frames_len, video_len)
+        feature_len = int(results['feature_len'])
+        small_frames_feature_len = min(frames_len, feature_len)
 
-        # generate sample index
-        clip_start_frame_idx = min(self.sampled_clip_index * (small_frames_video_len // self.clip_num), max(small_frames_video_len - sample_num * sample_rate - 1, 0))
-        clip_end_frame_idx = min((self.sampled_clip_index + 1) * (small_frames_video_len // self.clip_num), max(small_frames_video_len - sample_num * sample_rate, 0))
-        start_frame = random.randint(clip_start_frame_idx, clip_end_frame_idx)
-        end_frame = start_frame + sample_num * sample_rate
+        start_frame = int(results['start_frame'])
+        end_frame = int(results['end_frame'])
+
+        if self.random_temporal_agument:
+            clip_seg_num = self.clip_seg_num_dict[list(self.sample_add_key_pair.values())[0]]
+            random_temporal_shift = random.randint(-clip_seg_num, clip_seg_num)
+            if start_frame + random_temporal_shift >= 0:
+                start_frame = start_frame + random_temporal_shift
+                end_frame = end_frame + random_temporal_shift
+
+        if end_frame > small_frames_feature_len:
+            start_frame = small_frames_feature_len - (end_frame - start_frame)
+            end_frame = small_frames_feature_len
 
         return start_frame, end_frame
-    
-    def __call__(self, results):
-        """
-        Args:
-            results: data dict.
-        return:
-           data dict.
-        """
-        clip_results_list = []
-        for i in range(self.clip_num):
-            self.sampled_clip_index = i
-            # deal with object do not support add key
-            temp_dict = dict()
-            for sample_key, add_key in self.sample_add_key_pair.items():
-                temp_dict[sample_key] = results.pop(sample_key)
-            clip_results_dict = copy.deepcopy(results)
-            clip_results_dict.update(temp_dict)
-            for sample_key, add_key in self.sample_add_key_pair.items():
-                feature_dim = self.feature_dim_dict[add_key]
-                sample_rate = self.sample_rate_dict[add_key]
-                clip_seg_num = self.clip_seg_num_dict[add_key]
-                sliding_window = self.sliding_window_dict[add_key]
-                clip_results_dict = self._sample_frames(clip_results_dict, sample_rate, feature_dim, clip_seg_num, sliding_window, add_key=add_key, sample_key=sample_key)
-            sample_rate = self.sample_rate_dict["labels"]
-            clip_seg_num = self.clip_seg_num_dict["labels"]
-            sliding_window = self.sliding_window_dict["labels"]
-            clip_results_dict = self._sample_label(clip_results_dict, sample_rate, clip_seg_num, sliding_window, add_key='labels', sample_key='raw_labels')
-            clip_results_list.append(clip_results_dict)
-            # deal with object do not support add key
-            results.update(temp_dict)
-
-        for sample_key, add_key in self.sample_add_key_pair.items():
-            results.pop(sample_key)
-        # collect each clip results dict
-        add_key_set = set(clip_results_list[0].keys()) - set(results.keys())
-        for add_key in add_key_set:
-            collect_list = []
-            for clip_results in clip_results_list:
-                collect_list.append(clip_results[add_key])
-            results[add_key] = copy.deepcopy(collect_list)
-        # release memory space
-        del clip_results_list
-        return results

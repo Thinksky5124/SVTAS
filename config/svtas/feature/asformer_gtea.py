@@ -21,7 +21,7 @@ epochs = 50
 clip_seg_num = 256
 sliding_window = clip_seg_num * sample_rate
 dim = 2048
-model_name = "Stream_Asformer_512x1_gtea_split" + str(split)
+model_name = "Stream_ASFormer_512x1_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
