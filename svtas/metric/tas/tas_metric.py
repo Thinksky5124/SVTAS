@@ -8,7 +8,7 @@ FilePath     : /SVTAS/svtas/metric/temporal_action_segmentation/temporal_action_
 '''
 import numpy as np
 import os
-from .temporal_action_segmentation_base_class import BaseTASegmentationMetric
+from .tas_base_class import BaseTASegmentationMetric
 from ..builder import METRIC
 
 @METRIC.register()

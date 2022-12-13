@@ -7,11 +7,11 @@ Description  : Metric class
 FilePath     : /SVTAS/svtas/metric/__init__.py
 '''
 from .base_metric import BaseMetric
-from .temporal_action_segmentation import TASegmentationMetric, BaseTASegmentationMetric
+from .tas import TASegmentationMetric, BaseTASegmentationMetric
 from .classification import ConfusionMatrix
-from .temporal_action_localization import TALocalizationMetric
-from .temporal_action_proposal import TAProposalMetric
-from .stream_video_temporal_action_segmentation import SVTASegmentationMetric
+from .tal import TALocalizationMetric
+from .tap import TAProposalMetric
+from .svtas import SVTASegmentationMetric
 
 __all__ = [
     'TASegmentationMetric', 'BaseMetric', 'BaseTASegmentationMetric',

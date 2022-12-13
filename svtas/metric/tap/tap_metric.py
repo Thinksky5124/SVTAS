@@ -1,26 +1,25 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-12-12 16:19:29
+Date         : 2022-12-12 16:22:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 21:13:56
+LastEditTime : 2022-12-12 21:13:26
 Description  : file content
-FilePath     : /SVTAS/svtas/metric/temporal_action_localization/temporal_action_localization_metric.py
+FilePath     : /SVTAS/svtas/metric/temporal_action_proposal/temporal_action_proposal_metric.py
 '''
 import os
-import pandas as pd
 import numpy as np
 from ...utils.logger import get_logger
 from ..base_metric import BaseMetric
 from ..builder import METRIC
-from ..temporal_action_segmentation.temporal_action_segmentation_metric_utils import get_labels_scores_start_end_time
-from .utils import wrapper_compute_average_precision
+from ..tas.tas_metric_utils import get_labels_scores_start_end_time
+from .utils import boundary_AR
 
 @METRIC.register()
-class TALocalizationMetric(BaseMetric):
+class TAProposalMetric(BaseMetric):
     def __init__(self,
                  actions_map_file_path,
                  train_mode=False,
-                 show_ovberlaps=[0.5, 0.75],
+                 max_proposal=100,
                  tiou_thresholds=np.linspace(0.5, 0.95, 10),
                  file_output=False,
                  score_output=False,
@@ -37,7 +36,6 @@ class TALocalizationMetric(BaseMetric):
         self.score_output_dir = score_output_dir
         self.train_mode = train_mode
         self.tiou_thresholds = tiou_thresholds
-        self.show_ovberlaps = show_ovberlaps
         assert self.output_format in ["txt", "json"], "Unsupport output format: " + self.output_format + "!"
 
         if self.file_output is True and self.train_mode is False:
@@ -57,23 +55,12 @@ class TALocalizationMetric(BaseMetric):
         self.actions_dict = dict()
         for a in actions:
             self.actions_dict[a.split()[1]] = int(a.split()[0])
-            
-        self.logger = get_logger("SVTAS")
-        # localization score
-        self.pred_results_dict = {
-            "video-id": [],
-            "t_start": [],
-            "t_end": [],
-            "label": [],
-            "score": []
-        }
-        self.gt_results_dict = {
-            "video-id": [],
-            "t_start": [],
-            "t_end": [],
-            "label": []
-        }
 
+        self.logger = get_logger("SVTAS")
+        # boundary score
+        self.max_proposal = max_proposal
+        self.AR_at_AN = [[] for _ in range(max_proposal)]
+    
     def _write_seg_file(self, input_data, write_name, write_path):
         if self.output_format in ['txt']:
             self._write_txt_format(input_data, write_name, write_path)
@@ -114,41 +101,24 @@ class TALocalizationMetric(BaseMetric):
             outputs_arr, recog_content, self.actions_dict)
         gt_detection = get_labels_scores_start_end_time(
             np.ones(outputs_arr.shape), gt_content, self.actions_dict)
-        
+
         if self.file_output is True and self.train_mode is False:
             if self.gt_file_need is True:
                 self._write_seg_file(gt_content, vid + '-gt', self.output_dir)
             self._write_seg_file(recog_content, vid + '-pred', self.output_dir)
-            
         return [recog_content, gt_content, pred_detection, gt_detection]
-        
-    def _update_score(self, vid, pred_detection, gt_detection):
-        # localization score
+    
+    def _update_score(self, pred_detection, gt_detection):
+        # proposal score
+        for AN in range(self.max_proposal):
+            AR = boundary_AR(pred_detection,
+                             gt_detection,
+                             list(self.tiou_thresholds),
+                             max_proposal=(AN + 1))
+            self.AR_at_AN[AN].append(AR)
 
-        p_label, p_start, p_end, p_scores = pred_detection
-        g_label, g_start, g_end, _ = gt_detection
-        p_vid_list = vid * len(p_label)
-        g_vid_list = vid * len(g_label)
-
-        # collect
-        self.pred_results_dict[
-            "video-id"] = self.pred_results_dict["video-id"] + p_vid_list
-        self.pred_results_dict[
-            "t_start"] = self.pred_results_dict["t_start"] + p_start
-        self.pred_results_dict[
-            "t_end"] = self.pred_results_dict["t_end"] + p_end
-        self.pred_results_dict[
-            "label"] = self.pred_results_dict["label"] + p_label
-        self.pred_results_dict[
-            "score"] = self.pred_results_dict["score"] + p_scores
-
-        self.gt_results_dict[
-            "video-id"] = self.gt_results_dict["video-id"] + g_vid_list
-        self.gt_results_dict[
-            "t_start"] = self.gt_results_dict["t_start"] + g_start
-        self.gt_results_dict["t_end"] = self.gt_results_dict["t_end"] + g_end
-        self.gt_results_dict["label"] = self.gt_results_dict["label"] + g_label
-        
+        return AR
+    
     def update(self, vid, ground_truth_batch, outputs):
         """update metrics during each iter
         """
@@ -182,8 +152,8 @@ class TALocalizationMetric(BaseMetric):
 
             result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr)
             recog_content, gt_content, pred_detection, gt_detection = result
-            self._update_score([vid[bs]], pred_detection, gt_detection)
-
+            ar = self._update_score(pred_detection, gt_detection)
+            
             # count acc
             acc = 0.
             total = 1
@@ -194,58 +164,41 @@ class TALocalizationMetric(BaseMetric):
                     total += 1
                     acc += 1
             single_batch_acc += acc
-
         return single_batch_acc / len(predicted_batch)
     
     def _compute_metrics(self):
-        # localization metric
-        prediction = pd.DataFrame(self.pred_results_dict)
-        ground_truth = pd.DataFrame(self.gt_results_dict)
-
-        ap = wrapper_compute_average_precision(prediction, ground_truth,
-                                               self.tiou_thresholds,
-                                               self.actions_dict)
-
-        mAP = ap.mean(axis=1) * 100
-        average_mAP = mAP.mean()
+        # proposal metric
+        proposal_AUC = np.array(self.AR_at_AN) * 100
+        AUC = np.mean(proposal_AUC)
+        AR_at_AN1 = np.mean(proposal_AUC[0, :])
+        AR_at_AN5 = np.mean(proposal_AUC[4, :])
+        AR_at_AN15 = np.mean(proposal_AUC[14, :])
 
         # save metric
         metric_dict = dict()
-        overlap = list(self.tiou_thresholds)
-        for s in range(len(overlap)):
-            metric_dict['mAP@{:0.2f}'.format(
-                overlap[s])] = mAP[s]
-        metric_dict['avg_mAP'] = average_mAP
+        metric_dict['Auc'] = AUC
+        metric_dict['AR@AN1'] = AR_at_AN1
+        metric_dict['AR@AN5'] = AR_at_AN5
+        metric_dict['AR@AN15'] = AR_at_AN15
 
         return metric_dict
 
     def _log_metrics(self, metric_dict):
         # log metric
-        log_mertic_info = "Model performence in TAL task : "
-        # localization metric
-        for s in range(len(self.show_ovberlaps)):
-            log_mertic_info += 'mAP@{:0.2f}: {:.4f}, '.format(
-                self.show_ovberlaps[s],
-                metric_dict['mAP@{:0.2f}'.format(self.show_ovberlaps[s])])
-        log_mertic_info += "avg_mAP: {:.4f}, ".format(metric_dict['avg_mAP'])
+        log_mertic_info = "Model performence in TAP task : "
+
+        # boundary metric
+        log_mertic_info += "Auc: {:.4f}, ".format(metric_dict['Auc'])
+        log_mertic_info += "AR@AN1: {:.4f}, ".format(metric_dict['AR@AN1'])
+        log_mertic_info += "AR@AN5: {:.4f}, ".format(metric_dict['AR@AN5'])
+        log_mertic_info += "AR@AN15: {:.4f}, ".format(metric_dict['AR@AN15'])
+
         self.logger.info(log_mertic_info)
 
     def _clear_for_next_epoch(self):
         # clear for next epoch
-        # localization
-        self.pred_results_dict = {
-            "video-id": [],
-            "t_start": [],
-            "t_end": [],
-            "label": [],
-            "score": []
-        }
-        self.gt_results_dict = {
-            "video-id": [],
-            "t_start": [],
-            "t_end": [],
-            "label": []
-        }
+        # proposal
+        self.AR_at_AN = [[] for _ in range(self.max_proposal)]
     
     def accumulate(self):
         """accumulate metrics when finished all iters.

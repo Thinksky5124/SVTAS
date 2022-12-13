@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-09 21:41:26
+LastEditTime : 2022-12-13 09:58:09
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -302,8 +302,8 @@ class VideoClipSampler(VideoStreamSampler):
                          sample_mode=sample_mode,
                          frame_idx_key=frame_idx_key)
         self.random_temporal_agument = random_temporal_agument
-
-    def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):
+    
+    def _sample_start_end_idx(self, results):
         frames_len = int(results['frames_len'])
         video_len = int(results['video_len'])
         small_frames_video_len = min(frames_len, video_len)
@@ -322,4 +322,35 @@ class VideoClipSampler(VideoStreamSampler):
             start_frame = small_frames_video_len - (end_frame - start_frame)
             end_frame = small_frames_video_len
 
+        results['start_frame'] = start_frame
+        results['end_frame'] = end_frame
+        return results
+
+    def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):
+
+        start_frame = int(results['start_frame'])
+        end_frame = int(results['end_frame'])
+
         return start_frame, end_frame
+    
+    def __call__(self, results):
+        """
+        Args:
+            results: data dict.
+        return:
+           data dict.
+        """
+        results = self._sample_start_end_idx(results)
+        for sample_key, add_key in self.sample_add_key_pair.items():
+            channel_mode = self.channel_mode_dict[add_key]
+            channel = self.channel_num_dict[add_key]
+            sample_rate = self.sample_rate_dict[add_key]
+            clip_seg_num = self.clip_seg_num_dict[add_key]
+            sliding_window = self.sliding_window_dict[add_key]
+            results = self._sample_frames(results, sample_rate, channel_mode, channel, clip_seg_num, sliding_window, add_key=add_key, sample_key=sample_key)
+        sample_rate = self.sample_rate_dict["labels"]
+        clip_seg_num = self.clip_seg_num_dict["labels"]
+        sliding_window = self.sliding_window_dict["labels"]
+        results = self._sample_label(results, sample_rate, clip_seg_num, sliding_window, add_key='labels', sample_key='raw_labels')
+
+        return results

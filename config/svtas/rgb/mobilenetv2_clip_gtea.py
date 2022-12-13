@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 15:35:11
+LastEditTime : 2022-12-13 09:59:24
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_clip_gtea.py
 '''
@@ -106,7 +106,7 @@ PIPELINE = dict(
         sample = dict(
             name = "VideoClipSampler",
             is_train = True,
-            random_temporal_agument = False,
+            random_temporal_agument = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sample_add_key_pair={"frames":"imgs"},

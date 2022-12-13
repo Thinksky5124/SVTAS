@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:30:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 22:58:53
+LastEditTime : 2022-12-13 10:52:06
 Description  : file content
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_video_clip.py
 '''
@@ -41,12 +41,6 @@ METRIC = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         file_output = False,
         score_output = False),
-    ACC = dict(
-        name = "ConfusionMatrix",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        img_save_path = "./output",
-        need_plot = False,
-        need_color_bar = False,),
     TAP = dict(
         name = "TAProposalMetric",
         actions_map_file_path = "./data/gtea/mapping.txt",
@@ -63,11 +57,3 @@ METRIC = dict(
         file_output = False,
         score_output = False),
 )
-# METRIC = dict(
-#     TAS = dict(
-#     name = "TASegmentationMetric",
-#     overlap = [.1, .25, .5],
-#     actions_map_file_path = "./data/gtea/mapping.txt",
-#     file_output = False,
-#     score_output = False),
-# )

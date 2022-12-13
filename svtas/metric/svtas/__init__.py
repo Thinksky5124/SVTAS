@@ -6,7 +6,7 @@ LastEditTime : 2022-12-12 21:37:51
 Description  : file content
 FilePath     : /SVTAS/svtas/metric/stream_video_temporal_action_segmentation/__init__.py
 '''
-from .stream_video_temporal_action_segmentation_metric import SVTASegmentationMetric
+from .svtas_metric import SVTASegmentationMetric
 
 __all__ = [
     'SVTASegmentationMetric'

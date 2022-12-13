@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-12 21:34:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 23:06:06
+LastEditTime : 2022-12-13 10:14:01
 Description  : file content
-FilePath     : /SVTAS/svtas/metric/stream_video_temporal_action_segmentation/stream_video_temporal_action_segmentation_metric.py
+FilePath     : /SVTAS/svtas/metric/svtas/svtas_metric.py
 '''
 import os
 import numpy as np
@@ -12,8 +12,8 @@ from ..base_metric import BaseMetric
 from ...utils.config import get_logger
 from ..builder import METRIC
 
-from ..temporal_action_segmentation.temporal_action_segmentation_metric_utils import get_labels_scores_start_end_time
-from ..temporal_action_segmentation.temporal_action_segmentation_metric_utils import levenstein, edit_score, f_score
+from ..tas.tas_metric_utils import get_labels_scores_start_end_time
+from ..tas.tas_metric_utils import levenstein, edit_score, f_score
 
 @METRIC.register()
 class SVTASegmentationMetric(BaseMetric):
@@ -211,7 +211,7 @@ class SVTASegmentationMetric(BaseMetric):
         Fscore = dict()
         for s in range(self.overlap_len):
             f1 = self.total_f1[s] / self.total_seg
-            Fscore[self.overlap[s]] = f1
+            Fscore[self.overlap[s]] = f1 * 100
 
         # save metric
         metric_dict = dict()

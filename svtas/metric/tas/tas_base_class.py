@@ -12,8 +12,8 @@ from ..base_metric import BaseMetric
 from ...utils.config import get_logger
 from ..builder import METRIC
 
-from .temporal_action_segmentation_metric_utils import get_labels_scores_start_end_time
-from .temporal_action_segmentation_metric_utils import levenstein, edit_score, f_score
+from .tas_metric_utils import get_labels_scores_start_end_time
+from .tas_metric_utils import levenstein, edit_score, f_score
 
 @METRIC.register()
 class BaseTASegmentationMetric(BaseMetric):

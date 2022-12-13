@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:30:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 11:56:28
+LastEditTime : 2022-12-13 10:52:15
 Description  : file content
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_stream_video.py
 '''
@@ -35,25 +35,26 @@ DATASET = dict(
     )
 )
 
-# METRIC = dict(
-#     TAS = dict(
-#     name = "TASegmentationMetric",
-#     overlap = [.1, .25, .5],
-#     actions_map_file_path = "./data/gtea/mapping.txt",
-#     file_output = False,
-#     score_output = False),
-#     ACC = dict(
-#     name = "ConfusionMatrix",
-#     actions_map_file_path = "./data/gtea/mapping.txt",
-#     img_save_path = "./output",
-#     need_plot = True,
-#     need_color_bar = True,),
-# )
 METRIC = dict(
     TAS = dict(
-    name = "TASegmentationMetric",
-    overlap = [.1, .25, .5],
-    actions_map_file_path = "./data/gtea/mapping.txt",
-    file_output = False,
-    score_output = False),
+        name = "TASegmentationMetric",
+        overlap = [.1, .25, .5],
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        file_output = False,
+        score_output = False),
+    TAP = dict(
+        name = "TAProposalMetric",
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        max_proposal=100,),
+    TAL = dict(
+        name = "TALocalizationMetric",
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        show_ovberlaps=[0.5, 0.75],),
+    SVTAS = dict(
+        name = "SVTASegmentationMetric",
+        overlap = [.1, .25, .5],
+        segment_windows_size = 64,
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        file_output = False,
+        score_output = False),
 )
