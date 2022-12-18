@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-18 15:24:23
+LastEditTime : 2022-12-16 13:37:16
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_gtea.py
 '''
@@ -20,7 +20,7 @@ ignore_index = -100
 epochs = 50
 clip_seg_num = 256
 sliding_window = clip_seg_num * sample_rate
-dim = 2048
+dim = 1280
 model_name = "Stream_ASFormer_512x1_gtea_split" + str(split)
 
 MODEL = dict(
@@ -54,13 +54,13 @@ DATASET = dict(
     num_workers = 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = './data/gtea/raw_features',
+        # feature_path = './data/gtea/raw_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = './data/gtea/raw_features',
+        # feature_path = './data/gtea/raw_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     )
@@ -94,9 +94,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     ),
     test = dict(
@@ -122,9 +122,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     )
 )

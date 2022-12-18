@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-12 16:22:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 21:13:26
+LastEditTime : 2022-12-16 13:28:49
 Description  : file content
-FilePath     : /SVTAS/svtas/metric/temporal_action_proposal/temporal_action_proposal_metric.py
+FilePath     : /SVTAS/svtas/metric/tap/tap_metric.py
 '''
 import os
 import numpy as np
@@ -20,7 +20,7 @@ class TAProposalMetric(BaseMetric):
                  actions_map_file_path,
                  train_mode=False,
                  max_proposal=100,
-                 tiou_thresholds=np.linspace(0.5, 0.95, 10),
+                 tiou_thresholds=np.linspace(0.1, 0.5, 4),
                  file_output=False,
                  score_output=False,
                  gt_file_need=True,
@@ -163,6 +163,7 @@ class TAProposalMetric(BaseMetric):
                 elif p == t:
                     total += 1
                     acc += 1
+            acc = acc / total
             single_batch_acc += acc
         return single_batch_acc / len(predicted_batch)
     

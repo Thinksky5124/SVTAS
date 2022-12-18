@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:30:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-13 10:52:06
+LastEditTime : 2022-12-15 16:45:00
 Description  : file content
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_video_clip.py
 '''
@@ -48,12 +48,5 @@ METRIC = dict(
     TAL = dict(
         name = "TALocalizationMetric",
         actions_map_file_path = "./data/gtea/mapping.txt",
-        show_ovberlaps=[0.5, 0.75],),
-    SVTAS = dict(
-        name = "SVTASegmentationMetric",
-        overlap = [.1, .25, .5],
-        segment_windows_size = 64,
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        file_output = False,
-        score_output = False),
+        show_ovberlaps=[0.5, 0.75],)
 )

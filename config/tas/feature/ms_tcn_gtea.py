@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-16 10:48:11
+LastEditTime : 2022-12-15 16:32:21
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/ms_tcn_gtea.py
 '''
@@ -37,7 +37,6 @@ MODEL = dict(
 
 POSTPRECESSING = dict(
     name = "ScorePostProcessing",
-    num_classes = num_classes,
     ignore_index = ignore_index
 )
 
@@ -77,9 +76,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     ),
     test = dict(
@@ -102,9 +101,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     )
 )

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-13 09:59:24
+LastEditTime : 2022-12-15 16:51:38
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_clip_gtea.py
 '''
@@ -55,7 +55,7 @@ MODEL = dict(
         name = "LovaszSegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 0.0,
+        smooth_weight = 0.5,
         ignore_index = -100
     )  
 )
@@ -71,7 +71,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005,
+    learning_rate = 0.00005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,

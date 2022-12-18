@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 20:12:42
+LastEditTime : 2022-12-16 10:52:17
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -10,9 +10,6 @@ import torch
 import time
 from ..utils.logger import log_batch
 import torch.distributed as dist
-
-from ..utils.logger import get_logger
-
 
 try:
     from apex import amp

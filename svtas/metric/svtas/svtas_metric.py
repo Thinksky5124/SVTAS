@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-12 21:34:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-13 10:14:01
+LastEditTime : 2022-12-15 16:50:32
 Description  : file content
 FilePath     : /SVTAS/svtas/metric/svtas/svtas_metric.py
 '''
@@ -114,7 +114,6 @@ class SVTASegmentationMetric(BaseMetric):
                 f1 = np.nan_to_num(f1)
                 self.total_f1[s] += f1
                 current_f1[s] += f1
-
 
         return current_f1[-1] / current_seg_cnt, current_acc / current_seg_cnt
 

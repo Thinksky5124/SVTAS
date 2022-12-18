@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-09 15:51:23
+LastEditTime : 2022-12-16 11:10:38
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_gtea.py
 '''
@@ -15,7 +15,7 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 64
+clip_seg_num = 256
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
@@ -30,9 +30,9 @@ MODEL = dict(
         name = "MobileNetV2",
         pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
         out_indices = (7, ),
-        # sbp_build=True,
-        # keep_ratio_list=[0.125, 0.5, 0.5],
-        # sample_dims=[0, 2, 3]
+        sbp_build=True,
+        keep_ratio_list=[0.125],
+        sample_dims=[0]
     ),
     neck = dict(
         name = "PoolNeck",

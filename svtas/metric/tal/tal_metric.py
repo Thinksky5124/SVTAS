@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-12 16:19:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 21:13:56
+LastEditTime : 2022-12-15 16:49:32
 Description  : file content
-FilePath     : /SVTAS/svtas/metric/temporal_action_localization/temporal_action_localization_metric.py
+FilePath     : /SVTAS/svtas/metric/tal/tal_metric.py
 '''
 import os
 import pandas as pd
@@ -193,6 +193,7 @@ class TALocalizationMetric(BaseMetric):
                 elif p == t:
                     total += 1
                     acc += 1
+            acc = acc / total
             single_batch_acc += acc
 
         return single_batch_acc / len(predicted_batch)
