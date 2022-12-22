@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-16 13:34:26
+LastEditTime : 2022-12-22 17:10:48
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/asformer_gtea.py
 '''
@@ -28,7 +28,7 @@ MODEL = dict(
         r1 = 2,
         r2 = 2,
         num_f_maps = 64,
-        input_dim = 1280,
+        input_dim = 512,
         channel_masking_rate = 0.5,
         num_classes = num_classes,
         sample_rate = sample_rate

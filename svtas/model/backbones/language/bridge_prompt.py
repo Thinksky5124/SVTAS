@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-14 15:27:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 16:00:52
+LastEditTime : 2022-12-22 15:55:15
 Description  : Bridge-Prompt: Towards Ordinal Action Understanding in Instructional Videos ref:https://github.com/ttlmh/Bridge-Prompt
 FilePath     : /SVTAS/svtas/model/backbones/language/bridge_prompt.py
 '''
@@ -85,7 +85,6 @@ class BridgePrompt(nn.Module):
         self.cnt_max = cnt_max
         self.max_len = max_len
         
-
         text_aug_cnts = [f"This clip contains no actions.",
                         f"This clip contains only one action,", f"This clip contains two actions,",
                         f"This clip contains three actions,", f"This clip contains four actions,",

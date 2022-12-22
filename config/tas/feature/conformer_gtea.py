@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 20:59:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 20:41:38
+LastEditTime : 2022-12-22 18:00:25
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/conformer_gtea.py
 '''
@@ -24,10 +24,11 @@ model_name = "Conformer_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
-        input_dim = 2048,
+        input_dim = 512,
         encoder_dim = 64,
-        num_encoder_layers = 8,
-        input_dropout_p = 0.3,
+        num_stages = 3,
+        num_encoder_layers = 4,
+        input_dropout_p = 0.5,
         num_attention_heads = 8,
         feed_forward_expansion_factor = 4,
         conv_expansion_factor = 2,
@@ -36,6 +37,7 @@ MODEL = dict(
         conv_dropout_p = 0.1,
         conv_kernel_size = 31,
         half_step_residual = True,
+        need_subsampling = True,
         num_classes = num_classes,
         sample_rate = sample_rate
     ),
@@ -48,7 +50,6 @@ MODEL = dict(
 
 POSTPRECESSING = dict(
     name = "ScorePostProcessing",
-    num_classes = num_classes,
     ignore_index = ignore_index
 )
 
@@ -57,12 +58,12 @@ DATASET = dict(
     video_batch_size = batch_size,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features"
+        # feature_path = "./data/gtea/raw_features"
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features"
+        # feature_path = "./data/gtea/raw_features"
         # flow_feature_path = "./data/gtea/flow_features"
     )
 )
@@ -92,9 +93,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     ),
     test = dict(
@@ -117,9 +118,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     )
 )

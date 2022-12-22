@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-06 16:43:17
+LastEditTime : 2022-12-22 19:30:23
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
-FilePath     : /ETESVS/model/heads/segmentation/asformer.py
+FilePath     : /SVTAS/svtas/model/heads/segmentation/asformer.py
 '''
 import torch
 import torch.nn as nn
@@ -14,7 +14,6 @@ import copy
 import numpy as np
 import math
 from ...builder import HEADS
-
 
 def exponential_descrease(idx_decoder, p=3):
     return math.exp(-p*idx_decoder)

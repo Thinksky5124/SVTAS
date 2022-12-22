@@ -1,79 +1,97 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-10-30 16:48:22
+Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-22 16:02:45
+LastEditTime : 2022-12-19 15:57:27
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/bridge_prompt_ms_tcn_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/models/action_recognition/swin_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
-split = 1
+
 num_classes = 11
-sample_rate = 1
+sample_rate = 2
 clip_seg_num = 32
-sliding_window = 32
 ignore_index = -100
-batch_size = 1
+sliding_window = clip_seg_num * sample_rate
+split = 1
+batch_size = 2
 epochs = 50
-cnt_max = 30
-model_name = "BridgePrompt_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+
+model_name = "SwinTransformer3D_MSTCN_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "ActionCLIP",
-    pretrained = "./data/checkpoint/vit-16-32f.pt",
-    image_prompt = dict(
-        name = "CLIP",
-        # pretrained = "./data/checkpoint/ViT-B-16.pt",
-        embed_dim = 512,
-        image_resolution = 224,
-        vision_layers = 12,
-        vision_width = 768,
-        vision_patch_size = 16,
-        context_length = 77,
-        vocab_size = 49408,
-        transformer_width = 512,
-        transformer_heads = 8,
-        transformer_layers = 12,
-        joint=False,
-        tsm=False,
-        clip_seg_num=clip_seg_num,
-        dropout = 0.,
-        emb_dropout = 0.,
+    architecture = "Recognition3D",
+    backbone = dict(
+        name = "SwinTransformer3D",
+        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        pretrained2d = False,
+        patch_size = [2, 4, 4],
+        embed_dim = 96,
+        depths = [2, 2, 6, 2],
+        num_heads = [3, 6, 12, 24],
+        window_size = [8,7,7],
+        mlp_ratio = 4.,
+        qkv_bias = True,
+        qk_scale = None,
+        drop_rate = 0.,
+        attn_drop_rate = 0.,
+        drop_path_rate = 0.2,
+        patch_norm = True
     ),
-    text_prompt = dict(
-        name = "BridgePromptTextEncoder",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        cnt_max=cnt_max
-    ),
-    fusion_neck = dict(
-        name = "BridgePromptFusionEarlyhyp",
-        embedding_dim = 512,
-        num_layers=6,
-        cnt_max=cnt_max,
-        clip_seg_num = clip_seg_num
+    neck = dict(
+        name = "PoolNeck",
+        num_classes = num_classes,
+        in_channels = 768,
+        clip_seg_num = clip_seg_num // 2,
+        need_pool = True
     ),
     head = dict(
-        name = "MultiStageModel",
+        # name = "FCHead",
+        # num_classes = num_classes,
+        # sample_rate = sample_rate * 2,
+        # clip_seg_num = clip_seg_num // 2,
+        # drop_ratio=0.5,
+        # in_channels=768
+        # name = "ASFormer",
+        # num_decoders = 3,
+        # num_layers = 10,
+        # r1 = 2,
+        # r2 = 2,
+        # num_f_maps = 64,
+        # input_dim = 768,
+        # channel_masking_rate = 0.5,
+        # num_classes = num_classes,
+        # sample_rate = sample_rate * 2
+        name = "Conformer",
+        num_classes = num_classes,
+        sample_rate = sample_rate * 2,
+        input_dim = 768,
+        encoder_dim = 64,
         num_stages = 1,
-        num_layers = 4,
-        num_f_maps = 64,
-        dim = 512,
-        num_classes = 11,
-        sample_rate = sample_rate
+        num_encoder_layers = 1,
+        input_dropout_p = 0.5,
+        num_attention_heads = 8,
+        feed_forward_expansion_factor = 4,
+        conv_expansion_factor = 2,
+        feed_forward_dropout_p = 0.1,
+        attention_dropout_p = 0.1,
+        conv_dropout_p = 0.1,
+        conv_kernel_size = 11,
+        half_step_residual = True,
+        need_subsampling = False,
     ),
     loss = dict(
-        name = "BridgePromptCLIPSegmentationLoss",
+        name = "LovaszSegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        cnt_max = cnt_max,
-        smooth_weight = 0.15,
-        ignore_index = -100,
-        is_segmentation=True
-    )
+        smooth_weight = 0.0,
+        ignore_index = -100
+    )  
 )
 
 POSTPRECESSING = dict(
@@ -84,6 +102,17 @@ POSTPRECESSING = dict(
 
 LRSCHEDULER = dict(
     step_size = [epochs]
+)
+
+OPTIMIZER = dict(
+    learning_rate = 0.0005,
+    weight_decay = 1e-4,
+    betas = (0.9, 0.999),
+    need_grad_accumulate = True,
+    finetuning_scale_factor=0.5,
+    no_decay_key = [],
+    finetuning_key = [],
+    freeze_key = [],
 )
 
 DATASET = dict(
@@ -129,8 +158,8 @@ PIPELINE = dict(
                 dict(Normalize = dict(
                     mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                     std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
-                ))
-            ])
+                ))]
+            )
         )
     ),
     test = dict(
@@ -153,15 +182,15 @@ PIPELINE = dict(
             name = "VideoTransform",
             transform_dict = dict(
                 imgs = [
-                dict(ResizeImproved = dict(size = 256)),
-                dict(CenterCrop = dict(size = 224)),
-                dict(PILToTensor = None),
-                dict(ToFloat = None),
-                dict(Normalize = dict(
-                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
-                ))
-            ])
+                    dict(ResizeImproved = dict(size = 256)),
+                    dict(CenterCrop = dict(size = 224)),
+                    dict(PILToTensor = None),
+                    dict(ToFloat = None),
+                    dict(Normalize = dict(
+                        mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                        std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                    ))]
+            )
         )
     )
 )

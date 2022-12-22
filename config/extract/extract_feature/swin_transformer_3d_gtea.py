@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-10-31 10:25:20
+Date         : 2022-12-22 16:37:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-22 17:10:09
-Description  : Bridge Prompt
-FilePath     : /SVTAS/config/extract/extract_feature/bridge_prompt_rgb_gtea.py
+LastEditTime : 2022-12-22 16:41:58
+Description  : file content
+FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_gtea.py
 '''
 _base_ = [
     '../../_base_/collater/stream_compose.py'
@@ -12,58 +12,43 @@ _base_ = [
 
 sample_rate = 1
 ignore_index = -100
-sliding_window = 16
-clip_seg_num = 16
+sliding_window = 32
+clip_seg_num = 32
 
 MODEL = dict(
-    architecture = "ActionCLIP",
-    pretrained = "./data/checkpoint/last_model.pt",
-    is_feature_extract = True,
-    image_prompt = dict(
-        name = "CLIP",
-        # pretrained = "./data/ViT-B-16.pt",
-        embed_dim = 512,
-        image_resolution = 224,
-        vision_layers = 12,
-        vision_width = 768,
-        vision_patch_size = 16,
-        context_length = 77,
-        vocab_size = 49408,
-        transformer_width = 512,
-        transformer_heads = 8,
-        transformer_layers = 12,
-        joint=False,
-        tsm=False,
-        clip_seg_num=clip_seg_num,
-        dropout = 0.,
-        emb_dropout = 0.,
-        need_spatial=True
+    architecture = "Recognition3D",
+    backbone = dict(
+        name = "SwinTransformer3D",
+        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        pretrained2d = False,
+        patch_size = [2, 4, 4],
+        embed_dim = 96,
+        depths = [2, 2, 6, 2],
+        num_heads = [3, 6, 12, 24],
+        window_size = [8,7,7],
+        mlp_ratio = 4.,
+        qkv_bias = True,
+        qk_scale = None,
+        drop_rate = 0.,
+        attn_drop_rate = 0.,
+        drop_path_rate = 0.2,
+        patch_norm = True
     ),
-    text_prompt = dict(
-        name = "BridgePromptTextEncoder",
-        actions_map_file_path = "./data/gtea/mapping.txt"
-    ),
-    fusion_neck = dict(
-        name = "BridgePromptFusionEarlyhyp",
-        embedding_dim=512,
-        clip_seg_num=clip_seg_num,
-        num_layers=6,
-        cnt_max=7
-    ),
+    neck = None,
     head = dict(
         name = "FeatureExtractHead",
-        in_channels = 512,
-        input_seg_num = clip_seg_num,
+        in_channels = 768,
+        input_seg_num = clip_seg_num // 2,
         output_seg_num = clip_seg_num,
-        sample_rate = sample_rate,
+        sample_rate = sample_rate * 2,
         pool_space = True,
-        in_format = "N*T,C,H,W",
+        in_format = "N,C,T,H,W",
         out_format = "NCT"
     ),
     loss = None
 )
 
-PRETRAINED = None
+PRETRAINED = "./output/SwinTransformer3D_FC_32x2_gtea_split1/SwinTransformer3D_FC_32x2_gtea_split1_best.pt"
 
 POSTPRECESSING = dict(
     name = "StreamFeaturePostProcessing",
@@ -111,10 +96,9 @@ PIPELINE = dict(
             dict(CenterCrop = dict(size = 224)),
             dict(PILToTensor = None),
             dict(ToFloat = None),
-            dict(NormalizeColorTo1 = None),
             dict(Normalize = dict(
-                mean = [140.39158961711036 / 255.0, 108.18022223151027 / 255.0, 45.72351736766547 / 255.0],
-                std = [33.94421369129452 / 255.0, 35.93603536756186 / 255.0, 31.508484434367805 / 255.0]
+                mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
             ))
         ])
     )

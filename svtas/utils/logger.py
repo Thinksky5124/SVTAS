@@ -107,7 +107,7 @@ def setup_logger(output=None, name="SVTAS", level="INFO", tensorboard=False):
     return logger
 
 
-def get_logger(name, output=None, tensorboard=False):
+def get_logger(name="SVTAS", output=None, tensorboard=False):
     logger = logging.getLogger(name)
     if name in list(logger_initialized.keys()):
         if tensorboard is True:
@@ -185,11 +185,7 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
             coloring(epoch_str, "HEADER"),
             coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
             coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
-    elif mode in ["test"]:
-        logger.info("{:s} {:s} {:s} {:s} {}".format(
-            coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
-            coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
-    elif mode in ["infer"]:
+    elif mode in ["test", "infer"]:
         logger.info("{:s} {:s} {:s} {:s} {}".format(
             coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
             coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))

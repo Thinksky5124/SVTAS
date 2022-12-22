@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 16:54:34
+LastEditTime : 2022-12-18 19:32:08
 Description: avg pooling 3d to 2d neck
 FilePath     : /SVTAS/svtas/model/necks/pool_neck.py
 '''
@@ -15,6 +15,14 @@ from ..builder import NECKS
 
 @NECKS.register()
 class PoolNeck(nn.Module):
+    """Pool Neck Module
+    Pooling space information for different input size tensor.
+    
+    Shape:
+    1: [N T C H W] -> [N T C]
+    2: [N*T C H W] -> [N T C]
+    3: [N P C] -> [N T C]
+    """
     def __init__(self,
                  num_classes=11,
                  in_channels=1280,
