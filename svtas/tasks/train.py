@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 23:02:48
+LastEditTime : 2022-12-24 20:56:46
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -296,13 +296,10 @@ def train(cfg,
                     model_weight_dict = model.state_dict()
                 if use_amp is False:
                     checkpoint = {"model_state_dict": model_weight_dict,
-                            "optimizer_state_dict": optimizer.state_dict(),
                             "epoch": epoch,
                             "cfg": cfg.text}
                 else:
                     checkpoint = {"model_state_dict": model_weight_dict,
-                            "optimizer_state_dict": optimizer.state_dict(),
-                            "amp": amp.state_dict(),
                             "epoch": epoch,
                             "cfg": cfg.text}
                 torch.save(checkpoint,

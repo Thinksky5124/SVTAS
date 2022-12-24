@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 19:02:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 16:06:57
+LastEditTime : 2022-12-24 21:02:23
 Description  : file content
 FilePath     : /SVTAS/svtas/runner/visual_runner.py
 '''
@@ -151,18 +151,13 @@ class VisualRunner():
 
         # AblationCAM and ScoreCAM have batched implementations.
         # You can override the internal batch size for faster computation.
-        if self.visualize_cfg.data_key == "imgs":
-            cam_input_tensor = input_data[self.visualize_cfg.data_key].reshape([-1]+list(input_data[self.visualize_cfg.data_key].shape[-3:]))
-            input_tensor = input_data[self.visualize_cfg.data_key]
-        else:
-            cam_input_tensor = input_data[self.visualize_cfg.data_key]
-            input_tensor = input_data[self.visualize_cfg.data_key]
+        input_tensor = input_data[self.visualize_cfg.data_key]
             
         with torch.no_grad():
             outputs = self.model(input_tensor)
             score = outputs[0]
 
-        grayscale_cam = self.cam(input_tensor=cam_input_tensor,
+        grayscale_cam = self.cam(input_tensor=input_tensor,
                             targets=self.targets,
                             eigen_smooth=self.eigen_smooth,
                             aug_smooth=self.aug_smooth)

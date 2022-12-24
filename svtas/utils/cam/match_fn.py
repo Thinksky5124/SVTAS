@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 21:44:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 16:47:40
+LastEditTime : 2022-12-24 21:18:11
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/cam/match_fn.py
 '''
@@ -33,7 +33,8 @@ def feature_batch_match_fn(data_dict, grayscale_cam):
     for batch_id in range(len(data_dict['raw_feature'])):
         gray_img = np.expand_dims(data_dict['raw_feature'][batch_id], -1)
         norm_img = np.zeros(gray_img.shape)
-        cv2.normalize(gray_img , norm_img, 0, 255, cv2.NORM_MINMAX)
+        # get black image
+        cv2.normalize(norm_img , norm_img, 0, 255, cv2.NORM_MINMAX)
         norm_img = np.asarray(norm_img, dtype=np.uint8)
         heat_img = cv2.applyColorMap(norm_img, cv2.COLORMAP_JET)
         heat_img = cv2.cvtColor(heat_img, cv2.COLOR_BGR2RGB)

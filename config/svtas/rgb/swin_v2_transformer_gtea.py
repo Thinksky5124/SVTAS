@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 14:32:22
+LastEditTime : 2022-12-24 20:54:08
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_v2_transformer_gtea.py
 '''
@@ -114,7 +114,8 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_list = [
+            transform_dict = dict(
+                imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 256)),
                 dict(RandomHorizontalFlip = None),
@@ -124,7 +125,7 @@ PIPELINE = dict(
                     mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                     std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                 ))
-            ]
+            ])
         )
     ),
     test = dict(
@@ -145,7 +146,8 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_list = [
+            transform_dict = dict(
+                imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(CenterCrop = dict(size = 256)),
                 dict(PILToTensor = None),
@@ -154,7 +156,7 @@ PIPELINE = dict(
                     mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                     std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                 ))
-            ]
+            ])
         )
     )
 )

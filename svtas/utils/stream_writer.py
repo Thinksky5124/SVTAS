@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 17:52:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 18:57:29
+LastEditTime : 2022-12-24 20:39:05
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/stream_writer.py
 '''
@@ -147,7 +147,7 @@ class CAMVideoStreamWriter(VideoStreamWriter):
                     label_queue.put([labels[count]])
                     pred_img = label_arr2img(pred_queue, palette).convert('RGB')
                     label_img = label_arr2img(label_queue, palette).convert('RGB')
-                    past_width = int((label_img.size[0] / 32) * (self.frame_width - 40))
+                    past_width = int((label_img.size[0] / self.label_log_len) * (self.frame_width - 40))
                     pred_img = cv2.cvtColor(np.asarray(pred_img),cv2.COLOR_RGB2BGR)
                     label_img = cv2.cvtColor(np.asarray(label_img),cv2.COLOR_RGB2BGR)
                     pred_img = cv2.resize(pred_img, (past_width, 20))
@@ -227,7 +227,7 @@ class CAMImageStreamWriter(ImageStreamWriter):
         if self.need_label:
             pred_img = label_arr2img(list(preds[:len]), palette).convert('RGB')
             label_img = label_arr2img(list(labels[:len]), palette).convert('RGB')
-            past_width = int((label_img.size[0] / 32) * (self.frame_width - 40))
+            past_width = int((label_img.size[0] / len) * (self.frame_width - 40))
             pred_img = cv2.cvtColor(np.asarray(pred_img),cv2.COLOR_RGB2BGR)
             label_img = cv2.cvtColor(np.asarray(label_img),cv2.COLOR_RGB2BGR)
             pred_img = cv2.resize(pred_img, (past_width, 20))
@@ -241,7 +241,7 @@ class CAMImageStreamWriter(ImageStreamWriter):
             data_label = list(labels[:len])
             array_pred = np.array(data_pred).transpose()
             array_label = np.array(data_label).transpose()
-            label = list(set(array_pred[0, :].tolist()) | set(array_label[0, :].tolist()))
+            label = list(set(array_pred.tolist()) | set(array_label.tolist()))
             img = draw_action_label(img, palette, action_dict, label)
                 
         cv2.imwrite(path, img)

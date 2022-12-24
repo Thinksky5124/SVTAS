@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 21:20:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 17:00:58
+LastEditTime : 2022-12-24 20:57:29
 Description  : file content
 FilePath     : /SVTAS/config/cam_visualize/swin_v2_transformer_fc_visualize.py
 '''
@@ -56,7 +56,7 @@ MODEL = dict(
     )        
 )
 
-PRETRAINED = "./output/SwinTransformerV2_FC_32x2_gtea_split1/SwinTransformerV2_FC_32x2_gtea_split1_epoch_00001.pt"
+PRETRAINED = "./output/SwinTransformerV2_FC_32x2_gtea_split1/SwinTransformerV2_FC_32x2_gtea_split1_best.pt"
 
 VISUALIZE = dict(
     layer_name = ["model.backbone.norm"],
@@ -65,7 +65,7 @@ VISUALIZE = dict(
     ignore_index = ignore_index,
     data_key = "imgs",
     return_targets_name = dict(
-        CategorySegmentationTarget = None
+        CategorySegmentationTarget = dict(category=None)
     ),
     reshape_transform = "NPC",
     label_path = "./data/gtea/mapping.txt",
@@ -115,7 +115,7 @@ PIPELINE = dict(
         sample_mode = "uniform"
     ),
     transform = dict(
-        name = "VideoStreamRawFrameStoreTransform",
+        name = "VideoRawStoreTransform",
         transform_dict = dict(
             imgs = [
             dict(ResizeImproved = dict(size = 256)),

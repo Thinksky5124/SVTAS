@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 18:45:19
+LastEditTime : 2022-12-24 20:48:47
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_precessings/cam_post_processing.py
 '''
@@ -36,9 +36,10 @@ class CAMVideoPostProcessing():
     def update(self, cam_images, labels, score, idx):
         # seg_scores [stage_num N C T]
         # gt [N T]
+        score = torch.transpose(score[-1], -1, -2)
         self.labels_list.append(labels)
         with torch.no_grad():
-            pred = np.argmax(score.reshape([labels.shape[0], labels.shape[1], -1]).detach().cpu().numpy(), axis=-1)
+            pred = np.argmax(score.detach().cpu().numpy(), axis=-1)
             self.score_lsit.append(pred)
         for bs in range(cam_images.shape[0]):
             if len(self.imgs_list) < (bs + 1):
@@ -86,9 +87,10 @@ class CAMImagePostProcessing():
     def update(self, cam_images, labels, score, idx):
         # seg_scores [stage_num N C T]
         # gt [N T]
+        score = torch.transpose(score[-1], -1, -2)
         self.labels_list.append(labels)
         with torch.no_grad():
-            pred = np.argmax(score.reshape([labels.shape[0], labels.shape[1], -1]).detach().cpu().numpy(), axis=-1)
+            pred = np.argmax(score.detach().cpu().numpy(), axis=-1)
             self.score_lsit.append(pred)
         for bs in range(cam_images.shape[0]):
             if len(self.imgs_list) < (bs + 1):
