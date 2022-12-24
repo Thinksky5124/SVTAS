@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 19:02:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 21:02:23
+LastEditTime : 2022-12-24 22:05:20
 Description  : file content
 FilePath     : /SVTAS/svtas/runner/visual_runner.py
 '''
@@ -204,3 +204,4 @@ class VisualRunner():
             self.run_one_clip(sliding_seg)
             self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step)
             self.current_step = self.current_step + 1
+            self.post_processing.init_flag = False

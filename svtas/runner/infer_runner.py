@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-24 14:59:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:13:10
+LastEditTime : 2022-12-24 22:06:23
 Description  : Infer Runner Class
 FilePath     : /SVTAS/svtas/runner/infer_runner.py
 '''
@@ -176,3 +176,4 @@ class InferONNXRunner(Runner):
             self.run_one_clip(sliding_seg)
             self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
             self.current_step = self.current_step + 1
+            self.post_processing.init_flag = False

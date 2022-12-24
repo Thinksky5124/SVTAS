@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-16 10:52:17
+LastEditTime : 2022-12-24 22:06:16
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -268,3 +268,4 @@ class Runner():
             self.run_one_clip(sliding_seg)
             self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
             self.current_step = self.current_step + 1
+            self.post_processing.init_flag = False

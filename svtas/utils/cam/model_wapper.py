@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 17:50:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 16:52:15
+LastEditTime : 2022-12-24 22:20:11
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/cam/model_wapper.py
 '''

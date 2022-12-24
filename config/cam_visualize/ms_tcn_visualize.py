@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 20:48:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 22:15:37
+LastEditTime : 2022-12-24 22:22:02
 Description  : file content
-FilePath     : /SVTAS/config/cam_visualize/asformer_visualize.py
+FilePath     : /SVTAS/config/cam_visualize/ms_tcn_visualize.py
 '''
 _base_ = [
-    '../_base_/models/temporal_action_segmentation/asformer.py',
+    '../_base_/models/temporal_action_segmentation/ms_tcn.py',
     '../_base_/default_runtime.py', '../_base_/collater/batch_compose.py'
 ]
 
@@ -20,13 +20,7 @@ batch_size = 1
 
 MODEL = dict(
     head = dict(
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 512,
-        channel_masking_rate = 0.5,
+        dim = 512,
         num_classes = num_classes,
         sample_rate = sample_rate
     ),
@@ -37,10 +31,10 @@ MODEL = dict(
     )
 )
 
-PRETRAINED = "./output/Asformer_gtea_split1/Asformer_gtea_split1_best.pt"
+PRETRAINED = "./output/MSTCN_gtea_split1/MSTCN_gtea_split1_best.pt"
 
 VISUALIZE = dict(
-    layer_name = ["model.head.decoders.2.layers.9.conv_1x1"],
+    layer_name = ["model.head.stages.2.layers.9.conv_1x1"],
     batch_size = batch_size,
     sample_rate = sample_rate,
     ignore_index = ignore_index,
