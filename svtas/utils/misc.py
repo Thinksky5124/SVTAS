@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 15:53:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 10:53:02
+LastEditTime : 2022-12-24 18:56:10
 Description  : misc ref:https://github.com/open-mmlab/mmcv/blob/master/mmcv/utils/misc.py
 FilePath     : /SVTAS/svtas/utils/misc.py
 '''
@@ -423,7 +423,10 @@ def draw_action_label(img, palette, action_dict, label):
 
 
 def label_arr2img(label_queue, palette):
-    data = list(copy.deepcopy(label_queue.queue))
+    if isinstance(label_queue, list):
+        data = label_queue
+    else:
+        data = list(copy.deepcopy(label_queue.queue))
     array = np.array(data).transpose()
     arr = array.astype(np.uint8)
     arr = np.tile(arr, (20, 1))

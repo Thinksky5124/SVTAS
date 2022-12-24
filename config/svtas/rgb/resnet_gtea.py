@@ -35,8 +35,7 @@ MODEL = dict(
         pretrained="./data/checkpoint/resnet50-0676ba61.pth",
     ),
     neck = dict(
-        name = "PoolNeck",
-        num_classes = num_classes,
+       name = "PoolNeck",
         in_channels = 2048,
         clip_seg_num = clip_seg_num,
         need_pool = True

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-04 20:49:19
+LastEditTime : 2022-12-23 21:06:40
 Description  : Transform module
 FilePath     : /SVTAS/svtas/loader/transform/transform.py
 '''
@@ -81,6 +81,15 @@ class VideoRawStoreTransform(VideoTransform):
             results[key] = output
         return results
 
+@TRANSFORM.register()
+class FeatureRawStoreTransform(FeatureStreamTransform):
+    def __call__(self, results):
+        for key, transforms_pipeline in self.transforms_pipeline_dict.items():
+            results["raw_" + key] = copy.deepcopy(results[key])
+            output = self.transform(results[key], transforms_pipeline=transforms_pipeline)
+            results[key] = output
+        return results
+        
 @TRANSFORM.register()
 class VideoClipTransform(VideoTransform):
     

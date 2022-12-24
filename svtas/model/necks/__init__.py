@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-17 13:15:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 16:53:13
+LastEditTime : 2022-12-22 21:58:52
 Description  : neck registration
 FilePath     : /SVTAS/svtas/model/necks/__init__.py
 '''
@@ -15,9 +15,11 @@ from .bridge_fusion_earlyhyp import BridgePromptFusionEarlyhyp
 from .multimodality_fusion_neck import MultiModalityFusionNeck
 from .ipb_fusion_neck import IPBFusionNeck
 from .unsample_decoder_neck import UnsampleDecoderNeck
+from .task_fuion_neck import TaskFusionNeck
 
 __all__ = [
     'ETESVSNeck', 'ConvLSTMResidualLayer', 'LSTMST3DNeck', 'PoolNeck',
     'ActionCLIPFusionNeck', 'BridgePromptFusionEarlyhyp',
-    'MultiModalityFusionNeck', 'IPBFusionNeck', 'UnsampleDecoderNeck'
+    'MultiModalityFusionNeck', 'IPBFusionNeck', 'UnsampleDecoderNeck',
+    'TaskFusionNeck'
 ]

@@ -25,7 +25,7 @@ def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path=
         os.environ['ROS_LOG_DIR'] = os.path.join(os.getcwd(), config.work_dir)
 
     logger = setup_logger(f"./"+ logger_path + f"/{config.model_name}", name="SVTAS", level="INFO", tensorboard=tensorboard)
-    override_config(config, overrides)
+    override_config(config._cfg_dict, overrides)
     if show:
         print_config(config)
     return config

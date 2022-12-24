@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 15:08:36
+LastEditTime : 2022-12-24 14:03:38
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
@@ -11,17 +11,14 @@ import sys
 path = os.path.join(os.getcwd())
 sys.path.append(path)
 import argparse
-import numpy as np
 import torch
-from types import MethodType 
 from svtas.utils.config import Config
 import svtas.model.builder as model_builder
 import svtas.loader.builder as dataset_builder
 from mmcv.runner import load_state_dict
 from svtas.utils.logger import get_logger, setup_logger
-from tools.visualize.cam_forward_fn import cam_forward
+from svtas.utils.cam import ModelForwardWrapper, get_match_fn_class
 from svtas.runner.visual_runner import VisualRunner
-from svtas.model.post_precessings import CAMPostProcessing
 
 from pytorch_grad_cam import GradCAM, \
     ScoreCAM, \
@@ -32,7 +29,7 @@ from pytorch_grad_cam import GradCAM, \
     EigenGradCAM, \
     LayerCAM, \
     FullGrad
-
+        
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-cuda', action='store_true', default=True,
@@ -109,7 +106,7 @@ if __name__ == '__main__':
         load_state_dict(model, state_dicts, logger=logger)
         # model.load_state_dict(state_dicts)
     # override forawrd method
-    model.forward = MethodType(cam_forward, model)
+    model = ModelForwardWrapper(model=model, data_key=cfg.VISUALIZE.data_key, sample_rate=cfg.sample_rate)
     # construct dataloader
     num_workers = cfg.DATASET.get('num_workers', 0)
     test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
@@ -127,12 +124,13 @@ if __name__ == '__main__':
         num_workers=test_num_workers,
         collate_fn=sliding_concate_fn)
     
+    batch_infer = False
+    if cfg.COLLATE.test.name in ["BatchCompose"]:
+        batch_infer = True
+        
     visualize_cfg = cfg.VISUALIZE
-    post_processing = CAMPostProcessing(sample_rate=visualize_cfg.sample_rate,
-                                        ignore_index=visualize_cfg.ignore_index,
-                                        fps=visualize_cfg.fps,
-                                        output_frame_size=visualize_cfg.output_frame_size,
-                                        need_label=cfg.VISUALIZE.get('need_label', True))
+    post_processing = model_builder.build_post_precessing(cfg.POSTPRECESSING)
+    match_fn = get_match_fn_class(cfg.VISUALIZE.match_fn_name)
 
     if args.method not in methods:
         raise Exception(f"Method {args.method} not implemented")
@@ -146,10 +144,16 @@ if __name__ == '__main__':
                  visualize_cfg=visualize_cfg,
                  post_processing=post_processing,
                  cam_imgs_out_path=out_path,
-                 methods=methods)
+                 methods=methods,
+                 match_fn=match_fn)
 
     runner.epoch_init()
     for i, data in enumerate(dataloader):
-        runner.run_one_iter(data=data)
+        if batch_infer is True:
+            runner.run_one_batch(data=data)
+        elif len(data) == temporal_clip_batch_size or len(data[0]['labels'].shape) != 0:
+            runner.run_one_iter(data=data)
+        else:
+            break
     
     logger.info("Finish all visualization!")

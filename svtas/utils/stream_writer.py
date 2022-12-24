@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 17:52:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 11:41:16
+LastEditTime : 2022-12-24 18:57:29
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/stream_writer.py
 '''
@@ -178,3 +178,73 @@ class CAMVideoStreamWriter(VideoStreamWriter):
 
         self.cnt = 0
         self.tempdir.cleanup()
+
+class ImageStreamWriter(StreamWriter):
+    def __init__(self):
+        super().__init__()
+        self.cnt = 0
+    
+    def stream_write(self, imgs):
+        for img in imgs:
+            image_path = os.path.join(self.tempdir.name, str(self.cnt) + '.png')
+            cv2.imwrite(image_path, img=img)
+            self.cnt = self.cnt + 1
+            self.concat_file_list.append(image_path)
+    
+    def save(self, path, len):
+        raw_img = cv2.imread(self.dump_tem_file)
+        frame_height = int(raw_img.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        frame_width = int(raw_img.get(cv2.CAP_PROP_FRAME_WIDTH))
+        raw_img = raw_img[:, :len]
+        img = cv2.resize(raw_img, (frame_width, frame_height))
+        path = path.replace("mp4", "png")
+        cv2.imwrite(path, img)
+        self.cnt = 0
+        self.tempdir.cleanup()
+
+    def dump(self):
+        self.dump_tem_file = os.path.join(self.tempdir.name, 'temp.png')
+        img_list = []
+        for segment_image_file in self.concat_file_list:
+            seg_img = cv2.imread(segment_image_file)
+            img_list.append(seg_img)
+        concat_img =cv2.hconcat(img_list)
+        cv2.imwrite(self.dump_tem_file, concat_img)
+
+class CAMImageStreamWriter(ImageStreamWriter):
+    def __init__(self, frame_height, frame_width, need_label=True):
+        super().__init__()
+        self.frame_height = frame_height
+        self.frame_width = frame_width
+        self.need_label = need_label
+
+    def save(self, path, len, labels, preds, action_dict, palette):
+        raw_images = cv2.imread(self.dump_tem_file)
+        raw_images = raw_images[:, :len]
+        path = path.replace("mp4", "png")
+        img = cv2.resize(raw_images, (self.frame_width, self.frame_height))
+
+        if self.need_label:
+            pred_img = label_arr2img(list(preds[:len]), palette).convert('RGB')
+            label_img = label_arr2img(list(labels[:len]), palette).convert('RGB')
+            past_width = int((label_img.size[0] / 32) * (self.frame_width - 40))
+            pred_img = cv2.cvtColor(np.asarray(pred_img),cv2.COLOR_RGB2BGR)
+            label_img = cv2.cvtColor(np.asarray(label_img),cv2.COLOR_RGB2BGR)
+            pred_img = cv2.resize(pred_img, (past_width, 20))
+            label_img = cv2.resize(label_img, (past_width, 20))
+            cv2.putText(img, "Pr: ", (0, self.frame_height - 35), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
+            img[(self.frame_height - 50):(self.frame_height - 30), 30:(30 + past_width), :] = pred_img
+            cv2.putText(img, "GT: ", (0, self.frame_height - 15), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
+            img[(self.frame_height - 30):(self.frame_height - 10), 30:(30 + past_width), :] = label_img
+
+            data_pred = list(preds[:len])
+            data_label = list(labels[:len])
+            array_pred = np.array(data_pred).transpose()
+            array_label = np.array(data_label).transpose()
+            label = list(set(array_pred[0, :].tolist()) | set(array_label[0, :].tolist()))
+            img = draw_action_label(img, palette, action_dict, label)
+                
+        cv2.imwrite(path, img)
+        self.cnt = 0
+        self.tempdir.cleanup()
+    

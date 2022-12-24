@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-16 11:10:38
+LastEditTime : 2022-12-23 14:48:03
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/mobilenetv2_gtea.py
 '''
@@ -15,14 +15,14 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 256
+clip_seg_num = 128
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "MobileNetV2_MSTCN_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "MobileNetV2_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
@@ -35,8 +35,7 @@ MODEL = dict(
         sample_dims=[0]
     ),
     neck = dict(
-        name = "PoolNeck",
-        num_classes = num_classes,
+       name = "PoolNeck",
         in_channels = 1280,
         clip_seg_num = clip_seg_num,
         need_pool = True

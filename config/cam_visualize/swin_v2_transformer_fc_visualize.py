@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 21:20:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-30 19:40:57
+LastEditTime : 2022-12-24 17:00:58
 Description  : file content
 FilePath     : /SVTAS/config/cam_visualize/swin_v2_transformer_fc_visualize.py
 '''
@@ -34,8 +34,7 @@ MODEL = dict(
         drop_path_rate=0.2,
     ), 
     neck = dict(
-        name = "PoolNeck",
-        num_classes = num_classes,
+       name = "PoolNeck",
         in_channels = 768,
         clip_seg_num = clip_seg_num,
         need_pool = True
@@ -60,15 +59,26 @@ MODEL = dict(
 PRETRAINED = "./output/SwinTransformerV2_FC_32x2_gtea_split1/SwinTransformerV2_FC_32x2_gtea_split1_epoch_00001.pt"
 
 VISUALIZE = dict(
-    layer_name = ["backbone.norm"],
-    fps = 4,
+    layer_name = ["model.backbone.norm"],
     batch_size = batch_size,
     sample_rate = sample_rate,
     ignore_index = ignore_index,
-    return_targets_name = None,
-    output_frame_size = [720, 404],
+    data_key = "imgs",
+    return_targets_name = dict(
+        CategorySegmentationTarget = None
+    ),
     reshape_transform = "NPC",
-    label_path = "./data/gtea/mapping.txt"
+    label_path = "./data/gtea/mapping.txt",
+    match_fn_name = "rgb_stream_match_fn"
+)
+
+POSTPRECESSING = dict(
+    name = "CAMVideoPostProcessing",
+    sample_rate=sample_rate,
+    ignore_index=ignore_index,
+    fps=4,
+    output_frame_size = [720, 404],
+    need_label=True
 )
 
 DATASET = dict(
@@ -106,7 +116,8 @@ PIPELINE = dict(
     ),
     transform = dict(
         name = "VideoStreamRawFrameStoreTransform",
-        transform_list = [
+        transform_dict = dict(
+            imgs = [
             dict(ResizeImproved = dict(size = 256)),
             dict(CenterCrop = dict(size = 256)),
             dict(PILToTensor = None),
@@ -115,6 +126,6 @@ PIPELINE = dict(
                 mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                 std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
             ))
-        ]
+        ])
     )
 )

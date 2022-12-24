@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 21:09:41
+LastEditTime : 2022-12-23 13:33:15
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/efficientformer_gtea.py
 '''
@@ -15,14 +15,14 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 32
+clip_seg_num = 512
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
-epochs = 50
+epochs = 100
 
-model_name = "EfficientFormer_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "EfficientFormer_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition2D",
@@ -40,22 +40,43 @@ MODEL = dict(
                 bias=0.),
             dict(type='Constant', layer=['GroupNorm'], val=1., bias=0.),
             dict(type='Constant', layer=['LayerScale'], val=1e-5)
-        ]
+        ],
+        sbp_build=True,
+        keep_ratio_list=[0.125],
+        sample_dims=[0]
     ),
     neck = dict(
-        name = "PoolNeck",
-        num_classes = num_classes,
+       name = "PoolNeck",
         in_channels = 448,
         clip_seg_num = clip_seg_num,
         need_pool = True
     ),
     head = dict(
-        name = "FCHead",
+        # name = "FCHead",
+        # num_classes = num_classes,
+        # sample_rate = sample_rate,
+        # clip_seg_num = clip_seg_num,
+        # drop_ratio=0.5,
+        # in_channels=448
+        
+        # name = "MultiStageModel",
+        # num_stages = 1,
+        # num_layers = 4,
+        # num_f_maps = 64,
+        # dim = 448,
+        # num_classes = num_classes,
+        # sample_rate = sample_rate
+
+        name = "ASFormer",
+        num_decoders = 3,
+        num_layers = 10,
+        r1 = 2,
+        r2 = 2,
+        num_f_maps = 64,
+        input_dim = 448,
+        channel_masking_rate = 0.5,
         num_classes = num_classes,
-        sample_rate = sample_rate,
-        clip_seg_num = clip_seg_num,
-        drop_ratio=0.5,
-        in_channels=448
+        sample_rate = sample_rate
     ),
     loss = dict(
         name = "SegmentationLoss",
@@ -120,7 +141,8 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_list = [
+            transform_dict = dict(
+                imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
                 dict(RandomHorizontalFlip = None),
@@ -130,7 +152,7 @@ PIPELINE = dict(
                     mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                     std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                 ))
-            ]
+            ])
         )
     ),
     test = dict(
@@ -151,7 +173,8 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_list = [
+            transform_dict = dict(
+                imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(CenterCrop = dict(size = 224)),
                 dict(PILToTensor = None),
@@ -160,7 +183,7 @@ PIPELINE = dict(
                     mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
                     std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                 ))
-            ]
+            ])
         )
     )
 )

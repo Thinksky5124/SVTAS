@@ -34,8 +34,7 @@ MODEL = dict(
         embed_dims = 768
     ),
     neck = dict(
-        name = "PoolNeck",
-        num_classes = num_classes,
+       name = "PoolNeck",
         in_channels = 768,
         clip_seg_num = clip_seg_num,
         need_pool = True

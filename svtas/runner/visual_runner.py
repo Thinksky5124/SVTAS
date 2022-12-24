@@ -2,33 +2,23 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 19:02:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 11:12:17
+LastEditTime : 2022-12-24 16:06:57
 Description  : file content
 FilePath     : /SVTAS/svtas/runner/visual_runner.py
 '''
 import os
-import cv2
 import math
-import queue
-import numpy as np
 import torch
-import copy
 
-from tools.infer.infer import make_palette, label_arr2img, draw_action_label
-from pytorch_grad_cam import GuidedBackpropReLUModel
-from pytorch_grad_cam.utils.image import show_cam_on_image, \
-    preprocess_image
+from ..utils.flow_vis import make_palette
+from ..utils.cam import get_model_target_class
 from pytorch_grad_cam.ablation_layer import AblationLayerVit
 
 def reshape_transform(transform_form):
 # # class activation transform [N C T]
-    def reshape_transform_NCT(tensor, height=1, width=1):
-        result = torch.reshape(tensor, [tensor.shape[0], tensor.shape[1], height, width])
-        result = torch.permute(result, [0, 2, 3, 1])
-
-        # Bring the channels to the first dimension,
-        # like in CNNs.
-        result = result.transpose(2, 3).transpose(1, 2)
+    def reshape_transform_NCT(tensor):
+        # [N C T] -> [N C T 1]
+        result = tensor.unsqueeze(-1)
         return result
 
     # feature activation transform [N P C]
@@ -75,7 +65,8 @@ class VisualRunner():
                  visualize_cfg,
                  post_processing,
                  cam_imgs_out_path,
-                 methods):
+                 methods,
+                 match_fn):
         self.model = model
         self.logger = logger
         self.visualize_cfg = visualize_cfg
@@ -86,6 +77,7 @@ class VisualRunner():
         self.eigen_smooth = eigen_smooth
         self.aug_smooth = aug_smooth
         self.methods = methods
+        self.match_fn = match_fn
     
     def epoch_init(self):
         self.target_layers = []
@@ -114,7 +106,9 @@ class VisualRunner():
         if self.visualize_cfg.return_targets_name is None:
             self.targets = None
         else:
-            self.targets = self.visualize_cfg.return_targets_name
+            self.targets = []
+            for k, cfg in self.visualize_cfg.return_targets_name.items():
+                self.targets.append(get_model_target_class(target_name=k, cfg=cfg))
 
         # load mapping label
         file_ptr = open(self.visualize_cfg.label_path, 'r')
@@ -157,31 +151,24 @@ class VisualRunner():
 
         # AblationCAM and ScoreCAM have batched implementations.
         # You can override the internal batch size for faster computation.
-        input_tensor = input_data['imgs'].reshape([-1]+list(input_data['imgs'].shape[-3:]))
+        if self.visualize_cfg.data_key == "imgs":
+            cam_input_tensor = input_data[self.visualize_cfg.data_key].reshape([-1]+list(input_data[self.visualize_cfg.data_key].shape[-3:]))
+            input_tensor = input_data[self.visualize_cfg.data_key]
+        else:
+            cam_input_tensor = input_data[self.visualize_cfg.data_key]
+            input_tensor = input_data[self.visualize_cfg.data_key]
+            
         with torch.no_grad():
             outputs = self.model(input_tensor)
-            score = outputs
+            score = outputs[0]
 
-        grayscale_cam = self.cam(input_tensor=input_tensor,
+        grayscale_cam = self.cam(input_tensor=cam_input_tensor,
                             targets=self.targets,
                             eigen_smooth=self.eigen_smooth,
                             aug_smooth=self.aug_smooth)
 
         # Here grayscale_cam has only one image in the batch
-        cam_image_list = []
-        for batch_id in range(len(data_dict['raw_imgs'])):
-            batch_image_list = []
-            for sample_id in range(len(data_dict['raw_imgs'][batch_id])):
-                rgb_img = cv2.cvtColor(np.asarray(data_dict['raw_imgs'][batch_id][sample_id]), cv2.COLOR_RGB2BGR)[:, :, ::-1]
-                rgb_img = np.float32(rgb_img) / 255
-                rgb_img = cv2.resize(rgb_img, (grayscale_cam.shape[-1], grayscale_cam.shape[-2]))
-                grayscale_cam_sample = grayscale_cam[batch_id * len(data_dict['raw_imgs'][batch_id]) + sample_id, :]
-
-                cam_image = show_cam_on_image(rgb_img, grayscale_cam_sample)
-                batch_image_list.append(np.expand_dims(cam_image, 0))
-            batch_image = np.expand_dims(np.concatenate(batch_image_list, 0), 0)
-            cam_image_list.append(batch_image)
-        cam_images = np.concatenate(cam_image_list, 0)
+        cam_images = self.match_fn(data_dict, grayscale_cam)
         return score, cam_images
     
     def run_one_clip(self, data_dict):
@@ -210,3 +197,15 @@ class VisualRunner():
 
             if idx >= 0: 
                 self.run_one_clip(sliding_seg)
+    
+    def run_one_batch(self, data):
+        for sliding_seg in data:
+            step = self.current_step
+            vid_list = sliding_seg['vid_list']
+            sliding_num = sliding_seg['sliding_num']
+            idx = sliding_seg['current_sliding_cnt']
+
+            # run one batch
+            self.run_one_clip(sliding_seg)
+            self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step)
+            self.current_step = self.current_step + 1

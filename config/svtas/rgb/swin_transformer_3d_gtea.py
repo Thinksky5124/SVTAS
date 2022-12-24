@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-19 15:57:27
+LastEditTime : 2022-12-23 16:49:21
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_gtea.py
 '''
@@ -15,17 +15,17 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 32
+clip_seg_num = 128
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "SwinTransformer3D_MSTCN_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "Recognition3D",
+    architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
         name = "SwinTransformer3D",
         pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
@@ -41,14 +41,18 @@ MODEL = dict(
         drop_rate = 0.,
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
-        patch_norm = True
+        patch_norm = True,
+        # sbp_build=True,
+        # keep_ratio_list=[0.125],
+        # sample_dims=[0]
     ),
     neck = dict(
-        name = "PoolNeck",
-        num_classes = num_classes,
+        name = "TaskFusionNeck",
+        num_classes=num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True
+        need_pool = True,
+        fusion_ratio = 0.1
     ),
     head = dict(
         # name = "FCHead",
@@ -57,38 +61,39 @@ MODEL = dict(
         # clip_seg_num = clip_seg_num // 2,
         # drop_ratio=0.5,
         # in_channels=768
-        # name = "ASFormer",
-        # num_decoders = 3,
-        # num_layers = 10,
-        # r1 = 2,
-        # r2 = 2,
-        # num_f_maps = 64,
-        # input_dim = 768,
-        # channel_masking_rate = 0.5,
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 2
-        name = "Conformer",
-        num_classes = num_classes,
-        sample_rate = sample_rate * 2,
+        name = "ASFormer",
+        num_decoders = 3,
+        num_layers = 10,
+        r1 = 2,
+        r2 = 2,
+        num_f_maps = 64,
         input_dim = 768,
-        encoder_dim = 64,
-        num_stages = 1,
-        num_encoder_layers = 1,
-        input_dropout_p = 0.5,
-        num_attention_heads = 8,
-        feed_forward_expansion_factor = 4,
-        conv_expansion_factor = 2,
-        feed_forward_dropout_p = 0.1,
-        attention_dropout_p = 0.1,
-        conv_dropout_p = 0.1,
-        conv_kernel_size = 11,
-        half_step_residual = True,
-        need_subsampling = False,
+        channel_masking_rate = 0.5,
+        num_classes = num_classes,
+        sample_rate = sample_rate * 2
+        # name = "Conformer",
+        # num_classes = num_classes,
+        # sample_rate = sample_rate * 2,
+        # input_dim = 768,
+        # encoder_dim = 64,
+        # num_stages = 1,
+        # num_encoder_layers = 1,
+        # input_dropout_p = 0.5,
+        # num_attention_heads = 8,
+        # feed_forward_expansion_factor = 4,
+        # conv_expansion_factor = 2,
+        # feed_forward_dropout_p = 0.1,
+        # attention_dropout_p = 0.1,
+        # conv_dropout_p = 0.1,
+        # conv_kernel_size = 11,
+        # half_step_residual = True,
+        # need_subsampling = False,
     ),
     loss = dict(
-        name = "LovaszSegmentationLoss",
+        name = "StreamSegmentationLoss",
         num_classes = num_classes,
-        sample_rate = sample_rate,
+        backbone_sample_rate = sample_rate * 2,
+        head_sample_rate = sample_rate,
         smooth_weight = 0.0,
         ignore_index = -100
     )  
