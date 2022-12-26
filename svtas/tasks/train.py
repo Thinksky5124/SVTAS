@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 20:56:46
+LastEditTime : 2022-12-25 22:00:03
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -305,11 +305,11 @@ def train(cfg,
                 torch.save(checkpoint,
                     osp.join(output_dir, model_name + "_best.pt"))
                 logger.info(
-                        "Already save the best model (" + criterion_metric_name + f"){int(best * 10000) / 10000}"
+                        "Already save the best model (" + criterion_metric_name + f"){int(best * 10000) / 10000}."
                     )
 
         # 6. Save model and optimizer
-        if epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1 and local_rank <= 0:
+        if (epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1) and local_rank <= 0:
             if nprocs > 1:
                 model_weight_dict = model.module.state_dict()
             else:
@@ -329,6 +329,9 @@ def train(cfg,
                 checkpoint,
                 osp.join(output_dir,
                          model_name + f"_epoch_{epoch + 1:05d}.pt"))
+            logger.info(
+                        f"Already save the checkpoint model from epoch: {epoch + 1}."
+                    )
         
         if local_rank >= 0:
             torch.distributed.barrier()      

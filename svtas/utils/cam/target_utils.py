@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 17:41:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 21:12:14
+LastEditTime : 2022-12-25 11:48:05
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/cam/target_utils.py
 '''
@@ -29,7 +29,7 @@ class CategorySegmentationTarget:
                        for target, output in zip(targets, model_output)])
             return loss
         else:
-            return model_output[-1, :, :, self.category].sum()
+            return model_output[:, self.category].sum()
 
 class TemporalSegmentationTarget:
     def __init__(self, select_frame_idx_list=[]):

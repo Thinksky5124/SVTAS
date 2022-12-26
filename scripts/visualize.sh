@@ -2,7 +2,7 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-07-17 10:38:57
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2022-12-24 21:25:09
+ # @LastEditTime : 2022-12-25 11:53:01
  # @Description  : Visualization Script
  # @FilePath     : /SVTAS/scripts/visualize.sh
 ### 
@@ -17,4 +17,5 @@
 
 # # visualize cam image
 # python tools/visualize/cam_visualization.py -c config/cam_visualize/mobinetv2tsm_3Dtcn_visualize.yaml -o output --method gradcam++
-python tools/visualize/cam_visualization.py -c config/cam_visualize/asformer_visualize.py -o output --method gradcam
+# python tools/visualize/cam_visualization.py -c config/cam_visualize/asformer_visualize.py -o output --method gradcam
+python tools/visualize/cam_visualization.py -c config/cam_visualize/ms_tcn_visualize.py -o output --method gradcam

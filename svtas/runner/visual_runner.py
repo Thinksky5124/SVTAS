@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 19:02:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 22:05:20
+LastEditTime : 2022-12-24 22:39:13
 Description  : file content
 FilePath     : /SVTAS/svtas/runner/visual_runner.py
 '''
@@ -44,6 +44,7 @@ def reshape_transform(transform_form):
         # like in CNNs.
         result = result.transpose(2, 3).transpose(1, 2)
         return result
+        
     if transform_form == "NCT":
         return reshape_transform_NCT
     elif transform_form == "NPC":

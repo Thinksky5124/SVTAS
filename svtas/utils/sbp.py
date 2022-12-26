@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-23 20:14:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-07 22:17:43
+LastEditTime : 2022-12-25 14:26:54
 Description  : Stochastic Backpropagation Decorator Module
 FilePath     : /SVTAS/svtas/utils/sbp.py
 '''
@@ -146,8 +146,7 @@ class StochasticBackPropagation(object):
     KEEP_RATIO_LIST = [1]
     GRAD_MASK_MODE_LIST = 'uniform'
     SAMPLE_DIMS = [0]
-    SUPPORT_SAMPLE_MODE = ['uniform', 'random', 'random_shift', 'uniform_random', 'uniform_grid',
-                            'uniform_grid_shift', 'random_grid']
+    SUPPORT_SAMPLE_MODE = ['uniform', 'random', 'random_shift', 'uniform_random']
     def __init__(self,
                  keep_ratio_list: List[float] = [0.125],
                  sample_dims: List[int] = [0],
@@ -196,20 +195,8 @@ class StochasticBackPropagation(object):
             sample_index.sort()
             index = torch.tensor(sample_index)
         elif sample_mode == 'random_shift':
-            index = torch.arange(0, original_num, original_num // sample_num) + torch.randint(0, high=original_num // sample_num)
+            index = torch.arange(0, original_num, original_num // sample_num) + random.randint(a=0, b=original_num // sample_num)
         elif sample_mode == 'uniform_random':
-            index = torch.arange(0, original_num, original_num // sample_num)
-            index = index + torch.randint_like(index, high=original_num // sample_num)
-        elif sample_mode == 'uniform_grid':
-            #!
-            index = torch.arange(0, original_num, original_num // sample_num)
-            index = index + torch.randint_like(index, high=original_num // sample_num)
-        elif sample_mode == 'uniform_grid_shift':
-            #!
-            index = torch.arange(0, original_num, original_num // sample_num)
-            index = index + torch.randint_like(index, high=original_num // sample_num)
-        elif sample_mode == 'random_grid':
-            #!
             index = torch.arange(0, original_num, original_num // sample_num)
             index = index + torch.randint_like(index, high=original_num // sample_num)
         return index

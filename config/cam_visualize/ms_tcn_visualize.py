@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 20:48:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 22:22:02
+LastEditTime : 2022-12-25 11:51:26
 Description  : file content
 FilePath     : /SVTAS/config/cam_visualize/ms_tcn_visualize.py
 '''
@@ -40,7 +40,8 @@ VISUALIZE = dict(
     ignore_index = ignore_index,
     data_key = "feature",
     return_targets_name = dict(
-        TemporalSegmentationTarget = dict(select_frame_idx_list=[0])
+        TemporalSegmentationTarget = dict(select_frame_idx_list=[0,1,2,3,4])
+        # CategorySegmentationTarget = dict(category=0)
     ),
     reshape_transform = "NCT",
     label_path = "./data/gtea/mapping.txt",

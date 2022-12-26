@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-23 13:33:15
+LastEditTime : 2022-12-25 21:39:14
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/efficientformer_gtea.py
 '''
@@ -15,17 +15,17 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 512
+clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
-batch_size = 2
-epochs = 100
+batch_size = 1
+epochs = 50
 
 model_name = "EfficientFormer_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "Recognition2D",
+    architecture = "StreamSegmentation2DWithBackbone",
     backbone = dict(
         name = "EfficientFormer",
         arch='l1',
@@ -41,15 +41,22 @@ MODEL = dict(
             dict(type='Constant', layer=['GroupNorm'], val=1., bias=0.),
             dict(type='Constant', layer=['LayerScale'], val=1e-5)
         ],
-        sbp_build=True,
-        keep_ratio_list=[0.125],
-        sample_dims=[0]
+        # sbp_build=True,
+        # keep_ratio_list=[0.125],
+        # sample_dims=[0],
+        # grad_mask_mode_lsit=['random_shift']
     ),
     neck = dict(
-       name = "PoolNeck",
+        # name = "PoolNeck",
+        # in_channels = 448,
+        # clip_seg_num = clip_seg_num,
+        # need_pool = True
+        name = "TaskFusionNeck",
+        num_classes=num_classes,
         in_channels = 448,
         clip_seg_num = clip_seg_num,
-        need_pool = True
+        need_pool = True,
+        fusion_ratio = 0.0
     ),
     head = dict(
         # name = "FCHead",
@@ -66,7 +73,6 @@ MODEL = dict(
         # dim = 448,
         # num_classes = num_classes,
         # sample_rate = sample_rate
-
         name = "ASFormer",
         num_decoders = 3,
         num_layers = 10,
@@ -79,9 +85,10 @@ MODEL = dict(
         sample_rate = sample_rate
     ),
     loss = dict(
-        name = "SegmentationLoss",
+        name = "StreamSegmentationLoss",
         num_classes = num_classes,
-        sample_rate = sample_rate,
+        backbone_sample_rate = sample_rate,
+        head_sample_rate = sample_rate,
         smooth_weight = 0.0,
         ignore_index = -100
     )        

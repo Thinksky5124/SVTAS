@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-23 16:49:21
+LastEditTime : 2022-12-25 22:11:44
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_gtea.py
 '''
@@ -15,12 +15,12 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 128
+clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
-batch_size = 2
-epochs = 50
+batch_size = 1
+epochs = 100
 
 model_name = "SwinTransformer3D_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
@@ -52,7 +52,7 @@ MODEL = dict(
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
         need_pool = True,
-        fusion_ratio = 0.1
+        fusion_ratio = 0.0
     ),
     head = dict(
         # name = "FCHead",
@@ -110,7 +110,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005,
+    learning_rate = 0.00025,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
