@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-16 16:18:28
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-27 10:17:06
+LastEditTime : 2022-12-27 10:19:24
 Description  : file content
-FilePath     : \SVTAS\config\svtas\rgb\tsm_conformer_gtea.py
+FilePath     : \SVTAS\config\svtas\rgb\tsm_asformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -21,48 +21,43 @@ split = 1
 batch_size = 2
 epochs = 50
 
-model_name = "TSM_Conformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "TSM_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "Recognition2D",
+    architecture = "StreamSegmentation2DWithBackbone",
     backbone = dict(
         name = "MobileNetV2TSM",
         pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
         clip_seg_num = clip_seg_num,
         shift_div = 8,
-        out_indices = (7, ),
-        frozen_stages = 2,
+        out_indices = (7, )
     ),
     neck = dict(
-       name = "PoolNeck",
+        name = "TaskFusionNeck",
+        num_classes=num_classes,
         in_channels = 1280,
         clip_seg_num = clip_seg_num,
-        need_pool = True
+        need_pool = True,
+        fusion_ratio = 0.0
     ),
     head = dict(
-        name = "Conformer",
-        num_classes = num_classes,
-        sample_rate = sample_rate,
+        name = "ASFormer",
+        num_decoders = 3,
+        num_layers = 10,
+        r1 = 2,
+        r2 = 2,
+        num_f_maps = 64,
         input_dim = 1280,
-        encoder_dim = 64,
-        num_stages = 1,
-        num_encoder_layers = 1,
-        input_dropout_p = 0.5,
-        num_attention_heads = 8,
-        feed_forward_expansion_factor = 4,
-        conv_expansion_factor = 2,
-        feed_forward_dropout_p = 0.1,
-        attention_dropout_p = 0.1,
-        conv_dropout_p = 0.1,
-        conv_kernel_size = 11,
-        half_step_residual = True,
-        need_subsampling = False,
+        channel_masking_rate = 0.5,
+        num_classes = num_classes,
+        sample_rate = sample_rate
     ),
     loss = dict(
-        name = "SegmentationLoss",
+        name = "StreamSegmentationLoss",
         num_classes = num_classes,
-        sample_rate = sample_rate,
-        smooth_weight = 1.0,
+        backbone_sample_rate = sample_rate,
+        head_sample_rate = sample_rate,
+        smooth_weight = 0.0,
         ignore_index = -100
     )      
 )
