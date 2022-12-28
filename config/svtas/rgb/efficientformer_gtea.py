@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-25 21:39:14
+LastEditTime : 2022-12-27 17:26:21
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/efficientformer_gtea.py
 '''
@@ -51,12 +51,6 @@ MODEL = dict(
         # in_channels = 448,
         # clip_seg_num = clip_seg_num,
         # need_pool = True
-        name = "TaskFusionNeck",
-        num_classes=num_classes,
-        in_channels = 448,
-        clip_seg_num = clip_seg_num,
-        need_pool = True,
-        fusion_ratio = 0.0
     ),
     head = dict(
         # name = "FCHead",
@@ -86,11 +80,20 @@ MODEL = dict(
     ),
     loss = dict(
         name = "StreamSegmentationLoss",
-        num_classes = num_classes,
-        backbone_sample_rate = sample_rate,
-        head_sample_rate = sample_rate,
-        smooth_weight = 0.0,
-        ignore_index = -100
+        backbone_loss_cfg = dict(
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate,
+            smooth_weight = 0.0,
+            ignore_index = -100
+        ),
+        head_loss_cfg = dict(
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate,
+            smooth_weight = 0.0,
+            ignore_index = -100
+        )
     )        
 )
 

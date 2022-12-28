@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 21:24:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-25 17:00:38
+LastEditTime : 2022-12-27 17:25:16
 Description  : file content
 FilePath     : /SVTAS/svtas/model/necks/task_fuion_neck.py
 '''
@@ -21,12 +21,12 @@ class TensorCopyOperator(torch.autograd.Function):
     
     @staticmethod
     def backward(ctx: Any, copy_x_grad_outpt, x_grad_output) -> Any:
-        if TaskFusionNeck.FUSION_RATIO == 0.0:
+        if TaskFusionPoolNeck.FUSION_RATIO == 0.0:
             return copy_x_grad_outpt
-        return copy_x_grad_outpt + TaskFusionNeck.FUSION_RATIO * x_grad_output
+        return copy_x_grad_outpt + TaskFusionPoolNeck.FUSION_RATIO * x_grad_output
 
 @NECKS.register()
-class TaskFusionNeck(nn.Module):
+class TaskFusionPoolNeck(nn.Module):
     """Task Fusion Neck Module
     Fuion classification and pooling space information for different input size tensor.
     

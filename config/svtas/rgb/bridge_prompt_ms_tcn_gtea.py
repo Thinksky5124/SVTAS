@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 16:48:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-22 16:02:45
+LastEditTime : 2022-12-27 12:01:23
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/bridge_prompt_ms_tcn_gtea.py
 '''
@@ -24,10 +24,10 @@ model_name = "BridgePrompt_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split
 
 MODEL = dict(
     architecture = "ActionCLIP",
-    pretrained = "./data/checkpoint/vit-16-32f.pt",
+    # pretrained = "./data/checkpoint/vit-16-32f.pt",
     image_prompt = dict(
         name = "CLIP",
-        # pretrained = "./data/checkpoint/ViT-B-16.pt",
+        pretrained = "./data/checkpoint/ViT-B-16.pt",
         embed_dim = 512,
         image_resolution = 224,
         vision_layers = 12,

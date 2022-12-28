@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 14:46:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 20:54:08
+LastEditTime : 2022-12-27 12:09:20
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_v2_transformer_gtea.py
 '''
@@ -38,7 +38,7 @@ MODEL = dict(
         drop_path_rate=0.2,
     ), 
     neck = dict(
-       name = "PoolNeck",
+        name = "PoolNeck",
         in_channels = 768,
         clip_seg_num = clip_seg_num,
         need_pool = True

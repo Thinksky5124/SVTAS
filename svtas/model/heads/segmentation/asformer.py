@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-22 19:30:23
+LastEditTime : 2022-12-27 19:02:24
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/heads/segmentation/asformer.py
 '''
@@ -323,7 +323,7 @@ class ASFormer(nn.Module):
         outputs = out.unsqueeze(0)
         
         for decoder in self.decoders:
-            out, feature = decoder(F.softmax(out, dim=1) * mask[:, 0:1, ::self.sample_rate], feature* mask[:, 0:1, ::self.sample_rate], mask[:, 0:1, ::self.sample_rate])
+            out, feature = decoder(F.softmax(out, dim=1) * mask[:, 0:1, ::self.sample_rate], feature * mask[:, 0:1, ::self.sample_rate], mask[:, 0:1, ::self.sample_rate])
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
         
         outputs = F.interpolate(

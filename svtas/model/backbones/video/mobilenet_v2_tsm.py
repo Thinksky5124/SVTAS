@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 22:47:53
+LastEditTime : 2022-12-27 11:44:51
 Description: Mobilenet V2 TSM model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2_tsm.py
 FilePath     : /SVTAS/svtas/model/backbones/video/mobilenet_v2_tsm.py
 '''
@@ -29,12 +29,19 @@ class MobileNetV2TSM(MobileNetV2):
         **kwargs (keyword arguments, optional): Arguments for MobilNetV2.
     """
 
-    def __init__(self, clip_seg_num=8, is_shift=True, shift_div=8, modality="RGB", **kwargs):
+    def __init__(self,
+                 clip_seg_num=8,
+                 is_shift=True,
+                 shift_div=8,
+                 modality="RGB",
+                 pretrained2d=False,
+                 **kwargs):
         super().__init__(**kwargs)
         self.num_segments = clip_seg_num
         self.is_shift = is_shift
         self.shift_div = shift_div
         self.modality = modality
+        self.pretrained2d = pretrained2d
 
     def make_temporal_shift(self):
         """Make temporal shift for some layers."""
@@ -53,6 +60,8 @@ class MobileNetV2TSM(MobileNetV2):
     def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
+        if not self.pretrained2d and self.is_shift:
+            self.make_temporal_shift()
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
@@ -71,5 +80,5 @@ class MobileNetV2TSM(MobileNetV2):
                         kaiming_init(m)
                     elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
                         constant_init(m, 1)
-        if self.is_shift:
+        if self.pretrained2d and self.is_shift:
             self.make_temporal_shift()

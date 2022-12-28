@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-10-26 09:57:16
+Date         : 2022-12-27 12:03:04
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-27 12:04:17
-Description  : CLIP achitectures
-FilePath     : /SVTAS/svtas/model/architectures/recognition/action_clip.py
+LastEditTime : 2022-12-27 13:01:24
+Description  : file content
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/action_clip_segmentation_with_backboneloss.py
 '''
 import math
 import torch
@@ -14,16 +14,16 @@ from mmcv.runner import load_state_dict
 from collections import OrderedDict
 import re
 
-from ....utils.logger import get_logger
+from .....utils.logger import get_logger
 
-from ...builder import build_backbone
-from ...builder import build_neck
-from ...builder import build_head
+from ....builder import build_backbone
+from ....builder import build_neck
+from ....builder import build_head
 
-from ...builder import ARCHITECTURE
+from ....builder import ARCHITECTURE
 
 @ARCHITECTURE.register()
-class ActionCLIP(nn.Module):
+class StreamSegmentationActionCLIPWithBackbone(nn.Module):
     def __init__(self,
                  pretrained=None,
                  image_prompt=None,

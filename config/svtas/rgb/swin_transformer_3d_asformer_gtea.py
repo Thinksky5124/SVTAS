@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-25 22:11:44
+LastEditTime : 2022-12-27 17:28:33
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_asformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -22,7 +22,7 @@ split = 1
 batch_size = 1
 epochs = 100
 
-model_name = "SwinTransformer3D_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_ASFormer_Lovasz_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
@@ -47,7 +47,7 @@ MODEL = dict(
         # sample_dims=[0]
     ),
     neck = dict(
-        name = "TaskFusionNeck",
+        name = "TaskFusionPoolNeck",
         num_classes=num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
@@ -91,11 +91,20 @@ MODEL = dict(
     ),
     loss = dict(
         name = "StreamSegmentationLoss",
-        num_classes = num_classes,
-        backbone_sample_rate = sample_rate * 2,
-        head_sample_rate = sample_rate,
-        smooth_weight = 0.0,
-        ignore_index = -100
+        backbone_loss_cfg = dict(
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate * 2,
+            smooth_weight = 0.0,
+            ignore_index = -100
+        ),
+        head_loss_cfg = dict(
+            name = "LovaszSegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate,
+            smooth_weight = 0.0,
+            ignore_index = -100
+        )
     )  
 )
 
