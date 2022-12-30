@@ -208,8 +208,11 @@ def log_epoch(metric_list, epoch, mode, ips, logger):
         coloring(metric_str, "OKGREEN"), coloring(batch_cost, "OKGREEN"),
         coloring(reader_cost, "OKGREEN"), coloring(batch_sum, "OKGREEN"), ips))
 
-def tenorboard_log_epoch(metric_list, epoch, mode, writer):
+def tenorboard_log_epoch(metric_dict, epoch, mode, writer):
     if isinstance(writer, SummaryWriter):
-        for m in metric_list:
+        for m in metric_dict:
             if not (m == 'batch_time' or m == 'reader_time'):
-                writer.add_scalar(mode + "/" + m, metric_list[m].get_mean, epoch)
+                if isinstance(m, AverageMeter):
+                    writer.add_scalar(mode + "/" + m, metric_dict[m].get_mean, epoch)
+                elif isinstance(m, dict):
+                    writer.add_scalar(mode + "/" + m, metric_dict[m], epoch)

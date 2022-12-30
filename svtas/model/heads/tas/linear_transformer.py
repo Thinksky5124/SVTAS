@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-22 13:56:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-01 21:13:01
+LastEditTime : 2022-12-30 11:30:52
 Description  : Linear Head
 FilePath     : /SVTAS/svtas/model/heads/segmentation/linear_transformer.py
 '''

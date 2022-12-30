@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-06-05 10:35:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-12 17:12:15
+LastEditTime : 2022-12-30 16:09:30
 Description  : Transeger temporal Transformer network joint network module
-FilePath     : /ETESVS/model/heads/joint/transeger_transformer_joint_head.py
+FilePath     : /SVTAS/svtas/model/heads/joint/transeger_transformer_joint_head.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..utils import (Decoder, DecoderLayer, FullAttention, ProbAttention, AttentionLayer,
+from ..oad.oadtr import (Decoder, DecoderLayer, FullAttention, ProbAttention, AttentionLayer,
                     TransformerModel, FixedPositionalEncoding, LearnedPositionalEncoding)
 
 from ...builder import HEADS

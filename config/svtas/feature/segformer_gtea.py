@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-28 20:10:34
+LastEditTime : 2022-12-29 15:45:53
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/segformer_gtea.py
 '''
@@ -17,7 +17,7 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-clip_seg_num = 512
+clip_seg_num = 256
 dim = 2048
 batch_size = 2
 sliding_window = clip_seg_num * sample_rate
@@ -38,6 +38,7 @@ MODEL = dict(
         num_heads=8,
         dropout=0.5,
         sample_rate=sample_rate,
+        position_encoding=False
     ),
     loss = dict(
         name = "DiceSegmentationLoss",

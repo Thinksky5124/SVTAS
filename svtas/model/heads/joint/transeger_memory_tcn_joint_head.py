@@ -10,7 +10,7 @@ import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..segmentation.memory_tcn import MemoryDilationResidualLyaer
+from ..tas.memory_tcn import MemoryDilationResidualLyaer
 
 from ...builder import HEADS
 

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-28 20:15:49
+LastEditTime : 2022-12-30 21:52:52
 Description  : file content
-FilePath     : /SVTAS/config/tas/feature/segformer_gtea.py
+FilePath     : /SVTAS/config/tas/feature/tasegformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -25,16 +25,18 @@ MODEL = dict(
     backbone = None,
     neck = None,
     head = dict(
-        name = "SegFormer",
+        name = "TASegFormer",
         in_channels=2048,
         num_decoders=3,
-        num_layers=2,
-        num_classes=num_classes,
+        decoder_num_layers=10,
+        encoder_num_layers=10,
         input_dropout=0.5,
         embed_dim=64,
-        num_heads=8,
+        num_heads=1,
         dropout=0.5,
+        num_classes=num_classes,
         sample_rate=sample_rate,
+        position_encoding=False
     ),
     loss = dict(
         name = "DiceSegmentationLoss",
@@ -67,7 +69,7 @@ DATASET = dict(
 
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
-    learning_rate = 0.002,
+    learning_rate = 0.001,
     weight_decay = 0.01,
     betas = (0.9, 0.999)
 )

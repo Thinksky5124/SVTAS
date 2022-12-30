@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-25 22:00:03
+LastEditTime : 2022-12-30 17:30:23
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -280,6 +280,7 @@ def train(cfg,
                 (record_dict["batch_time"].sum + 1e-10))
             log_epoch(record_dict, epoch + 1, "val", ips, logger)
             if args.use_tensorboard and local_rank <= 0:
+                record_dict.update(Metric_dict)
                 tenorboard_log_epoch(record_dict, epoch + 1, "val", writer=tensorboard_writer)
             return best, best_flag
 

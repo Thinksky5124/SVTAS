@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-01 21:33:45
+LastEditTime : 2022-12-29 18:28:10
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/linformer_gtea.py
 '''
@@ -36,7 +36,6 @@ MODEL = dict(
 
 POSTPRECESSING = dict(
     name = "ScorePostProcessing",
-    num_classes = num_classes,
     ignore_index = ignore_index
 )
 
@@ -55,11 +54,11 @@ DATASET = dict(
     video_batch_size = batch_size,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
+        # feature_path = "./data/gtea/raw_features",
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
+        # feature_path = "./data/gtea/raw_features",
     )
 )
 
@@ -84,9 +83,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     ),
     test = dict(
@@ -109,9 +108,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     )
 )

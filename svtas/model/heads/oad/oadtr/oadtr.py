@@ -2,16 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 14:57:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-19 20:21:54
+LastEditTime : 2022-12-30 16:03:17
 Description  : OADTR model ref:https://github.com/wangxiang1230/OadTR
-FilePath     : /ETESVS/model/heads/oadtr.py
+FilePath     : /SVTAS/svtas/model/heads/oad/oadtr/oadtr.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..utils import (Decoder, DecoderLayer, FullAttention, ProbAttention, AttentionLayer,
-                    TransformerModel, FixedPositionalEncoding, LearnedPositionalEncoding)
-from ...builder import HEADS
+from .attention import SelfAttention
+from .attn import FullAttention, ProbAttention, AttentionLayer
+from .transformer import TransformerModel
+from .position_encoding import FixedPositionalEncoding, LearnedPositionalEncoding
+from .decoder import Decoder, DecoderLayer
+from ....builder import HEADS
 
 
 @HEADS.register()

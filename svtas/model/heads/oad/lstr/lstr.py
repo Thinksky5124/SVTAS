@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 15:59:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 16:37:35
+LastEditTime : 2022-12-30 16:04:16
 Description  : ref:https://github.com/amazon-science/long-short-term-transformer/blob/main/src/rekognition_online_action_detection/models/lstr.py
-FilePath     : /SVTAS/svtas/model/heads/online_action_detection/lstr.py
+FilePath     : /SVTAS/svtas/model/heads/oad/lstr/lstr.py
 '''
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
@@ -13,10 +13,13 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..utils import (FixedPositionalEncoding, TransformerDecoderLayer, TransformerDecoder,
-                     layer_norm, TransformerEncoderLayer, TransformerEncoder, generate_square_subsequent_mask)
+from .transformer import MultiheadAttention
+from .transformer import Transformer
+from .transformer import TransformerEncoder, TransformerEncoderLayer
+from .transformer import TransformerDecoder, TransformerDecoderLayer
+from .multihead_attention import layer_norm, generate_square_subsequent_mask
 
-from ...builder import HEADS
+from ....builder import HEADS
 
 
 class BaseFeatureHead(nn.Module):

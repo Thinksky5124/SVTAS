@@ -2,16 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 14:42:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-18 14:14:34
+LastEditTime : 2022-12-30 16:00:44
 Description  : ConFormer Head for Action Segmentation ref:https://github.com/sooftware/conformer/blob/main/conformer/model.py
-FilePath     : /SVTAS/svtas/model/heads/automatic_speech_recognition/conformer.py
+FilePath     : /SVTAS/svtas/model/heads/asr/conformer/conformer.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..utils.conformer import ConformerEncoder, ConFormerLinear, ConformerDecoder
+from .encoder import ConformerEncoder, ConformerDecoder
+from .modules import ConFormerLinear
 
-from ...builder import HEADS
+from ....builder import HEADS
 
 @HEADS.register()
 class Conformer(nn.Module):
