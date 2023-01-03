@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-30 15:10:59
+LastEditTime : 2022-12-31 15:32:08
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -158,8 +158,9 @@ def test(cfg,
         # metric output
         for k, v in runner.Metric.items():
             v.accumulate()
-        clip_seg_num = list(cfg.PIPELINE.test.sample.clip_seg_num_dict.values())[0]
-        sample_rate = list(cfg.PIPELINE.test.sample.sample_rate_dict.values())[0]
+        
+        clip_seg_num = list(cfg.PIPELINE.test.sample.get('clip_seg_num_dict', {'sample':32}).values())[0]
+        sample_rate = list(cfg.PIPELINE.test.sample.get('sample_rate_dict', {'sample':1}).values())[0]
         # model param flops caculate
         if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
             for transform_op in cfg.PIPELINE.test.transform.transform_list:

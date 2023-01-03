@@ -2,11 +2,10 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:11:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-30 22:01:22
+LastEditTime : 2023-01-03 16:19:27
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/attention_layer.py
 '''
-import copy
 import math
 import torch
 import torch.nn as nn
@@ -75,7 +74,7 @@ class MixedChunkAttentionLayer(nn.Module):
         dropout = 0.,
         shift_tokens = False,
         laplace_attn_fn = True,
-        reduce_group_non_causal_attn = False,
+        reduce_group_non_causal_attn = True,
         position_encoding = False,
     ):
         super().__init__()
@@ -198,8 +197,8 @@ class MixedChunkAttentionLayer(nn.Module):
 
         # calculate quadratic attention output
         sim = einsum('... i d, ... j d -> ... i j', quad_q, quad_k) / g
-        if exists(self.rel_pos_bias):
-            sim = self.rel_pos_bias(sim)
+        # if exists(self.rel_pos_bias):
+        #     sim = self.rel_pos_bias(sim)
 
         attn = self.attn_fn(sim)
         attn = self.dropout(attn)
@@ -241,33 +240,30 @@ class MultiHeadAttention(nn.Module):
     def __init__(self,
                  embed_dim,
                  num_heads=1,
-                 dropout=0.1,
-                 batch_first=True):
+                 position_encoding=True):
         "Take in model size and number of heads."
         super(MultiHeadAttention, self).__init__()
         assert embed_dim % num_heads == 0
         # We assume d_v always equals d_k
         self.d_k = embed_dim // num_heads
         self.num_heads = num_heads
-        self.linears = self.clones(nn.Linear(embed_dim, embed_dim), 4) # create 4 linear layers
-        self.attn = None
-        self.dropout = nn.Dropout(p=dropout)
+        self.embed_layers = nn.ModuleList([nn.Linear(embed_dim, embed_dim) for _ in range(3)])
+
+        # positional embeddings
+        self.position_encoding = position_encoding
+        if self.position_encoding:
+            self.pos_enc = RotaryEmbedding(dim = min(32, embed_dim))
+        else:
+            self.pos_enc = None
     
     @staticmethod
-    def clones(module, N):
-        "Produce N identical layers."
-        return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
-    
-    @staticmethod
-    def attention(query, key, value, mask=None, dropout=None):
+    def attention(query, key, value, mask=None):
         "Compute 'Scaled Dot Product Attention'"
         d_k = query.size(-1)
         scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
         if mask is not None:
-            scores = scores.masked_fill(mask == 0, -1e9)
+            scores = scores.masked_fill(mask, float("-inf"))
         p_attn = F.softmax(scores, dim = -1)
-        if dropout is not None:
-            p_attn = dropout(p_attn)
         return torch.matmul(p_attn, value), p_attn
 
     def forward(self, query, key, value, key_padding_mask=None, attn_mask=None):
@@ -285,35 +281,38 @@ class MultiHeadAttention(nn.Module):
             mask = mask | attn_mask
 
 
-        query, key, value = [l(x) for l, x in zip(self.linears, (query, key, value))] # (batch_size, seq_length, d_model), use first 3 self.linears
+        query, key, value = [l(x) for l, x in zip(self.embed_layers, (query, key, value))] # (batch_size, seq_length, d_model), use first 3 self.linears
         query, key, value = [x.view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
                              for x in (query, key, value)] # (batch_size, h, seq_length, d_k)
 
+        if self.position_encoding:
+            query = self.pos_enc.rotate_queries_or_keys(query)
+            key = self.pos_enc.rotate_queries_or_keys(key)
 
         # 2) Apply attention on all the projected vectors in batch.
-        x, self.attn = self.attention(query, key, value, mask=mask, dropout=self.dropout)
+        x, attn = self.attention(query, key, value, mask=mask)
 
         # 3) "Concat" using a view and apply a final linear.
         x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.d_k)
-        return self.linears[-1](x)
+        return x, attn
         
 class MultiHeadAttentionLayer(nn.Module):
     def __init__(self,
                  embed_dim,
                  num_heads,
                  dropout=0.0,
-                 causal=False) -> None:
+                 causal=False,
+                 position_encoding=True) -> None:
         super().__init__()
-        # self.att_layer = nn.MultiheadAttention(embed_dim=embed_dim,
-        #                                        num_heads=num_heads,
-        #                                        dropout=dropout,
-        #                                        batch_first=True)
         self.att_layer = MultiHeadAttention(embed_dim=embed_dim,
-                                               num_heads=num_heads,
-                                               dropout=dropout,
-                                               batch_first=True)
+                                            num_heads=num_heads,
+                                            position_encoding=position_encoding)
         self.causal = causal
         self.num_heads = num_heads
+        if dropout > 0.0:
+            self.dropout = nn.Dropout(p=dropout)
+        else:
+            self.dropout = None
     
     def gen_causal_mask(self, input_size, device):
         """
@@ -344,6 +343,8 @@ class MultiHeadAttentionLayer(nn.Module):
         
         out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
         out = torch.transpose(out, 1, 2)
+        if self.dropout is not None:
+            out = self.dropout(out)
         return out * masks
 
 class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
@@ -352,8 +353,9 @@ class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
                  num_heads,
                  chunck_size=1,
                  dropout=0,
-                 causal=False) -> None:
-        super().__init__(embed_dim, num_heads, dropout, causal)
+                 causal=False,
+                 position_encoding=True) -> None:
+        super().__init__(embed_dim, num_heads, dropout, causal, position_encoding)
         self.chunck_size = chunck_size
     
     def forward(self, q, k, v, masks):
@@ -384,6 +386,8 @@ class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
         # gather group
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
+        if self.dropout is not None:
+            out = self.dropout(out)
         return out * masks
 
 class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
@@ -514,3 +518,149 @@ class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
         return out * masks
+
+class AttentionHelper(nn.Module):
+    def __init__(self):
+        super(AttentionHelper, self).__init__()
+        self.softmax = nn.Softmax(dim=-1)
+
+
+    def scalar_dot_att(self, proj_query, proj_key, proj_val, padding_mask):
+        '''
+        scalar dot attention.
+        :param proj_query: shape of (B, C, L) => (Batch_Size, Feature_Dimension, Length)
+        :param proj_key: shape of (B, C, L)
+        :param proj_val: shape of (B, C, L)
+        :param padding_mask: shape of (B, C, L)
+        :return: attention value of shape (B, C, L)
+        '''
+        m, c1, l1 = proj_query.shape
+        m, c2, l2 = proj_key.shape
+        
+        assert c1 == c2
+        
+        energy = torch.bmm(proj_query.permute(0, 2, 1), proj_key)  # out of shape (B, L1, L2)
+        attention = energy / math.sqrt(c1)
+        attention = attention + torch.log(padding_mask + 1e-6) # mask the zero paddings. log(1e-6) for zero paddings
+        attention = self.softmax(attention) 
+        attention = attention * padding_mask
+        attention = attention.permute(0,2,1)
+        out = torch.bmm(proj_val, attention)
+        return out, attention
+
+class AttLayer(nn.Module):
+    def __init__(self, q_dim, k_dim, v_dim, r1, r2, r3, bl, att_type): # r1 = r2
+        super(AttLayer, self).__init__()
+        
+        self.query_conv = nn.Conv1d(in_channels=q_dim, out_channels=q_dim // r1, kernel_size=1)
+        self.key_conv = nn.Conv1d(in_channels=k_dim, out_channels=k_dim // r2, kernel_size=1)
+        self.value_conv = nn.Conv1d(in_channels=v_dim, out_channels=v_dim // r3, kernel_size=1)
+        
+        self.conv_out = nn.Conv1d(in_channels=v_dim // r3, out_channels=v_dim, kernel_size=1)
+
+        self.bl = bl
+        self.v_dim = v_dim
+        self.att_type = att_type
+        assert self.att_type in ['normal_att', 'block_att', 'sliding_att']
+        
+        self.att_helper = AttentionHelper()
+        self.window_mask = self.construct_window_mask()
+        
+    
+    def construct_window_mask(self):
+        '''
+            construct window mask of shape (1, l, l + l//2 + l//2), used for sliding window self attention
+        '''
+        window_mask = torch.zeros((1, self.bl, self.bl + 2* (self.bl //2)))
+        for i in range(self.bl):
+            window_mask[:, i, i:i+self.bl] = 1
+        return window_mask
+    
+    def forward(self, q, k, v, mask):
+        
+        query = self.query_conv(q)
+        key = self.key_conv(k)
+        value = self.value_conv(v)
+            
+        if self.att_type == 'normal_att':
+            return self._normal_self_att(query, key, value, mask)
+        elif self.att_type == 'block_att':
+            return self._block_wise_self_att(query, key, value, mask)
+        elif self.att_type == 'sliding_att':
+            return self._sliding_window_self_att(query, key, value, mask)
+
+    
+    def _normal_self_att(self,q,k,v, mask):
+        m_batchsize, c1, L = q.size()
+        _,c2,L = k.size()
+        _,c3,L = v.size()
+        padding_mask = torch.ones((m_batchsize, 1, L)).to(q.device) * mask[:,0:1,:]
+        output, attentions = self.att_helper.scalar_dot_att(q, k, v, padding_mask)
+        output = self.conv_out(F.relu(output))
+        output = output[:, :, 0:L]
+        return output * mask[:, 0:1, :]  
+        
+    def _block_wise_self_att(self, q,k,v, mask):
+        m_batchsize, c1, L = q.size()
+        _,c2,L = k.size()
+        _,c3,L = v.size()
+        
+        nb = L // self.bl
+        if L % self.bl != 0:
+            q = torch.cat([q, torch.zeros((m_batchsize, c1, self.bl - L % self.bl)).to(q.device)], dim=-1)
+            k = torch.cat([k, torch.zeros((m_batchsize, c2, self.bl - L % self.bl)).to(k.device)], dim=-1)
+            v = torch.cat([v, torch.zeros((m_batchsize, c3, self.bl - L % self.bl)).to(v.device)], dim=-1)
+            nb += 1
+
+        padding_mask = torch.cat([torch.ones((m_batchsize, 1, L)).to(q.device) * mask[:,0:1,:], torch.zeros((m_batchsize, 1, self.bl * nb - L)).to(q.device)],dim=-1)
+
+        q = q.reshape(m_batchsize, c1, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c1, self.bl)
+        padding_mask = padding_mask.reshape(m_batchsize, 1, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb,1, self.bl)
+        k = k.reshape(m_batchsize, c2, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c2, self.bl)
+        v = v.reshape(m_batchsize, c3, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c3, self.bl)
+        
+        output, attentions = self.att_helper.scalar_dot_att(q, k, v, padding_mask)
+        output = self.conv_out(F.relu(output))
+        
+        output = output.reshape(m_batchsize, nb, self.v_dim, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize, self.v_dim, nb * self.bl)
+        output = output[:, :, 0:L]
+        return output * mask[:, 0:1, :]  
+    
+    def _sliding_window_self_att(self, q, k, v, mask):
+        m_batchsize, c1, L = q.size()
+        _, c2, _ = k.size()
+        _, c3, _ = v.size()
+        
+        # assert m_batchsize == 1  # currently, we only accept input with batch size 1
+        # padding zeros for the last segment
+        nb = L // self.bl
+        if L % self.bl != 0:
+            q = torch.cat([q, torch.zeros((m_batchsize, c1, self.bl - L % self.bl)).to(q.device)], dim=-1)
+            k = torch.cat([k, torch.zeros((m_batchsize, c2, self.bl - L % self.bl)).to(q.device)], dim=-1)
+            v = torch.cat([v, torch.zeros((m_batchsize, c3, self.bl - L % self.bl)).to(q.device)], dim=-1)
+            nb += 1
+        padding_mask = torch.cat([torch.ones((m_batchsize, 1, L)).to(q.device) * mask[:,0:1,:], torch.zeros((m_batchsize, 1, self.bl * nb - L)).to(q.device)],dim=-1)
+        
+        # sliding window approach, by splitting query_proj and key_proj into shape (c1, l) x (c1, 2l)
+        # sliding window for query_proj: reshape
+        q = q.reshape(m_batchsize, c1, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c1, self.bl)
+        
+        # sliding window approach for key_proj
+        # 1. add paddings at the start and end
+        k = torch.cat([torch.zeros(m_batchsize, c2, self.bl // 2).to(q.device), k, torch.zeros(m_batchsize, c2, self.bl // 2).to(q.device)], dim=-1)
+        v = torch.cat([torch.zeros(m_batchsize, c3, self.bl // 2).to(q.device), v, torch.zeros(m_batchsize, c3, self.bl // 2).to(q.device)], dim=-1)
+        padding_mask = torch.cat([torch.zeros(m_batchsize, 1, self.bl // 2).to(q.device), padding_mask, torch.zeros(m_batchsize, 1, self.bl // 2).to(q.device)], dim=-1)
+        
+        # 2. reshape key_proj of shape (m_batchsize*nb, c1, 2*self.bl)
+        k = torch.cat([k[:,:, i*self.bl:(i+1)*self.bl+(self.bl//2)*2] for i in range(nb)], dim=0) # special case when self.bl = 1
+        v = torch.cat([v[:,:, i*self.bl:(i+1)*self.bl+(self.bl//2)*2] for i in range(nb)], dim=0) 
+        # 3. construct window mask of shape (1, l, 2l), and use it to generate final mask
+        padding_mask = torch.cat([padding_mask[:,:, i*self.bl:(i+1)*self.bl+(self.bl//2)*2] for i in range(nb)], dim=0) # of shape (m*nb, 1, 2l)
+        final_mask = self.window_mask.repeat(m_batchsize * nb, 1, 1).to(q.device) * padding_mask 
+        
+        output, attention = self.att_helper.scalar_dot_att(q, k, v, final_mask)
+        output = self.conv_out(F.relu(output))
+
+        output = output.reshape(m_batchsize, nb, -1, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize, -1, nb * self.bl)
+        output = output[:, :, 0:L]
+        return output * mask[:, 0:1, :]

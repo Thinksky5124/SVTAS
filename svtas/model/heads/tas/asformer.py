@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-29 17:49:26
+LastEditTime : 2023-01-03 17:05:51
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
-FilePath     : /SVTAS/svtas/model/heads/segmentation/asformer.py
+FilePath     : /SVTAS/svtas/model/heads/tas/asformer.py
 '''
 import torch
 import torch.nn as nn
@@ -59,6 +59,7 @@ class AttLayer(nn.Module):
 
         self.bl = bl
         self.stage = stage
+        self.v_dim = v_dim
         self.att_type = att_type
         assert self.att_type in ['normal_att', 'block_att', 'sliding_att']
         assert self.stage in ['encoder','decoder']
@@ -129,7 +130,7 @@ class AttLayer(nn.Module):
         output, attentions = self.att_helper.scalar_dot_att(q, k, v, padding_mask)
         output = self.conv_out(F.relu(output))
         
-        output = output.reshape(m_batchsize, nb, c3, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize, c3, nb * self.bl)
+        output = output.reshape(m_batchsize, nb, self.v_dim, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize, self.v_dim, nb * self.bl)
         output = output[:, :, 0:L]
         return output * mask[:, 0:1, :]  
     

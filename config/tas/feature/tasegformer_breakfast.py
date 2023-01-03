@@ -2,39 +2,41 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-28 17:49:00
+LastEditTime : 2022-12-31 10:59:28
 Description  : file content
-FilePath     : /SVTAS/config/tas/feature/segformer_50salads.py
+FilePath     : /SVTAS/config/tas/feature/tasegformer_breakfast.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
-    '../../_base_/dataset/50salads/50salads_feature.py'
+    '../../_base_/dataset/breakfast/breakfast_feature.py'
 ]
 
 split = 1
-num_classes = 19
-sample_rate = 2
+num_classes = 11
+sample_rate = 1
 ignore_index = -100
 epochs = 50
 batch_size = 2
-model_name = "Segformer_50salads_split" + str(split)
+model_name = "TASegformer_breakfast_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
     backbone = None,
     neck = None,
     head = dict(
-        name = "SegFormer",
+        name = "TASegFormer",
         in_channels=2048,
         num_decoders=3,
-        num_layers=2,
-        num_classes=num_classes,
+        decoder_num_layers=10,
+        encoder_num_layers=10,
         input_dropout=0.5,
         embed_dim=64,
-        num_heads=8,
+        num_heads=1,
         dropout=0.5,
+        num_classes=num_classes,
         sample_rate=sample_rate,
+        position_encoding=False
     ),
     loss = dict(
         name = "DiceSegmentationLoss",
@@ -54,14 +56,14 @@ DATASET = dict(
     temporal_clip_batch_size = batch_size,
     video_batch_size = batch_size,
     train = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/50salads/features"
-        # flow_feature_path = "./data/50salads/flow_features"
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        # feature_path = "./data/breakfast/raw_features"
+        # flow_feature_path = "./data/breakfast/flow_features"
     ),
     test = dict(
-        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/50salads/features"
-        # flow_feature_path = "./data/50salads/flow_features"
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        # feature_path = "./data/breakfast/raw_features"
+        # flow_feature_path = "./data/breakfast/flow_features"
     )
 )
 
