@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-03 17:05:38
+LastEditTime : 2023-01-03 22:32:09
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/tasegformer_gtea.py
 '''
@@ -35,7 +35,7 @@ MODEL = dict(
         dropout=0.5,
         num_classes=num_classes,
         sample_rate=sample_rate,
-        position_encoding=False
+        position_encoding=True
     ),
     loss = dict(
         name = "DiceSegmentationLoss",

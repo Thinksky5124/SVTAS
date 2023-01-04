@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:11:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-03 16:19:27
+LastEditTime : 2023-01-04 11:08:32
 Description  : file content
-FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/attention_layer.py
+FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/token_mixer_layer.py
 '''
 import math
 import torch
@@ -14,6 +14,7 @@ from torch import einsum
 from einops import rearrange
 from .position_encoding import T5RelativePositionBias, RelativePosition
 from ...utils import RotaryEmbedding
+from timm.models.layers import DropPath, trunc_normal_
 
 # helper functions
 
@@ -236,6 +237,187 @@ class MixedChunkAttentionLayer(nn.Module):
         out = self.to_out(out).transpose(1, 2)
         return out * masks
 
+class GAU(nn.Module):
+    def __init__(
+        self,
+        embed_dim = 128,
+        expansion_factor = 2.,
+        dropout = 0.,
+        laplace_attn_fn = False,
+        position_encoding=True
+    ):
+        super().__init__()
+        hidden_dim = int(expansion_factor * embed_dim)
+
+        self.norm = nn.LayerNorm(embed_dim)
+        self.dropout = nn.Dropout(dropout)
+
+        self.attn_fn = ReLUSquared() if not laplace_attn_fn else LaplacianAttnFn()
+
+        self.to_gate = nn.Sequential(
+            nn.Linear(embed_dim, hidden_dim),
+            nn.SiLU()
+        )
+
+        self.to_v = nn.Sequential(
+            nn.Linear(embed_dim, hidden_dim),
+            nn.SiLU()
+        )
+
+        self.to_qk = nn.Sequential(
+            nn.Linear(embed_dim, embed_dim),
+            nn.SiLU()
+        )
+
+        self.offsetscale = OffsetScale(embed_dim, heads = 2)
+
+        self.to_out = nn.Sequential(
+            nn.Linear(hidden_dim, embed_dim),
+            nn.Dropout(dropout)
+        )
+
+        # positional embeddings
+        self.position_encoding = position_encoding
+        if self.position_encoding:
+            self.pos_enc = RotaryEmbedding(dim = min(32, embed_dim))
+        else:
+            self.pos_enc = None
+
+    def forward(self, query, key, value, key_padding_mask=None, attn_mask=None):
+        batch_size, seq_len, device = query.shape[0], query.shape[-2], query.device
+
+        # merge key padding and attention masks
+        mask = None
+        if key_padding_mask is not None:
+            mask = key_padding_mask.view(batch_size, 1, seq_len)
+
+        # convert mask to float
+        if attn_mask is not None:
+            attn_mask = attn_mask.unsqueeze(0)
+            mask = mask | attn_mask
+            
+        if self.position_encoding:
+            query = self.pos_enc.rotate_queries_or_keys(query)
+
+        normed_x = self.norm(query)
+        gate = self.to_gate(normed_x)
+        v = self.to_gate(value)
+
+        qk = self.to_qk(normed_x)
+        q, k = self.offsetscale(qk)
+
+        sim = einsum('b i d, b j d -> b i j', q, k) / seq_len
+
+        attn = self.attn_fn(sim)
+        att_map = attn
+        attn = self.dropout(attn)
+
+        if exists(mask):
+            attn = attn.masked_fill(mask, 0.)
+
+        out = einsum('b i j, b j d -> b i d', attn, v)
+        out = out * gate
+
+        out = self.to_out(out)
+
+        return out, att_map
+
+class GAUAttentionLayer(nn.Module):
+    def __init__(self,
+                 embed_dim,
+                 dropout=0.0,
+                 causal=False,
+                 position_encoding=True,
+                 num_gau=1) -> None:
+        super().__init__()
+        self.att_layers = nn.ModuleList([GAU(embed_dim=embed_dim,
+                                            position_encoding=position_encoding) for _ in range(num_gau)])
+        self.causal = causal
+        if dropout > 0.0:
+            self.dropout = nn.Dropout(p=dropout)
+        else:
+            self.dropout = None
+    
+    def gen_causal_mask(self, input_size, device):
+        """
+        Generates a causal mask of size (input_size, input_size) for attention
+        """
+        # [T, T]
+        l_l_mask = torch.triu(torch.ones(input_size, input_size), diagonal=1) == 1
+        l_l_mask = l_l_mask.to(device)
+        return l_l_mask
+    
+    def gen_key_padding_mask(self, masks):
+        sum_masks = torch.sum(masks.squeeze(1), dim=-1) == 0.0
+        key_padding_mask = masks.detach().clone()
+        for bs in range(sum_masks.shape[0]):
+            if sum_masks[bs]:
+                key_padding_mask[bs] = 1.0
+        return (key_padding_mask == 0.0).squeeze(1)
+    
+    def forward(self, q, k, v, masks):
+        q = torch.transpose(q, 1, 2)
+        k = torch.transpose(k, 1, 2)
+        v = torch.transpose(v, 1, 2)
+        key_padding_mask = self.gen_key_padding_mask(masks=masks)
+        if self.causal:
+            causal_mask = self.gen_causal_mask(q.shape[1], masks)
+        else:
+            causal_mask = None
+        
+        for layer in self.att_layers:
+            out, att_map = layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
+            q = out
+        out = torch.transpose(out, 1, 2)
+        if self.dropout is not None:
+            out = self.dropout(out)
+        return out * masks
+
+class GAUAChunkttentionLayer(GAUAttentionLayer):
+    def __init__(self,
+                 embed_dim,
+                 num_heads,
+                 chunck_size=1,
+                 dropout=0,
+                 causal=False,
+                 position_encoding=True) -> None:
+        super().__init__(embed_dim, num_heads, dropout, causal, position_encoding)
+        self.chunck_size = chunck_size
+    
+    def forward(self, q, k, v, masks):
+        q = torch.transpose(q, 1, 2)
+        k = torch.transpose(k, 1, 2)
+        v = torch.transpose(v, 1, 2)
+        chunck_masks = torch.transpose(masks, 1, 2)
+
+        # chunck
+        # padding for groups
+        padding = padding_to_multiple_of(q.shape[1], self.chunck_size)
+        temporal_size = q.shape[1]
+        if padding > 0:
+            q, k, v = map(lambda t: F.pad(t, (0, 0, 0, padding), value = 0.), (q, k, v))
+            chunck_masks = F.pad(chunck_masks, (0, 0, 0, padding), value = 0.)
+        g_size = q.shape[1] // self.chunck_size
+        q, k, v, chunck_masks = map(lambda t: rearrange(t, 'b (g n) d -> (b g) n d', n = self.chunck_size), (q, k, v, chunck_masks))
+
+        chunck_masks = torch.transpose(chunck_masks, 1, 2)
+        key_padding_mask = self.gen_key_padding_mask(masks=chunck_masks)
+        if self.causal:
+            causal_mask = self.gen_causal_mask(q.shape[1], chunck_masks.device)
+        else:
+            causal_mask = None
+
+        for layer in self.att_layers:
+            out, att_map = layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
+            q = out
+        
+        # gather group
+        out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
+        out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
+        if self.dropout is not None:
+            out = self.dropout(out)
+        return out * masks
+                
 class MultiHeadAttention(nn.Module):
     def __init__(self,
                  embed_dim,
@@ -401,8 +583,9 @@ class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
                  num_heads,
                  dropout=0.0,
                  chunck_size=1,
-                 causal=False):
-        super().__init__()
+                 causal=False,
+                 position_encoding=False):
+        super().__init__(embed_dim, num_heads, dropout, causal, position_encoding)
         
         assert embed_dim % num_heads == 0
         self.causal = causal
@@ -519,148 +702,112 @@ class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
         return out * masks
 
-class AttentionHelper(nn.Module):
-    def __init__(self):
-        super(AttentionHelper, self).__init__()
-        self.softmax = nn.Softmax(dim=-1)
+class PoolFormerMixTokenLayer(nn.Module):
+    """
+    Implementation of pooling for PoolFormer
+    implement by pytorch (ref:https://github.com/sail-sg/poolformer/blob/main/models/poolformer.py),
+    from paper <MetaFormer is Actually What You Need for Vision> :https://arxiv.org/pdf/2111.11418.pdf
 
+    --pool_size: pooling size
+    """
+    def __init__(self, pool_size=3, stride=1, mode='encoder'):
+        super().__init__()
+        self.mode = mode
+        assert mode in ['encoder', 'decoder'], f"mode {mode} do not support!"
+        if pool_size % 2 == 0:
+            pool_size += 1
+        if self.mode == 'encoder':
+            self.pool = nn.AvgPool1d(
+                pool_size, stride=stride, padding=pool_size//2, count_include_pad=False)
+        elif self.mode == 'decoder':
+            self.pool = nn.AvgPool2d(
+                (2, pool_size), stride=stride, padding=(0, pool_size//2), count_include_pad=False)
 
-    def scalar_dot_att(self, proj_query, proj_key, proj_val, padding_mask):
-        '''
-        scalar dot attention.
-        :param proj_query: shape of (B, C, L) => (Batch_Size, Feature_Dimension, Length)
-        :param proj_key: shape of (B, C, L)
-        :param proj_val: shape of (B, C, L)
-        :param padding_mask: shape of (B, C, L)
-        :return: attention value of shape (B, C, L)
-        '''
-        m, c1, l1 = proj_query.shape
-        m, c2, l2 = proj_key.shape
-        
-        assert c1 == c2
-        
-        energy = torch.bmm(proj_query.permute(0, 2, 1), proj_key)  # out of shape (B, L1, L2)
-        attention = energy / math.sqrt(c1)
-        attention = attention + torch.log(padding_mask + 1e-6) # mask the zero paddings. log(1e-6) for zero paddings
-        attention = self.softmax(attention) 
-        attention = attention * padding_mask
-        attention = attention.permute(0,2,1)
-        out = torch.bmm(proj_val, attention)
-        return out, attention
+    def forward(self, q, k, v, masks):
+        if self.mode == 'encoder':
+            x = self.pool(q) - q
+        elif self.mode == 'decoder':
+            x = torch.cat([q.unsqueeze(2), v.unsqueeze(2)], dim=2)
+            x = self.pool(x).squeeze(2) - q
+        return x * masks[:, 0:1, :]
 
-class AttLayer(nn.Module):
-    def __init__(self, q_dim, k_dim, v_dim, r1, r2, r3, bl, att_type): # r1 = r2
-        super(AttLayer, self).__init__()
-        
-        self.query_conv = nn.Conv1d(in_channels=q_dim, out_channels=q_dim // r1, kernel_size=1)
-        self.key_conv = nn.Conv1d(in_channels=k_dim, out_channels=k_dim // r2, kernel_size=1)
-        self.value_conv = nn.Conv1d(in_channels=v_dim, out_channels=v_dim // r3, kernel_size=1)
-        
-        self.conv_out = nn.Conv1d(in_channels=v_dim // r3, out_channels=v_dim, kernel_size=1)
+class Mlp(nn.Module):
+    """
+    Implementation of MLP with 1*1 convolutions.
+    Input: tensor with shape [B, C, T]
+    """
+    def __init__(self, in_features, hidden_features=None, 
+                 out_features=None, act_layer=nn.GELU, drop=0.):
+        super().__init__()
+        out_features = out_features or in_features
+        hidden_features = hidden_features or in_features
+        self.fc1 = nn.Conv1d(in_features, hidden_features, 1)
+        self.act = act_layer()
+        self.fc2 = nn.Conv1d(hidden_features, out_features, 1)
+        self.drop = nn.Dropout(drop)
+        self.apply(self._init_weights)
 
-        self.bl = bl
-        self.v_dim = v_dim
-        self.att_type = att_type
-        assert self.att_type in ['normal_att', 'block_att', 'sliding_att']
-        
-        self.att_helper = AttentionHelper()
-        self.window_mask = self.construct_window_mask()
-        
-    
-    def construct_window_mask(self):
-        '''
-            construct window mask of shape (1, l, l + l//2 + l//2), used for sliding window self attention
-        '''
-        window_mask = torch.zeros((1, self.bl, self.bl + 2* (self.bl //2)))
-        for i in range(self.bl):
-            window_mask[:, i, i:i+self.bl] = 1
-        return window_mask
-    
-    def forward(self, q, k, v, mask):
-        
-        query = self.query_conv(q)
-        key = self.key_conv(k)
-        value = self.value_conv(v)
-            
-        if self.att_type == 'normal_att':
-            return self._normal_self_att(query, key, value, mask)
-        elif self.att_type == 'block_att':
-            return self._block_wise_self_att(query, key, value, mask)
-        elif self.att_type == 'sliding_att':
-            return self._sliding_window_self_att(query, key, value, mask)
+    def _init_weights(self, m):
+        if isinstance(m, nn.Conv2d):
+            trunc_normal_(m.weight, std=.02)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
 
-    
-    def _normal_self_att(self,q,k,v, mask):
-        m_batchsize, c1, L = q.size()
-        _,c2,L = k.size()
-        _,c3,L = v.size()
-        padding_mask = torch.ones((m_batchsize, 1, L)).to(q.device) * mask[:,0:1,:]
-        output, attentions = self.att_helper.scalar_dot_att(q, k, v, padding_mask)
-        output = self.conv_out(F.relu(output))
-        output = output[:, :, 0:L]
-        return output * mask[:, 0:1, :]  
-        
-    def _block_wise_self_att(self, q,k,v, mask):
-        m_batchsize, c1, L = q.size()
-        _,c2,L = k.size()
-        _,c3,L = v.size()
-        
-        nb = L // self.bl
-        if L % self.bl != 0:
-            q = torch.cat([q, torch.zeros((m_batchsize, c1, self.bl - L % self.bl)).to(q.device)], dim=-1)
-            k = torch.cat([k, torch.zeros((m_batchsize, c2, self.bl - L % self.bl)).to(k.device)], dim=-1)
-            v = torch.cat([v, torch.zeros((m_batchsize, c3, self.bl - L % self.bl)).to(v.device)], dim=-1)
-            nb += 1
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.drop(x)
+        x = self.fc2(x)
+        x = self.drop(x)
+        return x
 
-        padding_mask = torch.cat([torch.ones((m_batchsize, 1, L)).to(q.device) * mask[:,0:1,:], torch.zeros((m_batchsize, 1, self.bl * nb - L)).to(q.device)],dim=-1)
+class PoolFormerBlock(nn.Module):
+    """
+    Implementation of one PoolFormer block.
+    --dim: embedding dim
+    --pool_size: pooling size
+    --mlp_ratio: mlp expansion ratio
+    --act_layer: activation
+    --norm_layer: normalization
+    --drop: dropout rate
+    --drop path: Stochastic Depth, 
+        refer to https://arxiv.org/abs/1603.09382
+    --use_layer_scale, --layer_scale_init_value: LayerScale, 
+        refer to https://arxiv.org/abs/2103.17239
+    """
+    def __init__(self, dim, mode='encoder', pool_size=3, mlp_ratio=4., 
+                 act_layer=nn.GELU, norm_layer=nn.InstanceNorm1d, 
+                 drop=0., drop_path=0., 
+                 use_layer_scale=True, layer_scale_init_value=1e-5):
 
-        q = q.reshape(m_batchsize, c1, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c1, self.bl)
-        padding_mask = padding_mask.reshape(m_batchsize, 1, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb,1, self.bl)
-        k = k.reshape(m_batchsize, c2, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c2, self.bl)
-        v = v.reshape(m_batchsize, c3, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c3, self.bl)
-        
-        output, attentions = self.att_helper.scalar_dot_att(q, k, v, padding_mask)
-        output = self.conv_out(F.relu(output))
-        
-        output = output.reshape(m_batchsize, nb, self.v_dim, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize, self.v_dim, nb * self.bl)
-        output = output[:, :, 0:L]
-        return output * mask[:, 0:1, :]  
-    
-    def _sliding_window_self_att(self, q, k, v, mask):
-        m_batchsize, c1, L = q.size()
-        _, c2, _ = k.size()
-        _, c3, _ = v.size()
-        
-        # assert m_batchsize == 1  # currently, we only accept input with batch size 1
-        # padding zeros for the last segment
-        nb = L // self.bl
-        if L % self.bl != 0:
-            q = torch.cat([q, torch.zeros((m_batchsize, c1, self.bl - L % self.bl)).to(q.device)], dim=-1)
-            k = torch.cat([k, torch.zeros((m_batchsize, c2, self.bl - L % self.bl)).to(q.device)], dim=-1)
-            v = torch.cat([v, torch.zeros((m_batchsize, c3, self.bl - L % self.bl)).to(q.device)], dim=-1)
-            nb += 1
-        padding_mask = torch.cat([torch.ones((m_batchsize, 1, L)).to(q.device) * mask[:,0:1,:], torch.zeros((m_batchsize, 1, self.bl * nb - L)).to(q.device)],dim=-1)
-        
-        # sliding window approach, by splitting query_proj and key_proj into shape (c1, l) x (c1, 2l)
-        # sliding window for query_proj: reshape
-        q = q.reshape(m_batchsize, c1, nb, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize * nb, c1, self.bl)
-        
-        # sliding window approach for key_proj
-        # 1. add paddings at the start and end
-        k = torch.cat([torch.zeros(m_batchsize, c2, self.bl // 2).to(q.device), k, torch.zeros(m_batchsize, c2, self.bl // 2).to(q.device)], dim=-1)
-        v = torch.cat([torch.zeros(m_batchsize, c3, self.bl // 2).to(q.device), v, torch.zeros(m_batchsize, c3, self.bl // 2).to(q.device)], dim=-1)
-        padding_mask = torch.cat([torch.zeros(m_batchsize, 1, self.bl // 2).to(q.device), padding_mask, torch.zeros(m_batchsize, 1, self.bl // 2).to(q.device)], dim=-1)
-        
-        # 2. reshape key_proj of shape (m_batchsize*nb, c1, 2*self.bl)
-        k = torch.cat([k[:,:, i*self.bl:(i+1)*self.bl+(self.bl//2)*2] for i in range(nb)], dim=0) # special case when self.bl = 1
-        v = torch.cat([v[:,:, i*self.bl:(i+1)*self.bl+(self.bl//2)*2] for i in range(nb)], dim=0) 
-        # 3. construct window mask of shape (1, l, 2l), and use it to generate final mask
-        padding_mask = torch.cat([padding_mask[:,:, i*self.bl:(i+1)*self.bl+(self.bl//2)*2] for i in range(nb)], dim=0) # of shape (m*nb, 1, 2l)
-        final_mask = self.window_mask.repeat(m_batchsize * nb, 1, 1).to(q.device) * padding_mask 
-        
-        output, attention = self.att_helper.scalar_dot_att(q, k, v, final_mask)
-        output = self.conv_out(F.relu(output))
+        super().__init__()
 
-        output = output.reshape(m_batchsize, nb, -1, self.bl).permute(0, 2, 1, 3).reshape(m_batchsize, -1, nb * self.bl)
-        output = output[:, :, 0:L]
-        return output * mask[:, 0:1, :]
+        self.norm1 = norm_layer(dim)
+        self.token_mixer = PoolFormerMixTokenLayer(pool_size=pool_size, mode=mode)
+        self.norm2 = norm_layer(dim)
+        mlp_hidden_dim = int(dim * mlp_ratio)
+        self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, 
+                       act_layer=act_layer, drop=drop)
+
+        # The following two techniques are useful to train deep PoolFormers.
+        self.drop_path = DropPath(drop_path) if drop_path > 0. \
+            else nn.Identity()
+        self.use_layer_scale = use_layer_scale
+        if use_layer_scale:
+            self.layer_scale_1 = nn.Parameter(
+                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            self.layer_scale_2 = nn.Parameter(
+                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+
+    def forward(self, x, q, k, v, masks):
+        if self.use_layer_scale:
+            x = x + self.drop_path(self.norm1(
+                self.layer_scale_1.unsqueeze(-1)
+                * self.token_mixer(q, k, v, masks)))
+            x = x + self.drop_path(self.norm2(
+                self.layer_scale_2.unsqueeze(-1)
+                * self.mlp(x)))
+        else:
+            x = x + self.drop_path(self.norm1(self.token_mixer(q, k, v, masks)))
+            x = x + self.drop_path(self.norm2(self.mlp(x)))
+        return x

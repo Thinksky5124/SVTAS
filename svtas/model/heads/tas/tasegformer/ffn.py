@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:13:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-30 16:28:42
+LastEditTime : 2023-01-03 22:05:54
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/ffn.py
 '''

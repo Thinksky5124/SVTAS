@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 20:15:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-03 17:36:46
+LastEditTime : 2023-01-03 21:48:14
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/tasegformer.py
 '''
@@ -25,9 +25,8 @@ class Encoder(nn.Module):
                  position_encoding=True):
         super(Encoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
-        self.position_encoding = position_encoding
         self.layers = nn.ModuleList(
-            [TransformerEncoderBlock(embed_dim=embed_dim, num_heads=num_heads, dropout=dropout, dilation=i)
+            [TransformerEncoderBlock(embed_dim=embed_dim, num_heads=num_heads, dropout=dropout, dilation=i, position_encoding=position_encoding)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)
@@ -39,12 +38,12 @@ class Encoder(nn.Module):
         
         out = self.conv_out(feature) * mask[:, 0:1, :]
 
-        return None, feature
+        return out, feature
 
 
 class Decoder(nn.Module):
     def __init__(self,
-                 value_channels,
+                 in_channels,
                  embed_dim,
                  num_heads,
                  num_layers,
@@ -52,10 +51,10 @@ class Decoder(nn.Module):
                  dropout=0.0,
                  position_encoding=True):
         super(Decoder, self).__init__()
-        self.conv_1x1 = nn.Conv1d(value_channels, embed_dim, 1)
+        self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.position_encoding = position_encoding
         self.layers = nn.ModuleList(
-            [TransformerDecoderBlock(embed_dim=embed_dim, num_heads=num_heads, dropout=dropout, dilation=i)
+            [TransformerDecoderBlock(embed_dim=embed_dim, num_heads=num_heads, dropout=dropout, dilation=i, position_encoding=position_encoding)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)
@@ -76,6 +75,7 @@ class TASegFormer(nn.Module):
                  num_decoders=3,
                  decoder_num_layers=10,
                  encoder_num_layers=10,
+                 input_dropout_rate=0.5,
                  num_classes=11,
                  embed_dim=64,
                  num_heads=8,
@@ -101,7 +101,13 @@ class TASegFormer(nn.Module):
                                                              dropout=dropout,
                                                              position_encoding=position_encoding))
                                                              for s in range(num_decoders)]) # num_decoders
-        
+        self.input_dropout_rate = input_dropout_rate
+        assert 0.0 <= self.input_dropout_rate < 1.0, f"input_dropout_rate must between 0.0~1.0, now is {input_dropout_rate}!"
+        if self.input_dropout_rate > 0.0:
+            self.dropout = nn.Dropout2d(p=input_dropout_rate)
+        else:
+            self.dropout = None
+
     def init_weights(self):
         pass
 
@@ -112,6 +118,11 @@ class TASegFormer(nn.Module):
         # x.shape [N C T]
         # mask.shape [N C T]
         
+        if self.dropout is not None:
+            x = x.unsqueeze(2)
+            x = self.dropout(x)
+            x = x.squeeze(2)
+            
         out, feature = self.encoder(x, mask[:, 0:1, ::self.sample_rate])
         outputs = out.unsqueeze(0)
         
