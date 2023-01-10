@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-12-30 16:12:03
+Date         : 2023-01-07 16:53:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-30 21:03:46
+LastEditTime : 2023-01-07 16:53:34
 Description  : file content
-FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/position_encoding.py
+FilePath     : /SVTAS/svtas/model/heads/utils/attention_helper/position_encoding.py
 '''
 import math
 import torch

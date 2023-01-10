@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-30 17:30:23
+LastEditTime : 2023-01-07 18:42:42
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -54,6 +54,7 @@ def train(cfg,
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output/{model_name}")
     criterion_metric_name = cfg.get("criterion_metric_name", "F1@0.50")
+    best_epoch = 0
     mkdir(output_dir)
 
     # wheather use amp
@@ -308,6 +309,7 @@ def train(cfg,
                 logger.info(
                         "Already save the best model (" + criterion_metric_name + f"){int(best * 10000) / 10000}."
                     )
+                best_epoch = epoch
 
         # 6. Save model and optimizer
         if (epoch % cfg.get("save_interval", 1) == 0 or epoch == cfg.epochs - 1) and local_rank <= 0:
@@ -341,3 +343,5 @@ def train(cfg,
         dist.destroy_process_group()
 
     logger.info(f'training {model_name} finished')
+    if validate:
+        logger.info(f"The best performance on {criterion_metric_name} is {int(best * 10000) / 10000}, in epoch {best_epoch + 1}.")

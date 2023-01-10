@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-31 10:44:39
+LastEditTime : 2023-01-07 16:08:59
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/tasegformer_50salads.py
 '''
@@ -30,7 +30,7 @@ MODEL = dict(
         num_decoders=3,
         decoder_num_layers=10,
         encoder_num_layers=10,
-        input_dropout=0.5,
+        input_dropout_rate=0.3,
         embed_dim=64,
         num_heads=1,
         dropout=0.5,

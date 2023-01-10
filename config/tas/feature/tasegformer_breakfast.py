@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-31 10:59:28
+LastEditTime : 2023-01-07 16:09:03
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/tasegformer_breakfast.py
 '''
@@ -13,11 +13,12 @@ _base_ = [
 ]
 
 split = 1
-num_classes = 11
+num_classes = 48
 sample_rate = 1
 ignore_index = -100
 epochs = 50
 batch_size = 2
+log_interval = 100
 model_name = "TASegformer_breakfast_split" + str(split)
 
 MODEL = dict(
@@ -30,7 +31,7 @@ MODEL = dict(
         num_decoders=3,
         decoder_num_layers=10,
         encoder_num_layers=10,
-        input_dropout=0.5,
+        input_dropout_rate=0.3,
         embed_dim=64,
         num_heads=1,
         dropout=0.5,
@@ -69,7 +70,7 @@ DATASET = dict(
 
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
-    learning_rate = 0.001,
+    learning_rate = 0.002,
     weight_decay = 0.01,
     betas = (0.9, 0.999)
 )

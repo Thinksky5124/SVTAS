@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-03 22:32:09
+LastEditTime : 2023-01-09 11:59:20
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/tasegformer_gtea.py
 '''
@@ -12,7 +12,7 @@ _base_ = [
     '../../_base_/dataset/gtea/gtea_feature.py'
 ]
 
-split = 1
+split = 2
 num_classes = 11
 sample_rate = 1
 ignore_index = -100
@@ -30,12 +30,11 @@ MODEL = dict(
         num_decoders=3,
         decoder_num_layers=10,
         encoder_num_layers=10,
+        input_dropout_rate=0.5,
         embed_dim=64,
-        num_heads=1,
         dropout=0.5,
         num_classes=num_classes,
-        sample_rate=sample_rate,
-        position_encoding=True
+        sample_rate=sample_rate
     ),
     loss = dict(
         name = "DiceSegmentationLoss",
@@ -54,6 +53,7 @@ POSTPRECESSING = dict(
 DATASET = dict(
     temporal_clip_batch_size = batch_size,
     video_batch_size = batch_size,
+    num_workers = 4,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         # feature_path = "./data/gtea/raw_features"
@@ -64,6 +64,12 @@ DATASET = dict(
         # feature_path = "./data/gtea/raw_features"
         # flow_feature_path = "./data/gtea/flow_features"
     )
+)
+
+METRIC = dict(
+    TAS = dict(
+        file_output = True,
+        score_output = False)
 )
 
 OPTIMIZER = dict(

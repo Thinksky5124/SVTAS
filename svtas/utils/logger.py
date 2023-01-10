@@ -6,6 +6,8 @@ LastEditTime: 2022-04-28 14:15:08
 Description: logger config function ref: https://github.com/PaddlePaddle/PaddleVideo
 FilePath: /ETESVS/utils/logger.py
 '''
+import numpy as np
+import cv2
 import logging
 import os
 import sys
@@ -216,3 +218,12 @@ def tenorboard_log_epoch(metric_dict, epoch, mode, writer):
                     writer.add_scalar(mode + "/" + m, metric_dict[m].get_mean, epoch)
                 elif isinstance(m, dict):
                     writer.add_scalar(mode + "/" + m, metric_dict[m], epoch)
+
+def tensorboard_log_feature_image(writer: SummaryWriter, feature: torch.Tensor, epoch: int, tag: str):
+    assert len(list(feature.shape)) == 2, f"Only support fearure shape is 2-D, now is {list(feature.shape)}-D!"
+    feature_data = feature.detach().clone().cpu().numpy()
+    # Min Max Scaler
+    feature_data = (feature_data - np.min(feature_data))/(np.max(feature_data) - np.min(feature_data))
+    feature_data = np.uint8(255 * feature_data)
+    feature_data = cv2.applyColorMap(feature_data, cv2.COLORMAP_JET)
+    writer.add_image(tag, feature_data, epoch, dataformats = "HWC")

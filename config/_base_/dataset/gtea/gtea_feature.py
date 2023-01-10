@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:25:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-16 13:21:49
+LastEditTime : 2023-01-04 15:40:41
 Description  : gtea Dataset
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_feature.py
 '''
