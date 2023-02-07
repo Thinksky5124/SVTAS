@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-22 13:56:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-30 11:30:52
+LastEditTime : 2023-02-07 13:42:26
 Description  : Linear Head
-FilePath     : /SVTAS/svtas/model/heads/segmentation/linear_transformer.py
+FilePath     : /SVTAS/svtas/model/heads/tas/linear_transformer.py
 '''
 import torch
 import copy
@@ -46,7 +46,8 @@ class LinAttLayer(nn.Module):
         self.P_bar = None
         self.E = get_EF(k_dim // r1, k_dim // r1, method, q_dim // r1)
         self.F = get_EF(v_dim // r3, v_dim // r3, method, q_dim // r1)
-        self.causal_mask = self.gen_causal_mask(q_dim // r1, k_dim // r2)
+        self.causal_mask = None
+        # self.causal_mask = self.gen_causal_mask(q_dim // r1, k_dim // r2)
         self.bl = bl
         self.stage = stage
         self.att_type = att_type

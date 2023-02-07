@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 20:15:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-09 16:22:43
+LastEditTime : 2023-01-13 22:15:28
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/tasegformer.py
 '''
@@ -10,23 +10,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .token_mixer_layer import *
-import numpy as np
 import copy
 from ....builder import HEADS
-
-class DilationConvBlock(nn.Module):
-    def __init__(self, dilation, in_channels, out_channels, dropout) -> None:
-        super().__init__()
-        self.conv_dilated = nn.Conv1d(in_channels, out_channels, 3, padding=dilation, dilation=dilation)
-        self.conv_1x1 = nn.Conv1d(out_channels, out_channels, 1)
-        self.dropout = nn.Dropout(p=dropout)
-        self.act = nn.SiLU()
-
-    def forward(self, x, mask):
-        out = self.act(self.conv_dilated(x))
-        out = self.conv_1x1(out)
-        out = self.dropout(out)
-        return (x + out) * mask[:, 0:1, :]
 
 class ResdualTokenMixerBlock(nn.Module):
     def __init__(self,
@@ -35,12 +20,10 @@ class ResdualTokenMixerBlock(nn.Module):
                  dropout=0.0,
                  mode='encoder') -> None:
         super().__init__()
-        # self.dilation_conv = DilationConvBlock(2**(dilation), in_channels=embed_dim, out_channels=embed_dim, dropout=dropout)
-        self.token_mixer_blocks = nn.ModuleList([PoolFormerBlock(dim=embed_dim, drop=dropout, pool_size=(2**(dilation+1)+1), stride=1, mode=mode)
+        self.token_mixer_blocks = nn.ModuleList([PoolFormerBlock(dim=embed_dim, drop=dropout, pool_size=dilation, stride=1, mode=mode)
                                                  for i in range(1)])
         
-    def forward(self, x, masks=None):
-        # x = self.dilation_conv(x, masks)
+    def forward(self, x, masks):
         for token_mixer_block in self.token_mixer_blocks:
             x = token_mixer_block(x, masks)
         return x
@@ -143,7 +126,6 @@ class TASegFormer(nn.Module):
     def forward(self, x, mask):
         # x.shape [N C T]
         # mask.shape [N C T]
-        
         if self.dropout is not None:
             x = x.unsqueeze(2)
             x = self.dropout(x)

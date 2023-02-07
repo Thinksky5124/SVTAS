@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-03 17:05:51
+LastEditTime : 2023-01-13 23:22:33
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/heads/tas/asformer.py
 '''
@@ -284,8 +284,12 @@ class Decoder(nn.Module):
     def forward(self, x, fencoder, mask):
 
         feature = self.conv_1x1(x)
+        cnt = 0
+        np.save(f"output/{cnt}.npy", feature.detach().clone().cpu().numpy())
         for layer in self.layers:
             feature = layer(feature, fencoder, mask)
+            cnt += 1
+            np.save(f"output/{cnt}.npy", feature.detach().clone().cpu().numpy())
 
         out = self.conv_out(feature) * mask[:, 0:1, :]
 

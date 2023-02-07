@@ -2,15 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:11:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-09 16:54:50
+LastEditTime : 2023-01-13 23:20:00
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/token_mixer_layer.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from timm.models.layers import DropPath, trunc_normal_
-from .....utils.logger import get_logger, tensorboard_log_feature_image
 
 class PoolFormerMixTokenLayer(nn.Module):
     """
@@ -20,22 +18,33 @@ class PoolFormerMixTokenLayer(nn.Module):
 
     --pool_size: pooling size
     """
-    def __init__(self, pool_size=3, stride=1, mode='encoder'):
+    def __init__(self, pool_size=3, stride=1):
         super().__init__()
-        self.mode = mode
-        assert mode in ['encoder', 'decoder'], f"mode {mode} do not support!"
-        if pool_size % 2 == 0:
-            pool_size += 1
-        # if self.mode == 'encoder':
+        # if mode == 'enocder':
+        center_pool_size_list = [3, 5, 7, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+        # else:
+        #     center_pool_size_list = [3, 5, 7, 9, 11, 13, 17, 33, 65, 127, 255, 511]
+        center_pool_size = center_pool_size_list[pool_size]
         self.pool = nn.AvgPool1d(
-            pool_size, stride=stride, padding=pool_size//2, count_include_pad=False)
-        # elif self.mode == 'decoder':
-        #     self.pool = nn.AvgPool1d(
-        #         pool_size, stride=stride, padding=pool_size//2, count_include_pad=False)
+            center_pool_size, stride=stride, padding=center_pool_size//2, count_include_pad=False)
 
     def forward(self, x, masks):
-        x = self.pool(x) - x
+        x = self.pool(x)
         return x * masks[:, 0:1, :]
+
+class PoolSmothLayer(nn.Module):
+    def __init__(self, dim, dilation=1, stride=1, scale_init=1e-2):
+        pool_size = 2**(dilation + 1) + 1
+        super().__init__()
+        self.pool = nn.AvgPool1d(
+            pool_size, stride=stride, padding=pool_size//2, count_include_pad=False)
+        self.scale = nn.Parameter(torch.ones(dim) * scale_init)
+        self.norm = nn.InstanceNorm1d(dim)
+
+    def forward(self, x):
+        # x = self.norm(self.scale.unsqueeze(-1) * self.pool(x) - x))
+        x = self.norm(self.pool(x))
+        return x
 
 class Mlp(nn.Module):
     """
@@ -43,7 +52,7 @@ class Mlp(nn.Module):
     Input: tensor with shape [B, C, T]
     """
     def __init__(self, in_features, hidden_features=None, 
-                 out_features=None, act_layer=nn.GELU, drop=0.):
+                 out_features=None, act_layer=nn.SiLU, drop=0.):
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -51,22 +60,28 @@ class Mlp(nn.Module):
         self.act = act_layer()
         self.fc2 = nn.Conv1d(hidden_features, out_features, 1)
         self.drop = nn.Dropout(drop)
-        self.apply(self._init_weights)
-
-    def _init_weights(self, m):
-        if isinstance(m, nn.Conv2d):
-            trunc_normal_(m.weight, std=.02)
-            if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         x = self.fc1(x)
         x = self.act(x)
-        x = self.drop(x)
         x = self.fc2(x)
         x = self.drop(x)
         return x
 
+class DilationConv(nn.Module):
+    def __init__(self, dilation, in_channels, hidden_features, dropout) -> None:
+        super().__init__()
+        self.conv_dilated = nn.Conv1d(in_channels, hidden_features, 3, padding=dilation, dilation=dilation)
+        self.conv_1x1 = nn.Conv1d(hidden_features, in_channels, 1)
+        self.dropout = nn.Dropout(p=dropout)
+        self.act = nn.SiLU()
+
+    def forward(self, x, masks):
+        out = self.act(self.conv_dilated(x))
+        out = self.conv_1x1(out)
+        out = self.dropout(out)
+        return out * masks[:, 0:1, :]
+        
 class PoolFormerBlock(nn.Module):
     """
     Implementation of one PoolFormer block.
@@ -79,57 +94,24 @@ class PoolFormerBlock(nn.Module):
     --use_layer_scale, --layer_scale_init_value: LayerScale, 
         refer to https://arxiv.org/abs/2103.17239
     """
-    def __init__(self, dim, mode='encoder', pool_size=3, mlp_ratio=4., 
-                 act_layer=nn.GELU, drop=0., stride=1,
-                 use_layer_scale=True, layer_scale_init_value=1e-3):
+    def __init__(self, dim, mode='encoder', pool_size=3, drop=0., stride=1):
 
         super().__init__()
-
-        self.norm1 = nn.InstanceNorm1d(dim)
-        self.token_mixer = PoolFormerMixTokenLayer(pool_size=pool_size, stride=stride, mode=mode)
-        self.norm2 = nn.InstanceNorm1d(dim)
-        mlp_hidden_dim = int(dim * mlp_ratio)
-        self.ffn = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, 
-                       act_layer=act_layer, drop=drop)
-
-        # The following two techniques are useful to train deep PoolFormers.
-        self.use_layer_scale = use_layer_scale
-        if use_layer_scale:
-            self.layer_scale_1 = nn.Parameter(
-                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
-            self.layer_scale_2 = nn.Parameter(
-                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+        self.mode = mode
+        assert mode in ['encoder', 'decoder'], f"mode {mode} do not support!"
+        self.pool_norm = nn.InstanceNorm1d(dim)
+        self.mlp_norm = nn.InstanceNorm1d(dim)
+        self.conv_norm = nn.InstanceNorm1d(dim)
+        self.conv = DilationConv(dilation=2**pool_size, in_channels=dim, hidden_features=dim, dropout=drop)
+        self.token_mixer = PoolFormerMixTokenLayer(pool_size=pool_size, stride=stride)
+        self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
+        self.pol_smooth = PoolSmothLayer(dim, dilation=pool_size)
 
     def forward(self, x, masks):
-        if self.use_layer_scale:
-            writer = get_logger(tensorboard=True)
-            tensorboard_log_feature_image(writer, x[0], epoch=0, tag="raw_x")
-
-            out = self.token_mixer(x, masks)
-            tensorboard_log_feature_image(writer, out[0], epoch=0, tag="token_mixer")
-
-            sclae_x = self.layer_scale_1.unsqueeze(-1) * out
-            tensorboard_log_feature_image(writer, sclae_x[0], epoch=0, tag="token_sclae")
-
-            norm_x = self.norm1(sclae_x)
-            tensorboard_log_feature_image(writer, norm_x[0], epoch=0, tag="token_norm")
-
-            x = x + norm_x
-            tensorboard_log_feature_image(writer, x[0], epoch=0, tag="token_res")
-
-            norm_x = self.norm2(x)
-            tensorboard_log_feature_image(writer, norm_x[0], epoch=0, tag="ffn_norm")
-
-            ff_x = self.ffn(norm_x)
-            tensorboard_log_feature_image(writer, ff_x[0], epoch=0, tag="ffn")
-
-            out = self.layer_scale_2.unsqueeze(-1) * ff_x
-            tensorboard_log_feature_image(writer, out[0], epoch=0, tag="ffn_scale")
-
-            x = x + out
-            tensorboard_log_feature_image(writer, x[0], epoch=0, tag="ffn_res")
-
+        out = x + self.conv(self.conv_norm(x), masks)
+        if self.mode == 'encoder':
+            out = out + self.token_mixer(self.pool_norm(out), masks)
+            out = out + self.ffn(self.mlp_norm(out))
         else:
-            x = x + self.norm1(self.token_mixer(x, masks))
-            x = x + self.ffn(self.norm2(x))
-        return x
+            out = out + self.pol_smooth(out)
+        return out * masks[:, 0:1, :]

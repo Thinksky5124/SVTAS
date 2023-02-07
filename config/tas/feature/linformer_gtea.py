@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-29 18:28:10
+LastEditTime : 2023-02-07 13:43:22
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/linformer_gtea.py
 '''
 
 _base_ = [
-    '../../_base_/schedules/optimizer/adam.py', '../../_base_/models/temporal_action_segmentation/linformer.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/models/temporal_action_segmentation/linformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
     '../../_base_/dataset/gtea/gtea_feature.py', '../../_base_/schedules/lr/liner_step_50e.py'
 ]
@@ -20,14 +20,25 @@ ignore_index = -100
 model_name = "Linformer_gtea_split" + str(split)
 batch_size = 1
 epochs = 50
+log_interval = 8
 
 MODEL = dict(
+    architecture = "FeatureSegmentation",
+    backbone = None,
+    neck = None,
     head = dict(
+        name ="LinformerHead",
+        num_decoders = 3,
+        num_layers = 10,
+        num_f_maps = 64,
         input_dim = 2048,
-        num_classes = num_classes,
-        sample_rate = sample_rate
+        channel_masking_rate = 0.5,
+        num_classes=num_classes,
+        sample_rate=sample_rate
     ),
     loss = dict(
+        name = "DiceSegmentationLoss",
+        smooth_weight = 0.0,
         num_classes = num_classes,
         sample_rate = sample_rate,
         ignore_index = ignore_index
@@ -44,8 +55,9 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005 * batch_size,
-    weight_decay = 1e-4,
+    name = "AdamWOptimizer",
+    learning_rate = 0.0005,
+    weight_decay = 0.01,
     betas = (0.9, 0.999)
 )
 
@@ -60,6 +72,12 @@ DATASET = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         # feature_path = "./data/gtea/raw_features",
     )
+)
+
+METRIC = dict(
+    TAS = dict(
+        file_output = True,
+        score_output = False)
 )
 
 PIPELINE = dict(

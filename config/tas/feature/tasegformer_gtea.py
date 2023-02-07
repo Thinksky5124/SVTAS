@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-09 11:59:20
+LastEditTime : 2023-02-07 13:36:23
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/tasegformer_gtea.py
 '''
@@ -17,8 +17,9 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-batch_size = 2
+batch_size = 1
 model_name = "TASegformer_gtea_split" + str(split)
+log_interval = 8
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
@@ -27,7 +28,7 @@ MODEL = dict(
     head = dict(
         name = "TASegFormer",
         in_channels=2048,
-        num_decoders=3,
+        num_decoders=1,
         decoder_num_layers=10,
         encoder_num_layers=10,
         input_dropout_rate=0.5,
@@ -38,7 +39,7 @@ MODEL = dict(
     ),
     loss = dict(
         name = "DiceSegmentationLoss",
-        smooth_weight = 1.0,
+        smooth_weight = 0.0,
         num_classes = num_classes,
         sample_rate = sample_rate,
         ignore_index = ignore_index
@@ -74,7 +75,7 @@ METRIC = dict(
 
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
-    learning_rate = 0.001,
+    learning_rate = 0.0005,
     weight_decay = 0.01,
     betas = (0.9, 0.999)
 )

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-27 18:16:57
+LastEditTime : 2023-01-13 23:24:19
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/asformer_gtea.py
 '''
@@ -13,7 +13,7 @@ _base_ = [
     '../../_base_/dataset/gtea/gtea_feature.py'
 ]
 
-split = 1
+split = 2
 num_classes = 11
 sample_rate = 1
 ignore_index = -100
