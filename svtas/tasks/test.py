@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-31 15:32:08
+LastEditTime : 2023-02-09 18:56:27
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -163,7 +163,7 @@ def test(cfg,
         sample_rate = list(cfg.PIPELINE.test.sample.get('sample_rate_dict', {'sample':1}).values())[0]
         # model param flops caculate
         if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-            for transform_op in cfg.PIPELINE.test.transform.transform_list:
+            for transform_op in list(cfg.PIPELINE.test.transform.transform_dict.values())[0]:
                 if list(transform_op.keys())[0] in ['CenterCrop']:
                     image_size = transform_op['CenterCrop']['size']
             x_shape = [clip_seg_num, 3, image_size, image_size]

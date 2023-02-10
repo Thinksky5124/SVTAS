@@ -2,14 +2,14 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-06-13 16:04:40
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2023-01-04 15:41:04
+ # @LastEditTime : 2023-02-09 18:55:10
  # @Description  : Test script
  # @FilePath     : /SVTAS/scripts/test.sh
 ### 
 
 export CUDA_VISIBLE_DEVICES=0
 
-python tools/launch.py  --mode test -c config/tas/feature/tasegformer_gtea.py --weights=output/TASegformer_gtea_split1/TASegformer_gtea_split1_best.pt
+python tools/launch.py  --mode test -c config/svtas/rgb/swin_transformer_3d_asrf_gtea.py --weights=output/SwinTransformer3D_ASRF_64x2_gtea_split1/SwinTransformer3D_ASRF_64x2_gtea_split1_epoch_00001.pt
 
 # #### GTEA ####
 # python tools/launch.py  --mode test -c config/gtea/transeger/transeger_split1.yaml --weights=output/Transeger_gtea_split1/Transeger_gtea_split1_best.pkl

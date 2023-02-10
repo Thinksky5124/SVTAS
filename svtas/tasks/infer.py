@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-01 16:11:43
+LastEditTime : 2023-02-09 18:57:08
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
@@ -101,9 +101,9 @@ def infer(cfg,
         
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        for transform_op in cfg.PIPELINE.test.transform.transform_list:
-                if list(transform_op.keys())[0] in ['CenterCrop']:
-                    image_size = transform_op['CenterCrop']['size']
+        for transform_op in list(cfg.PIPELINE.test.transform.transform_dict.values())[0]:
+            if list(transform_op.keys())[0] in ['CenterCrop']:
+                image_size = transform_op['CenterCrop']['size']
         x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]
         mask_shape = [cfg.DATASET.infer.clip_seg_num * cfg.DATASET.infer.sample_rate]
         input_shape = (x_shape, mask_shape)

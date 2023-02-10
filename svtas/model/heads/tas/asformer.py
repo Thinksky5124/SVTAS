@@ -284,12 +284,8 @@ class Decoder(nn.Module):
     def forward(self, x, fencoder, mask):
 
         feature = self.conv_1x1(x)
-        cnt = 0
-        np.save(f"output/{cnt}.npy", feature.detach().clone().cpu().numpy())
         for layer in self.layers:
             feature = layer(feature, fencoder, mask)
-            cnt += 1
-            np.save(f"output/{cnt}.npy", feature.detach().clone().cpu().numpy())
 
         out = self.conv_out(feature) * mask[:, 0:1, :]
 

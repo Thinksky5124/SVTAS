@@ -169,7 +169,7 @@ class AverageMeter(object):
         return '{self.name}: {self.val:{self.fmt}}'.format(self=self)
 
 
-def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
+def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger, need_coloring=False):
     batch_cost = str(metric_list['batch_time'].value) + ' sec,'
     reader_cost = str(metric_list['reader_time'].value) + ' sec,'
 
@@ -183,16 +183,24 @@ def log_batch(metric_list, batch_id, epoch_id, total_epoch, mode, ips, logger):
     step_str = "{:s} step:{:<4d}".format(mode, batch_id)
 
     if mode in ["train", "validation"]:
-        logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
-            coloring(epoch_str, "HEADER"),
-            coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
-            coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+        if need_coloring:
+            logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+                coloring(epoch_str, "HEADER"),
+                coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
+                coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+        else:
+            logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+                epoch_str, step_str, metric_str, batch_cost, reader_cost, ips))
     elif mode in ["test", "infer"]:
-        logger.info("{:s} {:s} {:s} {:s} {}".format(
-            coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
-            coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+        if need_coloring:
+            logger.info("{:s} {:s} {:s} {:s} {}".format(
+                coloring(step_str, "PURPLE"), coloring(metric_str, 'OKGREEN'),
+                coloring(batch_cost, "OKGREEN"), coloring(reader_cost, 'OKGREEN'), ips))
+        else:
+            logger.info("{:s} {:s} {:s} {:s} {}".format(
+                step_str, metric_str, batch_cost, reader_cost, ips))
 
-def log_epoch(metric_list, epoch, mode, ips, logger):
+def log_epoch(metric_list, epoch, mode, ips, logger, need_coloring=False):
     batch_cost = 'avg_' + str(metric_list['batch_time'].value) + ' sec,'
     reader_cost = 'avg_' + str(metric_list['reader_time'].value) + ' sec,'
     batch_sum = str(metric_list['batch_time'].total) + ' sec,'
@@ -205,10 +213,14 @@ def log_epoch(metric_list, epoch, mode, ips, logger):
 
     end_epoch_str = "END epoch:{:<3d}".format(epoch)
 
-    logger.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
-        coloring(end_epoch_str, "RED"), coloring(mode, "PURPLE"),
-        coloring(metric_str, "OKGREEN"), coloring(batch_cost, "OKGREEN"),
-        coloring(reader_cost, "OKGREEN"), coloring(batch_sum, "OKGREEN"), ips))
+    if need_coloring:
+        logger.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
+            coloring(end_epoch_str, "RED"), coloring(mode, "PURPLE"),
+            coloring(metric_str, "OKGREEN"), coloring(batch_cost, "OKGREEN"),
+            coloring(reader_cost, "OKGREEN"), coloring(batch_sum, "OKGREEN"), ips))
+    else:
+        logger.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
+            end_epoch_str, mode, metric_str, batch_cost, reader_cost, batch_sum, ips))
 
 def tenorboard_log_epoch(metric_dict, epoch, mode, writer):
     if isinstance(writer, SummaryWriter):

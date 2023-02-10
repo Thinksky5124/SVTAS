@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-07 18:42:42
+LastEditTime : 2023-02-08 20:45:20
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -11,7 +11,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from ..utils.logger import get_logger, log_epoch, tenorboard_log_epoch
+from ..utils.logger import get_logger, log_epoch, tenorboard_log_epoch, coloring
 from ..utils.save_load import mkdir
 from ..utils.recorder import build_recod
 from ..model.builder import build_model
@@ -307,7 +307,7 @@ def train(cfg,
                 torch.save(checkpoint,
                     osp.join(output_dir, model_name + "_best.pt"))
                 logger.info(
-                        "Already save the best model (" + criterion_metric_name + f"){int(best * 10000) / 10000}."
+                        coloring("Already save the best model (" + criterion_metric_name + f"){int(best * 10000) / 10000}.", "OKGREEN")
                     )
                 best_epoch = epoch
 

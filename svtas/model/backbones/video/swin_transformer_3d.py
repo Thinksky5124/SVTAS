@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-18 19:13:40
+LastEditTime : 2023-02-09 15:34:51
 Description  : Swim Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
-FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer.py
+FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer_3d.py
 '''
 import torch
 import torch.nn as nn

@@ -106,6 +106,6 @@ def build(cfg, registry, key='name', **kwargs):
                 obj_type, registry.name))
     if 'sbp_build' in kwargs.keys() and kwargs['sbp_build']:
         sbp = StochasticBackPropagation(**kwargs)
-        obj_cls = sbp(obj_cls)
-    
+        return sbp.register_module_from_instance(obj_cls, cfg_copy)
+
     return obj_cls(**cfg_copy)
