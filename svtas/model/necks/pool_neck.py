@@ -19,9 +19,9 @@ class PoolNeck(nn.Module):
     Pooling space information for different input size tensor.
     
     Shape:
-    1: [N T C H W] -> [N T C]
-    2: [N*T C H W] -> [N T C]
-    3: [N P C] -> [N T C]
+    1: [N T C H W] -> [N C T]
+    2: [N*T C H W] -> [N C T]
+    3: [N P C] -> [N C T]
     """
     def __init__(self,
                  in_channels=1280,

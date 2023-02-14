@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 16:37:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-22 16:41:58
+LastEditTime : 2023-02-12 19:49:14
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_gtea.py
 '''
@@ -12,15 +12,16 @@ _base_ = [
 
 sample_rate = 1
 ignore_index = -100
-sliding_window = 32
-clip_seg_num = 32
+sliding_window = 128
+clip_seg_num = 128
+output_dir_name = 'extract_features'
 
 MODEL = dict(
     architecture = "Recognition3D",
     backbone = dict(
         name = "SwinTransformer3D",
-        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
-        pretrained2d = False,
+        # pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        # pretrained2d = False,
         patch_size = [2, 4, 4],
         embed_dim = 96,
         depths = [2, 2, 6, 2],
@@ -48,7 +49,7 @@ MODEL = dict(
     loss = None
 )
 
-PRETRAINED = "./output/SwinTransformer3D_FC_32x2_gtea_split1/SwinTransformer3D_FC_32x2_gtea_split1_best.pt"
+PRETRAINED = "./output/SwinTransformer3D_FC_64x2_gtea_split1_baseline/SwinTransformer3D_FC_64x2_gtea_split1_best.pt"
 
 POSTPRECESSING = dict(
     name = "StreamFeaturePostProcessing",

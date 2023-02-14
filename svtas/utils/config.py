@@ -123,6 +123,8 @@ def print_dict(d, delimiter=0):
             logger.info("{}{} : {}".format(delimiter * " ",
                                            coloring(k, "HEADER"),
                                            coloring(v, "OKGREEN")))
-
-        if k.isupper():
+        try:
+            if k.isupper():
+                logger.info(placeholder)
+        except:
             logger.info(placeholder)

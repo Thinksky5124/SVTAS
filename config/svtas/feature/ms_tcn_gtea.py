@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-16 20:17:28
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-16 20:39:44
+LastEditTime : 2023-02-13 21:39:07
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/ms_tcn_gtea.py
 '''
@@ -18,11 +18,11 @@ num_classes = 11
 sample_rate = 1
 ignore_index = -100
 epochs = 50
-clip_seg_num = 512
-batch_size = 2
-in_channels = 2048
+clip_seg_num = 256
+batch_size = 1
+in_channels = 768
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_MS_TCN_512x1_gtea_split" + str(split)
+model_name = "Stream_MS_TCN_Swin3DSBP_feature_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
@@ -52,13 +52,13 @@ DATASET = dict(
     num_workers = batch_size * 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
+        feature_path = "./data/gtea/extract_features",
         # flow_feature_path = "./data/gtea/flow_features",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
+        feature_path = "./data/gtea/extract_features",
         # flow_feature_path = "./data/gtea/flow_features",
         sliding_window = sliding_window
     )
@@ -92,9 +92,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     ),
     test = dict(
@@ -120,9 +120,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     )
 )

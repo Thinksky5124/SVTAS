@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-08 11:38:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-08 20:31:09
+LastEditTime : 2023-02-10 14:17:41
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/asrf_gtea.py
 '''
@@ -13,7 +13,7 @@ _base_ = [
     '../../_base_/dataset/gtea/gtea_feature.py'
 ]
 
-split = 2
+split = 1
 num_classes = 11
 sample_rate = 1
 ignore_index = -100

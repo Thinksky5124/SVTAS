@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 11:32:57
+LastEditTime : 2023-02-12 16:21:01
 Description  : Extract video feature script
 FilePath     : /SVTAS/tools/extract/extract_features.py
 '''
@@ -23,9 +23,11 @@ from svtas.runner.extract_runner import ExtractFeatureRunner
 @torch.no_grad()
 def extractor(cfg, outpath, flow_extract):
     if flow_extract:
-        out_path = os.path.join(outpath, "flow_features")
+        output_dir_name = cfg.get('output_dir_name', 'flow_features')
+        out_path = os.path.join(outpath, output_dir_name)
     else:
-        out_path = os.path.join(outpath, "features")
+        output_dir_name = cfg.get('output_dir_name', 'features')
+        out_path = os.path.join(outpath, output_dir_name)
     isExists = os.path.exists(out_path)
     if not isExists:
         os.makedirs(out_path)

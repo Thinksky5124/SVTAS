@@ -19,9 +19,10 @@ from .vit_3d import ViT3D
 from .sample_vit_3d import SampleViT3D
 from .mvit import MViT
 from .x3d import X3D
+from .swin_transformer_3d_sbp import SwinTransformer3DWithSBP
 
 __all__ = [
     "I3D", "MobileNetV2TSM", "MoViNet", "ResNet2Plus1d", "PredRNNV2", "ResNet3d",
     "TimeSformer", "ResNetTSM", "SwinTransformer3D", "ViT3D", "SampleViT3D",
-    "MViT", "X3D"
+    "MViT", "X3D", "SwinTransformer3DWithSBP"
 ]

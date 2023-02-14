@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-08 20:31:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-08 20:52:30
+LastEditTime : 2023-02-13 21:39:00
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asrf_gtea.py
 '''
@@ -20,9 +20,9 @@ ignore_index = -100
 epochs = 50
 clip_seg_num = 256
 sliding_window = clip_seg_num * sample_rate
-dim = 2048
+dim = 768
 batch_size = 1
-model_name = "Stream_ASRF_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "Stream_ASRF_Swin3DSBP_feature_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
@@ -67,13 +67,13 @@ DATASET = dict(
     num_workers = 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        # feature_path = './data/gtea/raw_features',
+        feature_path = './data/gtea/extract_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        # feature_path = './data/gtea/raw_features',
+        feature_path = './data/gtea/extract_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     )

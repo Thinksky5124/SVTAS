@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-10-25 16:53:39
+Date         : 2022-12-22 16:37:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-13 14:35:15
-Description  : TSM Config
-FilePath     : /SVTAS/config/extract/extract_feature/mobilev2_tsm_rgb_gtea.py
+LastEditTime : 2023-02-13 21:36:35
+Description  : file content
+FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_sbp_gtea.py
 '''
 _base_ = [
     '../../_base_/collater/stream_compose.py'
@@ -17,31 +17,40 @@ clip_seg_num = 256
 output_dir_name = 'extract_features'
 
 MODEL = dict(
-    architecture = "Recognition2D",
+    architecture = "Recognition3D",
     backbone = dict(
-        name = "MobileNetV2TSM",
-        # pretrained = "./data/checkpoint/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth",
-        # pretrained2d = True,
-        # pretrained = "./data/checkpoint/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
-        clip_seg_num = clip_seg_num,
-        shift_div = 8,
-        out_indices = (7, )
+        name = "SwinTransformer3DWithSBP",
+        # pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        # pretrained2d = False,
+        patch_size = [2, 4, 4],
+        embed_dim = 96,
+        depths = [2, 2, 6, 2],
+        num_heads = [3, 6, 12, 24],
+        window_size = [8,7,7],
+        mlp_ratio = 4.,
+        qkv_bias = True,
+        qk_scale = None,
+        drop_rate = 0.,
+        attn_drop_rate = 0.,
+        drop_path_rate = 0.2,
+        patch_norm = True,
+        graddrop_config={"gd_downsample": 2, "with_gd": [[1, 1], [1, 1], [1] * 4 + [0] * 2, [0, 0]]}
     ),
     neck = None,
     head = dict(
         name = "FeatureExtractHead",
-        in_channels = 1280,
-        input_seg_num = clip_seg_num,
-        output_seg_num = sliding_window,
-        sample_rate = sample_rate,
+        in_channels = 768,
+        input_seg_num = clip_seg_num // 2,
+        output_seg_num = clip_seg_num,
+        sample_rate = sample_rate * 2,
         pool_space = True,
-        in_format = "N*T,C,H,W",
+        in_format = "N,C,T,H,W",
         out_format = "NCT"
     ),
     loss = None
 )
 
-PRETRAINED = "./output/TSM_FC_256x2_gtea_split1/TSM_FC_256x2_gtea_split1_best.pt"
+PRETRAINED = "./output/SwinTransformer3DSBP_FC_256x2_gtea_split1/SwinTransformer3DSBP_FC_256x2_gtea_split1_best.pt"
 
 POSTPRECESSING = dict(
     name = "StreamFeaturePostProcessing",
@@ -51,7 +60,7 @@ POSTPRECESSING = dict(
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
-    video_batch_size = 4,
+    video_batch_size = 2,
     num_workers = 2,
     config = dict(
         name = "RawFrameStreamSegmentationDataset",
@@ -62,7 +71,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = False,
-        sliding_window = sliding_window,
+        sliding_window = sliding_window
     )
 )
 
