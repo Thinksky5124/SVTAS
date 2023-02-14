@@ -99,7 +99,7 @@ threadpoolctl==3.1.0
 tifffile==2021.6.14
 timm==0.5.4
 toml==0.10.2
-torch==1.12.1+cu113
+torch==1.13.1
 torch-tb-profiler==0.4.0
 torchaudio==0.12.1+cu113
 torchvision==0.13.1+cu113
