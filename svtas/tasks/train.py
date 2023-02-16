@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-12 15:32:15
+LastEditTime : 2023-02-16 16:32:32
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -199,6 +199,7 @@ def train(cfg,
                 local_rank=local_rank,
                 need_grad_accumulate=need_grad_accumulate)
     best = 0.0
+    epoch_start_time = time.time()
     for epoch in range(0, cfg.epochs):
         if epoch <= resume_epoch and resume_epoch != 0:
             logger.info(
@@ -336,6 +337,13 @@ def train(cfg,
                         f"Already save the checkpoint model from epoch: {epoch + 1}."
                     )
         
+        # 7. Computer ETA
+        epoch_duration_time = time.time() - epoch_start_time
+        timeArray = time.gmtime(epoch_duration_time * (cfg.epochs - (epoch + 1)))
+        formatTime = f"{timeArray.tm_mday - 1} day {timeArray.tm_hour} h : {timeArray.tm_min} m : {timeArray.tm_sec} s"
+        logger.info(coloring(f"ETA: {formatTime}", 'OKBLUE'))
+        epoch_start_time = time.time()
+
         if local_rank >= 0:
             torch.distributed.barrier()      
 
