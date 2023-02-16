@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-13 16:07:33
+LastEditTime : 2023-02-14 14:38:17
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_fc_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -15,7 +15,7 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 128
+clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1

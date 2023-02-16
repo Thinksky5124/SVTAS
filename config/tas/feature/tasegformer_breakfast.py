@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-07 16:09:03
+LastEditTime : 2023-02-15 10:33:33
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/tasegformer_breakfast.py
 '''
@@ -28,20 +28,18 @@ MODEL = dict(
     head = dict(
         name = "TASegFormer",
         in_channels=2048,
-        num_decoders=3,
+        num_decoders=1,
         decoder_num_layers=10,
         encoder_num_layers=10,
         input_dropout_rate=0.3,
         embed_dim=64,
-        num_heads=1,
         dropout=0.5,
         num_classes=num_classes,
-        sample_rate=sample_rate,
-        position_encoding=False
+        sample_rate=sample_rate
     ),
     loss = dict(
         name = "DiceSegmentationLoss",
-        smooth_weight = 1.0,
+        smooth_weight = 0.0,
         num_classes = num_classes,
         sample_rate = sample_rate,
         ignore_index = ignore_index
@@ -56,6 +54,7 @@ POSTPRECESSING = dict(
 DATASET = dict(
     temporal_clip_batch_size = batch_size,
     video_batch_size = batch_size,
+    num_workers = 4,
     train = dict(
         file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
         # feature_path = "./data/breakfast/raw_features"
@@ -70,7 +69,7 @@ DATASET = dict(
 
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
-    learning_rate = 0.002,
+    learning_rate = 0.001,
     weight_decay = 0.01,
     betas = (0.9, 0.999)
 )

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 20:15:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-13 22:15:28
+LastEditTime : 2023-02-16 10:33:16
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/tasegformer.py
 '''
@@ -12,36 +12,20 @@ import torch.nn.functional as F
 from .token_mixer_layer import *
 import copy
 from ....builder import HEADS
-
-class ResdualTokenMixerBlock(nn.Module):
-    def __init__(self,
-                 embed_dim,
-                 dilation,
-                 dropout=0.0,
-                 mode='encoder') -> None:
-        super().__init__()
-        self.token_mixer_blocks = nn.ModuleList([PoolFormerBlock(dim=embed_dim, drop=dropout, pool_size=dilation, stride=1, mode=mode)
-                                                 for i in range(1)])
-        
-    def forward(self, x, masks):
-        for token_mixer_block in self.token_mixer_blocks:
-            x = token_mixer_block(x, masks)
-        return x
-
+    
 class Encoder(nn.Module):
     def __init__(self,
                  in_channels,
                  embed_dim,
                  num_layers,
                  num_classes,
-                 dropout=0.0):
+                 dropout=0.0,
+                 chunck_size=16,
+                 position_encoding=True):
         super(Encoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.layers = nn.ModuleList(
-            [ResdualTokenMixerBlock(embed_dim=embed_dim,
-                                   dilation=i,
-                                   dropout=dropout,
-                                   mode='encoder')
+            [ShfitTokenFormerEncoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)
@@ -62,22 +46,21 @@ class Decoder(nn.Module):
                  embed_dim,
                  num_layers,
                  num_classes,
-                 dropout=0.0):
+                 dropout=0.0,
+                 chunck_size=16,
+                 position_encoding=True):
         super(Decoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.layers = nn.ModuleList(
-            [ResdualTokenMixerBlock(embed_dim=embed_dim,
-                                   dilation=i,
-                                   dropout=dropout,
-                                   mode='decoder')
+            [ShfitTokenFormerDecoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)
 
-    def forward(self, x, mask):
+    def forward(self, x, value_feature, mask):
         feature = self.conv_1x1(x)
         for layer in self.layers:
-            feature = layer(feature, mask)
+            feature = layer(feature, value_feature, mask)
 
         out = self.conv_out(feature) * mask[:, 0:1, :]
 
@@ -95,6 +78,8 @@ class TASegFormer(nn.Module):
                  embed_dim=64,
                  dropout=0.5,
                  sample_rate=1,
+                 chunck_size=32,
+                 position_encoding=True,
                  out_feature=False):
         super(TASegFormer, self).__init__()
         self.sample_rate = sample_rate
@@ -103,12 +88,16 @@ class TASegFormer(nn.Module):
                                embed_dim=embed_dim,
                                num_layers=encoder_num_layers,
                                num_classes=num_classes,
-                               dropout=dropout)
+                               dropout=dropout,
+                               chunck_size=chunck_size,
+                               position_encoding=position_encoding)
         self.decoders = nn.ModuleList([copy.deepcopy(Decoder(in_channels=num_classes,
                                                              embed_dim=embed_dim,
                                                              num_layers=decoder_num_layers,
                                                              num_classes=num_classes,
-                                                             dropout=dropout))
+                                                             dropout=dropout,
+                                                             chunck_size=chunck_size,
+                                                             position_encoding=position_encoding))
                                                              for s in range(num_decoders)]) # num_decoders
         self.input_dropout_rate = input_dropout_rate
         assert 0.0 <= self.input_dropout_rate < 1.0, f"input_dropout_rate must between 0.0~1.0, now is {input_dropout_rate}!"
@@ -135,7 +124,7 @@ class TASegFormer(nn.Module):
         outputs = out.unsqueeze(0)
         
         for decoder in self.decoders:
-            out, d_feature = decoder(F.softmax(out, dim=1) * mask[:, 0:1, ::self.sample_rate], mask[:, 0:1, ::self.sample_rate])
+            out, d_feature = decoder(F.softmax(out, dim=1) * mask[:, 0:1, ::self.sample_rate], feature * mask[:, 0:1, ::self.sample_rate],mask[:, 0:1, ::self.sample_rate])
             outputs = torch.cat((outputs, out.unsqueeze(0)), dim=0)
         
         outputs = F.interpolate(

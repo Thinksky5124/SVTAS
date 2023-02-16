@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 11:10:19
+LastEditTime : 2023-02-14 15:18:09
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_asformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_asrf_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -18,11 +18,11 @@ sample_rate = 2
 clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
-split = 2
+split = 1
 batch_size = 1
 epochs = 100
 
-model_name = "SwinTransformer3D_Small_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
@@ -55,39 +55,13 @@ MODEL = dict(
         fusion_ratio = 0.0
     ),
     head = dict(
-        # name = "FCHead",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 2,
-        # clip_seg_num = clip_seg_num // 2,
-        # drop_ratio=0.5,
-        # in_channels=768
-        name = "ASFormer",
-        num_decoders = 3,
+        name = "ActionSegmentRefinementFramework",
+        in_channel = 768,
+        num_features = 64,
+        num_stages = 4,
         num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 768,
-        channel_masking_rate = 0.5,
         num_classes = num_classes,
         sample_rate = sample_rate * 2
-        # name = "Conformer",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 2,
-        # input_dim = 768,
-        # encoder_dim = 64,
-        # num_stages = 1,
-        # num_encoder_layers = 1,
-        # input_dropout_p = 0.5,
-        # num_attention_heads = 8,
-        # feed_forward_expansion_factor = 4,
-        # conv_expansion_factor = 2,
-        # feed_forward_dropout_p = 0.1,
-        # attention_dropout_p = 0.1,
-        # conv_dropout_p = 0.1,
-        # conv_kernel_size = 11,
-        # half_step_residual = True,
-        # need_subsampling = False,
     ),
     loss = dict(
         name = "StreamSegmentationLoss",
@@ -99,19 +73,28 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate,
-            smooth_weight = 0.0,
-            ignore_index = -100
+        name = "ASRFLoss",
+        class_weight = [0.40253314,0.6060787,0.41817436,1.0009843,1.6168522,
+                        1.2425169,1.5743035,0.8149039,7.6466165,1.0,0.29321033],
+        pos_weight = [33.866594360086765],
+        num_classes = num_classes,
+        sample_rate = sample_rate * 2,
+        ignore_index = -100
         )
     )  
 )
 
 POSTPRECESSING = dict(
-    name = "StreamScorePostProcessing",
+    name = "StreamScorePostProcessingWithRefine",
     sliding_window = sliding_window,
-    ignore_index = ignore_index
+    ignore_index = ignore_index,
+    refine_method_cfg = dict(
+        name = "ASRFRefineMethod",
+        refinement_method="refinement_with_boundary",
+        boundary_threshold=0.5,
+        theta_t=15,
+        kernel_size=15
+    )
 )
 
 LRSCHEDULER = dict(
@@ -119,13 +102,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
     finetuning_scale_factor=0.5,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["backbone"],
     freeze_key = [],
 )
 

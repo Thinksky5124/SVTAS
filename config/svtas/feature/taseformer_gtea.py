@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-10 14:25:58
+LastEditTime : 2023-02-15 14:21:51
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/taseformer_gtea.py
 '''
@@ -31,11 +31,13 @@ MODEL = dict(
         name = "TASegFormer",
         in_channels=dim,
         num_decoders=1,
-        decoder_num_layers=10,
-        encoder_num_layers=10,
+        decoder_num_layers=5,
+        encoder_num_layers=5,
         input_dropout_rate=0.5,
         embed_dim=64,
         dropout=0.5,
+        chunck_size=8,
+        position_encoding=False,
         num_classes=num_classes,
         sample_rate=sample_rate
     ),
@@ -60,13 +62,13 @@ DATASET = dict(
     num_workers = 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        # feature_path = './data/gtea/raw_features',
+        feature_path = './data/gtea/raw_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        # feature_path = './data/gtea/raw_features',
+        feature_path = './data/gtea/raw_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     )

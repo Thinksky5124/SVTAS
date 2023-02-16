@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 11:00:53
+LastEditTime : 2023-02-16 09:40:18
 Description  : Swin Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
 FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer_3d.py
 '''
@@ -204,7 +204,7 @@ class SwinTransformerBlock3D(nn.Module):
         self.window_size = window_size
         self.shift_size = shift_size
         self.mlp_ratio = mlp_ratio
-        self.use_checkpoint=use_checkpoint
+        self.use_checkpoint = use_checkpoint
 
         assert 0 <= self.shift_size[0] < self.window_size[0], "shift_size must in 0-window_size"
         assert 0 <= self.shift_size[1] < self.window_size[1], "shift_size must in 0-window_size"

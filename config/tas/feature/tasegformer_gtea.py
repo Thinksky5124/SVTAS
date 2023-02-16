@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-07 13:36:23
+LastEditTime : 2023-02-15 19:16:11
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/tasegformer_gtea.py
 '''
@@ -38,7 +38,7 @@ MODEL = dict(
         sample_rate=sample_rate
     ),
     loss = dict(
-        name = "DiceSegmentationLoss",
+        name = "SegmentationLoss",
         smooth_weight = 0.0,
         num_classes = num_classes,
         sample_rate = sample_rate,
@@ -57,12 +57,12 @@ DATASET = dict(
     num_workers = 4,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        # feature_path = "./data/gtea/raw_features"
+        feature_path = "./data/gtea/raw_features"
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        # feature_path = "./data/gtea/raw_features"
+        feature_path = "./data/gtea/raw_features"
         # flow_feature_path = "./data/gtea/flow_features"
     )
 )
@@ -81,7 +81,9 @@ OPTIMIZER = dict(
 )
 
 LRSCHEDULER = dict(
-    step_size = [epochs]
+    name = "MultiStepLR",
+    step_size = [epochs],
+    gamma = 0.8
 )
 
 PIPELINE = dict(

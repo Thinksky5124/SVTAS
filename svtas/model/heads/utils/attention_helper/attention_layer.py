@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-01-07 16:52:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-07 16:53:58
+LastEditTime : 2023-02-15 15:57:11
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/utils/attention_helper/attention_layer.py
 '''
@@ -417,7 +417,7 @@ class GAUAChunkttentionLayer(GAUAttentionLayer):
         if self.dropout is not None:
             out = self.dropout(out)
         return out * masks
-                
+
 class MultiHeadAttention(nn.Module):
     def __init__(self,
                  embed_dim,
@@ -700,4 +700,205 @@ class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
         # gather group
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
+        return out * masks
+
+def get_EF(input_size, dim, method="learnable", head_dim=None, bias=True):
+    """
+    Retuns the E or F matrix, initialized via xavier initialization.
+    This is the recommended way to do it according to the authors of the paper.
+    Includes a method for convolution, as well as a method for no additional params.
+    """
+    assert method == "learnable" or method == "convolution" or method == "no_params", "The method flag needs to be either 'learnable', 'convolution', or 'no_params'!"
+    if method == "convolution":
+        conv = nn.Conv1d(head_dim, head_dim, kernel_size=int(input_size/dim), stride=int(input_size/dim))
+        return conv
+    if method == "no_params":
+        mat = torch.zeros((input_size, dim))
+        torch.nn.init.normal_(mat, mean=0.0, std=1/dim)
+        return mat
+    lin = nn.Linear(input_size, dim, bias)
+    torch.nn.init.xavier_normal_(lin.weight)
+    return lin
+
+class LinearMultiHeadAttention(nn.Module):
+    def __init__(self,
+                 chunk_size,
+                 embed_dim,
+                 num_heads=1,
+                 position_encoding=True) -> None:
+        super().__init__()
+        assert embed_dim % num_heads == 0
+        # We assume d_v always equals d_k
+        self.d_k = embed_dim // num_heads
+        self.num_heads = num_heads
+        self.embed_layers = nn.ModuleList([nn.Linear(embed_dim, embed_dim) for _ in range(3)])
+
+        # positional embeddings
+        self.position_encoding = position_encoding
+        if self.position_encoding:
+            self.pos_enc = RotaryEmbedding(dim = min(32, embed_dim))
+        else:
+            self.pos_enc = None
+
+        self.dropout = nn.Dropout()
+        self.P_bar = None
+        self.E = get_EF(chunk_size, embed_dim, "learnable", embed_dim)
+        self.F = get_EF(chunk_size, embed_dim, "learnable", embed_dim)
+        self.is_proj_tensor = isinstance(self.E, torch.Tensor)
+    
+    @staticmethod
+    def attention(query, key, value, E, F, mask=None, is_proj_tensor=False):
+        """
+        ref: https://github.com/tatp22/linformer-pytorch/blob/master/linformer_pytorch/linformer_pytorch.py
+        """
+
+        key = key.transpose(-1,-2)
+        if is_proj_tensor:
+            E = E.to(key.device)
+            key = torch.matmul(key, E)
+        else:
+            key = E(key)
+
+        query = torch.matmul(query, key)
+
+        P_bar = query/torch.sqrt(torch.tensor(query.shape[-1]).type(query.type())).to(query.device)
+        if mask is not None:
+            mask = mask.to(query.device)
+            P_bar = P_bar.masked_fill_(mask, float('-inf'))
+        P_bar = P_bar.softmax(dim=-2)
+
+        value = value.transpose(-1,-2)
+        if is_proj_tensor:
+            F = F.to(value.device)
+            value = torch.matmul(value, F)
+        else:
+            value = F(value)
+
+        value = value.transpose(-1,-2)
+        attn = torch.matmul(P_bar, value)
+        return attn, P_bar
+    
+    def forward(self, query, key, value, key_padding_mask=None, attn_mask=None):
+        batch_size = query.shape[0]
+        len_q = query.shape[1]
+
+        # merge key padding and attention masks
+        mask = None
+        if key_padding_mask is not None:
+            mask = key_padding_mask.view(batch_size, 1, 1, len_q).expand(-1, self.num_heads, -1, -1)
+
+        # convert mask to float
+        if attn_mask is not None:
+            attn_mask = attn_mask.unsqueeze(0).unsqueeze(0)
+            mask = mask | attn_mask
+
+
+        query, key, value = [l(x) for l, x in zip(self.embed_layers, (query, key, value))] # (batch_size, seq_length, d_model), use first 3 self.linears
+        query, key, value = [x.view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+                             for x in (query, key, value)] # (batch_size, h, seq_length, d_k)
+
+        if self.position_encoding:
+            query = self.pos_enc.rotate_queries_or_keys(query)
+            key = self.pos_enc.rotate_queries_or_keys(key)
+
+        # 2) Apply attention on all the projected vectors in batch.
+        x, attn = self.attention(query, key, value, self.E, self.F, mask=mask.transpose(-1, -2), is_proj_tensor=self.is_proj_tensor)
+
+        # 3) "Concat" using a view and apply a final linear.
+        x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.d_k)
+        return x, attn
+
+class LinearAttentionLayer(nn.Module):
+    def __init__(self,
+                 embed_dim,
+                 chunk_size,
+                 num_heads,
+                 dropout=0.0,
+                 causal=False,
+                 position_encoding=True) -> None:
+        super().__init__()
+        self.att_layer = LinearMultiHeadAttention(chunk_size=chunk_size,
+                                         embed_dim=embed_dim,
+                                         num_heads=num_heads,
+                                         position_encoding=position_encoding)
+        self.causal = causal
+        if dropout > 0.0:
+            self.dropout = nn.Dropout(p=dropout)
+        else:
+            self.dropout = None
+    
+    def gen_causal_mask(self, input_size, device):
+        """
+        Generates a causal mask of size (input_size, input_size) for attention
+        """
+        # [T, T]
+        l_l_mask = torch.triu(torch.ones(input_size, input_size), diagonal=1) == 1
+        l_l_mask = l_l_mask.to(device)
+        return l_l_mask
+    
+    def gen_key_padding_mask(self, masks):
+        sum_masks = torch.sum(masks.squeeze(1), dim=-1) == 0.0
+        key_padding_mask = masks.detach().clone()
+        for bs in range(sum_masks.shape[0]):
+            if sum_masks[bs]:
+                key_padding_mask[bs] = 1.0
+        return (key_padding_mask == 0.0).squeeze(1)
+    
+    def forward(self, q, k, v, masks):
+        q = torch.transpose(q, 1, 2)
+        k = torch.transpose(k, 1, 2)
+        v = torch.transpose(v, 1, 2)
+        key_padding_mask = self.gen_key_padding_mask(masks=masks)
+        if self.causal:
+            causal_mask = self.gen_causal_mask(q.shape[1], masks)
+        else:
+            causal_mask = None
+        
+        out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
+        out = torch.transpose(out, 1, 2)
+        if self.dropout is not None:
+            out = self.dropout(out)
+        return out * masks
+
+class LinearChunkAttentionLayer(LinearAttentionLayer):
+    def __init__(self,
+                 embed_dim,
+                 num_heads=1,
+                 chunck_size=1,
+                 dropout=0,
+                 causal=False,
+                 position_encoding=True) -> None:
+        super().__init__(embed_dim, chunck_size, num_heads, dropout, causal, position_encoding)
+        self.chunck_size = chunck_size
+    
+    def forward(self, q, k, v, masks):
+        q = torch.transpose(q, 1, 2)
+        k = torch.transpose(k, 1, 2)
+        v = torch.transpose(v, 1, 2)
+        chunck_masks = torch.transpose(masks, 1, 2)
+
+        # chunck
+        # padding for groups
+        padding = padding_to_multiple_of(q.shape[1], self.chunck_size)
+        temporal_size = q.shape[1]
+        if padding > 0:
+            q, k, v = map(lambda t: F.pad(t, (0, 0, 0, padding), value = 0.), (q, k, v))
+            chunck_masks = F.pad(chunck_masks, (0, 0, 0, padding), value = 0.)
+        g_size = q.shape[1] // self.chunck_size
+        q, k, v, chunck_masks = map(lambda t: rearrange(t, 'b (g n) d -> (b g) n d', n = self.chunck_size), (q, k, v, chunck_masks))
+
+        chunck_masks = torch.transpose(chunck_masks, 1, 2)
+        key_padding_mask = self.gen_key_padding_mask(masks=chunck_masks)
+        if self.causal:
+            causal_mask = self.gen_causal_mask(q.shape[1], chunck_masks.device)
+        else:
+            causal_mask = None
+
+        out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
+        
+        # gather group
+        out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
+        out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
+        if self.dropout is not None:
+            out = self.dropout(out)
         return out * masks

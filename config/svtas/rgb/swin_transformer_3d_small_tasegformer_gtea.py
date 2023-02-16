@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 11:10:19
+LastEditTime : 2023-02-15 14:43:30
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_asformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_tasegformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -15,17 +15,17 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 64
+clip_seg_num = 32
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
-split = 2
+split = 1
 batch_size = 1
-epochs = 100
+epochs = 50
 
-model_name = "SwinTransformer3D_Small_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_Small_TASegFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "StreamSegmentation3DWithBackbone",
+    architecture = "Recognition3D",
     backbone = dict(
         name = "SwinTransformer3D",
         pretrained = "./data/checkpoint/swin_small_patch244_window877_kinetics400_1k.pth",
@@ -44,68 +44,35 @@ MODEL = dict(
         patch_norm = True,
         # sbp_build=True,
         # keep_ratio_list=[0.125],
-        # sample_dims=[0]
+        # sample_dims=[2],
+        # grad_mask_mode_lsit=['random'],
+        # register_sbp_module_dict={Mlp: Swin3DMLPMaskMappingFunctor(permute_dims=[0, 2, 3, 4, 1])}
     ),
     neck = dict(
-        name = "TaskFusionPoolNeck",
-        num_classes=num_classes,
+        name = "PoolNeck",
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True,
-        fusion_ratio = 0.0
+        need_pool = True
     ),
     head = dict(
-        # name = "FCHead",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 2,
-        # clip_seg_num = clip_seg_num // 2,
-        # drop_ratio=0.5,
-        # in_channels=768
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 768,
-        channel_masking_rate = 0.5,
-        num_classes = num_classes,
-        sample_rate = sample_rate * 2
-        # name = "Conformer",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 2,
-        # input_dim = 768,
-        # encoder_dim = 64,
-        # num_stages = 1,
-        # num_encoder_layers = 1,
-        # input_dropout_p = 0.5,
-        # num_attention_heads = 8,
-        # feed_forward_expansion_factor = 4,
-        # conv_expansion_factor = 2,
-        # feed_forward_dropout_p = 0.1,
-        # attention_dropout_p = 0.1,
-        # conv_dropout_p = 0.1,
-        # conv_kernel_size = 11,
-        # half_step_residual = True,
-        # need_subsampling = False,
+        name = "TASegFormer",
+        in_channels=768,
+        num_decoders=1,
+        decoder_num_layers=5,
+        encoder_num_layers=5,
+        input_dropout_rate=0.5,
+        embed_dim=64,
+        dropout=0.5,
+        num_classes=num_classes,
+        sample_rate=sample_rate * 2
     ),
     loss = dict(
-        name = "StreamSegmentationLoss",
-        backbone_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate * 2,
-            smooth_weight = 0.0,
-            ignore_index = -100
-        ),
-        head_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate,
-            smooth_weight = 0.0,
-            ignore_index = -100
-        )
-    )  
+        name = "SegmentationLoss",
+        num_classes = num_classes,
+        sample_rate = sample_rate * 2,
+        smooth_weight = 0.0,
+        ignore_index = -100
+    ) 
 )
 
 POSTPRECESSING = dict(
@@ -119,13 +86,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
     finetuning_scale_factor=0.5,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["backbone"],
     freeze_key = [],
 )
 

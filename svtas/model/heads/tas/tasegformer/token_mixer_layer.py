@@ -2,13 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:11:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-13 23:20:00
+LastEditTime : 2023-02-16 09:44:13
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/token_mixer_layer.py
 '''
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from ...utils.attention_helper.attention_layer import MultiHeadChunkAttentionLayer, MHRPRChunkAttentionLayer
 
 class PoolFormerMixTokenLayer(nn.Module):
     """
@@ -21,7 +23,8 @@ class PoolFormerMixTokenLayer(nn.Module):
     def __init__(self, pool_size=3, stride=1):
         super().__init__()
         # if mode == 'enocder':
-        center_pool_size_list = [3, 5, 7, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+        center_pool_size_list = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+        # center_pool_size_list = [3, 5, 7, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
         # else:
         #     center_pool_size_list = [3, 5, 7, 9, 11, 13, 17, 33, 65, 127, 255, 511]
         center_pool_size = center_pool_size_list[pool_size]
@@ -32,19 +35,111 @@ class PoolFormerMixTokenLayer(nn.Module):
         x = self.pool(x)
         return x * masks[:, 0:1, :]
 
-class PoolSmothLayer(nn.Module):
-    def __init__(self, dim, dilation=1, stride=1, scale_init=1e-2):
-        pool_size = 2**(dilation + 1) + 1
+class ShfitTokenMixerLayer(nn.Module):
+    def __init__(self, shift_div=8) -> None:
         super().__init__()
-        self.pool = nn.AvgPool1d(
-            pool_size, stride=stride, padding=pool_size//2, count_include_pad=False)
-        self.scale = nn.Parameter(torch.ones(dim) * scale_init)
-        self.norm = nn.InstanceNorm1d(dim)
+        self.shift_div = shift_div
+    
+    @staticmethod
+    def offline_shift(x, shift_div=3, shift_len=1):
+        """Perform temporal shift operation on the feature.
 
-    def forward(self, x):
-        # x = self.norm(self.scale.unsqueeze(-1) * self.pool(x) - x))
-        x = self.norm(self.pool(x))
-        return x
+        Args:
+            x (torch.Tensor): The input feature to be shifted.
+            num_segments (int): Number of frame segments.
+            shift_div (int): Number of divisions for shift. Default: 3.
+
+        Returns:
+            torch.Tensor: The shifted feature.
+        """
+        # [N, C, T]
+        n, c, t = x.size()
+
+        # [N, num_segments, C]
+        # can't use 5 dimensional array on PPL2D backend for caffe
+        x = torch.permute(x, [0, 2, 1])
+
+        # get shift fold
+        fold = c // shift_div
+
+        # split c channel into three parts:
+        # left_split, mid_split, right_split
+        left_split = x[:, :, :fold]
+        mid_split = x[:, :, fold:2 * fold]
+        right_split = x[:, :, 2 * fold:]
+
+        # can't use torch.zeros(*A.shape) or torch.zeros_like(A)
+        # because array on caffe inference must be got by computing
+
+        # shift left on num_segments channel in `left_split`
+        zeros = left_split - left_split
+        blank = zeros[:, :shift_len, :]
+        left_split = left_split[:, shift_len:, :]
+        left_split = torch.cat((left_split, blank), 1)
+
+        # shift right on num_segments channel in `mid_split`
+        zeros = mid_split - mid_split
+        blank = zeros[:, :shift_len, :]
+        mid_split = mid_split[:, :-shift_len, :]
+        mid_split = torch.cat((blank, mid_split), 1)
+
+        # right_split: no shift
+
+        # concatenate
+        out = torch.cat((left_split, mid_split, right_split), 2)
+
+        # [N, T, C]
+        # restore the original dimension
+        return torch.permute(out, [0, 2, 1])
+
+    @staticmethod
+    def online_shift(x, shift_div=3, shift_len=1):
+        """Perform temporal shift operation on the feature.
+
+        Args:
+            x (torch.Tensor): The input feature to be shifted.
+            num_segments (int): Number of frame segments.
+            shift_div (int): Number of divisions for shift. Default: 3.
+
+        Returns:
+            torch.Tensor: The shifted feature.
+        """
+        # [N, C, T]
+        n, c, t = x.size()
+
+        # [N, num_segments, C]
+        # can't use 5 dimensional array on PPL2D backend for caffe
+        x = torch.permute(x, [0, 2, 1])
+
+        # get shift fold
+        fold = c // shift_div
+
+        # split c channel into three parts:
+        # left_split, mid_split, right_split
+        left_split = x[:, :, :fold]
+        mid_split = x[:, :, fold:2 * fold]
+        right_split = x[:, :, 2 * fold:]
+
+        # can't use torch.zeros(*A.shape) or torch.zeros_like(A)
+        # because array on caffe inference must be got by computing
+
+        # shift left on num_segments channel in `left_split`
+        left_split = torch.roll(left_split, shifts=shift_len, dims=1)
+
+        # shift right on num_segments channel in `mid_split`
+        mid_split = torch.roll(mid_split, shifts=shift_len, dims=1)
+
+        # right_split: no shift
+
+        # concatenate
+        out = torch.cat((left_split, mid_split, right_split), 2)
+
+        # [N, T, C]
+        # restore the original dimension
+        return torch.permute(out, [0, 2, 1])
+
+    def forward(self, x, shift_len=1):
+        return self.offline_shift(x=x, shift_div=self.shift_div, shift_len=shift_len)
 
 class Mlp(nn.Module):
     """
@@ -68,50 +163,59 @@ class Mlp(nn.Module):
         x = self.drop(x)
         return x
 
-class DilationConv(nn.Module):
+class DilationConvBlock(nn.Module):
     def __init__(self, dilation, in_channels, hidden_features, dropout) -> None:
         super().__init__()
         self.conv_dilated = nn.Conv1d(in_channels, hidden_features, 3, padding=dilation, dilation=dilation)
         self.conv_1x1 = nn.Conv1d(hidden_features, in_channels, 1)
         self.dropout = nn.Dropout(p=dropout)
-        self.act = nn.SiLU()
+        self.act = nn.ReLU()
 
     def forward(self, x, masks):
         out = self.act(self.conv_dilated(x))
         out = self.conv_1x1(out)
         out = self.dropout(out)
         return out * masks[:, 0:1, :]
-        
-class PoolFormerBlock(nn.Module):
-    """
-    Implementation of one PoolFormer block.
-    --dim: embedding dim
-    --pool_size: pooling size
-    --mlp_ratio: mlp expansion ratio
-    --act_layer: activation
-    --norm_layer: normalization
-    --drop: dropout rate
-    --use_layer_scale, --layer_scale_init_value: LayerScale, 
-        refer to https://arxiv.org/abs/2103.17239
-    """
-    def __init__(self, dim, mode='encoder', pool_size=3, drop=0., stride=1):
 
+def exponential_descrease(idx_decoder, p=3):
+    return math.exp(-p*idx_decoder)
+
+class ShfitTokenFormerEncoderBlock(nn.Module):
+    def __init__(self, dim, dilation=3, drop=0., chunck_size=16, position_encoding=True):
         super().__init__()
-        self.mode = mode
-        assert mode in ['encoder', 'decoder'], f"mode {mode} do not support!"
-        self.pool_norm = nn.InstanceNorm1d(dim)
+        self.token_norm = nn.InstanceNorm1d(dim)
         self.mlp_norm = nn.InstanceNorm1d(dim)
-        self.conv_norm = nn.InstanceNorm1d(dim)
-        self.conv = DilationConv(dilation=2**pool_size, in_channels=dim, hidden_features=dim, dropout=drop)
-        self.token_mixer = PoolFormerMixTokenLayer(pool_size=pool_size, stride=stride)
+        self.token_mixer = ShfitTokenMixerLayer(shift_div=8)
+        # self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
         self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
-        self.pol_smooth = PoolSmothLayer(dim, dilation=pool_size)
+
+        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=0.2)
+        self.shift_len = 2**dilation
 
     def forward(self, x, masks):
-        out = x + self.conv(self.conv_norm(x), masks)
-        if self.mode == 'encoder':
-            out = out + self.token_mixer(self.pool_norm(out), masks)
-            out = out + self.ffn(self.mlp_norm(out))
-        else:
-            out = out + self.pol_smooth(out)
+        # out = self.conv(x, masks)
+        out = self.token_norm(x)
+        shfit_out = self.token_mixer(out, shift_len=self.shift_len)
+        out = x + self.attn(shfit_out, shfit_out, shfit_out, masks)
+        out = self.ffn(self.mlp_norm(out)) + out
+        return out * masks[:, 0:1, :]
+
+class ShfitTokenFormerDecoderBlock(nn.Module):
+    def __init__(self, dim, dilation=3, drop=0., chunck_size=16, position_encoding=True):
+        super().__init__()
+        self.dilation = dilation
+        self.token_norm = nn.InstanceNorm1d(dim)
+        self.mlp_norm = nn.InstanceNorm1d(dim)
+        self.token_mixer = ShfitTokenMixerLayer(shift_div=8)
+        # self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
+        self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
+
+        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=0.2)
+        self.shift_len = 2**dilation
+
+    def forward(self, x, value, masks):
+        out = self.token_norm(x)
+        shfit_out = self.token_mixer(out, shift_len=self.shift_len)
+        out = x + self.attn(value, value, shfit_out, masks)
+        out = self.ffn(self.mlp_norm(out)) + out
         return out * masks[:, 0:1, :]

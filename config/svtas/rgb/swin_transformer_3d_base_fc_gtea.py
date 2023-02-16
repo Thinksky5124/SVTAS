@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 14:35:34
+LastEditTime : 2023-02-14 14:37:14
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_fc_gtea.py
 '''
@@ -17,7 +17,7 @@ from svtas.utils.sbp import Swin3DMLPMaskMappingFunctor
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 128
+clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
@@ -84,7 +84,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
