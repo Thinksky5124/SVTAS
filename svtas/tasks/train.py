@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 16:32:32
+LastEditTime : 2023-02-16 21:45:07
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -340,7 +340,7 @@ def train(cfg,
         # 7. Computer ETA
         epoch_duration_time = time.time() - epoch_start_time
         timeArray = time.gmtime(epoch_duration_time * (cfg.epochs - (epoch + 1)))
-        formatTime = f"{timeArray.tm_mday - 1} day {timeArray.tm_hour} h : {timeArray.tm_min} m : {timeArray.tm_sec} s"
+        formatTime = f"{timeArray.tm_mday - 1} day : {timeArray.tm_hour} h : {timeArray.tm_min} m : {timeArray.tm_sec} s."
         logger.info(coloring(f"ETA: {formatTime}", 'OKBLUE'))
         epoch_start_time = time.time()
 

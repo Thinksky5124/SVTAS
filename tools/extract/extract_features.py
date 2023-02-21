@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-12 16:21:01
+LastEditTime : 2023-02-17 17:17:19
 Description  : Extract video feature script
 FilePath     : /SVTAS/tools/extract/extract_features.py
 '''

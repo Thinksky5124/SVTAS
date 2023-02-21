@@ -2,37 +2,40 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 17:08:34
+LastEditTime : 2023-02-16 21:37:23
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_asformer_50salads.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_breakfast.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/50salads/50salads_stream_video.py'
+    '../../_base_/dataset/breakfast/breakfast_stream_video.py'
 ]
+from svtas.model.backbones.video.swin_transformer_3d import Mlp
+from svtas.utils.sbp import Swin3DMLPMaskMappingFunctor
 
-num_classes = 19
-sample_rate = 16
+num_classes = 48
+sample_rate = 2
 clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
-epochs = 100
+epochs = 50
+log_interval = 100
 
-model_name = "SwinTransformer3D_Small_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
-    architecture = "StreamSegmentation3DWithBackbone",
+    architecture = "Recognition3D",
     backbone = dict(
         name = "SwinTransformer3D",
-        pretrained = "./data/checkpoint/swin_small_patch244_window877_kinetics400_1k.pth",
+        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
         embed_dim = 96,
-        depths = [2, 2, 18, 2],
+        depths = [2, 2, 6, 2],
         num_heads = [3, 6, 12, 24],
         window_size = [8,7,7],
         mlp_ratio = 4.,
@@ -44,51 +47,31 @@ MODEL = dict(
         patch_norm = True,
         # sbp_build=True,
         # keep_ratio_list=[0.125],
-        # sample_dims=[0]
+        # sample_dims=[2],
+        # grad_mask_mode_lsit=['random'],
+        # register_sbp_module_dict={Mlp: Swin3DMLPMaskMappingFunctor(permute_dims=[0, 2, 3, 4, 1])}
     ),
     neck = dict(
-        name = "TaskFusionPoolNeck",
-        num_classes=num_classes,
+        name = "PoolNeck",
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True,
-        fusion_ratio = 0.0
+        need_pool = True
     ),
     head = dict(
-        # name = "FCHead",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 2,
-        # clip_seg_num = clip_seg_num // 2,
-        # drop_ratio=0.5,
-        # in_channels=768
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 768,
-        channel_masking_rate = 0.3,
+        name = "FCHead",
         num_classes = num_classes,
-        sample_rate = sample_rate * 2
+        sample_rate = sample_rate * 2,
+        clip_seg_num = clip_seg_num // 2,
+        drop_ratio=0.5,
+        in_channels=768
     ),
     loss = dict(
-        name = "StreamSegmentationLoss",
-        backbone_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate * 2,
-            smooth_weight = 0.0,
-            ignore_index = -100
-        ),
-        head_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate,
-            smooth_weight = 0.0,
-            ignore_index = -100
-        )
-    )  
+        name = "SegmentationLoss",
+        num_classes = num_classes,
+        sample_rate = sample_rate * 2,
+        smooth_weight = 0.0,
+        ignore_index = -100
+    ) 
 )
 
 POSTPRECESSING = dict(
@@ -117,11 +100,11 @@ DATASET = dict(
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
         sliding_window = sliding_window,
     )
 )
@@ -153,8 +136,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                    std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                    mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
+                    std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
                 ))]
             )
         )
@@ -184,8 +167,8 @@ PIPELINE = dict(
                     dict(PILToTensor = None),
                     dict(ToFloat = None),
                     dict(Normalize = dict(
-                        mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                        std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                        mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
+                        std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
                     ))]
             )
         )

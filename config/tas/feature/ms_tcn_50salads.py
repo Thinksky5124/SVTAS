@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 16:24:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-07 15:30:21
+LastEditTime : 2023-02-17 16:50:52
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/ms_tcn_50salads.py
 '''
@@ -23,7 +23,7 @@ model_name = "MSTCN_50salads_split" + str(split)
 
 MODEL = dict(
     head = dict(
-        dim = 2048,
+        dim = 768,
         num_classes = num_classes,
         sample_rate = sample_rate
     ),
@@ -36,17 +36,18 @@ MODEL = dict(
 
 POSTPRECESSING = dict(
     name = "ScorePostProcessing",
-    num_classes = num_classes,
     ignore_index = ignore_index
 )
 
 DATASET = dict(
     train = dict(
         file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
+        feature_path = "./data/50salads/extract_features"
         # flow_feature_path = "./data/50salads/flow_features"
     ),
     test = dict(
         file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
+        feature_path = "./data/50salads/extract_features"
         # flow_feature_path = "./data/50salads/flow_features"
     )
 )
@@ -76,9 +77,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     ),
     test = dict(
@@ -101,9 +102,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     )
 )

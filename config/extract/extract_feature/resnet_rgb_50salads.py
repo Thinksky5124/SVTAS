@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-10-25 21:28:26
+Date         : 2023-02-18 19:31:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-12 15:49:55
-Description  : SwinTransformer Config
-FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_rgb_gtea.py
+LastEditTime : 2023-02-18 19:48:21
+Description  : file content
+FilePath     : /SVTAS/config/extract/extract_feature/resnet_rgb_50salads.py
 '''
 _base_ = [
     '../../_base_/collater/stream_compose.py'
@@ -12,34 +12,23 @@ _base_ = [
 
 sample_rate = 1
 ignore_index = -100
-sliding_window = 1
-clip_seg_num = 16
+sliding_window = 256
+clip_seg_num = 256
+output_dir_name = 'extract_features'
 
 MODEL = dict(
-    architecture = "Recognition3D",
+    architecture = "Recognition2D",
     backbone = dict(
-        name = "SwinTransformer3D",
-        pretrained = "./data/swin_tiny_patch244_window877_kinetics400_1k.pth",
-        pretrained2d = False,
-        patch_size = [2, 4, 4],
-        embed_dim = 96,
-        depths = [2, 2, 6, 2],
-        num_heads = [3, 6, 12, 24],
-        window_size = [8,7,7],
-        mlp_ratio = 4.,
-        qkv_bias = True,
-        qk_scale = None,
-        drop_rate = 0.,
-        attn_drop_rate = 0.,
-        drop_path_rate = 0.2,
-        patch_norm = True
+        name = "ResNet",
+        pretrained = "./data/checkpoint/resnet50-0676ba61.pth",
+        depth = 50,
     ),
     neck = None,
     head = dict(
         name = "FeatureExtractHead",
-        in_channels = 768,
-        input_seg_num = clip_seg_num // 2,
-        output_seg_num = 1,
+        in_channels = 1024,
+        input_seg_num = clip_seg_num,
+        output_seg_num = clip_seg_num,
         sample_rate = sample_rate,
         pool_space = True,
         in_format = "N*T,C,H,W",
@@ -58,20 +47,18 @@ POSTPRECESSING = dict(
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
-    video_batch_size = 4,
+    video_batch_size = 1,
     num_workers = 2,
     config = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/all_files.txt",
-        videos_path = "./data/gtea/Videos",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
+        file_path = "./data/50salads/splits/all_files.txt",
+        videos_path = "./data/50salads/Videos",
+        gt_path = "./data/50salads/groundTruth",
+        actions_map_file_path = "./data/50salads/mapping.txt",
+        dataset_type = "50salads",
         train_mode = False,
-        sliding_window = sliding_window,
-        clip_seg_num = clip_seg_num,
-        sample_rate = sample_rate
+        sliding_window = sliding_window
     )
 )
 
@@ -92,15 +79,16 @@ PIPELINE = dict(
     ),
     transform = dict(
         name = "VideoTransform",
-        transform_list = [
+        transform_dict = dict(
+            imgs = [
             dict(ResizeImproved = dict(size = 256)),
             dict(CenterCrop = dict(size = 224)),
             dict(PILToTensor = None),
             dict(ToFloat = None),
             dict(Normalize = dict(
-                mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
-            ))
-        ]
+                mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
+                std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+            ))]
+        )
     )
 )

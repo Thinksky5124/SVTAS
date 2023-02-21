@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-07 10:38:09
+LastEditTime : 2023-02-17 16:48:51
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/asformer_50salads.py
 '''
@@ -28,7 +28,7 @@ MODEL = dict(
         r1 = 2,
         r2 = 2,
         num_f_maps = 64,
-        input_dim = 2048,
+        input_dim = 768,
         channel_masking_rate = 0.5,
         num_classes = num_classes,
         sample_rate = sample_rate
@@ -42,7 +42,6 @@ MODEL = dict(
 
 POSTPRECESSING = dict(
     name = "ScorePostProcessing",
-    num_classes = num_classes,
     ignore_index = ignore_index
 )
 
@@ -51,12 +50,12 @@ DATASET = dict(
     video_batch_size = batch_size,
     train = dict(
         file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/50salads/features"
+        feature_path = "./data/50salads/extract_features"
         # flow_feature_path = "./data/50salads/flow_features"
     ),
     test = dict(
         file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/50salads/features"
+        feature_path = "./data/50salads/extract_features"
         # flow_feature_path = "./data/50salads/flow_features"
     )
 )
@@ -86,9 +85,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     ),
     test = dict(
@@ -111,9 +110,9 @@ PIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_list = [
-                dict(XToTensor = None)
-            ]
+            transform_dict = dict(
+                feature = [dict(XToTensor = None)]
+            )
         )
     )
 )
