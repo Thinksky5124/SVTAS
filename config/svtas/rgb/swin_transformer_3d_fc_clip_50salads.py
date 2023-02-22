@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 10:09:43
+LastEditTime : 2023-02-22 14:50:49
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_50salads.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_clip_50salads.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/50salads/50salads_stream_video.py'
+    '../../_base_/default_runtime.py', '../../_base_/collater/batch_stream_compose.py',
+    '../../_base_/dataset/50salads/50salads_video_clip.py'
 ]
 from svtas.model.backbones.video.swin_transformer_3d import Mlp
 from svtas.utils.sbp import Swin3DMLPMaskMappingFunctor
@@ -23,9 +23,9 @@ sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
 epochs = 50
-log_interval = 10
+log_interval = 100
 
-model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_Clip_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition3D",
@@ -85,7 +85,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00001,
+    learning_rate = 0.001,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
@@ -93,6 +93,18 @@ OPTIMIZER = dict(
     no_decay_key = [],
     finetuning_key = [],
     freeze_key = [],
+)
+
+METRIC = dict(
+    TAS = dict(
+        file_output = True,
+        score_output = True),
+    ACC = dict(
+        name = "ConfusionMatrix",
+        actions_map_file_path = "./data/50salads/mapping.txt",
+        img_save_path = "./output",
+        need_plot = True,
+        need_color_bar = True,),
 )
 
 DATASET = dict(
@@ -118,11 +130,11 @@ PIPELINE = dict(
                     name='DecordContainer')
         ),
         sample = dict(
-            name = "VideoStreamSampler",
-            is_train = False,
+            name = "VideoClipSampler",
+            is_train = True,
+            random_temporal_agument = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
-            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"imgs"},
             sample_mode = "uniform"
         ),

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 14:24:06
+LastEditTime : 2023-02-22 10:09:26
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''

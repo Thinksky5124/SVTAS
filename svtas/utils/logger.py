@@ -144,7 +144,6 @@ class AverageMeter(object):
         self.val = val
         self.sum += val * n
         self.count += n
-        self.avg = self.sum / self.count
 
     @property
     def total(self):
@@ -157,10 +156,12 @@ class AverageMeter(object):
 
     @property
     def get_mean(self):
+        self.avg = self.sum / self.count
         return self.avg if self.need_avg else self.val
 
     @property
     def mean(self):
+        self.avg = self.sum / self.count
         return '{self.name}_avg: {self.avg:{self.fmt}}'.format(
             self=self) if self.need_avg else ''
 

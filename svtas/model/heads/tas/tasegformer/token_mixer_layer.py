@@ -2,10 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:11:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 09:44:13
+LastEditTime : 2023-02-21 14:40:15
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/token_mixer_layer.py
 '''
+import random
 import math
 import torch
 import torch.nn as nn
@@ -39,6 +40,22 @@ class ShfitTokenMixerLayer(nn.Module):
     def __init__(self, shift_div=8) -> None:
         super().__init__()
         self.shift_div = shift_div
+    
+    @staticmethod
+    def partial_shfit(x, shift_div=3, shift_len=1):
+        shift_x = torch.zeros_like(x)
+        n, c, t = x.size()
+        g =  c // shift_div
+
+        chunk_start = random.choice(range(shift_div - 3))
+        
+        # left shfit
+        shift_x[:, g * chunk_start:g * (chunk_start+1), :-shift_len] = x[:, g * chunk_start:g * (chunk_start+1), shift_len:]
+        # right shfit
+        shift_x[:, g * (chunk_start+1):g * (chunk_start+2), shift_len:] = x[:, g * (chunk_start+1):g * (chunk_start+2), :-shift_len]
+        # no shift
+        shift_x[:, g * (chunk_start+2):, :] = x[:, g * (chunk_start+2):, ]
+        return shift_x
     
     @staticmethod
     def offline_shift(x, shift_div=3, shift_len=1):
@@ -139,7 +156,7 @@ class ShfitTokenMixerLayer(nn.Module):
         return torch.permute(out, [0, 2, 1])
 
     def forward(self, x, shift_len=1):
-        return self.offline_shift(x=x, shift_div=self.shift_div, shift_len=shift_len)
+        return self.partial_shfit(x=x, shift_div=self.shift_div, shift_len=shift_len)
 
 class Mlp(nn.Module):
     """
@@ -194,9 +211,9 @@ class ShfitTokenFormerEncoderBlock(nn.Module):
 
     def forward(self, x, masks):
         # out = self.conv(x, masks)
-        out = self.token_norm(x)
-        shfit_out = self.token_mixer(out, shift_len=self.shift_len)
-        out = x + self.attn(shfit_out, shfit_out, shfit_out, masks)
+        shfit_x = self.token_mixer(x, shift_len=self.shift_len)
+        out = self.token_norm(shfit_x)
+        out = x + self.attn(out, out, out, masks)
         out = self.ffn(self.mlp_norm(out)) + out
         return out * masks[:, 0:1, :]
 
@@ -214,8 +231,8 @@ class ShfitTokenFormerDecoderBlock(nn.Module):
         self.shift_len = 2**dilation
 
     def forward(self, x, value, masks):
-        out = self.token_norm(x)
-        shfit_out = self.token_mixer(out, shift_len=self.shift_len)
-        out = x + self.attn(value, value, shfit_out, masks)
+        shfit_x = self.token_mixer(x, shift_len=self.shift_len)
+        out = self.token_norm(shfit_x)
+        out = x + self.attn(out, out, value, masks)
         out = self.ffn(self.mlp_norm(out)) + out
         return out * masks[:, 0:1, :]

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:30:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-18 19:55:17
+LastEditTime : 2023-02-22 14:51:08
 Description  : file content
 FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_video.py
 '''
@@ -42,6 +42,6 @@ METRIC = dict(
         name = "ConfusionMatrix",
         actions_map_file_path = "./data/gtea/mapping.txt",
         img_save_path = "./output",
-        plot = True,
+        need_plot = True,
         need_color_bar = True,),
 )

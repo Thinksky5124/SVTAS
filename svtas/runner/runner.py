@@ -2,13 +2,13 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 22:06:16
+LastEditTime : 2023-02-21 15:30:20
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
 import torch
 import time
-from ..utils.logger import log_batch
+from ..utils.logger import log_batch, AverageMeter
 import torch.distributed as dist
 
 try:
@@ -60,22 +60,32 @@ class Runner():
     def _init_loss_dict(self):
         self.loss_dict = {}
         if self.record_dict is not None:
-            for key, _ in self.record_dict.items():
+            for key, value in self.record_dict.items():
                 if key.endswith("loss"):
-                    self.loss_dict[key] = 0.
+                    if not self.need_grad_accumulate:
+                        self.loss_dict[key] = value
+                    else:
+                        self.loss_dict[key] = 0.
     
     def _update_loss_dict(self, input_loss_dict):
-        for key, _ in self.loss_dict.items():
-            self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone()
+        for key, value in self.loss_dict.items():
+            if not isinstance(value, AverageMeter):
+                self.loss_dict[key] = self.loss_dict[key] + input_loss_dict[key].detach().clone()
+            else:
+                self.loss_dict[key].update(input_loss_dict[key].detach().clone())
     
     def _distribute_sync_loss_dict(self):
         for key, value in self.loss_dict.items():
             if key != "loss":
-                self.loss_dict[key] = reduce_mean(value, self.nprocs)
+                if not isinstance(value, AverageMeter):
+                    self.loss_dict[key] = reduce_mean(value, self.nprocs)
+                else:
+                    self.loss_dict[key].update(reduce_mean(value, self.nprocs))
 
     def _log_loss_dict(self):
-        for key, value in self.loss_dict.items(): 
-            self.record_dict[key].update(value.item(), self.video_batch_size)
+        for key, value in self.loss_dict.items():
+                if not isinstance(value, AverageMeter):
+                    self.record_dict[key].update(value.item(), self.video_batch_size)
 
     def epoch_init(self):
         # batch videos sampler

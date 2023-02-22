@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-15 14:21:51
+LastEditTime : 2023-02-21 15:31:13
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/taseformer_gtea.py
 '''
@@ -30,14 +30,14 @@ MODEL = dict(
     head = dict(
         name = "TASegFormer",
         in_channels=dim,
-        num_decoders=1,
-        decoder_num_layers=5,
-        encoder_num_layers=5,
+        num_decoders=3,
+        decoder_num_layers=6,
+        encoder_num_layers=6,
         input_dropout_rate=0.5,
         embed_dim=64,
         dropout=0.5,
         chunck_size=8,
-        position_encoding=False,
+        position_encoding=True,
         num_classes=num_classes,
         sample_rate=sample_rate
     ),
@@ -78,7 +78,12 @@ OPTIMIZER = dict(
     name = "AdamWOptimizer",
     learning_rate = 0.0005,
     weight_decay = 0.01,
-    betas = (0.9, 0.999)
+    betas = (0.9, 0.999),
+    need_grad_accumulate = True,
+    finetuning_scale_factor=0.1,
+    no_decay_key = [],
+    finetuning_key = [],
+    freeze_key = [],
 )
 
 LRSCHEDULER = dict(

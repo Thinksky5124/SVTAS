@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-30 11:34:36
+LastEditTime : 2023-02-22 15:33:33
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -21,6 +21,7 @@ from svtas.tasks.test import test
 from svtas.tasks.train import train
 from svtas.utils.config import get_config
 from svtas.utils.logger import get_logger
+from svtas.tasks.profile import profile
 
 
 def parse_args():
@@ -32,7 +33,7 @@ def parse_args():
                         help='config file path')
     parser.add_argument('--mode',
                         '--m',
-                        choices=["train", "test", "infer"],
+                        choices=["train", "test", "infer", "profile"],
                         help='run mode')
     parser.add_argument('-o',
                         '--override',
@@ -128,6 +129,12 @@ def main():
             nprocs=nprocs,
             weights=args.weights,
             validate=args.validate)
+    elif args.mode in ["profile"]:
+        profile(cfg,
+            args=args,
+            local_rank=args.local_rank,
+            nprocs=nprocs,
+            weights=args.weights)
     else:
         raise NotImplementedError(args.mode + " mode not support!")
 

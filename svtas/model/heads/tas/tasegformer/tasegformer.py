@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 20:15:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 10:33:16
+LastEditTime : 2023-02-21 14:55:49
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/tasegformer.py
 '''
@@ -52,6 +52,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.layers = nn.ModuleList(
+            # [DilationConvBlock(dilation=2**i, in_channels=embed_dim, hidden_features=embed_dim, dropout=dropout)
             [ShfitTokenFormerDecoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
                 for i in range(num_layers)])
         

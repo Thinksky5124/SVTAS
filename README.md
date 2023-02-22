@@ -25,6 +25,7 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 - [x] Onnxruntime Infer Suppport
 - [x] Support CAM Visualization
 - [x] Assemble the `pytest` testing framework
+- [x] Pytorch Profiler Suppport
 
 # Envirnment Prepare
 
