@@ -3,7 +3,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-19 14:34:10
+LastEditTime : 2023-02-22 21:18:50
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet_3d.py
 '''
@@ -890,7 +890,6 @@ class ResNet3d(nn.Module):
                     m.eval()
 
 
-@BACKBONES.register()
 class ResNet3dLayer(nn.Module):
     """ResNet 3d Layer.
 

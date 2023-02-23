@@ -66,3 +66,12 @@ python tools/dataset_transform/check_videos_file.py -c config/svtas/rgb/efficien
 ...
 
 ```
+
+# Transform Videos from `.avi` to `.mp4`
+Decord lib has issue that decode `.avi` video
+```bash
+# 50salads
+python tools/dataset_transform/video_coding_transform.py data/50salads/splits/all_files.txt data/50salads/Videos --data_type 50salads
+# breakfast
+python tools/dataset_transform/video_coding_transform.py data/breakfast/splits/all_files.txt data/breakfast/Videos --data_type breakfast
+```

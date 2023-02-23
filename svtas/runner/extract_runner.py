@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-17 17:14:39
+LastEditTime : 2023-02-23 09:06:17
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
@@ -28,7 +28,9 @@ class ExtractRunner():
         self.current_step = 0
         self.current_step_vid_list = None
         self.init_file_dir()
-    
+
+        # self.cnt = 0
+
     @classmethod
     def init_file_dir(self):
         pass
@@ -82,6 +84,9 @@ class ExtractRunner():
         
         if idx % self.logger_interval == 0:
             self.logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
+        
+        # np.save(f"output/test/raw_data_{self.cnt}.npy", data_dict["imgs"].detach().clone().numpy())
+        # self.cnt = self.cnt+1
 
     @torch.no_grad()
     def run_one_iter(self, data):

@@ -124,10 +124,11 @@ class AverageMeter(object):
     Computes and stores the average and current value
     """
 
-    def __init__(self, name='', fmt='f', need_avg=True):
+    def __init__(self, name='', fmt='f', need_avg=True, output_mean=False):
         self.name = name
         self.fmt = fmt
         self.need_avg = need_avg
+        self.output_mean = output_mean
         self.reset()
 
     def reset(self):
@@ -167,6 +168,9 @@ class AverageMeter(object):
 
     @property
     def value(self):
+        if self.output_mean:
+            self.avg = self.sum / self.count
+            return '{self.name}: {self.avg:{self.fmt}}'.format(self=self)
         return '{self.name}: {self.val:{self.fmt}}'.format(self=self)
 
 

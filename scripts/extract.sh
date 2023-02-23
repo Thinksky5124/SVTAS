@@ -3,7 +3,7 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-10-24 16:10:45
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2023-02-18 19:48:36
+ # @LastEditTime : 2023-02-23 08:46:38
  # @Description  : feature extract script
  # @FilePath     : /SVTAS/scripts/extract.sh
 ### 
@@ -11,7 +11,6 @@
 export CUDA_VISIBLE_DEVICES=0
 
 ### gtea rgb feature ###
-python tools/extract/extract_features.py -c config/extract/extract_feature/resnet_rgb_50salads.py -o data/50salads
 # python tools/extract/extract_features.py -c config/extract/extract_feature/mobilev2_tsm_rgb_gtea.py -o data/gtea
 ### gtea flow ###
 # python tools/extract/extract_flow.py -c config/extract/extract_flow/raft_gtea.py -o data/gtea
@@ -19,3 +18,8 @@ python tools/extract/extract_features.py -c config/extract/extract_feature/resne
 # python tools/extract/extract_features.py -c config/extract/extract_feature/i3d_r50_flow_gtea.py -o data/gtea --flow_extract
 ### gtea mvs res ###
 # python tools/extract/extract_mvs_res.py -c config/extract/extract_mvs_res/mvs_res_gtea.py -o data/gtea
+
+### 50salads rgb feature ###
+python tools/extract/extract_features.py -c config/extract/extract_feature/resnet_rgb_50salads.py -o data/50salads
+### 50salads flow ###
+# python tools/extract/extract_flow.py -c config/extract/extract_flow/raft_50salads.py -o data/50salads

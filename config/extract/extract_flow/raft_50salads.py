@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 11:09:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 20:15:57
+LastEditTime : 2023-02-22 22:04:50
 Description  : RAFT extract flow Config
-FilePath     : /SVTAS/config/extract/extract_flow/raft_gtea.py
+FilePath     : /SVTAS/config/extract/extract_flow/raft_50salads.py
 '''
 _base_ = [
     '../../_base_/collater/stream_compose.py', '../../_base_/models/optical_flow_estimate/raft.py',
-    '../../_base_/dataset/gtea/gtea_stream_video.py'
+    '../../_base_/dataset/50salads/50salads_stream_video.py'
 ]
 sliding_window = 32
 clip_seg_num = 32
@@ -19,11 +19,11 @@ DATASET = dict(
     config = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/all_files.txt",
-        videos_path = "./data/gtea/Videos",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
+        file_path = "./data/50salads/splits/all_files.txt",
+        videos_path = "./data/50salads/Videos",
+        gt_path = "./data/50salads/groundTruth",
+        actions_map_file_path = "./data/50salads/mapping.txt",
+        dataset_type = "50salads",
         train_mode = False,
         sliding_window = clip_seg_num
     )
@@ -31,7 +31,7 @@ DATASET = dict(
 
 POSTPRECESSING = dict(
     name = "OpticalFlowPostProcessing",
-    fps = 15,
+    fps = 30,
     need_visualize = False,
     sliding_window = sliding_window
 )
@@ -58,8 +58,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                    mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
+                    std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
                 ))
             ])
     )

@@ -2,29 +2,27 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-23 10:45:47
+LastEditTime : 2023-02-22 19:19:08
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_50salads.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_clip_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/50salads/50salads_stream_video.py'
+    '../../_base_/default_runtime.py', '../../_base_/collater/batch_stream_compose.py',
+    '../../_base_/dataset/gtea/gtea_video_clip.py'
 ]
 
-num_classes = 19
-sample_rate = 4
+num_classes = 11
+sample_rate = 2
 clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
 epochs = 50
-log_interval = 10
-save_interval = 1
 
-model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_Clip_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition3D",
@@ -65,10 +63,7 @@ MODEL = dict(
         in_channels=768
     ),
     loss = dict(
-        name = "DiceSegmentationLoss",
-        # class_weight = [0.40501603,1.7388232,0.5236841,2.3680801,0.52725035,1.8183347,
-        #                 2.1976302,1.0866599,0.9076069,1.8409629,1.1957755,0.403674,0.5133538,
-        #                 1.5752678,1.1706547,1.0,0.7277812,0.8284057,0.48404875],
+        name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate * 2,
         smooth_weight = 0.0,
@@ -97,30 +92,16 @@ OPTIMIZER = dict(
     freeze_key = [],
 )
 
-METRIC = dict(
-    TAS = dict(
-        file_output = False,
-        score_output = False),
-    ACC = dict(
-        name = "ConfusionMatrix",
-        actions_map_file_path = "./data/50salads/mapping.txt",
-        img_save_path = "./output",
-        need_plot = False,
-        need_color_bar = False,),
-)
-
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        videos_path = "./data/50salads/Videos_mp4",
+        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        videos_path = "./data/50salads/Videos_mp4",
+        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         sliding_window = sliding_window,
     )
 )
@@ -134,11 +115,11 @@ PIPELINE = dict(
                     name='DecordContainer')
         ),
         sample = dict(
-            name = "VideoStreamSampler",
+            name = "VideoClipSampler",
             is_train = False,
+            random_temporal_agument = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
-            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"imgs"},
             sample_mode = "uniform"
         ),
@@ -152,8 +133,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                    std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                 ))]
             )
         )
@@ -183,8 +164,8 @@ PIPELINE = dict(
                     dict(PILToTensor = None),
                     dict(ToFloat = None),
                     dict(Normalize = dict(
-                        mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                        std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                        mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                        std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                     ))]
             )
         )

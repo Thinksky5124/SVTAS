@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 14:50:49
+LastEditTime : 2023-02-22 20:41:46
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_clip_50salads.py
 '''
@@ -17,13 +17,13 @@ from svtas.utils.sbp import Swin3DMLPMaskMappingFunctor
 
 num_classes = 19
 sample_rate = 4
-clip_seg_num = 64
+clip_seg_num = 128
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
 epochs = 50
-log_interval = 100
+log_interval = 10
 
 model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_Clip_split" + str(split)
 
@@ -85,13 +85,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.001,
+    learning_rate = 0.000001,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
-    finetuning_scale_factor=0.5,
+    finetuning_scale_factor=1.0,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["head"],
     freeze_key = [],
 )
 
@@ -103,12 +103,12 @@ METRIC = dict(
         name = "ConfusionMatrix",
         actions_map_file_path = "./data/50salads/mapping.txt",
         img_save_path = "./output",
-        need_plot = True,
-        need_color_bar = True,),
+        need_plot = False,
+        need_color_bar = False,),
 )
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
+    temporal_clip_batch_size = 1,
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(

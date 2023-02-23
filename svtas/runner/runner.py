@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-21 15:30:20
+LastEditTime : 2023-02-22 19:00:13
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -63,6 +63,7 @@ class Runner():
             for key, value in self.record_dict.items():
                 if key.endswith("loss"):
                     if not self.need_grad_accumulate:
+                        setattr(value, "output_mean", True)
                         self.loss_dict[key] = value
                     else:
                         self.loss_dict[key] = 0.

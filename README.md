@@ -35,6 +35,7 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 - CUDA 11.7+ 
 - Cudnn 8.6+ (optional): Only need if you want to use apex accelerate
 - Pillow-SIMD (optional): Install it by the following scripts.
+- FFmpeg 4.3.1+ (optional): For extract flow and visualize video cam
 
 ```bash
 conda uninstall -y --force pillow pil jpeg libtiff libjpeg-turbo
