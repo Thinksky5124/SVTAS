@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-13 16:07:33
+LastEditTime : 2023-02-23 15:42:30
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_gtea.py
 '''
@@ -12,12 +12,10 @@ _base_ = [
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
-from svtas.model.backbones.video.swin_transformer_3d import Mlp
-from svtas.utils.sbp import Swin3DMLPMaskMappingFunctor
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 128
+clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
@@ -84,13 +82,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
-    finetuning_scale_factor=0.5,
+    finetuning_scale_factor=0.025,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["backbone"],
     freeze_key = [],
 )
 

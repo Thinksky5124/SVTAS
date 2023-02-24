@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 09:17:59
+LastEditTime : 2023-02-23 22:32:23
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_asformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_tiny_asformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -20,7 +20,7 @@ ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
-epochs = 100
+epochs = 50
 
 model_name = "SwinTransformer3D_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
@@ -51,26 +51,26 @@ MODEL = dict(
         num_classes=num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True,
-        fusion_ratio = 0.0
+        need_pool = True
     ),
     head = dict(
-        # name = "FCHead",
-        # num_classes = num_classes,
-        # sample_rate = sample_rate * 2,
-        # clip_seg_num = clip_seg_num // 2,
-        # drop_ratio=0.5,
-        # in_channels=768
-        name = "ASFormer",
-        num_decoders = 3,
+        name = "MultiStageModel",
+        num_stages = 1,
         num_layers = 10,
-        r1 = 2,
-        r2 = 2,
         num_f_maps = 64,
-        input_dim = 768,
-        channel_masking_rate = 0.5,
+        dim = 768,
         num_classes = num_classes,
         sample_rate = sample_rate * 2
+        # name = "ASFormer",
+        # num_decoders = 3,
+        # num_layers = 10,
+        # r1 = 2,
+        # r2 = 2,
+        # num_f_maps = 64,
+        # input_dim = 768,
+        # channel_masking_rate = 0.5,
+        # num_classes = num_classes,
+        # sample_rate = sample_rate * 2
         # name = "Conformer",
         # num_classes = num_classes,
         # sample_rate = sample_rate * 2,
@@ -119,13 +119,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
-    finetuning_scale_factor=0.5,
+    finetuning_scale_factor=0.02,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["backbone"],
     freeze_key = [],
 )
 

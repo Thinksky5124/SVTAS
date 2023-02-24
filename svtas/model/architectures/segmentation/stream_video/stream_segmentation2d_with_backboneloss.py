@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-25 10:29:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:16:57
+LastEditTime : 2023-02-23 17:48:44
 Description: etesvs model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video/stream_segmentation2d_with_backboneloss.py
 '''

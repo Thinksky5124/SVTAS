@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-27 10:24:19
+LastEditTime : 2023-02-23 19:18:18
 Description: loss function
-FilePath     : \SVTAS\svtas\model\losses\steam_segmentation_loss.py
+FilePath     : /SVTAS/svtas/model/losses/steam_segmentation_loss.py
 '''
 import torch
 import torch.nn as nn

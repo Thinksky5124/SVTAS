@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 21:37:23
+LastEditTime : 2023-02-23 14:23:47
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_breakfast.py
 '''
@@ -12,8 +12,6 @@ _base_ = [
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/breakfast/breakfast_stream_video.py'
 ]
-from svtas.model.backbones.video.swin_transformer_3d import Mlp
-from svtas.utils.sbp import Swin3DMLPMaskMappingFunctor
 
 num_classes = 48
 sample_rate = 2
@@ -85,7 +83,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.00001,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
@@ -101,10 +99,12 @@ DATASET = dict(
     num_workers = 2,
     train = dict(
         file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        videos_path = "./data/breakfast/Videos_mp4",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        videos_path = "./data/breakfast/Videos_mp4",
         sliding_window = sliding_window,
     )
 )

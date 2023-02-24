@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 21:45:07
+LastEditTime : 2023-02-23 21:52:22
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -203,7 +203,7 @@ def train(cfg,
     for epoch in range(0, cfg.epochs):
         if epoch <= resume_epoch and resume_epoch != 0:
             logger.info(
-                f"| epoch: [{epoch+1}] <= resume_epoch: [{ resume_epoch}], continue... "
+                f"| epoch: [{epoch+1}] <= resume_epoch: [{resume_epoch+1}], continue... "
             )
             continue
 
