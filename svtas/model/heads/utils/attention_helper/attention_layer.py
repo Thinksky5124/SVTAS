@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-01-07 16:52:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-15 15:57:11
+LastEditTime : 2023-02-25 15:03:47
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/utils/attention_helper/attention_layer.py
 '''
@@ -421,6 +421,7 @@ class GAUAChunkttentionLayer(GAUAttentionLayer):
 class MultiHeadAttention(nn.Module):
     def __init__(self,
                  embed_dim,
+                 dropout=0.5,
                  num_heads=1,
                  position_encoding=True):
         "Take in model size and number of heads."
@@ -430,6 +431,10 @@ class MultiHeadAttention(nn.Module):
         self.d_k = embed_dim // num_heads
         self.num_heads = num_heads
         self.embed_layers = nn.ModuleList([nn.Linear(embed_dim, embed_dim) for _ in range(3)])
+        if dropout > 0.0:
+            self.dropout = nn.Dropout(p=dropout)
+        else:
+            self.dropout = None
 
         # positional embeddings
         self.position_encoding = position_encoding
@@ -439,13 +444,15 @@ class MultiHeadAttention(nn.Module):
             self.pos_enc = None
     
     @staticmethod
-    def attention(query, key, value, mask=None):
+    def attention(query, key, value, mask=None, dropout=None):
         "Compute 'Scaled Dot Product Attention'"
         d_k = query.size(-1)
         scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
         if mask is not None:
             scores = scores.masked_fill(mask, float("-inf"))
         p_attn = F.softmax(scores, dim = -1)
+        if dropout is not None:
+            p_attn = dropout(p_attn)
         return torch.matmul(p_attn, value), p_attn
 
     def forward(self, query, key, value, key_padding_mask=None, attn_mask=None):
@@ -472,7 +479,7 @@ class MultiHeadAttention(nn.Module):
             key = self.pos_enc.rotate_queries_or_keys(key)
 
         # 2) Apply attention on all the projected vectors in batch.
-        x, attn = self.attention(query, key, value, mask=mask)
+        x, attn = self.attention(query, key, value, mask=mask, dropout=self.dropout)
 
         # 3) "Concat" using a view and apply a final linear.
         x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.d_k)
@@ -488,13 +495,10 @@ class MultiHeadAttentionLayer(nn.Module):
         super().__init__()
         self.att_layer = MultiHeadAttention(embed_dim=embed_dim,
                                             num_heads=num_heads,
-                                            position_encoding=position_encoding)
+                                            position_encoding=position_encoding,
+                                            dropout=dropout)
         self.causal = causal
         self.num_heads = num_heads
-        if dropout > 0.0:
-            self.dropout = nn.Dropout(p=dropout)
-        else:
-            self.dropout = None
     
     def gen_causal_mask(self, input_size, device):
         """
@@ -525,8 +529,6 @@ class MultiHeadAttentionLayer(nn.Module):
         
         out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
         out = torch.transpose(out, 1, 2)
-        if self.dropout is not None:
-            out = self.dropout(out)
         return out * masks
 
 class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
@@ -539,7 +541,7 @@ class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
                  position_encoding=True) -> None:
         super().__init__(embed_dim, num_heads, dropout, causal, position_encoding)
         self.chunck_size = chunck_size
-    
+
     def forward(self, q, k, v, masks):
         q = torch.transpose(q, 1, 2)
         k = torch.transpose(k, 1, 2)
@@ -564,12 +566,9 @@ class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
             causal_mask = None
 
         out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
-        
         # gather group
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
-        if self.dropout is not None:
-            out = self.dropout(out)
         return out * masks
 
 class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):

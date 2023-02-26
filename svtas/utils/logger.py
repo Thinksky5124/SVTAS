@@ -14,6 +14,7 @@ import sys
 import datetime
 import torch
 from torch.utils.tensorboard import SummaryWriter
+import seaborn as sns
 
 Color = {
     'RED': '\033[31m',
@@ -239,8 +240,7 @@ def tenorboard_log_epoch(metric_dict, epoch, mode, writer):
 def tensorboard_log_feature_image(writer: SummaryWriter, feature: torch.Tensor, epoch: int, tag: str):
     assert len(list(feature.shape)) == 2, f"Only support fearure shape is 2-D, now is {list(feature.shape)}-D!"
     feature_data = feature.detach().clone().cpu().numpy()
-    # Min Max Scaler
-    feature_data = (feature_data - np.min(feature_data))/(np.max(feature_data) - np.min(feature_data))
-    feature_data = np.uint8(255 * feature_data)
-    feature_data = cv2.applyColorMap(feature_data, cv2.COLORMAP_JET)
-    writer.add_image(tag, feature_data, epoch, dataformats = "HWC")
+    heatmapshow = None
+    heatmapshow = cv2.normalize(feature_data, heatmapshow, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    heatmapshow = cv2.applyColorMap(heatmapshow, cv2.COLORMAP_JET)
+    writer.add_image(tag, heatmapshow, epoch, dataformats = "HWC")

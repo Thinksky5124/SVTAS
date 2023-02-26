@@ -119,7 +119,7 @@ DATASET = dict(
         sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
+        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
         videos_path = "./data/50salads/Videos_mp4",
         sliding_window = sliding_window,
     )

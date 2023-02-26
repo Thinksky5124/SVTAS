@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-02-22 21:27:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 21:52:15
+LastEditTime : 2023-02-24 16:03:44
 Description  : file content
 FilePath     : /SVTAS/config/_base_/models/action_recognition/slowonly.py
 '''
 model = dict(
-    architecture ='Recognizer3D',
+    architecture ='Recognition3D',
     backbone = dict(
         name='ResNet3dSlowOnly',
         depth=50,

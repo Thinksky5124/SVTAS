@@ -2,26 +2,26 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 14:45:03
+LastEditTime : 2023-02-24 10:10:28
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/taseformer_gtea.py
+FilePath     : /SVTAS/config/svtas/feature/taseformer_50salads.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/gtea/gtea_stream_feature.py'
+    '../../_base_/dataset/50salads/50salads_stream_feature.py'
 ]
 
 split = 1
-num_classes = 11
-sample_rate = 2
+num_classes = 19
+sample_rate = 4
 ignore_index = -100
 epochs = 50
 clip_seg_num = 64
 dim = 2048
 batch_size = 1
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_TASegformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "Stream_TASegformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
@@ -61,16 +61,16 @@ DATASET = dict(
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = './data/gtea/raw_features',
+        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
+        feature_path = './data/50salads/features',
         sliding_window = sliding_window,
-        # flow_feature_path = "./data/gtea/flow_features"
+        # flow_feature_path = "./data/50salads/flow_features"
     ),
     test = dict(
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = './data/gtea/raw_features',
+        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
+        feature_path = './data/50salads/features',
         sliding_window = sliding_window,
-        # flow_feature_path = "./data/gtea/flow_features"
+        # flow_feature_path = "./data/50salads/flow_features"
     )
 )
 

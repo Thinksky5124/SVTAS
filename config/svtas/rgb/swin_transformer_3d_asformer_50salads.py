@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-23 12:55:18
+LastEditTime : 2023-02-24 15:29:36
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_asformer_50salads.py
 '''
@@ -55,8 +55,7 @@ MODEL = dict(
         num_classes=num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True,
-        fusion_ratio = 0.0
+        need_pool = True
     ),
     head = dict(
         name = "ASFormer",
@@ -109,13 +108,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0001,
+    learning_rate = 0.00025,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
     finetuning_scale_factor=0.1,
     no_decay_key = [],
-    finetuning_key = ["backbone"],
+    finetuning_key = [],
     freeze_key = [],
 )
 
@@ -141,7 +140,7 @@ DATASET = dict(
         sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
+        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
         videos_path = "./data/50salads/Videos_mp4",
         sliding_window = sliding_window,
     )

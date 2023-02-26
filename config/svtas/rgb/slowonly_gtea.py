@@ -1,16 +1,16 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-12-18 19:04:09
+Date         : 2023-02-24 16:02:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 19:19:08
+LastEditTime : 2023-02-24 16:04:30
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_clip_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/slowonly_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
-    '../../_base_/models/action_recognition/swin_transformer.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/batch_stream_compose.py',
-    '../../_base_/dataset/gtea/gtea_video_clip.py'
+    '../../_base_/models/action_recognition/slowonly.py',
+    '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
+    '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
 
 num_classes = 11
@@ -22,26 +22,23 @@ split = 1
 batch_size = 1
 epochs = 50
 
-model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_Clip_split" + str(split)
+model_name = "SlowOnly_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "Recognition3D",
     backbone = dict(
-        name = "SwinTransformer3D",
-        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
-        pretrained2d = False,
-        patch_size = [2, 4, 4],
-        embed_dim = 96,
-        depths = [2, 2, 6, 2],
-        num_heads = [3, 6, 12, 24],
-        window_size = [8,7,7],
-        mlp_ratio = 4.,
-        qkv_bias = True,
-        qk_scale = None,
-        drop_rate = 0.,
-        attn_drop_rate = 0.,
-        drop_path_rate = 0.2,
-        patch_norm = True,
+        name='ResNet3dSlowOnly',
+        depth=50,
+        pretrained='./data/checkpoint/slowonly_r50_256p_4x16x1_256e_kinetics400_rgb_20200820-bea7701f.pth',
+        pretrained2d=False,
+        in_channels=3,
+        lateral=False,
+        conv1_kernel=(1, 7, 7),
+        conv1_stride_t=1,
+        pool1_stride_t=1,
+        inflate=(0, 0, 1, 1),
+        norm_eval=False,
+        with_pool2=False
         # sbp_build=True,
         # keep_ratio_list=[0.125],
         # sample_dims=[2],
@@ -50,22 +47,22 @@ MODEL = dict(
     ),
     neck = dict(
         name = "PoolNeck",
-        in_channels = 768,
-        clip_seg_num = clip_seg_num // 2,
+        in_channels = 2048,
+        clip_seg_num = clip_seg_num,
         need_pool = True
     ),
     head = dict(
         name = "FCHead",
         num_classes = num_classes,
-        sample_rate = sample_rate * 2,
-        clip_seg_num = clip_seg_num // 2,
+        sample_rate = sample_rate,
+        clip_seg_num = clip_seg_num,
         drop_ratio=0.5,
-        in_channels=768
+        in_channels=2048
     ),
     loss = dict(
         name = "SegmentationLoss",
         num_classes = num_classes,
-        sample_rate = sample_rate * 2,
+        sample_rate = sample_rate,
         smooth_weight = 0.0,
         ignore_index = -100
     ) 
@@ -82,11 +79,11 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00001,
+    learning_rate = 0.00025,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = False,
-    finetuning_scale_factor=0.5,
+    need_grad_accumulate = True,
+    finetuning_scale_factor=0.025,
     no_decay_key = [],
     finetuning_key = [],
     freeze_key = [],
@@ -115,11 +112,11 @@ PIPELINE = dict(
                     name='DecordContainer')
         ),
         sample = dict(
-            name = "VideoClipSampler",
+            name = "VideoStreamSampler",
             is_train = False,
-            random_temporal_agument = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
+            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"imgs"},
             sample_mode = "uniform"
         ),

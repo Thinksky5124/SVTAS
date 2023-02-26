@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 16:25:38
+LastEditTime : 2023-02-24 14:54:56
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_taseformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_asformer_clip_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
-    '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/gtea/gtea_stream_video.py'
+    '../../_base_/default_runtime.py', '../../_base_/collater/batch_stream_compose.py',
+    '../../_base_/dataset/gtea/gtea_video_clip.py'
 ]
 
 num_classes = 11
@@ -22,7 +22,7 @@ split = 1
 batch_size = 1
 epochs = 50
 
-model_name = "SwinTransformer3D_TASegformer_Lovasz_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_Asformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_Clip_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
@@ -44,28 +44,28 @@ MODEL = dict(
         patch_norm = True,
         # sbp_build=True,
         # keep_ratio_list=[0.125],
-        # sample_dims=[0]
+        # sample_dims=[2],
+        # grad_mask_mode_lsit=['random'],
+        # register_sbp_module_dict={Mlp: Swin3DMLPMaskMappingFunctor(permute_dims=[0, 2, 3, 4, 1])}
     ),
     neck = dict(
         name = "TaskFusionPoolNeck",
         num_classes=num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True
+        need_pool = True,
     ),
     head = dict(
-        name = "TASegFormer",
-        in_channels=768,
-        num_decoders=3,
-        decoder_num_layers=6,
-        encoder_num_layers=6,
-        input_dropout_rate=0.5,
-        embed_dim=128,
-        dropout=0.5,
-        chunck_size=8,
-        position_encoding=True,
-        num_classes=num_classes,
-        sample_rate=sample_rate* 2
+        name = "ASFormer",
+        num_decoders = 3,
+        num_layers = 10,
+        r1 = 2,
+        r2 = 2,
+        num_f_maps = 64,
+        input_dim = 768,
+        channel_masking_rate = 0.5,
+        num_classes = num_classes,
+        sample_rate = sample_rate * 2
     ),
     loss = dict(
         name = "StreamSegmentationLoss",
@@ -77,13 +77,13 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
-            name = "LovaszSegmentationLoss",
+            name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = -100
         )
-    )  
+    ) 
 )
 
 POSTPRECESSING = dict(
@@ -97,11 +97,11 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = True,
-    finetuning_scale_factor=0.1,
+    need_grad_accumulate = False,
+    finetuning_scale_factor=0.2,
     no_decay_key = [],
     finetuning_key = ["backbone"],
     freeze_key = [],
@@ -130,11 +130,11 @@ PIPELINE = dict(
                     name='DecordContainer')
         ),
         sample = dict(
-            name = "VideoStreamSampler",
+            name = "VideoClipSampler",
             is_train = False,
+            random_temporal_agument = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
-            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"imgs"},
             sample_mode = "uniform"
         ),

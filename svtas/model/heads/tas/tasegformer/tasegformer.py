@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 20:15:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-21 14:55:49
+LastEditTime : 2023-02-24 16:36:02
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/tasegformer.py
 '''
@@ -25,7 +25,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.layers = nn.ModuleList(
-            [ShfitTokenFormerEncoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
+            [ShfitTokenFormerEncoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=chunck_size)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)
@@ -53,7 +53,7 @@ class Decoder(nn.Module):
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.layers = nn.ModuleList(
             # [DilationConvBlock(dilation=2**i, in_channels=embed_dim, hidden_features=embed_dim, dropout=dropout)
-            [ShfitTokenFormerDecoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
+            [ShfitTokenFormerDecoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=chunck_size)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)

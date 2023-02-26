@@ -10,7 +10,7 @@ import os
 from .logger import coloring, get_logger, setup_logger
 from mmcv import Config
 
-def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path="output"):
+def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path="output", need_coloring=False):
     """
     Read config from file
     """
@@ -27,7 +27,7 @@ def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path=
     logger = setup_logger(f"./"+ logger_path + f"/{config.model_name}", name="SVTAS", level="INFO", tensorboard=tensorboard)
     override_config(config._cfg_dict, overrides)
     if show:
-        print_config(config)
+        print_config(config, need_coloring=need_coloring)
     return config
 
 def override(dl, ks, v):
@@ -94,15 +94,15 @@ def override_config(config, options=None):
 
     return config
 
-def print_config(config):
+def print_config(config, need_coloring=False):
     """
     visualize configs
     Arguments:
         config: configs
     """
-    print_dict(config)
+    print_dict(config, need_coloring=need_coloring)
 
-def print_dict(d, delimiter=0):
+def print_dict(d, delimiter=0, need_coloring=False):
     """
     Recursively visualize a dict and
     indenting acrrording by the relationship of keys.
@@ -111,18 +111,27 @@ def print_dict(d, delimiter=0):
     placeholder = "-" * 60
     for k, v in sorted(d.items()):
         if isinstance(v, dict):
-            logger.info("{}{} : ".format(delimiter * " ", coloring(k,
-                                                                   "HEADER")))
-            print_dict(v, delimiter + 4)
+            if not need_coloring:
+                logger.info("{}{} : ".format(delimiter * " ", k))
+            else:
+                logger.info("{}{} : ".format(delimiter * " ", coloring(k,
+                                                                    "HEADER")))
+            print_dict(v, delimiter + 4, need_coloring)
         elif isinstance(v, list) and len(v) >= 1 and isinstance(v[0], dict):
-            logger.info("{}{} : ".format(delimiter * " ",
-                                         coloring(str(k), "HEADER")))
+            if not need_coloring:
+                logger.info("{}{} : ".format(delimiter * " ", str(k)))
+            else:
+                logger.info("{}{} : ".format(delimiter * " ",
+                                            coloring(str(k), "HEADER")))
             for value in v:
-                print_dict(value, delimiter + 4)
+                print_dict(value, delimiter + 4, need_coloring)
         else:
-            logger.info("{}{} : {}".format(delimiter * " ",
-                                           coloring(k, "HEADER"),
-                                           coloring(v, "OKGREEN")))
+            if not need_coloring:
+                logger.info("{}{} : {}".format(delimiter * " ", k, v))
+            else:
+                logger.info("{}{} : {}".format(delimiter * " ",
+                                            coloring(k, "HEADER"),
+                                            coloring(v, "OKGREEN")))
         try:
             if k.isupper():
                 logger.info(placeholder)

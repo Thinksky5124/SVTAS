@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-23 22:32:23
+LastEditTime : 2023-02-24 15:58:23
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_tiny_asformer_gtea.py
 '''
@@ -54,11 +54,14 @@ MODEL = dict(
         need_pool = True
     ),
     head = dict(
-        name = "MultiStageModel",
-        num_stages = 1,
+        name = "ASFormer",
+        num_decoders = 3,
         num_layers = 10,
+        r1 = 2,
+        r2 = 2,
         num_f_maps = 64,
-        dim = 768,
+        input_dim = 768,
+        channel_masking_rate = 0.5,
         num_classes = num_classes,
         sample_rate = sample_rate * 2
         # name = "ASFormer",
@@ -119,13 +122,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005,
+    learning_rate = 0.00025,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
     finetuning_scale_factor=0.02,
     no_decay_key = [],
-    finetuning_key = ["backbone"],
+    finetuning_key = [],
     freeze_key = [],
 )
 

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:11:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-21 14:40:15
+LastEditTime : 2023-02-24 16:37:01
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/token_mixer_layer.py
 '''
@@ -47,7 +47,7 @@ class ShfitTokenMixerLayer(nn.Module):
         n, c, t = x.size()
         g =  c // shift_div
 
-        chunk_start = random.choice(range(shift_div - 3))
+        chunk_start = 0
         
         # left shfit
         shift_x[:, g * chunk_start:g * (chunk_start+1), :-shift_len] = x[:, g * chunk_start:g * (chunk_start+1), shift_len:]
@@ -206,8 +206,8 @@ class ShfitTokenFormerEncoderBlock(nn.Module):
         # self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
         self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
 
-        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=0.2)
-        self.shift_len = 2**dilation
+        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=drop)
+        self.shift_len = 2**(dilation)
 
     def forward(self, x, masks):
         # out = self.conv(x, masks)
@@ -227,8 +227,8 @@ class ShfitTokenFormerDecoderBlock(nn.Module):
         # self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
         self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
 
-        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=0.2)
-        self.shift_len = 2**dilation
+        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=drop)
+        self.shift_len = 2**(dilation)
 
     def forward(self, x, value, masks):
         shfit_x = self.token_mixer(x, shift_len=self.shift_len)

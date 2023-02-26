@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-11-04 19:50:40
+Date         : 2023-02-25 14:49:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 14:45:03
+LastEditTime : 2023-02-25 15:13:53
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/taseformer_gtea.py
+FilePath     : /SVTAS/config/svtas/feature/lstm_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -14,39 +14,37 @@ _base_ = [
 
 split = 1
 num_classes = 11
-sample_rate = 2
+sample_rate = 1
 ignore_index = -100
 epochs = 50
 clip_seg_num = 64
 dim = 2048
 batch_size = 1
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_TASegformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "Stream_LSTM_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
     backbone = None,
     neck = None,
     head = dict(
-        name = "TASegFormer",
-        in_channels=dim,
-        num_decoders=3,
-        decoder_num_layers=6,
-        encoder_num_layers=6,
-        input_dropout_rate=0.5,
-        embed_dim=64,
-        dropout=0.5,
-        chunck_size=8,
-        position_encoding=True,
-        num_classes=num_classes,
-        sample_rate=sample_rate
-    ),
-    loss = dict(
-        name = "DiceSegmentationLoss",
-        smooth_weight = 0.0,
+        name = "LSTMSegmentationHead",
+        in_channels = dim,
         num_classes = num_classes,
         sample_rate = sample_rate,
-        ignore_index = ignore_index
+        hidden_channels=1024,
+        num_layers=3,
+        batch_first=True,
+        dropout=0.5,
+        bidirectional=True,
+        is_memory_sliding=True
+    ),
+    loss = dict(
+        name = "SegmentationLoss",
+        num_classes = num_classes,
+        sample_rate = sample_rate,
+        smooth_weight = 0.0,
+        ignore_index = -100
     )
 )
 

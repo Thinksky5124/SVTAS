@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-23 09:12:35
+LastEditTime : 2023-02-25 15:16:47
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -17,7 +17,7 @@ from ..builder import SAMPLER
 
 class FrameIndexSample():
     def __init__(self, mode='random'):
-        assert mode in ['random', 'uniform', 'linspace', 'random_choice'], 'not support mode'
+        assert mode in ['random', 'uniform', 'linspace', 'random_choice', 'uniform_random'], 'not support mode'
         self.mode = mode
     
     def random_sample(self, start_idx, end_idx, sample_rate):
