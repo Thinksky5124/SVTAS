@@ -2,13 +2,13 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 19:00:13
+LastEditTime : 2023-02-27 17:13:22
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
 import torch
 import time
-from ..utils.logger import log_batch, AverageMeter
+from ..utils.logger import log_batch, AverageMeter, get_logger
 import torch.distributed as dist
 
 try:
@@ -218,7 +218,7 @@ class Runner():
                 if self.grad_clip is not None:
                     for param_group in self.optimizer.param_groups:
                         self.grad_clip(param_group['params'])
-            
+
             if not self.need_grad_accumulate:
                 self.optimizer.step()
                 self.optimizer.zero_grad()

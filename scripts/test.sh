@@ -9,8 +9,7 @@
 
 export CUDA_VISIBLE_DEVICES=0
 
-python tools/launch.py  --mode test -c config/svtas/rgb/swin_transformer_3d_fc_clip_50salads.py --weights=output/SwinTransformer3D_FC_64x4_50salads_Clip_split1/SwinTransformer3D_FC_64x4_50salads_Clip_split1_best.pt
-
+python tools/launch.py  --mode test -c config/svtas/feature/asrf_brt_gtea.py --weights=output/Stream_ASRF_BRT_64x1_gtea_split1/Stream_ASRF_BRT_64x1_gtea_split1_best.pt
 # #### GTEA ####
 # python tools/launch.py  --mode test -c config/gtea/transeger/transeger_split1.yaml --weights=output/Transeger_gtea_split1/Transeger_gtea_split1_best.pkl
 # python tools/launch.py  --mode test -c config/gtea/I3D_mstcn/i3d_mstcn_split1.yaml --weights=output/I3D_MSTCN_gtea_split1/I3D_MSTCN_gtea_split1_best.pkl

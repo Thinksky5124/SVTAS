@@ -82,7 +82,7 @@ def setup_logger(output=None, name="SVTAS", level="INFO", tensorboard=False):
                 idx = str(int(idx) + 1)
                 path = os.path.join(output, "tensorboard", idx)
                 isExists = os.path.exists(path)
-            writer = SummaryWriter(path, comment=name)
+            writer = TensorboardWriter(path, comment=name)
 
     # file logging: all workers
     if output is not None:
@@ -228,19 +228,53 @@ def log_epoch(metric_list, epoch, mode, ips, logger, need_coloring=False):
         logger.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
             end_epoch_str, mode, metric_str, batch_cost, reader_cost, batch_sum, ips))
 
-def tenorboard_log_epoch(metric_dict, epoch, mode, writer):
-    if isinstance(writer, SummaryWriter):
-        for m in metric_dict:
-            if not (m == 'batch_time' or m == 'reader_time'):
-                if isinstance(m, AverageMeter):
-                    writer.add_scalar(mode + "/" + m, metric_dict[m].get_mean, epoch)
-                elif isinstance(m, dict):
-                    writer.add_scalar(mode + "/" + m, metric_dict[m], epoch)
+class TensorboardWriter(object):
+    def __init__(self, path, comment) -> None:
+        self.writer = SummaryWriter(path, comment=comment)
+        self.step = 0
+        self.epoch = 0
+    
+    def tenorboard_log_epoch(self, metric_dict, epoch=None, mode='train'):
+        if epoch is None:
+            epoch = self.epoch
+        if isinstance(self.writer, SummaryWriter):
+            for m in metric_dict:
+                if not (m == 'batch_time' or m == 'reader_time'):
+                    if isinstance(m, AverageMeter):
+                        self.writer.add_scalar(mode + "/" + m, metric_dict[m].get_mean, epoch)
+                    elif isinstance(m, dict):
+                        self.writer.add_scalar(mode + "/" + m, metric_dict[m], epoch)
 
-def tensorboard_log_feature_image(writer: SummaryWriter, feature: torch.Tensor, epoch: int, tag: str):
-    assert len(list(feature.shape)) == 2, f"Only support fearure shape is 2-D, now is {list(feature.shape)}-D!"
-    feature_data = feature.detach().clone().cpu().numpy()
-    heatmapshow = None
-    heatmapshow = cv2.normalize(feature_data, heatmapshow, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    heatmapshow = cv2.applyColorMap(heatmapshow, cv2.COLORMAP_JET)
-    writer.add_image(tag, heatmapshow, epoch, dataformats = "HWC")
+    def tensorboard_log_feature_image(self, feature: torch.Tensor, tag: str, epoch: int = None):
+        if epoch is None:
+            epoch = self.step
+        assert len(list(feature.shape)) == 2, f"Only support fearure shape is 2-D, now is {list(feature.shape)}-D!"
+        feature_data = feature.detach().clone().cpu().numpy()
+        heatmapshow = None
+        heatmapshow = cv2.normalize(feature_data, heatmapshow, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        heatmapshow = cv2.applyColorMap(heatmapshow, cv2.COLORMAP_JET)
+        self.writer.add_image(tag, heatmapshow, epoch, dataformats = "HWC")
+    
+    def tensorboard_log_tensor(self, tensor, name):
+        self.writer.add_histogram(tag=name, values=tensor, global_step=self.step)
+    
+    def add_model_parameters_grad_histogram(self, model):
+        for name, param in model.named_parameters():
+            if param.grad is not None:
+                self.writer.add_histogram(tag=name+'_grad', values=param.grad.detach().cpu(), global_step=self.step)
+    
+    def add_model_parameters_histogram(self, model):
+        for name, param in model.named_parameters():
+            self.writer.add_histogram(tag=name, values=param.detach().cpu(), global_step=self.step)
+    
+    def tensorboard_add_graph(self, model, fake_input = torch.randn(16,2)):
+        self.writer.add_graph(model=model, input_to_model=fake_input)
+    
+    def update_step(self, n=1):
+        self.step = self.step + n
+    
+    def update_epoch(self, n=1):
+        self.epoch = self.epoch + n
+    
+    def close(self):
+        self.writer.close()

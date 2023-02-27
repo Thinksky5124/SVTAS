@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-06 20:19:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-25 19:51:58
+LastEditTime : 2023-02-26 20:25:29
 Description  : Segmentation Head Modules
 FilePath     : /SVTAS/svtas/model/heads/tas/__init__.py
 '''
@@ -16,11 +16,11 @@ from .tasegformer import TASegFormer
 from .asrf import ActionSegmentRefinementFramework
 from .c2f_tcn import C2F_TCN
 from .transformer_xl import TransformerXL
-from .block_recurrent_transformer import BRTSegmentationHead
+from .block_recurrent_transformer import BRTSegmentationHead, ASRFWithBRT
 
 __all__ = [
     'MultiStageModel', 'ASFormer', 'SingleStageModel',
     'TCN3DHead', 'LSTMSegmentationHead', 'MemoryTCNHead', 'LinformerHead',
     'TASegFormer', 'ActionSegmentRefinementFramework', 'C2F_TCN',
-    'TransformerXL', 'BRTSegmentationHead'
+    'TransformerXL', 'BRTSegmentationHead', 'ASRFWithBRT'
 ]

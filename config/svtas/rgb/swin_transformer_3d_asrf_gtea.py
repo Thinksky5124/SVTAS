@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-10 13:42:23
+LastEditTime : 2023-02-27 16:07:45
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_asrf_gtea.py
 '''
@@ -25,14 +25,14 @@ epochs = 50
 model_name = "SwinTransformer3D_ASRF_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
-    architecture = "Recognition3D",
+    architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
         name = "SwinTransformer3D",
-        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        pretrained = "./data/checkpoint/swin_small_patch244_window877_kinetics400_1k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
         embed_dim = 96,
-        depths = [2, 2, 6, 2],
+        depths = [2, 2, 18, 2],
         num_heads = [3, 6, 12, 24],
         window_size = [8,7,7],
         mlp_ratio = 4.,
@@ -44,13 +44,8 @@ MODEL = dict(
         patch_norm = True,
     ),
     neck = dict(
-        # name = "TaskFusionPoolNeck",
-        # num_classes=num_classes,
-        # in_channels = 768,
-        # clip_seg_num = clip_seg_num // 2,
-        # need_pool = True,
-        # fusion_ratio = 1.0
-        name = "PoolNeck",
+        name = "TaskFusionPoolNeck",
+        num_classes=num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
         need_pool = True
@@ -59,36 +54,29 @@ MODEL = dict(
         name = "ActionSegmentRefinementFramework",
         in_channel = 768,
         num_features = 64,
-        num_stages = 4,
+        num_stages = 1,
         num_layers = 10,
         num_classes = num_classes,
         sample_rate = sample_rate * 2
     ),
     loss = dict(
-        # name = "StreamSegmentationLoss",
-        # backbone_loss_cfg = dict(
-        #     name = "SegmentationLoss",
-        #     num_classes = num_classes,
-        #     sample_rate = sample_rate * 2,
-        #     smooth_weight = 0.0,
-        #     ignore_index = -100
-        # ),
-        # head_loss_cfg = dict(
-        #     name = "ASRFLoss",
-        #     class_weight = [0.40253314,0.6060787,0.41817436,1.0009843,1.6168522,
-        #                     1.2425169,1.5743035,0.8149039,7.6466165,1.0,0.29321033],
-        #     pos_weight = [33.866594360086765],
-        #     num_classes = num_classes,
-        #     sample_rate = sample_rate * 2,
-        #     ignore_index = -100
-        # )
-        name = "ASRFLoss",
-        class_weight = [0.40253314,0.6060787,0.41817436,1.0009843,1.6168522,
-                        1.2425169,1.5743035,0.8149039,7.6466165,1.0,0.29321033],
-        pos_weight = [33.866594360086765],
-        num_classes = num_classes,
-        sample_rate = sample_rate * 2,
-        ignore_index = -100
+        name = "StreamSegmentationLoss",
+        backbone_loss_cfg = dict(
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate * 2,
+            smooth_weight = 0.0,
+            ignore_index = -100
+        ),
+        head_loss_cfg = dict(
+            name = "ASRFLoss",
+            class_weight = [0.40253314,0.6060787,0.41817436,1.0009843,1.6168522,
+                            1.2425169,1.5743035,0.8149039,7.6466165,1.0,0.29321033],
+            pos_weight = [33.866594360086765],
+            num_classes = num_classes,
+            sample_rate = sample_rate * 2,
+            ignore_index = -100
+        )
     )  
 )
 
@@ -110,13 +98,13 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
-    finetuning_scale_factor=0.5,
+    finetuning_scale_factor=0.2,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["backbone"],
     freeze_key = [],
 )
 

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 11:20:49
+LastEditTime : 2023-02-26 20:54:23
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_asformer_gtea.py
 '''
@@ -51,8 +51,7 @@ MODEL = dict(
         num_classes=num_classes,
         in_channels = 1024,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True,
-        fusion_ratio = 0.0
+        need_pool = True
     ),
     head = dict(
         # name = "FCHead",

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-23 21:52:22
+LastEditTime : 2023-02-27 15:46:07
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -11,7 +11,7 @@ import time
 
 import torch
 import torch.distributed as dist
-from ..utils.logger import get_logger, log_epoch, tenorboard_log_epoch, coloring
+from ..utils.logger import get_logger, log_epoch, coloring
 from ..utils.save_load import mkdir
 from ..utils.recorder import build_recod
 from ..model.builder import build_model
@@ -220,6 +220,8 @@ def train(cfg,
             else:
                 break
             r_tic = time.time()
+            if args.use_tensorboard and local_rank <= 0:
+                tensorboard_writer.update_step()
             
         if local_rank <= 0:
             # metric output
@@ -236,7 +238,7 @@ def train(cfg,
             (record_dict["batch_time"].sum + 1e-10))
         log_epoch(record_dict, epoch + 1, "train", ips, logger)
         if args.use_tensorboard and local_rank <= 0:
-            tenorboard_log_epoch(record_dict, epoch + 1, "train", writer=tensorboard_writer)
+            tensorboard_writer.tenorboard_log_epoch(record_dict, epoch + 1, "train")
 
         def evaluate(best):
             record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
@@ -283,7 +285,7 @@ def train(cfg,
             log_epoch(record_dict, epoch + 1, "val", ips, logger)
             if args.use_tensorboard and local_rank <= 0:
                 record_dict.update(Metric_dict)
-                tenorboard_log_epoch(record_dict, epoch + 1, "val", writer=tensorboard_writer)
+                tensorboard_writer.tenorboard_log_epoch(record_dict, epoch + 1, "val")
             return best, best_flag
 
         # 5. Validation
@@ -353,3 +355,5 @@ def train(cfg,
     logger.info(f'training {model_name} finished')
     if validate:
         logger.info(f"The best performance on {criterion_metric_name} is {int(best * 10000) / 10000}, in epoch {best_epoch + 1}.")
+    if args.use_tensorboard and local_rank <= 0:
+        tensorboard_writer.close()
