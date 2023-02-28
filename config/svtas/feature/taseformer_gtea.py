@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 14:45:03
+LastEditTime : 2023-02-28 11:04:56
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/taseformer_gtea.py
 '''
@@ -17,7 +17,7 @@ num_classes = 11
 sample_rate = 2
 ignore_index = -100
 epochs = 50
-clip_seg_num = 64
+clip_seg_num = 32
 dim = 2048
 batch_size = 1
 sliding_window = clip_seg_num * sample_rate

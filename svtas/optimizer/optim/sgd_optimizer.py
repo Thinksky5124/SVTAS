@@ -2,12 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:11:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 21:03:47
+LastEditTime : 2023-02-27 21:07:01
 Description  : SGD optimizer
 FilePath     : /SVTAS/svtas/optimizer/optim/sgd_optimizer.py
 '''
 from ..builder import OPTIMIZER
 import torch
+from .helper_function import (filter_normal_optim_params, filter_no_decay_optim_params,
+                              filter_no_decay_finetuning_optim_params, filter_finetuning_optim_params)
 
 @OPTIMIZER.register()
 class SGDOptimizer(torch.optim.SGD):
@@ -33,10 +35,10 @@ class SGDOptimizer(torch.optim.SGD):
                 if nd in n:
                     p.requires_grad = False
 
-        normal_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if not any(nd in n for nd in no_main)])
-        no_decay_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if not any(nd in n for nd in finetuning_key) and any(nd in n for nd in no_decay_key)])
-        no_decay_finetuning_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if any(nd in n for nd in finetuning_key) and any(nd in n for nd in no_decay_key) ])
-        finetuning_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if any(nd in n for nd in finetuning_key) and not any(nd in n for nd in no_decay_key)])
+        normal_optim_params = filter_normal_optim_params(params=params, no_main=no_main)
+        no_decay_optim_params = filter_no_decay_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
+        no_decay_finetuning_optim_params = filter_no_decay_finetuning_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
+        finetuning_optim_params = filter_finetuning_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
 
         param_group = [
             {'params':normal_optim_params, 'weight_decay':weight_decay, 'lr':learning_rate},

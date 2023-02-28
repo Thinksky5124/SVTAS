@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-27 16:07:45
+LastEditTime : 2023-02-27 21:36:41
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_asrf_gtea.py
 '''
@@ -55,9 +55,9 @@ MODEL = dict(
         in_channel = 768,
         num_features = 64,
         num_stages = 1,
-        num_layers = 10,
+        num_layers = 5,
         num_classes = num_classes,
-        sample_rate = sample_rate * 2
+        sample_rate = sample_rate*2
     ),
     loss = dict(
         name = "StreamSegmentationLoss",
@@ -104,7 +104,7 @@ OPTIMIZER = dict(
     need_grad_accumulate = True,
     finetuning_scale_factor=0.2,
     no_decay_key = [],
-    finetuning_key = ["backbone"],
+    finetuning_key = ["backbone."],
     freeze_key = [],
 )
 

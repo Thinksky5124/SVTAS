@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-13 21:38:05
+LastEditTime : 2023-02-28 16:28:38
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_gtea.py
 '''
@@ -15,14 +15,14 @@ _base_ = [
 
 split = 1
 num_classes = 11
-sample_rate = 1
+sample_rate = 2
 ignore_index = -100
 epochs = 50
-clip_seg_num = 256
+clip_seg_num = 64
 sliding_window = clip_seg_num * sample_rate
 batch_size = 1
-dim = 768
-model_name = "Stream_ASFormer_Swin3DSBP_feature_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+dim = 2048
+model_name = "Stream_ASFormer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     head = dict(
@@ -55,13 +55,13 @@ DATASET = dict(
     num_workers = batch_size * 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/extract_features",
+        feature_path = './data/gtea/raw_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     ),
     test = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/extract_features",
+        feature_path = './data/gtea/raw_features',
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     )

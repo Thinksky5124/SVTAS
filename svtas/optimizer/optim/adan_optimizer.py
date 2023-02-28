@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 10:19:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-09 21:03:30
+LastEditTime : 2023-02-27 21:06:47
 Description  : Adan Optimizer ref:https://github.com/sail-sg/Adan
 FilePath     : /SVTAS/svtas/optimizer/optim/adan_optimizer.py
 '''
@@ -15,6 +15,8 @@ Implementation adapted from https://github.com/sail-sg/Adan
 import math
 from ..builder import OPTIMIZER
 import torch
+from .helper_function import (filter_normal_optim_params, filter_no_decay_optim_params,
+                              filter_no_decay_finetuning_optim_params, filter_finetuning_optim_params)
 
 from torch.optim import Optimizer
 
@@ -73,10 +75,10 @@ class AdanOptimizer(Optimizer):
                 if nd in n:
                     p.requires_grad = False
 
-        normal_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if not any(nd in n for nd in no_main)])
-        no_decay_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if not any(nd in n for nd in finetuning_key) and any(nd in n for nd in no_decay_key)])
-        no_decay_finetuning_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if any(nd in n for nd in finetuning_key) and any(nd in n for nd in no_decay_key) ])
-        finetuning_optim_params = filter(lambda p : p.requires_grad, [p for n,p in params if any(nd in n for nd in finetuning_key) and not any(nd in n for nd in no_decay_key)])
+        normal_optim_params = filter_normal_optim_params(params=params, no_main=no_main)
+        no_decay_optim_params = filter_no_decay_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
+        no_decay_finetuning_optim_params = filter_no_decay_finetuning_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
+        finetuning_optim_params = filter_finetuning_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
 
         param_group = [
             {'params':normal_optim_params, 'weight_decay':weight_decay, 'lr':learning_rate},

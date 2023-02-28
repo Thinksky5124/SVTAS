@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-26 20:26:04
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-26 20:50:20
+LastEditTime : 2023-02-27 20:16:57
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asrf_brt_gtea.py
 '''
@@ -33,7 +33,7 @@ MODEL = dict(
         in_channel = dim,
         num_features = 64,
         num_stages = 1,
-        num_layers = 3,
+        num_layers = 2,
         num_classes = num_classes,
         sample_rate = sample_rate
     ),

@@ -2,19 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:55:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-26 19:31:13
+LastEditTime : 2023-02-28 16:33:36
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_feature.py'
 ]
 
 split = 1
 num_classes = 11
-sample_rate = 1
+sample_rate = 2
 ignore_index = -100
 epochs = 50
 clip_seg_num = 64
@@ -29,21 +29,23 @@ MODEL = dict(
     neck = None,
     head = dict(
         name = "BRTSegmentationHead",
-        in_channels=dim,
-        hidden_channels=512,
-        num_classes=num_classes,
         num_head=1,
-        dim_head=128,
-        sample_rate=sample_rate,
+        dim_head=1,
         state_len=512,
         causal=False,
+        num_decoders=3,
+        num_layers=10,
+        num_f_maps=64,
+        input_dim=dim,
+        num_classes=num_classes,
+        channel_masking_rate=0.5,
+        sample_rate=sample_rate
     ),
     loss = dict(
         name = "SegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
-        smooth_weight = 0.0,
-        ignore_index = -100
+        ignore_index = ignore_index
     )
 )
 
@@ -56,7 +58,7 @@ POSTPRECESSING = dict(
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 2,
+    num_workers = batch_size * 2,
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         feature_path = './data/gtea/raw_features',
@@ -69,18 +71,6 @@ DATASET = dict(
         sliding_window = sliding_window,
         # flow_feature_path = "./data/gtea/flow_features"
     )
-)
-
-OPTIMIZER = dict(
-    name = "AdamWOptimizer",
-    learning_rate = 0.0005,
-    weight_decay = 0.01,
-    betas = (0.9, 0.999),
-    need_grad_accumulate = True,
-    finetuning_scale_factor=0.1,
-    no_decay_key = [],
-    finetuning_key = [],
-    freeze_key = [],
 )
 
 LRSCHEDULER = dict(

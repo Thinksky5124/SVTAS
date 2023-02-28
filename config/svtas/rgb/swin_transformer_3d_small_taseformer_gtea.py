@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-13 19:43:02
+LastEditTime : 2023-02-27 21:53:16
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_sbp_ms_tcn_depach_grad_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_taseformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
@@ -12,26 +12,27 @@ _base_ = [
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
+
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 128
+clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
-epochs = 50
+epochs = 70
 
-model_name = "SwinTransformer3DSBP_MS_TCN_DepatchGrad_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_ASRF_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
-        name = "SwinTransformer3DWithSBP",
-        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        name = "SwinTransformer3D",
+        pretrained = "./data/checkpoint/swin_small_patch244_window877_kinetics400_1k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
         embed_dim = 96,
-        depths = [2, 2, 6, 2],
+        depths = [2, 2, 18, 2],
         num_heads = [3, 6, 12, 24],
         window_size = [8,7,7],
         mlp_ratio = 4.,
@@ -41,26 +42,23 @@ MODEL = dict(
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
         patch_norm = True,
-        graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 4 + [0] * 2, [0, 0]]}
     ),
     neck = dict(
-        # name = "PoolNeck",
-        # in_channels = 768,
-        # clip_seg_num = clip_seg_num // 2,
-        # need_pool = True,
         name = "TaskFusionPoolNeck",
         num_classes=num_classes,
         in_channels = 768,
         clip_seg_num = clip_seg_num // 2,
-        need_pool = True,
-        fusion_ratio = 0.0
+        need_pool = True
     ),
     head = dict(
-        name = "MultiStageModel",
-        num_stages = 4,
-        num_layers = 10,
+        name = "ASFormer",
+        num_decoders = 3,
+        num_layers = 6,
+        r1 = 2,
+        r2 = 2,
         num_f_maps = 64,
-        dim = 768,
+        input_dim = 768,
+        channel_masking_rate = 0.0,
         num_classes = num_classes,
         sample_rate = sample_rate * 2
     ),
@@ -74,13 +72,13 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
-            name = "LovaszSegmentationLoss",
+            name = "SegmentationLoss",
             num_classes = num_classes,
-            sample_rate = sample_rate,
+            sample_rate = sample_rate * 2,
             smooth_weight = 0.0,
             ignore_index = -100
         )
-    ) 
+    )  
 )
 
 POSTPRECESSING = dict(
@@ -90,7 +88,8 @@ POSTPRECESSING = dict(
 )
 
 LRSCHEDULER = dict(
-    step_size = [epochs]
+    step_size = [epochs//2],
+    gamma = 0.5
 )
 
 OPTIMIZER = dict(
@@ -100,7 +99,7 @@ OPTIMIZER = dict(
     need_grad_accumulate = True,
     finetuning_scale_factor=0.5,
     no_decay_key = [],
-    finetuning_key = ["backbone"],
+    finetuning_key = ["backbone."],
     freeze_key = [],
 )
 

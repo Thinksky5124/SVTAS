@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-01-07 16:52:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-25 15:03:47
+LastEditTime : 2023-02-28 15:56:53
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/utils/attention_helper/attention_layer.py
 '''
@@ -423,7 +423,8 @@ class MultiHeadAttention(nn.Module):
                  embed_dim,
                  dropout=0.5,
                  num_heads=1,
-                 position_encoding=True):
+                 position_encoding=True,
+                 additional_mask_type=None):
         "Take in model size and number of heads."
         super(MultiHeadAttention, self).__init__()
         assert embed_dim % num_heads == 0
@@ -442,15 +443,30 @@ class MultiHeadAttention(nn.Module):
             self.pos_enc = RotaryEmbedding(dim = min(32, embed_dim))
         else:
             self.pos_enc = None
+        
+        self.additional_mask_type = "windows"
+    
+    @staticmethod
+    def construct_window_mask(channel_size, sequence_size, window_size):
+        '''
+            construct window mask of shape (1, l, l + l//2 + l//2), used for sliding window self attention
+        '''
+        window_mask = torch.ones((1, channel_size, sequence_size))
+        tril_ = torch.tril(window_mask, diagonal=window_size//2)
+        triu_ = torch.triu(window_mask, diagonal=-window_size//2)
+        window_mask = window_mask * tril_ * triu_
+        return window_mask
     
     @staticmethod
     def attention(query, key, value, mask=None, dropout=None):
         "Compute 'Scaled Dot Product Attention'"
         d_k = query.size(-1)
         scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
+
         if mask is not None:
             scores = scores.masked_fill(mask, float("-inf"))
         p_attn = F.softmax(scores, dim = -1)
+        
         if dropout is not None:
             p_attn = dropout(p_attn)
         return torch.matmul(p_attn, value), p_attn

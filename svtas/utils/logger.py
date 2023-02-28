@@ -238,12 +238,12 @@ class TensorboardWriter(object):
         if epoch is None:
             epoch = self.epoch
         if isinstance(self.writer, SummaryWriter):
-            for m in metric_dict:
-                if not (m == 'batch_time' or m == 'reader_time'):
-                    if isinstance(m, AverageMeter):
-                        self.writer.add_scalar(mode + "/" + m, metric_dict[m].get_mean, epoch)
-                    elif isinstance(m, dict):
-                        self.writer.add_scalar(mode + "/" + m, metric_dict[m], epoch)
+            for k, v in metric_dict.items():
+                if not (k == 'batch_time' or k == 'reader_time'):
+                    if isinstance(v, AverageMeter):
+                        self.writer.add_scalar(mode + "/" + k, v.get_mean, epoch)
+                    elif isinstance(v, float):
+                        self.writer.add_scalar(mode + "/" + k, v, epoch)
 
     def tensorboard_log_feature_image(self, feature: torch.Tensor, tag: str, epoch: int = None):
         if epoch is None:

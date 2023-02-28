@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 15:33:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-26 20:18:08
+LastEditTime : 2023-02-28 08:49:52
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/block_recurrent_transformer.py
 '''
@@ -228,9 +228,9 @@ class RecurrentAttentionEncoder(nn.Module):
         self.state = temp_state
 
         return feature * mask.transpose(1, 2)
-
+    
 @HEADS.register()
-class BRTSegmentationHead(nn.Module):
+class BRTClassificationHead(nn.Module):
     """Block Recurrent Transformer
     paper: https://arxiv.org/pdf/2203.07852
     """
@@ -245,7 +245,7 @@ class BRTSegmentationHead(nn.Module):
                  num_layers=5,
                  causal=False,
                  out_feature=False):
-        super(BRTSegmentationHead, self).__init__()
+        super(BRTClassificationHead, self).__init__()
         self.sample_rate = sample_rate
         self.out_feature = out_feature
         self.encoder = RecurrentAttentionEncoder(hidden_channels, hidden_channels, dim_head=dim_head,
