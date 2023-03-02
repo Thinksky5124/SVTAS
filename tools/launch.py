@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 15:33:33
+LastEditTime : 2023-02-28 18:37:54
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -63,8 +63,12 @@ def parse_args():
     parser.add_argument(
         '--seed',
         type=int,
-        default=0,
+        default=None,
         help='fixed all random seeds when the program is running')
+    parser.add_argument(
+        '--benchmark',
+        action='store_true',
+        help='whether to use amp to accelerate')
     parser.add_argument(
         '--max_iters',
         type=int,
@@ -103,7 +107,7 @@ def main():
         torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
         torch.backends.cudnn.deterministic = True
         # weather accelerate conv op
-        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.benchmark = args.benchmark
         logger = get_logger("SVTAS")
         logger.info("Current Seed is: " + str(seed))
 

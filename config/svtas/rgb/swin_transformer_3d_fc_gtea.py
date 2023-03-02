@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 16:13:49
+LastEditTime : 2023-03-02 10:17:28
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_fc_gtea.py
 '''
@@ -86,7 +86,7 @@ OPTIMIZER = dict(
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
-    finetuning_scale_factor=0.025,
+    finetuning_scale_factor=0.1,
     no_decay_key = [],
     finetuning_key = [],
     freeze_key = [],

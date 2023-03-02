@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-27 21:53:16
+LastEditTime : 2023-03-02 10:48:17
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_taseformer_gtea.py
 '''
@@ -22,7 +22,7 @@ split = 1
 batch_size = 1
 epochs = 70
 
-model_name = "SwinTransformer3D_ASRF_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
@@ -51,16 +51,19 @@ MODEL = dict(
         need_pool = True
     ),
     head = dict(
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 6,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 768,
-        channel_masking_rate = 0.0,
-        num_classes = num_classes,
-        sample_rate = sample_rate * 2
+        name = "BRTSegmentationHead",
+        num_head=1,
+        dim_head=128,
+        state_len=512,
+        causal=False,
+        num_decoders=3,
+        encoder_num_layers=6,
+        decoder_num_layers=6,
+        num_f_maps=64,
+        input_dim=768,
+        num_classes=num_classes,
+        channel_masking_rate=0.0,
+        sample_rate=sample_rate * 2
     ),
     loss = dict(
         name = "StreamSegmentationLoss",
@@ -97,7 +100,7 @@ OPTIMIZER = dict(
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = True,
-    finetuning_scale_factor=0.5,
+    finetuning_scale_factor=0.2,
     no_decay_key = [],
     finetuning_key = ["backbone."],
     freeze_key = [],

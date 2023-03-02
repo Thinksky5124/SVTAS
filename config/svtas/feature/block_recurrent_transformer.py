@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:55:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-28 16:33:36
+LastEditTime : 2023-03-02 17:09:35
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_feature.py'
 ]
@@ -30,12 +30,15 @@ MODEL = dict(
     head = dict(
         name = "BRTSegmentationHead",
         num_head=1,
-        dim_head=1,
+        dim_head=64,
         state_len=512,
         causal=False,
         num_decoders=3,
-        num_layers=10,
+        encoder_num_layers=6,
+        decoder_num_layers=6,
         num_f_maps=64,
+        dropout=0.5,
+        att_dropout=0.0,
         input_dim=dim,
         num_classes=num_classes,
         channel_masking_rate=0.5,
@@ -75,6 +78,18 @@ DATASET = dict(
 
 LRSCHEDULER = dict(
     step_size = [epochs]
+)
+
+OPTIMIZER = dict(
+    name = "AdamWOptimizer",
+    learning_rate = 0.0005,
+    weight_decay = 0.0001,
+    betas = (0.9, 0.999),
+    need_grad_accumulate = True,
+    finetuning_scale_factor=0.1,
+    no_decay_key = [],
+    finetuning_key = [],
+    freeze_key = [],
 )
 
 PIPELINE = dict(
