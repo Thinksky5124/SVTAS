@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:53:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-02 17:06:55
+LastEditTime : 2023-03-02 18:44:02
 Description  : file content
 FilePath     : /SVTAS/config/_base_/models/temporal_action_segmentation/block_recurrent_transformer.py
 '''
@@ -20,7 +20,6 @@ MODEL = dict(
         num_layers=10,
         num_f_maps=64,
         dropout=0.5,
-        att_dropout=0.1,
         input_dim=2048,
         num_classes=11,
         channel_masking_rate=0.5,

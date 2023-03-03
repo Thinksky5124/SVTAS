@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 15:29:36
+LastEditTime : 2023-03-02 23:31:17
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_asformer_50salads.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/50salads/50salads_stream_video.py'
@@ -24,17 +24,17 @@ epochs = 50
 log_interval = 10
 save_interval = 1
 
-model_name = "SwinTransformer3D_Asformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
         name = "SwinTransformer3D",
-        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        pretrained = "./data/checkpoint/swin_small_patch244_window877_kinetics400_1k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
         embed_dim = 96,
-        depths = [2, 2, 6, 2],
+        depths = [2, 2, 18, 2],
         num_heads = [3, 6, 12, 24],
         window_size = [8,7,7],
         mlp_ratio = 4.,
@@ -58,16 +58,19 @@ MODEL = dict(
         need_pool = True
     ),
     head = dict(
-        name = "ASFormer",
-        num_decoders = 3,
-        num_layers = 10,
-        r1 = 2,
-        r2 = 2,
-        num_f_maps = 64,
-        input_dim = 768,
-        channel_masking_rate = 0.5,
-        num_classes = num_classes,
-        sample_rate = sample_rate * 2
+        name = "BRTSegmentationHead",
+        num_head=1,
+        dim_head=128,
+        state_len=512,
+        causal=False,
+        num_decoders=3,
+        encoder_num_layers=6,
+        decoder_num_layers=6,
+        num_f_maps=64,
+        input_dim=768,
+        num_classes=num_classes,
+        channel_masking_rate=0.2,
+        sample_rate=sample_rate * 2
     ),
     loss = dict(
         name = "StreamSegmentationLoss",
@@ -81,7 +84,7 @@ MODEL = dict(
         head_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
-            sample_rate = sample_rate,
+            sample_rate = sample_rate * 2,
             smooth_weight = 0.0,
             ignore_index = -100
         )
@@ -104,30 +107,26 @@ POSTPRECESSING = dict(
 )
 
 LRSCHEDULER = dict(
-    step_size = [epochs]
+    name = "CosineAnnealingLR",
+    T_max = epochs,
+    eta_min = 0.00001,
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00025,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = False,
-    finetuning_scale_factor=0.1,
+    need_grad_accumulate = True,
+    finetuning_scale_factor=0.2,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["backbone."],
     freeze_key = [],
 )
 
 METRIC = dict(
     TAS = dict(
         file_output = False,
-        score_output = False),
-    ACC = dict(
-        name = "ConfusionMatrix",
-        actions_map_file_path = "./data/50salads/mapping.txt",
-        img_save_path = "./output",
-        need_plot = False,
-        need_color_bar = False,),
+        score_output = False)
 )
 
 DATASET = dict(

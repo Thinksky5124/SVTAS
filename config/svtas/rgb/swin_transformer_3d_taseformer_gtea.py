@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-02 10:14:52
+LastEditTime : 2023-03-02 19:22:07
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_taseformer_gtea.py
 '''
@@ -60,12 +60,12 @@ MODEL = dict(
         state_len=512,
         causal=False,
         num_decoders=3,
-        encoder_num_layers=6,
-        decoder_num_layers=6,
+        encoder_num_layers=7,
+        decoder_num_layers=7,
         num_f_maps=64,
         input_dim=768,
         num_classes=num_classes,
-        channel_masking_rate=0.0,
+        channel_masking_rate=0.2,
         sample_rate=sample_rate * 2
     ),
     loss = dict(
