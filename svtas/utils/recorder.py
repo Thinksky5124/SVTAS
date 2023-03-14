@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 16:24:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 19:41:23
+LastEditTime : 2023-03-09 10:56:32
 Description: recorder construct function
 FilePath     : /SVTAS/svtas/utils/recorder.py
 '''
@@ -55,7 +55,7 @@ def build_recod(architecture_type, mode):
                   }
     elif architecture_type in ["FeatureSegmentation", "Recognition2D", "Recognition3D", "Transeger",
                                 "Segmentation2D", "Segmentation3D", "ActionCLIP", "ActionCLIPSegmentation",
-                                "FeatureSegmentation3D", "MultiModalityStreamSegmentation"]:
+                                "FeatureSegmentation3D", "MultiModalityStreamSegmentation", "RLFeatureSegmentation"]:
         if mode == "train":
             return {'batch_time': AverageMeter('batch_cost', '.5f'),
                     'reader_time': AverageMeter('reader_time', '.5f'),

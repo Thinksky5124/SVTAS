@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-11 11:10:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 21:16:54
+LastEditTime : 2023-03-13 10:40:09
 Description  : Segmentation Framweork
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/__init__.py
 '''

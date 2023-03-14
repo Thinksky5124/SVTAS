@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-06 20:19:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-28 08:48:48
+LastEditTime : 2023-03-13 10:42:08
 Description  : Segmentation Head Modules
 FilePath     : /SVTAS/svtas/model/heads/tas/__init__.py
 '''

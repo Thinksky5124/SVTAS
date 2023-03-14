@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-02 10:48:17
+LastEditTime : 2023-03-14 09:21:01
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_taseformer_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_gtea.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/gtea/gtea_stream_video.py'
@@ -18,9 +18,9 @@ sample_rate = 2
 clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
-split = 1
+split = 4
 batch_size = 1
-epochs = 70
+epochs = 50
 
 model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
@@ -42,6 +42,7 @@ MODEL = dict(
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
         patch_norm = True,
+        # graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
     ),
     neck = dict(
         name = "TaskFusionPoolNeck",
@@ -53,16 +54,16 @@ MODEL = dict(
     head = dict(
         name = "BRTSegmentationHead",
         num_head=1,
-        dim_head=128,
         state_len=512,
         causal=False,
         num_decoders=3,
-        encoder_num_layers=6,
-        decoder_num_layers=6,
-        num_f_maps=64,
+        encoder_num_layers=10,
+        decoder_num_layers=10,
+        num_f_maps=128,
+        dropout=0.5,
         input_dim=768,
         num_classes=num_classes,
-        channel_masking_rate=0.0,
+        channel_masking_rate=0.2,
         sample_rate=sample_rate * 2
     ),
     loss = dict(
@@ -75,11 +76,11 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
-            name = "SegmentationLoss",
+            name = "RLDPGSegmentationLoss",
+            gamma_weight = 0.95,
             num_classes = num_classes,
             sample_rate = sample_rate * 2,
-            smooth_weight = 0.0,
-            ignore_index = -100
+            ignore_index = ignore_index
         )
     )  
 )
@@ -91,15 +92,16 @@ POSTPRECESSING = dict(
 )
 
 LRSCHEDULER = dict(
-    step_size = [epochs//2],
-    gamma = 0.5
+    name = "CosineAnnealingLR",
+    T_max = epochs,
+    eta_min = 0.00001,
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005,
+    learning_rate = 0.00005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = True,
+    need_grad_accumulate = False,
     finetuning_scale_factor=0.2,
     no_decay_key = [],
     finetuning_key = ["backbone."],

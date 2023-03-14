@@ -2,26 +2,27 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-03 19:11:37
+LastEditTime : 2023-03-07 19:58:48
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_50salads.py
+FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_breakfast.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/50salads/50salads_stream_feature.py'
+    '../../_base_/dataset/breakfast/breakfast_stream_feature.py'
 ]
 
 split = 1
-num_classes = 19
+num_classes = 48
 sample_rate = 4
 ignore_index = -100
 epochs = 50
-clip_seg_num = 64
+clip_seg_num = 128
 dim = 2048
 batch_size = 1
+log_interval = 100
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "Stream_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
@@ -33,18 +34,18 @@ MODEL = dict(
         state_len=512,
         causal=False,
         num_decoders=3,
-        encoder_num_layers=8,
-        decoder_num_layers=8,
+        encoder_num_layers=10,
+        decoder_num_layers=10,
         num_f_maps=128,
         dropout=0.5,
         input_dim=dim,
         num_classes=num_classes,
-        channel_masking_rate=0.5,
+        channel_masking_rate=0.2,
         sample_rate=sample_rate
     ),
     loss = dict(
-        name = "DiceSegmentationLoss",
-        smooth_weight = 0.0,
+        name = "RLDPGSegmentationLoss",
+        gamma_weight = 0.95,
         num_classes = num_classes,
         sample_rate = sample_rate,
         ignore_index = ignore_index
@@ -60,18 +61,18 @@ POSTPRECESSING = dict(
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 2,
+    num_workers = batch_size * 2,
     train = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        feature_path = './data/50salads/features',
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        feature_path = './data/breakfast/features',
         sliding_window = sliding_window,
-        # flow_feature_path = "./data/50salads/flow_features"
+        # flow_feature_path = "./data/breakfast/flow_features"
     ),
     test = dict(
-        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        feature_path = './data/50salads/features',
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        feature_path = './data/breakfast/features',
         sliding_window = sliding_window,
-        # flow_feature_path = "./data/50salads/flow_features"
+        # flow_feature_path = "./data/breakfast/flow_features"
     )
 )
 
@@ -80,7 +81,7 @@ OPTIMIZER = dict(
     learning_rate = 0.0005,
     weight_decay = 0.01,
     betas = (0.9, 0.999),
-    need_grad_accumulate = True,
+    need_grad_accumulate = False,
     finetuning_scale_factor=0.1,
     no_decay_key = [],
     finetuning_key = [],
@@ -92,6 +93,7 @@ LRSCHEDULER = dict(
     T_max = epochs,
     eta_min = 0.00001,
 )
+
 PIPELINE = dict(
     train = dict(
         name = "BasePipline",

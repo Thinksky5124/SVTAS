@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:55:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-03 19:08:34
+LastEditTime : 2023-03-14 09:11:49
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer.py
+FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
@@ -14,10 +14,10 @@ _base_ = [
 
 split = 1
 num_classes = 11
-sample_rate = 1
+sample_rate = 2
 ignore_index = -100
 epochs = 50
-clip_seg_num = 256
+clip_seg_num = 64
 dim = 2048
 batch_size = 1
 sliding_window = clip_seg_num * sample_rate
@@ -33,8 +33,8 @@ MODEL = dict(
         state_len=512,
         causal=False,
         num_decoders=3,
-        encoder_num_layers=8,
-        decoder_num_layers=8,
+        encoder_num_layers=10,
+        decoder_num_layers=10,
         num_f_maps=128,
         dropout=0.5,
         input_dim=dim,
@@ -43,7 +43,8 @@ MODEL = dict(
         sample_rate=sample_rate
     ),
     loss = dict(
-        name = "SegmentationLoss",
+        name = "RLDPGSegmentationLoss",
+        gamma_weight = 0.95,
         num_classes = num_classes,
         sample_rate = sample_rate,
         ignore_index = ignore_index
@@ -85,7 +86,7 @@ OPTIMIZER = dict(
     learning_rate = 0.0005,
     weight_decay = 0.0001,
     betas = (0.9, 0.999),
-    need_grad_accumulate = True,
+    need_grad_accumulate = False,
     finetuning_scale_factor=0.1,
     no_decay_key = [],
     finetuning_key = [],

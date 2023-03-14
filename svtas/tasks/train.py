@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-27 15:46:07
+LastEditTime : 2023-03-13 11:11:55
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -127,7 +127,9 @@ def train(cfg,
         else:
             model.load_state_dict(checkpoint['model_state_dict'])
 
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if "optimizer_state_dict" in checkpoint.keys():
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            
         start_epoch = checkpoint['epoch']
         if use_amp is True:
             amp.load_state_dict(checkpoint['amp'])
@@ -253,7 +255,8 @@ def train(cfg,
                 use_amp=use_amp,
                 nprocs=nprocs,
                 local_rank=local_rank,
-                runner_mode='validation')
+                runner_mode='validation',
+                need_grad_accumulate=need_grad_accumulate)
 
             # model logger init
             runner.epoch_init()

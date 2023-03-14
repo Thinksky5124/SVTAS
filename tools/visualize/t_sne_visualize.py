@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-15 16:10:58
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-15 16:11:00
+LastEditTime : 2023-03-06 18:36:10
 Description  : file content
 FilePath     : /SVTAS/tools/visualize/t_sne_visualize.py
 '''
@@ -38,7 +38,7 @@ def tsne(args):
     # 选择维度
     tsne = TSNE(n_components=2)
 
-    tsne_obj= tsne.fit_transform(feature.T)
+    tsne_obj= tsne.fit_transform(feature[:1024].T)
 
     tsne_df = pd.DataFrame({'X':tsne_obj[:,0],
                             'Y':tsne_obj[:,1],
@@ -46,7 +46,7 @@ def tsne(args):
 
     img = sns.scatterplot(x="X", y="Y",
                 hue="label",
-                legend='full',
+                legend='auto',
                 data=tsne_df)
     img.figure.savefig(os.path.join(args.out_path, "t-SNE_visalize.png"), bbox_inches='tight', dpi=500)
     plt.close()

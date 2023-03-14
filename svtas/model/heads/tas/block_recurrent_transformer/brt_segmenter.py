@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-28 08:47:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-03 18:14:13
+LastEditTime : 2023-03-09 09:50:13
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/brt_segmenter.py
 '''
@@ -136,18 +136,20 @@ class AttModule(nn.Module):
         self.stage = stage
         self.feed_forward = ConvFeedForward(dilation, in_channels, out_channels)
         self.instance_norm = nn.InstanceNorm1d(in_channels, track_running_stats=False)
-        self.att_layer = RecurrentHierarchicalAttentionLayer(dim = out_channels,
-                                                             dim_state = out_channels,
-                                                             state_len = state_len,
-                                                             num_head = num_head,
-                                                             dilation= dilation,
-                                                             causal = causal,
-                                                             dropout=dropout)
+        if self.stage == 'encoder':
+            self.att_layer = RecurrentHierarchicalAttentionLayer(dim = out_channels,
+                                                                dim_state = out_channels,
+                                                                state_len = state_len,
+                                                                num_head = num_head,
+                                                                dilation= dilation,
+                                                                causal = causal,
+                                                                dropout=dropout)
         self.conv_1x1 = nn.Conv1d(out_channels, in_channels, 1)
         self.dropout = nn.Dropout()
     
     def _clear_memory_buffer(self):
-        self.att_layer._clear_memory_buffer()
+        if self.stage == 'encoder':
+            self.att_layer._clear_memory_buffer()
 
     def forward(self, x, mask):
         out = self.feed_forward(x)
@@ -189,7 +191,6 @@ class Encoder(nn.Module):
         feature = self.conv_1x1(x)
         for layer in self.layers:
             feature = layer(feature, mask)
-        
         out = self.conv_out(feature) * mask[:, 0:1, :]
 
         return out, feature
