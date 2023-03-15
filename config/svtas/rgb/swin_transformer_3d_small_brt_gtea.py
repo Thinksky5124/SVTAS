@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-14 09:21:01
+LastEditTime : 2023-03-15 15:18:00
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_gtea.py
 '''
@@ -18,7 +18,7 @@ sample_rate = 2
 clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
-split = 4
+split = 1
 batch_size = 1
 epochs = 50
 
@@ -76,10 +76,9 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
-            name = "RLDPGSegmentationLoss",
-            gamma_weight = 0.95,
+            name = "RLPGSegmentationLoss",
             num_classes = num_classes,
-            sample_rate = sample_rate * 2,
+            sample_rate = sample_rate,
             ignore_index = ignore_index
         )
     )  
@@ -98,7 +97,7 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00005,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,

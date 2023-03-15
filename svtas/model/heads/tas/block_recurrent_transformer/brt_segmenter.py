@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-28 08:47:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-09 09:50:13
+LastEditTime : 2023-03-14 16:58:15
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/brt_segmenter.py
 '''
@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from ....builder import HEADS
 from ...utils.attention_helper.attention_layer import MultiHeadAttention
 from .block_recurrent_transformer import RecurrentStateGate
-from .helper_function import (exists, RotaryEmbedding, FeedForward)
+from .helper_function import (exists, FeedForward)
 from ..asformer import ConvFeedForward
 
 class RecurrentAttentionBlock(nn.Module):
@@ -36,8 +36,6 @@ class RecurrentAttentionBlock(nn.Module):
         self.heads = heads
         self.causal = causal
         self.state_len = state_len
-        rotary_emb_dim = max(dim // 2, 32)
-        self.rotary_pos_emb = RotaryEmbedding(rotary_emb_dim)
         
         self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': kernel_size, 'dilation': dilation})
         self.state_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)

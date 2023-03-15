@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:55:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-14 09:11:49
+LastEditTime : 2023-03-15 15:17:36
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_gtea.py
+FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_rl_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
@@ -30,7 +30,7 @@ MODEL = dict(
     head = dict(
         name = "BRTSegmentationHead",
         num_head=1,
-        state_len=512,
+        state_len=128,
         causal=False,
         num_decoders=3,
         encoder_num_layers=10,
@@ -43,8 +43,7 @@ MODEL = dict(
         sample_rate=sample_rate
     ),
     loss = dict(
-        name = "RLDPGSegmentationLoss",
-        gamma_weight = 0.95,
+        name = "RLPGSegmentationLoss",
         num_classes = num_classes,
         sample_rate = sample_rate,
         ignore_index = ignore_index
@@ -84,7 +83,7 @@ LRSCHEDULER = dict(
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
     learning_rate = 0.0005,
-    weight_decay = 0.0001,
+    weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
     finetuning_scale_factor=0.1,

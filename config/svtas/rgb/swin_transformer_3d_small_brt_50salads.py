@@ -77,10 +77,9 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
-            name = "RLDPGSegmentationLoss",
-            gamma_weight = 0.95,
+            name = "RLPGSegmentationLoss",
             num_classes = num_classes,
-            sample_rate = sample_rate * 2,
+            sample_rate = sample_rate,
             ignore_index = ignore_index
         )
     ) 
@@ -103,7 +102,7 @@ OPTIMIZER = dict(
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
-    finetuning_scale_factor=0.02,
+    finetuning_scale_factor=0.2,
     no_decay_key = [],
     finetuning_key = ["backbone."],
     freeze_key = [],

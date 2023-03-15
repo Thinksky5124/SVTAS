@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:29:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-13 10:41:41
+LastEditTime : 2023-03-15 10:32:13
 Description: file content
 FilePath     : /SVTAS/svtas/model/losses/__init__.py
 '''
@@ -17,7 +17,7 @@ from .bridge_prompt_clip_loss import BridgePromptCLIPLoss, BridgePromptCLIPSegme
 from .lovasz_softmax_loss import LovaszSegmentationLoss
 from .dice_loss import DiceSegmentationLoss
 from .asrf_loss import ASRFLoss
-from .rl_dpg_loss import RLDPGSegmentationLoss
+from .rl_dpg_loss import RLPGSegmentationLoss
 
 __all__ = [
     'ETESVSLoss', 'SegmentationLoss', 'RecognitionSegmentationLoss',
@@ -25,5 +25,5 @@ __all__ = [
     'SgementationCLIPLoss', 'CLIPLoss', 'BridgePromptCLIPLoss',
     'BridgePromptCLIPSegmentationLoss', 'ActionCLIPSegmentationLoss',
     'LSTRSegmentationLoss', 'LovaszSegmentationLoss', 'DiceSegmentationLoss',
-    'ASRFLoss', 'RLDPGSegmentationLoss'
+    'ASRFLoss', 'RLPGSegmentationLoss'
 ]

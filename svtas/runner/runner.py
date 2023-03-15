@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-27 17:13:22
+LastEditTime : 2023-03-14 11:14:14
 Description: runner script
 FilePath     : /SVTAS/svtas/runner/runner.py
 '''
@@ -113,7 +113,8 @@ class Runner():
         
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
         if self.runner_mode in ['train']:
-            self.optimizer.step()
+            if self.need_grad_accumulate:
+                self.optimizer.step()
             self.optimizer.zero_grad()
 
         # clear memory buffer
