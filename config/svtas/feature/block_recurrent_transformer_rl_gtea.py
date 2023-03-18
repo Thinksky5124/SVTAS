@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:55:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-15 15:17:36
+LastEditTime : 2023-03-18 14:44:05
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_rl_gtea.py
 '''
@@ -30,7 +30,7 @@ MODEL = dict(
     head = dict(
         name = "BRTSegmentationHead",
         num_head=1,
-        state_len=128,
+        state_len=512,
         causal=False,
         num_decoders=3,
         encoder_num_layers=10,

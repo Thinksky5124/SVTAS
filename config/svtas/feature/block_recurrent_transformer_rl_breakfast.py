@@ -14,7 +14,7 @@ _base_ = [
 
 split = 1
 num_classes = 48
-sample_rate = 4
+sample_rate = 8
 ignore_index = -100
 epochs = 50
 clip_seg_num = 128

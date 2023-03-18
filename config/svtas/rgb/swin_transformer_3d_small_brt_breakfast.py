@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-15 15:18:20
+LastEditTime : 2023-03-18 14:43:30
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_breakfast.py
 '''
@@ -98,10 +98,10 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00005,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = False,
+    need_grad_accumulate = True,
     finetuning_scale_factor=0.2,
     no_decay_key = [],
     finetuning_key = ["backbone."],
@@ -134,7 +134,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = False,
+            is_train = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},

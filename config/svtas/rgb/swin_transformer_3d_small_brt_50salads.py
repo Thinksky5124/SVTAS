@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-14 09:21:16
+LastEditTime : 2023-03-18 14:43:16
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_50salads.py
 '''
@@ -20,7 +20,7 @@ ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
-epochs = 30
+epochs = 50
 log_interval = 10
 
 model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
@@ -98,10 +98,10 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00005,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = False,
+    need_grad_accumulate = True,
     finetuning_scale_factor=0.2,
     no_decay_key = [],
     finetuning_key = ["backbone."],
@@ -135,7 +135,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = False,
+            is_train = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
