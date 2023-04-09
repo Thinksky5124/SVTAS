@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-16 12:26:26
+LastEditTime : 2023-04-09 20:40:15
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_gtea.py
 '''
@@ -75,10 +75,11 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
-            name = "RLPGSegmentationLoss",
+            name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,
-            ignore_index = ignore_index
+            smooth_weight = 0.15,
+            ignore_index = -100
         )
     )  
 )
@@ -130,7 +131,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = False,
+            is_train = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},

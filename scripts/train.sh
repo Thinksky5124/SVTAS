@@ -2,11 +2,11 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-05-22 17:05:58
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2023-04-09 20:22:25
+ # @LastEditTime : 2023-04-09 20:40:35
  # @Description  : train script
  # @FilePath     : /SVTAS/scripts/train.sh
 ### 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 
 # mstcn 1538574472
 # asformer 19980125
