@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-23 09:06:17
+LastEditTime : 2023-04-08 12:34:13
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import os
 import torch
+from ..utils.recorder import AverageMeter
 
 class ExtractRunner():
     def __init__(self,
@@ -136,6 +137,84 @@ class ExtractModelRunner(ExtractRunner):
         score = outputs['output']
             
         return score
+
+class LossLandSpaceRunner(ExtractModelRunner):
+    def __init__(self,
+                 logger,
+                 model,
+                 post_processing,
+                 Metric,
+                 out_path,
+                 criterion,
+                 need_grad_accumulate=True,
+                 logger_interval=10):
+        super().__init__(logger, model, post_processing, out_path, logger_interval)
+        self.criterion = criterion
+        self.Metric = Metric
+        self.need_grad_accumulate = need_grad_accumulate
+        self.record_dict = {'loss': AverageMeter('loss'), 'loss_sample': AverageMeter('loss_sample')}
+        if not self.need_grad_accumulate:
+            setattr(self.record_dict['loss_sample'], "output_mean", True)
+
+    def epoch_init(self):
+        super().epoch_init()
+        self.model.eval()
+        self.record_dict['loss'].reset()
+        self.record_dict['loss_sample'].reset()
+
+    @torch.no_grad()
+    def _model_forward(self, data_dict):
+        # move data
+        input_data = {}
+        for key, value in data_dict.items():
+            if torch.is_tensor(value):
+                input_data[key] = value.cuda()
+        if not self.need_grad_accumulate:
+            input_data['precise_sliding_num'] = torch.ones_like(input_data['precise_sliding_num'])
+
+        outputs = self.model(input_data)
+        loss_dict = self.criterion(outputs, input_data)
+        
+        score = outputs['output']
+        loss = loss_dict["loss"]
+            
+        return score, loss
+
+    def duil_will_iter_end_losslandspace(self, loss, current_step_vid_list):
+        self.record_dict['loss_sample'].update(loss)
+    
+    def duil_will_end_extract(self, extract_output, current_vid_list):
+        pred_score_list, pred_cls_list, ground_truth_list = extract_output
+        outputs = dict(predict=pred_cls_list,
+                        output_np=pred_score_list)
+        for k, v in self.Metric.items():
+            acc = v.update(current_vid_list, ground_truth_list, outputs)
+
+        self.record_dict['loss'].update(self.record_dict['loss_sample'].get_mean)
+        self.record_dict['loss_sample'].reset()
+
+    @torch.no_grad()
+    def run_one_clip(self, data_dict):
+        vid_list = data_dict['vid_list']
+        sliding_num = data_dict['sliding_num']
+        idx = data_dict['current_sliding_cnt']
+        labels = data_dict['labels']
+        # train segment
+        score, loss = self._model_forward(data_dict)
+            
+        with torch.no_grad():
+            if self.post_processing.init_flag is not True:
+                self.post_processing.init_scores(sliding_num, len(vid_list))
+                self.current_step_vid_list = vid_list
+                self.logger.info("Current process video: " + ",".join(vid_list))
+            extract_output = self.post_processing.update(score, labels, idx)
+        
+            # save feature file
+            self.duil_will_iter_end_losslandspace(loss, self.current_step_vid_list)
+        
+        if idx % self.logger_interval == 0:
+            self.logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
+
 
 class ExtractFeatureRunner(ExtractModelRunner):
 

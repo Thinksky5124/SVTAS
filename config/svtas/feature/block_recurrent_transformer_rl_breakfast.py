@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-07 19:58:48
+LastEditTime : 2023-04-09 20:21:58
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_breakfast.py
+FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_rl_breakfast.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
@@ -12,9 +12,9 @@ _base_ = [
     '../../_base_/dataset/breakfast/breakfast_stream_feature.py'
 ]
 
-split = 1
+split = 3
 num_classes = 48
-sample_rate = 4
+sample_rate = 8
 ignore_index = -100
 epochs = 50
 clip_seg_num = 128
@@ -22,7 +22,7 @@ dim = 2048
 batch_size = 1
 log_interval = 100
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
+model_name = "Stream_BRT_rgb_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
     architecture = "FeatureSegmentation",
@@ -34,11 +34,11 @@ MODEL = dict(
         state_len=512,
         causal=False,
         num_decoders=3,
-        encoder_num_layers=10,
-        decoder_num_layers=10,
+        encoder_num_layers=8,
+        decoder_num_layers=8,
         num_f_maps=128,
         dropout=0.5,
-        input_dim=dim,
+        input_dim=1024,
         num_classes=num_classes,
         channel_masking_rate=0.2,
         sample_rate=sample_rate
@@ -46,6 +46,7 @@ MODEL = dict(
     loss = dict(
         name = "RLPGSegmentationLoss",
         num_classes = num_classes,
+        smooth_weight = 0.15,
         sample_rate = sample_rate,
         ignore_index = ignore_index
     )
@@ -77,7 +78,7 @@ DATASET = dict(
 
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
-    learning_rate = 0.0005,
+    learning_rate = 0.0001,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,

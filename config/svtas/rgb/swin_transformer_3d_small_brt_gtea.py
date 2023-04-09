@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-15 15:18:00
+LastEditTime : 2023-03-16 12:26:26
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_gtea.py
 '''
@@ -41,8 +41,7 @@ MODEL = dict(
         drop_rate = 0.,
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
-        patch_norm = True,
-        # graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
+        patch_norm = True
     ),
     neck = dict(
         name = "TaskFusionPoolNeck",
@@ -101,7 +100,7 @@ OPTIMIZER = dict(
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
-    finetuning_scale_factor=0.2,
+    finetuning_scale_factor=0.02,
     no_decay_key = [],
     finetuning_key = ["backbone."],
     freeze_key = [],

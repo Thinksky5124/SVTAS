@@ -11,6 +11,8 @@ python tools/data_anlysis/statistic_labels_num.py data/gtea/splits/all_files.txt
 python tools/data_anlysis/statistic_labels_num.py data/50salads/splits/all_files.txt data/50salads/groundTruth data/50salads/mapping.txt output
 # for breakfast
 python tools/data_anlysis/statistic_labels_num.py data/breakfast/splits/all_files.txt data/breakfast/groundTruth data/breakfast/mapping.txt output
+# for egtea
+python tools/data_anlysis/statistic_labels_num.py data/egtea/splits/all_files.txt data/egtea/groundTruth data/egtea/mapping.txt output
 ```
 ### Example
 <center class="half">
@@ -34,6 +36,8 @@ This tools will visualize groundtruth and prediction labels help user to analysi
 python tools/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 128
 # 50salads
 python tools/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
+# breakfast
+python tools/convert_pred2img.py output/results/pred_gt_list data/breakfast/mapping.txt output/results/imgs --sliding_windows 600
 ```
 ### Example
 <div align="center">
@@ -74,4 +78,9 @@ Decord lib has issue that decode `.avi` video
 python tools/dataset_transform/video_coding_transform.py data/50salads/splits/all_files.txt data/50salads/Videos --data_type 50salads
 # breakfast
 python tools/dataset_transform/video_coding_transform.py data/breakfast/splits/all_files.txt data/breakfast/Videos --data_type breakfast
+```
+
+# Visulize Loss Landspace
+```bash
+python tools/visualize/visualize_loss.py -c config/svtas/feature/block_recurrent_transformer_rl_gtea.py -w output/Stream_BRT_64x2_gtea_split1/Stream_BRT_64x2_gtea_split1_best.pt -o ./output/visulize_loss
 ```

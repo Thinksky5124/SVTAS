@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:55:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-15 15:17:36
+LastEditTime : 2023-03-16 15:20:30
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_rl_gtea.py
 '''
@@ -45,6 +45,7 @@ MODEL = dict(
     loss = dict(
         name = "RLPGSegmentationLoss",
         num_classes = num_classes,
+        smooth_weight = 0.0,
         sample_rate = sample_rate,
         ignore_index = ignore_index
     )

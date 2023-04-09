@@ -2,50 +2,42 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-07 16:23:18
+LastEditTime : 2023-04-06 18:46:09
 Description  : file content
-FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_rl_50salads.py
+FilePath     : /SVTAS/config/svtas/feature/asformer_breakfast.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
+    '../../_base_/models/temporal_action_segmentation/asformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/50salads/50salads_stream_feature.py'
+    '../../_base_/dataset/breakfast/breakfast_stream_feature.py'
 ]
 
 split = 1
-num_classes = 19
-sample_rate = 8
+num_classes = 48
+sample_rate = 10
 ignore_index = -100
 epochs = 50
 clip_seg_num = 128
-dim = 2048
-batch_size = 1
 sliding_window = clip_seg_num * sample_rate
-model_name = "Stream_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+batch_size = 1
+log_interval = 100
+model_name = "Stream_Asformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
-    architecture = "FeatureSegmentation",
-    backbone = None,
-    neck = None,
     head = dict(
-        name = "BRTSegmentationHead",
-        num_head=1,
-        state_len=512,
-        causal=False,
-        num_decoders=3,
-        encoder_num_layers=8,
-        decoder_num_layers=8,
-        num_f_maps=128,
-        dropout=0.5,
-        input_dim=dim,
-        num_classes=num_classes,
-        channel_masking_rate=0.2,
-        sample_rate=sample_rate
+        num_decoders = 3,
+        num_layers = 10,
+        r1 = 2,
+        r2 = 2,
+        num_f_maps = 64,
+        input_dim = 2048,
+        channel_masking_rate = 0.5,
+        num_classes = num_classes,
+        sample_rate = sample_rate
     ),
     loss = dict(
-        name = "RLPGSegmentationLoss",
         num_classes = num_classes,
-        smooth_weight = 0.0,
         sample_rate = sample_rate,
         ignore_index = ignore_index
     )
@@ -59,32 +51,20 @@ POSTPRECESSING = dict(
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
-    video_batch_size = batch_size,
+    video_batch_size = 2,
     num_workers = 2,
     train = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        feature_path = './data/50salads/features',
-        sliding_window = sliding_window,
-        # flow_feature_path = "./data/50salads/flow_features"
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        feature_path = './data/breakfast/features',
+        sliding_window = sliding_window
+        # flow_feature_path = "./data/breakfast/flow_features"
     ),
     test = dict(
-        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        feature_path = './data/50salads/features',
-        sliding_window = sliding_window,
-        # flow_feature_path = "./data/50salads/flow_features"
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        feature_path = './data/breakfast/features',
+        sliding_window = sliding_window
+        # flow_feature_path = "./data/breakfast/flow_features"
     )
-)
-
-OPTIMIZER = dict(
-    name = "AdamWOptimizer",
-    learning_rate = 0.0005,
-    weight_decay = 1e-4,
-    betas = (0.9, 0.999),
-    need_grad_accumulate = False,
-    finetuning_scale_factor=0.1,
-    no_decay_key = [],
-    finetuning_key = [],
-    freeze_key = [],
 )
 
 LRSCHEDULER = dict(
@@ -92,6 +72,14 @@ LRSCHEDULER = dict(
     T_max = epochs,
     eta_min = 0.00001,
 )
+
+OPTIMIZER = dict(
+    name = "AdamWOptimizer",
+    learning_rate = 0.0001,
+    weight_decay = 0.01,
+    betas = (0.9, 0.999)
+)
+
 PIPELINE = dict(
     train = dict(
         name = "BasePipline",
@@ -111,7 +99,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":dim},
+            feature_dim_dict={"feature":2048},
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -139,7 +127,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":dim},
+            feature_dim_dict={"feature":2048},
             sample_mode = "uniform"
         ),
         transform = dict(

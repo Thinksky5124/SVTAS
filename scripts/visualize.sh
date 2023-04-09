@@ -2,7 +2,7 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-07-17 10:38:57
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2023-03-04 14:46:05
+ # @LastEditTime : 2023-04-08 13:00:26
  # @Description  : Visualization Script
  # @FilePath     : /SVTAS/scripts/visualize.sh
 ### 
@@ -19,3 +19,6 @@ python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/gtea
 # python tools/visualize/cam_visualization.py -c config/cam_visualize/mobinetv2tsm_3Dtcn_visualize.yaml -o output --method gradcam++
 # python tools/visualize/cam_visualization.py -c config/cam_visualize/asformer_visualize.py -o output --method gradcam
 # python tools/visualize/cam_visualization.py -c config/cam_visualize/segformer_visualize.py -o output --method gradcam
+
+# # visualize loss landspace
+python tools/visualize/visualize_loss.py -c config/svtas/feature/block_recurrent_transformer_rl_gtea.py -w output/Stream_BRT_64x2_gtea_split1 -o ./output/visulize_loss

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-25 15:16:47
+LastEditTime : 2023-04-01 10:40:35
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -30,9 +30,10 @@ class FrameIndexSample():
     def uniform_sample(self, start_idx, end_idx, sample_rate):
         return list(range(start_idx, end_idx, sample_rate))
     
-    def uniform_random_sample(self, start_idx, end_idx, sample_rate):
-        sample_index = np.arange(start_idx, end_idx, sample_rate)
-        return sample_rate + np.random.randint(0, high=sample_rate, size=sample_index.size())
+    def uniform_random_sample(self, start_idx, end_idx, sample_num, sample_rate):
+        sample_index = np.ceil(np.linspace(start_idx, end_idx, num=sample_num)).astype(np.int64) + np.random.randint(0, high=sample_rate, size=sample_num)
+        sample_index[sample_index >= end_idx] = end_idx - 1
+        return list(sample_index)
 
     def linspace_sample(self, start_idx, end_idx, sample_num):
         return list(np.ceil(np.linspace(start_idx, end_idx, num=sample_num)).astype(np.int64))
@@ -50,7 +51,7 @@ class FrameIndexSample():
         elif self.mode == 'random_choice':
             return self.random_choice_sample(start_idx, end_idx, sample_num)
         elif self.mode == 'uniform_random':
-            return self.uniform_random_sample(start_idx, end_idx, sample_num)
+            return self.uniform_random_sample(start_idx, end_idx, sample_num, sample_rate)
         else:
             raise NotImplementedError
 

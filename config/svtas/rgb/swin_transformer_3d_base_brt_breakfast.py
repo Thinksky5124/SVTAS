@@ -2,38 +2,39 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-16 11:11:07
+LastEditTime : 2023-04-07 16:23:50
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_fc_gtea.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_breakfast.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/gtea/gtea_stream_video.py'
+    '../../_base_/dataset/breakfast/breakfast_stream_video.py'
 ]
 
-num_classes = 11
-sample_rate = 2
-clip_seg_num = 64
+num_classes = 48
+sample_rate = 10
+clip_seg_num = 128
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
 epochs = 50
+log_interval = 100
 
-model_name = "SwinTransformer3D_Small_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
-    architecture = "Recognition3D",
+    architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
-        name = "SwinTransformer3D",
-        pretrained = "./data/checkpoint/swin_small_patch244_window877_kinetics400_1k.pth",
+        name = "SwinTransformer3DWithSBP",
+        pretrained = "./data/checkpoint/swin_base_patch244_window877_kinetics600_22k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
-        embed_dim = 96,
+        embed_dim = 128,
         depths = [2, 2, 18, 2],
-        num_heads = [3, 6, 12, 24],
+        num_heads = [4, 8, 16, 32],
         window_size = [8,7,7],
         mlp_ratio = 4.,
         qkv_bias = True,
@@ -42,32 +43,46 @@ MODEL = dict(
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
         patch_norm = True,
-        # sbp_build=True,
-        # keep_ratio_list=[0.125],
-        # sample_dims=[2],
-        # grad_mask_mode_lsit=['random'],
-        # register_sbp_module_dict={Mlp: Swin3DMLPMaskMappingFunctor(permute_dims=[0, 2, 3, 4, 1])}
+        graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
     ),
     neck = dict(
-        name = "PoolNeck",
-        in_channels = 768,
+        name = "TaskFusionPoolNeck",
+        num_classes=num_classes,
+        in_channels = 1024,
         clip_seg_num = clip_seg_num // 2,
         need_pool = True
     ),
     head = dict(
-        name = "FCHead",
-        num_classes = num_classes,
-        sample_rate = sample_rate * 2,
-        clip_seg_num = clip_seg_num // 2,
-        drop_ratio=0.5,
-        in_channels=768
+        name = "BRTSegmentationHead",
+        num_head=1,
+        state_len=512,
+        causal=False,
+        num_decoders=3,
+        encoder_num_layers=8,
+        decoder_num_layers=8,
+        num_f_maps=128,
+        dropout=0.5,
+        input_dim=1024,
+        num_classes=num_classes,
+        channel_masking_rate=0.2,
+        sample_rate=sample_rate * 2
     ),
     loss = dict(
-        name = "SegmentationLoss",
-        num_classes = num_classes,
-        sample_rate = sample_rate * 2,
-        smooth_weight = 0.0,
-        ignore_index = -100
+        name = "StreamSegmentationLoss",
+        backbone_loss_cfg = dict(
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate * 2,
+            smooth_weight = 0.0,
+            ignore_index = ignore_index
+        ),
+        head_loss_cfg = dict(
+            name = "RLPGSegmentationLoss",
+            num_classes = num_classes,
+            smooth_weight = 0.0,
+            sample_rate = sample_rate,
+            ignore_index = ignore_index
+        )
     ) 
 )
 
@@ -78,17 +93,19 @@ POSTPRECESSING = dict(
 )
 
 LRSCHEDULER = dict(
-    step_size = [epochs]
+    name = "CosineAnnealingLR",
+    T_max = epochs,
+    eta_min = 0.00001,
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00001,
+    learning_rate = 0.0001,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
-    finetuning_scale_factor=0.5,
+    finetuning_scale_factor = 0.1,
     no_decay_key = [],
-    finetuning_key = [],
+    finetuning_key = ["backbone."],
     freeze_key = [],
 )
 
@@ -97,11 +114,13 @@ DATASET = dict(
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        videos_path = "./data/breakfast/Videos_mp4",
         sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        videos_path = "./data/breakfast/Videos_mp4",
         sliding_window = sliding_window,
     )
 )
@@ -116,7 +135,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = False,
+            is_train = True,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
@@ -133,8 +152,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                    mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
+                    std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
                 ))]
             )
         )
@@ -164,8 +183,8 @@ PIPELINE = dict(
                     dict(PILToTensor = None),
                     dict(ToFloat = None),
                     dict(Normalize = dict(
-                        mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                        std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
+                        mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
+                        std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
                     ))]
             )
         )

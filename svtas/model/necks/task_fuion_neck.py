@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 21:24:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 09:56:04
+LastEditTime : 2023-04-01 09:56:58
 Description  : file content
 FilePath     : /SVTAS/svtas/model/necks/task_fuion_neck.py
 '''

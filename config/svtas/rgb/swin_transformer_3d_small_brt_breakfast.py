@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-15 15:18:20
+LastEditTime : 2023-03-29 09:33:10
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_breakfast.py
 '''
@@ -20,7 +20,7 @@ ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
-epochs = 50
+epochs = 100
 log_interval = 100
 
 model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
@@ -77,8 +77,14 @@ MODEL = dict(
             ignore_index = -100
         ),
         head_loss_cfg = dict(
+            # name = "SegmentationLoss",
+            # num_classes = num_classes,
+            # sample_rate = sample_rate,
+            # smooth_weight = 0.0,
+            # ignore_index = -100
             name = "RLPGSegmentationLoss",
             num_classes = num_classes,
+            smooth_weight = 0.0,
             sample_rate = sample_rate,
             ignore_index = ignore_index
         )
@@ -98,14 +104,14 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00005,
+    learning_rate = 0.0003,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = False,
-    finetuning_scale_factor=0.2,
+    need_grad_accumulate = True,
+    finetuning_scale_factor = 0.02,
     no_decay_key = [],
-    finetuning_key = ["backbone."],
-    freeze_key = [],
+    finetuning_key = [],
+    freeze_key = ["backbone."],
 )
 
 DATASET = dict(

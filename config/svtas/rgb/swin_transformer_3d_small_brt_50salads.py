@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-14 09:21:16
+LastEditTime : 2023-03-19 09:59:39
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_50salads.py
 '''
@@ -20,7 +20,7 @@ ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
-epochs = 30
+epochs = 50
 log_interval = 10
 
 model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
@@ -29,12 +29,12 @@ MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
         name = "SwinTransformer3DWithSBP",
-        pretrained = "./data/checkpoint/swin_small_patch244_window877_kinetics400_1k.pth",
+        pretrained = "./data/checkpoint/swin_base_patch244_window877_kinetics400_22k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
-        embed_dim = 96,
+        embed_dim = 128,
         depths = [2, 2, 18, 2],
-        num_heads = [3, 6, 12, 24],
+        num_heads = [4, 8, 16, 32],
         window_size = [8,7,7],
         mlp_ratio = 4.,
         qkv_bias = True,
@@ -48,7 +48,7 @@ MODEL = dict(
     neck = dict(
         name = "TaskFusionPoolNeck",
         num_classes=num_classes,
-        in_channels = 768,
+        in_channels = 1024,
         clip_seg_num = clip_seg_num // 2,
         need_pool = True
     ),
@@ -62,7 +62,7 @@ MODEL = dict(
         decoder_num_layers=10,
         num_f_maps=128,
         dropout=0.5,
-        input_dim=768,
+        input_dim=1024,
         num_classes=num_classes,
         channel_masking_rate=0.2,
         sample_rate=sample_rate * 2
@@ -98,10 +98,10 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.00005,
+    learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = False,
+    need_grad_accumulate = True,
     finetuning_scale_factor=0.2,
     no_decay_key = [],
     finetuning_key = ["backbone."],

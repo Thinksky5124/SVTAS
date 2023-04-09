@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-10 10:15:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-04 14:53:10
+LastEditTime : 2023-04-07 09:38:28
 Description  : statistic labels number for dataset
 FilePath     : /SVTAS/tools/data_anlysis/statistic_labels_num.py
 '''
@@ -72,6 +72,7 @@ def main() -> None:
     num_dict = {}
     total_frame_cnt = {}
     duration_list = []
+    video_duration_list = []
 
     nums = [0 for i in range(len(id2class_map))]
     boundary_nums = [0 for i in range(2)]
@@ -82,6 +83,7 @@ def main() -> None:
         file_ptr = open(label_path, 'r')
         content = file_ptr.read().split('\n')[:-1]
 
+        video_duration_list.append(len(content))
         gt_array = np.zeros(len(content))
         boundary_array = np.zeros(len(content), dtype=np.int64)
         last = content[0]
@@ -128,7 +130,7 @@ def main() -> None:
     
     num_duraction = np.array(duration_list)
     
-    plt.hist(num_duraction, bins=100, density = True, range=(0, max(num_duraction)))
+    plt.hist(num_duraction, bins=100, density = True, range=(0, 2000))
     plt.vlines(64, 0, 0.008, color="red")
     plt.title('hist for action duration')
     plt.xlabel("Frame duration")
@@ -148,6 +150,15 @@ def main() -> None:
     plt.ylabel('Number')
     plt.xticks(fontsize=5)
     plt.savefig(os.path.join(args.output_dir, "labels_count.png"), bbox_inches='tight', dpi=500)
+    plt.close()
+
+    num_duraction = np.array(video_duration_list)
+    plt.hist(num_duraction, bins=100, density = True, range=(0, max(num_duraction)))
+    plt.vlines(512, 0, 0.001, color="red")
+    plt.title('hist for video duration')
+    plt.xlabel("Frame duration")
+    plt.ylabel('Density')
+    plt.savefig(os.path.join(args.output_dir, "video_duration_count.png"), bbox_inches='tight', dpi=500)
     plt.close()
 
     weights_dict = {}

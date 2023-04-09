@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-28 19:31:50
+LastEditTime : 2023-04-09 20:22:18
 Description: feaeture segmentation model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature/feature_segmentation.py
 '''
@@ -83,7 +83,7 @@ class FeatureSegmentation(nn.Module):
                 feature, masks)
             
         else:
-            seg_feature = feature
+            seg_feature = feature[:, :1024]
 
         # step 5 segmentation
         # seg_feature [N, H_dim, T]
