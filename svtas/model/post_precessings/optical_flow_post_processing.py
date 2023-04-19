@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:28:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-03 21:31:52
+LastEditTime : 2023-04-16 12:53:34
 Description  : Optical Flow Post Processing
 FilePath     : /SVTAS/svtas/model/post_precessings/optical_flow_post_processing.py
 '''
@@ -82,7 +82,7 @@ class OpticalFlowPostProcessing():
                     flows_image[:, :, :, ch_idx] = np.floor(255 * col)                
                 if len(self.flow_visual_list) < (bs + 1):
                     self.flow_visual_list.append(VideoStreamWriter(self.fps))
-                self.flow_visual_list[bs].stream_write(flows)
+                self.flow_visual_list[bs].stream_write(flows_image)
 
 
     def output(self):

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-03-09 09:58:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-09 20:40:45
+LastEditTime : 2023-04-10 10:11:15
 Description  : file content
 FilePath     : /SVTAS/svtas/model/losses/rl_dpg_loss.py
 '''
@@ -108,7 +108,7 @@ class RLPGSegmentationLoss(SegmentationLoss):
                 seg_cls_loss += self.smooth_weight * self._compute_smooth_loss(p, labels, masks, b, precise_sliding_num)
             loss += seg_cls_loss
         with torch.no_grad():
-            reward = self.beta_1 ** (self._compute_dice_loss(head_score[-1], labels, masks, b, precise_sliding_num)) - self.beta_2
+            reward = self.beta_1 ** (self._compute_dice_loss(head_score[-1], labels, masks, b, precise_sliding_num)) + self.beta_2
         loss_dict={}
         loss_dict["loss"] = self.loss_weight * loss * reward
         return loss_dict

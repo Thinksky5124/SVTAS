@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 11:09:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 22:04:50
+LastEditTime : 2023-04-16 16:08:27
 Description  : RAFT extract flow Config
 FilePath     : /SVTAS/config/extract/extract_flow/raft_50salads.py
 '''
@@ -20,7 +20,7 @@ DATASET = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/50salads/splits/all_files.txt",
-        videos_path = "./data/50salads/Videos",
+        videos_path = "./data/50salads/Videos_mp4",
         gt_path = "./data/50salads/groundTruth",
         actions_map_file_path = "./data/50salads/mapping.txt",
         dataset_type = "50salads",
@@ -32,7 +32,7 @@ DATASET = dict(
 POSTPRECESSING = dict(
     name = "OpticalFlowPostProcessing",
     fps = 30,
-    need_visualize = False,
+    need_visualize = True,
     sliding_window = sliding_window
 )
 

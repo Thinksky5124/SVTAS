@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-09 20:21:58
+LastEditTime : 2023-04-14 09:05:10
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_rl_breakfast.py
 '''
@@ -12,7 +12,7 @@ _base_ = [
     '../../_base_/dataset/breakfast/breakfast_stream_feature.py'
 ]
 
-split = 3
+split = 4
 num_classes = 48
 sample_rate = 8
 ignore_index = -100

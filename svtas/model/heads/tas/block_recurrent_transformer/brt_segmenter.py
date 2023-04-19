@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-28 08:47:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-14 16:58:15
+LastEditTime : 2023-04-15 18:31:10
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/brt_segmenter.py
 '''
@@ -37,10 +37,12 @@ class RecurrentAttentionBlock(nn.Module):
         self.causal = causal
         self.state_len = state_len
         
-        self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': kernel_size, 'dilation': dilation})
+        self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
+        # self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': kernel_size, 'dilation': dilation})
         self.state_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
 
-        self.input_state_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': state_len, 'dilation': dilation})
+        self.input_state_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
+        # self.input_state_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': state_len, 'dilation': dilation})
         self.state_input_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
 
         self.proj_gate = RecurrentStateGate(dim)

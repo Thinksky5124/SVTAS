@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-04-07 15:09:04
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-08 14:05:05
+LastEditTime : 2023-04-12 15:38:25
 Description  : ref:https://github.com/tomgoldstein/loss-landscape
 FilePath     : /SVTAS/tools/visualize/visualize_loss.py
 '''
@@ -42,7 +42,10 @@ def visulizer(cfg, outpath, weight_path,
     model.cuda()
     criterion.cuda()
     # prepare trained model
-    checkpoint = torch.load(os.path.join(weight_path, cfg.model_name + "_best.pt"))
+    if weight_path.endswith(".pt"):
+        checkpoint = torch.load(weight_path)
+    else:
+        checkpoint = torch.load(os.path.join(weight_path, cfg.model_name + "_best.pt"))
     state_dicts = checkpoint["model_state_dict"]
     load_state_dict(model, state_dicts, logger=logger)
 
@@ -137,6 +140,6 @@ if __name__ == "__main__":
     setup_logger(args.out_path, name="SVTAS", level="INFO", tensorboard=False)
     cfg = Config.fromfile(args.config)
     visulizer(cfg, args.out_path, args.weight, 
-              xmin=-2, xmax=2, xnum=5, ymin=-2, ymax=2, ynum=5,
-              vmin = 0, vmax = 100, vlevel = 0.05,
+              xmin=-0.5, xmax=0.5, xnum=51, ymin=-0.5, ymax=0.5, ynum=51,
+              vmin = 0, vmax = 10, vlevel = 0.05,
               plot_1D=args.plot_1D, plot_optimization_path=args.plot_optimization_path)

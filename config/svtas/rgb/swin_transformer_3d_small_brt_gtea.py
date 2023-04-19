@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-09 20:40:15
+LastEditTime : 2023-04-12 13:56:59
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_small_brt_gtea.py
 '''
@@ -18,7 +18,7 @@ sample_rate = 2
 clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
-split = 1
+split = 4
 batch_size = 1
 epochs = 50
 
@@ -78,7 +78,7 @@ MODEL = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,
-            smooth_weight = 0.15,
+            smooth_weight = 0.0,
             ignore_index = -100
         )
     )  

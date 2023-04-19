@@ -2,18 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-13 23:24:19
+LastEditTime : 2023-04-18 09:19:19
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/asformer_gtea.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/temporal_action_segmentation/asformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
     '../../_base_/dataset/gtea/gtea_feature.py'
 ]
 
-split = 2
+split = 4
 num_classes = 11
 sample_rate = 1
 ignore_index = -100

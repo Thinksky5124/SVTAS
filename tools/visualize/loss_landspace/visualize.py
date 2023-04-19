@@ -44,6 +44,13 @@ def plot_landspace_2D_loss_err(outpath,
         plt.clabel(CS, inline=1, fontsize=8)
         fig.savefig(os.path.join(outpath, surf_name + '_2dcontour' + '.png'), dpi=300,
                     bbox_inches='tight')
+        
+        # Save 2D contours image
+        fig = plt.figure()
+        CS = plt.contour(X, Y, 100 - test_metric, cmap='summer', levels=np.arange(0, 100, 5))
+        plt.clabel(CS, inline=1, fontsize=8)
+        fig.savefig(os.path.join(outpath, 'test_metric_2dcontour' + '.png'), dpi=300,
+                    bbox_inches='tight')
 
         fig = plt.figure()
         CS = plt.contourf(X, Y, test_loss, cmap='summer', levels=np.arange(vmin, vmax, vlevel))
@@ -61,17 +68,19 @@ def plot_landspace_2D_loss_err(outpath,
 
         # Save 3D surface image
         # loss and accuracy map
-        fig_coom, ax1 = plt.subplots()
-        ax1 = Axes3D(fig_coom)
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
 
-        plt.xlim(vmin, vmax)
-        ax1.set_ylabel('Loss', color='b', fontsize='xx-large')
-        ax1.tick_params('y', colors='b', labelsize='x-large')
-        ax1.tick_params('x', labelsize='x-large')
-        ax1.set_ylim(0, vmax)
+        plt.xlim(-1, 1)
+        ax.set_zlabel('Loss', fontsize=1)
+        ax.set_xlabel('X', fontsize=1)
+        ax.set_ylabel('Y', fontsize=1)
+        ax.set_ylim(-1, 1)
+        plt.xticks([])
+        plt.yticks([])
 
-        ax1.plot_surface(X, Y, test_loss, label='Testing loss', linewidth=0, antialiased=True)
-        ax1.plot_surface(X, Y, 100 - test_metric, label='Testing metric', linewidth=0, antialiased=True)
+        ax.plot_surface(X, Y, test_loss, label='Testing loss', linewidth=0, antialiased=True, cmap='rainbow')
+        ax.view_init(elev=20, azim=-60)
         fig.savefig(os.path.join(outpath, surf_name + '_3dsurface' + '.png'), dpi=300,
                     bbox_inches='tight')
 

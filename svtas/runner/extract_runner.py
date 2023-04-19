@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-08 12:34:13
+LastEditTime : 2023-04-12 00:15:21
 Description  : Extract Runner Class
 FilePath     : /SVTAS/svtas/runner/extract_runner.py
 '''
@@ -153,8 +153,6 @@ class LossLandSpaceRunner(ExtractModelRunner):
         self.Metric = Metric
         self.need_grad_accumulate = need_grad_accumulate
         self.record_dict = {'loss': AverageMeter('loss'), 'loss_sample': AverageMeter('loss_sample')}
-        if not self.need_grad_accumulate:
-            setattr(self.record_dict['loss_sample'], "output_mean", True)
 
     def epoch_init(self):
         super().epoch_init()
@@ -190,7 +188,10 @@ class LossLandSpaceRunner(ExtractModelRunner):
         for k, v in self.Metric.items():
             acc = v.update(current_vid_list, ground_truth_list, outputs)
 
-        self.record_dict['loss'].update(self.record_dict['loss_sample'].get_mean)
+        if not self.need_grad_accumulate:
+            self.record_dict['loss'].update(self.record_dict['loss_sample'].get_mean)
+        else:
+            self.record_dict['loss'].update(self.record_dict['loss_sample'].get_sum)
         self.record_dict['loss_sample'].reset()
 
     @torch.no_grad()

@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-30 14:45:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:16:20
+LastEditTime : 2023-04-11 18:42:18
 Description: Action Recognition 3D framework
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition3d.py
 '''

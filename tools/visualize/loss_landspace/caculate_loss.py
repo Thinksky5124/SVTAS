@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-04-07 15:21:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-08 14:02:41
+LastEditTime : 2023-04-11 14:33:22
 Description  : file content
 FilePath     : /SVTAS/tools/visualize/loss_landspace/caculate_loss.py
 '''
@@ -50,7 +50,7 @@ def calulate_loss_landscape(model, directions, outpath, logger, runner, dataload
             overwrite_weights(model, init_weights, directions, coord)
 
             loss, acc = eval_loss(runner, dataloader, criterion_metric_name)
-            logger.info('Loss: %.2f, Acc: %.2f' % (loss, acc))
+            logger.info('Loss: %.2f, Metric: %.2f' % (loss, acc))
 
             losses.ravel()[ind] = loss
             accuracies.ravel()[ind] = acc

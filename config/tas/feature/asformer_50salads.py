@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-17 16:48:51
+LastEditTime : 2023-04-18 09:19:09
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/asformer_50salads.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adam.py', '../../_base_/schedules/lr/liner_step_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/temporal_action_segmentation/asformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/batch_compose.py',
     '../../_base_/dataset/50salads/50salads_feature.py'
@@ -28,7 +28,7 @@ MODEL = dict(
         r1 = 2,
         r2 = 2,
         num_f_maps = 64,
-        input_dim = 768,
+        input_dim = 2048,
         channel_masking_rate = 0.5,
         num_classes = num_classes,
         sample_rate = sample_rate
@@ -50,12 +50,12 @@ DATASET = dict(
     video_batch_size = batch_size,
     train = dict(
         file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/50salads/extract_features"
+        # feature_path = "./data/50salads/extract_features"
         # flow_feature_path = "./data/50salads/flow_features"
     ),
     test = dict(
         file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/50salads/extract_features"
+        # feature_path = "./data/50salads/extract_features"
         # flow_feature_path = "./data/50salads/flow_features"
     )
 )

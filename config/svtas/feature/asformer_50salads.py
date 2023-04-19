@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-08 21:38:42
+LastEditTime : 2023-04-18 09:21:21
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_50salads.py
 '''
@@ -13,12 +13,12 @@ _base_ = [
     '../../_base_/dataset/50salads/50salads_stream_feature.py'
 ]
 
-split = 1
+split = 5
 num_classes = 19
-sample_rate = 2
+sample_rate = 8
 ignore_index = -100
-epochs = 50
-clip_seg_num = 256
+epochs = 80
+clip_seg_num = 128
 sliding_window = clip_seg_num * sample_rate
 batch_size = 1
 model_name = "Stream_Asformer_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
@@ -73,7 +73,7 @@ LRSCHEDULER = dict(
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
     learning_rate = 0.0005,
-    weight_decay = 0.01,
+    need_grad_accumulate = False,
     betas = (0.9, 0.999)
 )
 

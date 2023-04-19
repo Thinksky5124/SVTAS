@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-24 15:28:23
+LastEditTime : 2023-04-13 14:16:58
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/heads/tas/asformer.py
 '''

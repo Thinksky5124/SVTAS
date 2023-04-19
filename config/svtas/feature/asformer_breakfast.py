@@ -2,20 +2,20 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-06 18:46:09
+LastEditTime : 2023-04-19 16:16:56
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_breakfast.py
 '''
 _base_ = [
-    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
+    '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/liner_step_50e.py',
     '../../_base_/models/temporal_action_segmentation/asformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
     '../../_base_/dataset/breakfast/breakfast_stream_feature.py'
 ]
 
-split = 1
+split = 4
 num_classes = 48
-sample_rate = 10
+sample_rate = 8
 ignore_index = -100
 epochs = 50
 clip_seg_num = 128
@@ -32,7 +32,7 @@ MODEL = dict(
         r2 = 2,
         num_f_maps = 64,
         input_dim = 2048,
-        channel_masking_rate = 0.5,
+        channel_masking_rate = 0.3,
         num_classes = num_classes,
         sample_rate = sample_rate
     ),
@@ -50,8 +50,8 @@ POSTPRECESSING = dict(
 )
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
-    video_batch_size = 2,
+    temporal_clip_batch_size = batch_size,
+    video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
         file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
@@ -67,17 +67,16 @@ DATASET = dict(
     )
 )
 
-LRSCHEDULER = dict(
-    name = "CosineAnnealingLR",
-    T_max = epochs,
-    eta_min = 0.00001,
-)
-
 OPTIMIZER = dict(
     name = "AdamWOptimizer",
     learning_rate = 0.0001,
+    need_grad_accumulate = False,
     weight_decay = 0.01,
     betas = (0.9, 0.999)
+)
+
+LRSCHEDULER = dict(
+    step_size = [epochs]
 )
 
 PIPELINE = dict(

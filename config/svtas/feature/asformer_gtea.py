@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-28 16:28:38
+LastEditTime : 2023-04-17 23:36:28
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_gtea.py
 '''
@@ -13,11 +13,11 @@ _base_ = [
     '../../_base_/dataset/gtea/gtea_stream_feature.py'
 ]
 
-split = 1
+split = 4
 num_classes = 11
 sample_rate = 2
 ignore_index = -100
-epochs = 50
+epochs = 80
 clip_seg_num = 64
 sliding_window = clip_seg_num * sample_rate
 batch_size = 1
@@ -69,6 +69,13 @@ DATASET = dict(
 
 LRSCHEDULER = dict(
     step_size = [epochs]
+)
+
+OPTIMIZER = dict(
+    name = "AdamWOptimizer",
+    learning_rate = 0.0005,
+    need_grad_accumulate = False,
+    betas = (0.9, 0.999)
 )
 
 PIPELINE = dict(

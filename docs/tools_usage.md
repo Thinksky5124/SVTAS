@@ -23,7 +23,8 @@ python tools/data_anlysis/statistic_labels_num.py data/egtea/splits/all_files.tx
 # Feature Manifold Analysis
 We use `t-sne` method visualize manifold to help user to analysis.
 ```bash
-python tools/visualize/t_sne_visualize.py -i data/gtea/features/S1_Cheese_C1.npy -l data/gtea/groundTruth/S1_Cheese_C1.txt -o output
+python tools/visualize/t_sne_visualize.py -i data/gtea/extract_features/S1_Cheese_C1.npy -l data/gtea/groundTruth/S1_Cheese_C1.txt -o output
+python tools/visualize/t_sne_visualize.py -i data/50salads/extract_features/rgb-04-2.npy -l data/50salads/groundTruth/rgb-04-2.txt -o output
 ```
 ### Example
 <div align="center">
@@ -33,11 +34,11 @@ python tools/visualize/t_sne_visualize.py -i data/gtea/features/S1_Cheese_C1.npy
 This tools will visualize groundtruth and prediction labels help user to analysis model prediction.
 ```bash
 # gtea
-python tools/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 128
+python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 128
 # 50salads
-python tools/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
+python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 600
 # breakfast
-python tools/convert_pred2img.py output/results/pred_gt_list data/breakfast/mapping.txt output/results/imgs --sliding_windows 600
+python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/breakfast/mapping.txt output/results/imgs --sliding_windows 600
 ```
 ### Example
 <div align="center">
@@ -82,5 +83,5 @@ python tools/dataset_transform/video_coding_transform.py data/breakfast/splits/a
 
 # Visulize Loss Landspace
 ```bash
-python tools/visualize/visualize_loss.py -c config/svtas/feature/block_recurrent_transformer_rl_gtea.py -w output/Stream_BRT_64x2_gtea_split1/Stream_BRT_64x2_gtea_split1_best.pt -o ./output/visulize_loss
+python tools/visualize/visualize_loss.py -c config/svtas/rgb/swin_transformer_3d_base_brt_gtea.py -w output/final_RGB_gtea_mcepoch80_SwinTransformer3D_BRT_64x2_gtea_split4_best.pt -o ./output/visulize_loss
 ```

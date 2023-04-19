@@ -3,7 +3,7 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-10-24 16:10:45
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2023-02-23 08:46:38
+ # @LastEditTime : 2023-04-15 21:16:50
  # @Description  : feature extract script
  # @FilePath     : /SVTAS/scripts/extract.sh
 ### 
@@ -20,6 +20,9 @@ export CUDA_VISIBLE_DEVICES=0
 # python tools/extract/extract_mvs_res.py -c config/extract/extract_mvs_res/mvs_res_gtea.py -o data/gtea
 
 ### 50salads rgb feature ###
-python tools/extract/extract_features.py -c config/extract/extract_feature/resnet_rgb_50salads.py -o data/50salads
+# python tools/extract/extract_features.py -c config/extract/extract_feature/resnet_rgb_50salads.py -o data/50salads
 ### 50salads flow ###
 # python tools/extract/extract_flow.py -c config/extract/extract_flow/raft_50salads.py -o data/50salads
+
+### breakfast flow ###
+python tools/extract/extract_flow.py -c config/extract/extract_flow/raft_breakfast.py -o data/breakfast

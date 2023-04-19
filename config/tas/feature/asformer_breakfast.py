@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 15:00:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-21 10:29:55
+LastEditTime : 2023-04-17 14:30:38
 Description  : file content
 FilePath     : /SVTAS/config/tas/feature/asformer_breakfast.py
 '''
@@ -70,7 +70,7 @@ OPTIMIZER = dict(
     learning_rate = 0.0001,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = True,
+    need_grad_accumulate = False,
     finetuning_scale_factor=0.1,
     no_decay_key = [],
     finetuning_key = [],
