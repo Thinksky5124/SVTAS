@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-28 08:47:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-15 18:31:10
+LastEditTime : 2023-04-25 11:00:41
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/brt_segmenter.py
 '''
@@ -37,12 +37,10 @@ class RecurrentAttentionBlock(nn.Module):
         self.causal = causal
         self.state_len = state_len
         
-        self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
-        # self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': kernel_size, 'dilation': dilation})
+        self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': kernel_size, 'dilation': dilation})
         self.state_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
 
-        self.input_state_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
-        # self.input_state_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': state_len, 'dilation': dilation})
+        self.input_state_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': state_len, 'dilation': dilation})
         self.state_input_cross_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads)
 
         self.proj_gate = RecurrentStateGate(dim)
@@ -89,6 +87,58 @@ class RecurrentAttentionBlock(nn.Module):
         next_state = self.ff_gate(self.state_ff(state_residual), state_residual)
 
         return output, next_state
+
+class AttentionBlock(nn.Module):
+    def __init__(
+        self,
+        dim: int,
+        dim_state: int,
+        kernel_size: int,
+        dilation: int =1,
+        heads: int = 8,
+        causal: bool = False,
+    ):
+        super().__init__()
+        self.scale = dim ** -0.5
+
+        self.dim = dim
+        self.dim_state = dim_state
+
+        self.heads = heads
+        self.causal = causal
+        
+        self.input_self_attn = MultiHeadAttention(embed_dim=dim, num_heads=heads, additional_mask_cfg={'type':'dilated_windows', 'window_size': kernel_size, 'dilation': dilation})
+
+        self.proj_gate = RecurrentStateGate(dim)
+        self.ff_gate = RecurrentStateGate(dim)
+
+        self.input_proj = nn.Linear(dim + dim_state, dim, bias = False)
+
+        self.input_ff = FeedForward(dim)
+
+    def gen_key_padding_mask(self, masks):
+        sum_masks = torch.sum(masks.squeeze(1), dim=-1) == 0.0
+        key_padding_mask = masks.detach().clone()
+        for bs in range(sum_masks.shape[0]):
+            if sum_masks[bs]:
+                key_padding_mask[bs] = 1.0
+        return (key_padding_mask == 0.0).squeeze(1)
+    
+    def forward(
+        self,
+        x,
+        masks,
+        state=None,
+    ):
+        key_padding_mask = self.gen_key_padding_mask(masks=masks)
+
+        input_attn, _ = self.input_self_attn(x, x, x, key_padding_mask)
+
+        input_residual = input_attn + x
+
+        output = self.input_ff(input_residual) + input_residual
+
+        return output, None
     
 class RecurrentHierarchicalAttentionLayer(nn.Module):
     def __init__(self,
@@ -98,9 +148,13 @@ class RecurrentHierarchicalAttentionLayer(nn.Module):
                  num_head: int = 8,
                  dilation: int = 8,
                  causal: bool = False,
-                 dropout=0.0):
+                 dropout=0.0,
+                 need_pass=True):
         super().__init__()
-        self.att = RecurrentAttentionBlock(dim, dim_state, kernel_size=dilation, dilation=1, state_len=state_len, heads=num_head, causal=causal)
+        if need_pass:
+            self.att = RecurrentAttentionBlock(dim, dim_state, kernel_size=dilation, dilation=1, state_len=state_len, heads=num_head, causal=causal)
+        else:
+            self.att = AttentionBlock(dim, dim_state, kernel_size=dilation, dilation=1, heads=num_head, causal=causal)
         if dropout > 0.0:
             self.dropout = nn.Dropout(dropout)
         else:
@@ -119,7 +173,8 @@ class RecurrentHierarchicalAttentionLayer(nn.Module):
     def forward(self, x, masks):
         x = torch.transpose(x, 1, 2)
         x, state = self.att(x, masks=masks, state=self.state)
-        self.state = state.detach()
+        if state is not None:
+            self.state = state.detach()
 
         # segmenter transformer
         x = self.fc1(x)
@@ -131,7 +186,7 @@ class RecurrentHierarchicalAttentionLayer(nn.Module):
         return x.transpose(1, 2) * masks[:, 0:1, :]
 
 class AttModule(nn.Module):
-    def __init__(self, dilation, in_channels, out_channels, state_len=512, num_head=1, stage='encoder', causal=False, dropout=0.0):
+    def __init__(self, dilation, in_channels, out_channels, state_len=512, num_head=1, stage='encoder', causal=False, dropout=0.0, need_pass=True):
         super(AttModule, self).__init__()
         self.stage = stage
         self.feed_forward = ConvFeedForward(dilation, in_channels, out_channels)
@@ -143,7 +198,8 @@ class AttModule(nn.Module):
                                                                 num_head = num_head,
                                                                 dilation= dilation,
                                                                 causal = causal,
-                                                                dropout=dropout)
+                                                                dropout=dropout,
+                                                                need_pass=need_pass)
         self.conv_1x1 = nn.Conv1d(out_channels, in_channels, 1)
         self.dropout = nn.Dropout()
     
@@ -166,7 +222,7 @@ class Encoder(nn.Module):
         self.conv_1x1 = nn.Conv1d(input_dim, num_f_maps, 1) # fc layer
         self.layers = nn.ModuleList(
             [AttModule(2 ** i, num_f_maps, num_f_maps, state_len=state_len,
-                       num_head=num_head, stage='encoder', causal=causal, dropout=dropout)
+                       num_head=num_head, stage='encoder', causal=causal, dropout=dropout, need_pass=True)
                        for i in range(num_layers)])
         self.conv_out = nn.Conv1d(num_f_maps, num_classes, 1)
         self.dropout = nn.Dropout2d(p=channel_masking_rate)

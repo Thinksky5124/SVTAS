@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 20:48:47
+LastEditTime : 2023-04-20 11:58:40
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_precessings/cam_post_processing.py
 '''
@@ -70,13 +70,15 @@ class CAMImagePostProcessing():
                  sample_rate,
                  output_frame_size,
                  ignore_index=-100,
-                 need_label=True):
+                 need_label=True,
+                 need_split=False):
         self.init_flag = False
         self.ignore_index = ignore_index
         self.sample_rate = sample_rate
         self.frame_height = output_frame_size[1]
         self.frame_width = output_frame_size[0]
         self.need_label = need_label
+        self.need_split = need_split
     
     def init_scores(self):
         self.imgs_list = []
@@ -94,7 +96,7 @@ class CAMImagePostProcessing():
             self.score_lsit.append(pred)
         for bs in range(cam_images.shape[0]):
             if len(self.imgs_list) < (bs + 1):
-                self.imgs_list.append(CAMImageStreamWriter(self.frame_height, self.frame_width, need_label=self.need_label))
+                self.imgs_list.append(CAMImageStreamWriter(self.frame_height, self.frame_width, need_label=self.need_label, need_split=self.need_split))
             self.imgs_list[bs].stream_write(cam_images[bs])
 
     def output(self):

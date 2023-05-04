@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 19:55:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-09 20:39:36
+LastEditTime : 2023-04-26 10:48:28
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/block_recurrent_transformer_rl_gtea.py
 '''
@@ -12,11 +12,11 @@ _base_ = [
     '../../_base_/dataset/gtea/gtea_stream_feature.py'
 ]
 
-split = 1
+split = 4
 num_classes = 11
 sample_rate = 2
 ignore_index = -100
-epochs = 50
+epochs = 80
 clip_seg_num = 64
 dim = 2048
 batch_size = 1
@@ -43,7 +43,7 @@ MODEL = dict(
         sample_rate=sample_rate
     ),
     loss = dict(
-        name = "RLPGSegmentationLoss",
+        name = "SegmentationLoss",
         num_classes = num_classes,
         smooth_weight = 0.0,
         sample_rate = sample_rate,

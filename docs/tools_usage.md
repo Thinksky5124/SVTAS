@@ -24,7 +24,7 @@ python tools/data_anlysis/statistic_labels_num.py data/egtea/splits/all_files.tx
 We use `t-sne` method visualize manifold to help user to analysis.
 ```bash
 python tools/visualize/t_sne_visualize.py -i data/gtea/extract_features/S1_Cheese_C1.npy -l data/gtea/groundTruth/S1_Cheese_C1.txt -o output
-python tools/visualize/t_sne_visualize.py -i data/50salads/extract_features/rgb-04-2.npy -l data/50salads/groundTruth/rgb-04-2.txt -o output
+python tools/visualize/t_sne_visualize.py -i data/50salads/extract_features/rgb-24-2.npy -l data/50salads/groundTruth/rgb-24-2.txt -o output
 ```
 ### Example
 <div align="center">

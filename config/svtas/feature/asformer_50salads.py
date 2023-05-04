@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-04 19:50:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-18 09:21:21
+LastEditTime : 2023-04-29 11:43:20
 Description  : file content
 FilePath     : /SVTAS/config/svtas/feature/asformer_50salads.py
 '''
@@ -13,7 +13,7 @@ _base_ = [
     '../../_base_/dataset/50salads/50salads_stream_feature.py'
 ]
 
-split = 5
+split = 1
 num_classes = 19
 sample_rate = 8
 ignore_index = -100
@@ -30,7 +30,7 @@ MODEL = dict(
         r1 = 2,
         r2 = 2,
         num_f_maps = 64,
-        input_dim = 2048,
+        input_dim = 1024,
         channel_masking_rate = 0.5,
         num_classes = num_classes,
         sample_rate = sample_rate
@@ -54,13 +54,13 @@ DATASET = dict(
     num_workers = 2,
     train = dict(
         file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        # feature_path = './data/50salads/features',
+        feature_path = './data/50salads/extract_features',
         sliding_window = sliding_window
         # flow_feature_path = "./data/50salads/flow_features"
     ),
     test = dict(
         file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        # feature_path = './data/50salads/features',
+        feature_path = './data/50salads/extract_features',
         sliding_window = sliding_window
         # flow_feature_path = "./data/50salads/flow_features"
     )
@@ -96,7 +96,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":2048},
+            feature_dim_dict={"feature":1024},
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -124,7 +124,7 @@ PIPELINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num, "labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window, "labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":2048},
+            feature_dim_dict={"feature":1024},
             sample_mode = "uniform"
         ),
         transform = dict(

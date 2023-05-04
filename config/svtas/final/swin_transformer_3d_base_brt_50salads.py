@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-26 18:23:03
+LastEditTime : 2023-04-07 16:18:33
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_50salads.py
 '''
@@ -20,10 +20,10 @@ ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
-epochs = 80
+epochs = 50
 log_interval = 10
 
-model_name = "SwinTransformer3D_BRT_freeze_backbone_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
@@ -102,11 +102,11 @@ OPTIMIZER = dict(
     learning_rate = 0.0005,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
-    need_grad_accumulate = False,
+    need_grad_accumulate = True,
     finetuning_scale_factor=0.02,
     no_decay_key = [],
-    finetuning_key = [],
-    freeze_key = ["backbone."],
+    finetuning_key = ["backbone."],
+    freeze_key = [],
 )
 
 
@@ -116,14 +116,12 @@ DATASET = dict(
     num_workers = 2,
     train = dict(
         file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        videos_path = "./data/50salads/Videos_mp4",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        videos_path = "./data/50salads/Videos_mp4",
         sliding_window = sliding_window,
     )
 )
@@ -138,7 +136,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = True,
+            is_train = False,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},

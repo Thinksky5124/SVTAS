@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-13 15:43:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 11:01:02
+LastEditTime : 2023-04-25 18:36:24
 Description  : Swin Transformer With Stochastic Backpropagation ref:https://github.com/amazon-science/stochastic-backpropagation.git
 FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer_3d_sbp.py
 '''

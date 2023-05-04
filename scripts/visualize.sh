@@ -2,14 +2,14 @@
  # @Author       : Thyssen Wen
  # @Date         : 2022-07-17 10:38:57
  # @LastEditors  : Thyssen Wen
- # @LastEditTime : 2023-04-08 13:00:26
+ # @LastEditTime : 2023-04-26 10:49:38
  # @Description  : Visualization Script
  # @FilePath     : /SVTAS/scripts/visualize.sh
 ### 
 
 # visualize label
 # gtea
-python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 64
+# python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/gtea/mapping.txt output/results/imgs --sliding_windows 64
 # 50salads
 # python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/50salads/mapping.txt output/results/imgs --sliding_windows 256
 # # breakfast
@@ -21,4 +21,4 @@ python tools/visualize/convert_pred2img.py output/results/pred_gt_list data/gtea
 # python tools/visualize/cam_visualization.py -c config/cam_visualize/segformer_visualize.py -o output --method gradcam
 
 # # visualize loss landspace
-python tools/visualize/visualize_loss.py -c config/svtas/feature/block_recurrent_transformer_rl_gtea.py -w output/Stream_BRT_64x2_gtea_split1 -o ./output/visulize_loss
+python tools/visualize/visualize_loss.py -c config/svtas/feature/asformer_gtea.py -w output/Stream_ASFormer_64x2_gtea_split4/Stream_ASFormer_64x2_gtea_split4_best.pt -o ./output/visulize_loss

@@ -2,33 +2,32 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-26 18:23:03
+LastEditTime : 2023-04-07 16:16:17
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_50salads.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_gtea.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/50salads/50salads_stream_video.py'
+    '../../_base_/dataset/gtea/gtea_stream_video.py'
 ]
 
-num_classes = 19
-sample_rate = 8
-clip_seg_num = 128
+num_classes = 11
+sample_rate = 2
+clip_seg_num = 64
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 1
 epochs = 80
-log_interval = 10
 
-model_name = "SwinTransformer3D_BRT_freeze_backbone_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "final_"+"RGB_"+"gtea_"+"td"+"epoch"+str(epochs)+"_SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
-        name = "SwinTransformer3DWithSBP",
+        name = "SwinTransformer3D",
         pretrained = "./data/checkpoint/swin_base_patch244_window877_kinetics600_22k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
@@ -43,7 +42,7 @@ MODEL = dict(
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
         patch_norm = True,
-        graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
+        # graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
     ),
     neck = dict(
         name = "TaskFusionPoolNeck",
@@ -79,11 +78,11 @@ MODEL = dict(
         head_loss_cfg = dict(
             name = "RLPGSegmentationLoss",
             num_classes = num_classes,
-            smooth_weight = 0.0,
+            smooth_weight = 0.15,
             sample_rate = sample_rate,
             ignore_index = ignore_index
         )
-    ) 
+    )  
 )
 
 POSTPRECESSING = dict(
@@ -105,25 +104,20 @@ OPTIMIZER = dict(
     need_grad_accumulate = False,
     finetuning_scale_factor=0.02,
     no_decay_key = [],
-    finetuning_key = [],
-    freeze_key = ["backbone."],
+    finetuning_key = ["backbone."],
+    freeze_key = [],
 )
-
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         sliding_window = sliding_window,
     )
 )
@@ -138,7 +132,7 @@ PIPELINE = dict(
         ),
         sample = dict(
             name = "VideoStreamSampler",
-            is_train = True,
+            is_train = False,
             sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
             clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
@@ -155,8 +149,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                    std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                 ))]
             )
         )
@@ -186,8 +180,8 @@ PIPELINE = dict(
                     dict(PILToTensor = None),
                     dict(ToFloat = None),
                     dict(Normalize = dict(
-                        mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                        std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                        mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
+                        std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
                     ))]
             )
         )

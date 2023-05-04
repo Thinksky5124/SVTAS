@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-15 18:30:46
+LastEditTime : 2023-04-22 22:47:20
 Description  : file content
 FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_gtea.py
 '''
@@ -15,7 +15,7 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 64
+clip_seg_num = 16
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
@@ -28,6 +28,7 @@ MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
     backbone = dict(
         name = "SwinTransformer3D",
+        # name = "SwinTransformer3DWithSBP",
         pretrained = "./data/checkpoint/swin_base_patch244_window877_kinetics600_22k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
@@ -41,7 +42,8 @@ MODEL = dict(
         drop_rate = 0.,
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
-        patch_norm = True
+        patch_norm = True,
+        # graddrop_config={"gd_downsample": 2, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
     ),
     neck = dict(
         name = "TaskFusionPoolNeck",

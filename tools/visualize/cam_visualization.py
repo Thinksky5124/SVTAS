@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-23 10:27:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 14:03:38
+LastEditTime : 2023-04-20 10:56:46
 Description  : Use Grad-CAM to visualization Video Infer Process ref:https://github.com/jacobgil/pytorch-grad-cam
 FilePath     : /SVTAS/tools/visualize/cam_visualization.py
 '''
@@ -148,6 +148,7 @@ if __name__ == '__main__':
                  match_fn=match_fn)
 
     runner.epoch_init()
+    dataloader.dataset._viodeo_sample_shuffle()
     for i, data in enumerate(dataloader):
         if batch_infer is True:
             runner.run_one_batch(data=data)

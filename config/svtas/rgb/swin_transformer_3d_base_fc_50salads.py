@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-26 18:23:03
+LastEditTime : 2023-04-25 18:33:09
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_50salads.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_fc_50salads.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
@@ -23,10 +23,10 @@ batch_size = 1
 epochs = 80
 log_interval = 10
 
-model_name = "SwinTransformer3D_BRT_freeze_backbone_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "SwinTransformer3D_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
 
 MODEL = dict(
-    architecture = "StreamSegmentation3DWithBackbone",
+    architecture = "Recognition3D",
     backbone = dict(
         name = "SwinTransformer3DWithSBP",
         pretrained = "./data/checkpoint/swin_base_patch244_window877_kinetics600_22k.pth",
@@ -46,43 +46,25 @@ MODEL = dict(
         graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
     ),
     neck = dict(
-        name = "TaskFusionPoolNeck",
-        num_classes=num_classes,
+        name = "PoolNeck",
         in_channels = 1024,
         clip_seg_num = clip_seg_num // 2,
         need_pool = True
     ),
     head = dict(
-        name = "BRTSegmentationHead",
-        num_head=1,
-        state_len=512,
-        causal=False,
-        num_decoders=3,
-        encoder_num_layers=8,
-        decoder_num_layers=8,
-        num_f_maps=128,
-        dropout=0.5,
-        input_dim=1024,
-        num_classes=num_classes,
-        channel_masking_rate=0.2,
-        sample_rate=sample_rate * 2
+        name = "FCHead",
+        num_classes = num_classes,
+        sample_rate = sample_rate * 2,
+        clip_seg_num = clip_seg_num // 2,
+        drop_ratio=0.5,
+        in_channels=1024
     ),
     loss = dict(
-        name = "StreamSegmentationLoss",
-        backbone_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate * 2,
-            smooth_weight = 0.0,
-            ignore_index = -100
-        ),
-        head_loss_cfg = dict(
-            name = "RLPGSegmentationLoss",
-            num_classes = num_classes,
-            smooth_weight = 0.0,
-            sample_rate = sample_rate,
-            ignore_index = ignore_index
-        )
+        name = "SegmentationLoss",
+        num_classes = num_classes,
+        sample_rate = sample_rate,
+        smooth_weight = 0.0,
+        ignore_index = ignore_index
     ) 
 )
 
@@ -105,10 +87,18 @@ OPTIMIZER = dict(
     need_grad_accumulate = False,
     finetuning_scale_factor=0.02,
     no_decay_key = [],
-    finetuning_key = [],
-    freeze_key = ["backbone."],
+    finetuning_key = ["backbone."],
+    freeze_key = [],
 )
 
+METRIC = dict(
+    TAS = dict(
+        name = "TASegmentationMetric",
+        overlap = [.1, .25, .5],
+        actions_map_file_path = "./data/50salads/mapping.txt",
+        file_output = True,
+        score_output = False)
+)
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
@@ -116,14 +106,12 @@ DATASET = dict(
     num_workers = 2,
     train = dict(
         file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        videos_path = "./data/50salads/Videos_mp4",
         sliding_window = sliding_window
     ),
     test = dict(
         file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        videos_path = "./data/50salads/Videos_mp4",
         sliding_window = sliding_window,
     )
 )

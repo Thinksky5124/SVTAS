@@ -1,29 +1,29 @@
 '''
 Author       : Thyssen Wen
 Date         : 2022-12-18 19:04:09
-LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-26 18:23:03
+LastEditors: Thinksky5124 Thinksky5124@outlook.com
+LastEditTime: 2023-05-04 10:46:40
 Description  : file content
-FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_50salads.py
+FilePath     : /SVTAS/config/svtas/rgb/swin_transformer_3d_base_brt_breakfast.py
 '''
 _base_ = [
     '../../_base_/schedules/optimizer/adamw.py', '../../_base_/schedules/lr/cosine_50e.py',
     '../../_base_/models/action_recognition/swin_transformer.py',
     '../../_base_/default_runtime.py', '../../_base_/collater/stream_compose.py',
-    '../../_base_/dataset/50salads/50salads_stream_video.py'
+    '../../_base_/dataset/breakfast/breakfast_stream_video.py'
 ]
 
-num_classes = 19
+num_classes = 48
 sample_rate = 8
 clip_seg_num = 128
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
-split = 1
+split = 2
 batch_size = 1
-epochs = 80
-log_interval = 10
+epochs = 50
+log_interval = 100
 
-model_name = "SwinTransformer3D_BRT_freeze_backbone_"+str(clip_seg_num)+"x"+str(sample_rate)+"_50salads_split" + str(split)
+model_name = "r2l05_td_"+"SwinTransformer3D_BRT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_breakfast_split" + str(split)
 
 MODEL = dict(
     architecture = "StreamSegmentation3DWithBackbone",
@@ -74,12 +74,14 @@ MODEL = dict(
             num_classes = num_classes,
             sample_rate = sample_rate * 2,
             smooth_weight = 0.0,
-            ignore_index = -100
+            ignore_index = ignore_index
         ),
         head_loss_cfg = dict(
             name = "RLPGSegmentationLoss",
             num_classes = num_classes,
             smooth_weight = 0.0,
+            beta_1=2,
+            beta_2=-0.5,
             sample_rate = sample_rate,
             ignore_index = ignore_index
         )
@@ -99,31 +101,28 @@ LRSCHEDULER = dict(
 )
 
 OPTIMIZER = dict(
-    learning_rate = 0.0005,
+    learning_rate = 0.0001,
     weight_decay = 1e-4,
     betas = (0.9, 0.999),
     need_grad_accumulate = False,
-    finetuning_scale_factor=0.02,
+    finetuning_scale_factor = 0.1,
     no_decay_key = [],
-    finetuning_key = [],
-    freeze_key = ["backbone."],
+    finetuning_key = ["backbone."],
+    freeze_key = [],
 )
-
 
 DATASET = dict(
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
     num_workers = 2,
     train = dict(
-        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        videos_path = "./data/breakfast_2/Videos_mp4",
         sliding_window = sliding_window
     ),
     test = dict(
-        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
-        # videos_path = "./data/50salads/Videos_mp4",
-        videos_path = "./data/50salads/Videos_mp4_1",
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        videos_path = "./data/breakfast_2/Videos_mp4",
         sliding_window = sliding_window,
     )
 )
@@ -155,8 +154,8 @@ PIPELINE = dict(
                 dict(PILToTensor = None),
                 dict(ToFloat = None),
                 dict(Normalize = dict(
-                    mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                    std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                    mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
+                    std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
                 ))]
             )
         )
@@ -186,8 +185,8 @@ PIPELINE = dict(
                     dict(PILToTensor = None),
                     dict(ToFloat = None),
                     dict(Normalize = dict(
-                        mean = [0.5139909998345553 * 255, 0.5117725498677757 * 255, 0.4798814301515671 * 255],
-                        std = [0.23608918491478523 * 255, 0.23385714300069754 * 255, 0.23755006337414028* 255]
+                        mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
+                        std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
                     ))]
             )
         )

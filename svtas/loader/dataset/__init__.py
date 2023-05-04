@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 14:55:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 16:05:49
+LastEditTime : 2023-04-20 10:49:25
 Description  : datatset class
 FilePath     : /SVTAS/svtas/loader/dataset/__init__.py
 '''
@@ -16,7 +16,8 @@ from .stream_base_dataset import (FeatureStreamSegmentationDataset,
                                   RawFrameStreamSegmentationDataset,
                                   RGBFlowFrameStreamSegmentationDataset,
                                   CompressedVideoStreamSegmentationDataset,
-                                  RGBMVsResFrameStreamSegmentationDataset)
+                                  RGBMVsResFrameStreamSegmentationDataset,
+                                  CAMFeatureStreamSegmentationDataset)
 
 __all__ = [
     'RawFrameStreamSegmentationDataset', 'FeatureStreamSegmentationDataset',
@@ -26,5 +27,6 @@ __all__ = [
     'CompressedVideoStreamSegmentationDataset',
     'RGBMVsResFrameStreamSegmentationDataset',
     'RawFrameClipSegmentationDataset',
-    'CAMFeatureSegmentationDataset'
+    'CAMFeatureSegmentationDataset',
+    'CAMFeatureStreamSegmentationDataset'
 ]

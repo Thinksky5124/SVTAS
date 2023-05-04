@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 16:37:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-17 15:11:08
+LastEditTime : 2023-04-25 20:53:56
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_50salads.py
 '''
@@ -19,13 +19,13 @@ output_dir_name = 'extract_features'
 MODEL = dict(
     architecture = "Recognition3D",
     backbone = dict(
-        name = "SwinTransformer3D",
-        pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+        name = "SwinTransformer3DWithSBP",
+        # pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
         pretrained2d = False,
         patch_size = [2, 4, 4],
-        embed_dim = 96,
-        depths = [2, 2, 6, 2],
-        num_heads = [3, 6, 12, 24],
+        embed_dim = 128,
+        depths = [2, 2, 18, 2],
+        num_heads = [4, 8, 16, 32],
         window_size = [8,7,7],
         mlp_ratio = 4.,
         qkv_bias = True,
@@ -33,12 +33,13 @@ MODEL = dict(
         drop_rate = 0.,
         attn_drop_rate = 0.,
         drop_path_rate = 0.2,
-        patch_norm = True
+        patch_norm = True,
+        graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
     ),
     neck = None,
     head = dict(
         name = "FeatureExtractHead",
-        in_channels = 768,
+        in_channels = 1024,
         input_seg_num = clip_seg_num // 2,
         output_seg_num = clip_seg_num,
         sample_rate = sample_rate * 2,
@@ -49,7 +50,7 @@ MODEL = dict(
     loss = None
 )
 
-PRETRAINED = None
+PRETRAINED = "output/SwinTransformer3D_FC_128x8_50salads_split1_best.pt"
 
 POSTPRECESSING = dict(
     name = "StreamFeaturePostProcessing",
@@ -65,7 +66,7 @@ DATASET = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/50salads/splits/all_files.txt",
-        videos_path = "./data/50salads/Videos",
+        videos_path = "./data/50salads/Videos_mp4",
         gt_path = "./data/50salads/groundTruth",
         actions_map_file_path = "./data/50salads/mapping.txt",
         dataset_type = "50salads",

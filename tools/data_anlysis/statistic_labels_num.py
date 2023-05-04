@@ -161,6 +161,8 @@ def main() -> None:
     plt.savefig(os.path.join(args.output_dir, "video_duration_count.png"), bbox_inches='tight', dpi=500)
     plt.close()
 
+    print(f"Avg. frames length is: {np.mean(num_duraction)}")
+
     weights_dict = {}
     # crossentropy weight compute by median frequency balancing
     """

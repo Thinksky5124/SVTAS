@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 17:52:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 20:39:05
+LastEditTime : 2023-04-20 11:59:36
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/stream_writer.py
 '''
@@ -180,9 +180,10 @@ class CAMVideoStreamWriter(VideoStreamWriter):
         self.tempdir.cleanup()
 
 class ImageStreamWriter(StreamWriter):
-    def __init__(self):
+    def __init__(self, need_split=False):
         super().__init__()
         self.cnt = 0
+        self.need_split = need_split
     
     def stream_write(self, imgs):
         for img in imgs:
@@ -212,8 +213,8 @@ class ImageStreamWriter(StreamWriter):
         cv2.imwrite(self.dump_tem_file, concat_img)
 
 class CAMImageStreamWriter(ImageStreamWriter):
-    def __init__(self, frame_height, frame_width, need_label=True):
-        super().__init__()
+    def __init__(self, frame_height, frame_width, need_label=True, need_split=False):
+        super().__init__(need_split)
         self.frame_height = frame_height
         self.frame_width = frame_width
         self.need_label = need_label
@@ -223,6 +224,14 @@ class CAMImageStreamWriter(ImageStreamWriter):
         raw_images = raw_images[:, :len]
         path = path.replace("mp4", "png")
         img = cv2.resize(raw_images, (self.frame_width, self.frame_height))
+
+        if self.need_split:
+            cnt = 0
+            for segment_image_file in self.concat_file_list:
+                split_file_path = path.split('.')[0] + f'_{cnt}.png'
+                seg_img = cv2.imread(segment_image_file)
+                cv2.imwrite(split_file_path, seg_img)
+                cnt = cnt + 1
 
         if self.need_label:
             pred_img = label_arr2img(list(preds[:len]), palette).convert('RGB')
