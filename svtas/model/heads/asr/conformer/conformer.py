@@ -14,7 +14,7 @@ from .modules import ConFormerLinear
 
 from ....builder import HEADS
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class Conformer(nn.Module):
     """
     Conformer: Convolution-augmented Transformer for Speech Recognition

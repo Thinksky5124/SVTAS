@@ -14,10 +14,10 @@ from mmcv.runner import load_checkpoint
 from ..utils.liteflownet_v3 import Features, Matching, Regularization, Subpixel, BackWarp
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class LiteFlowNetV3(nn.Module):
     def __init__(self,
                  pretrained=None,

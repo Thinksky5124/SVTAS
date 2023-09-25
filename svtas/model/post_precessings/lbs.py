@@ -8,9 +8,9 @@ FilePath     : /SVTAS/svtas/model/post_precessings/lbs.py
 '''
 import torch
 import numpy as np
-from ..builder import POSTPRECESSING
+from svtas.utils import AbstractBuildFactory
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class StreamScorePostProcessingWithLBS():
     def __init__(self,
                  num_classes,

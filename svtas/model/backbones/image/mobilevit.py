@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange
 from einops.layers.torch import Reduce
@@ -193,7 +193,7 @@ class MobileViTBlock(nn.Module):
         x = self.conv4(x)
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileViT(nn.Module):
     """MobileViT.
     Paper: https://arxiv.org/abs/2110.02178

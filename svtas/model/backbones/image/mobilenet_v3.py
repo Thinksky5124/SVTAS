@@ -10,11 +10,11 @@ from mmcv.cnn import ConvModule
 from torch.nn.modules.batchnorm import _BatchNorm
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from .efficientnet import BaseBackbone, InvertedResidual
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileNetV3(BaseBackbone):
     """MobileNetV3 backbone.
     Args:

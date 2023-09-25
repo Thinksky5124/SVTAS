@@ -67,7 +67,7 @@ class Decoder(nn.Module):
 
         return out, feature
         
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class TASegFormer(nn.Module):
     def __init__(self,
                  in_channels,

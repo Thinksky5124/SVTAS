@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-13 11:11:55
+LastEditTime : 2023-09-22 16:50:15
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -23,14 +23,7 @@ from ..model.builder import build_post_precessing
 from ..optimizer.builder import build_optimizer
 from ..optimizer.builder import build_lr_scheduler
 
-from ..runner.runner import Runner
-import warnings
-try:
-    from apex import amp
-    from apex.parallel import convert_syncbn_model
-    from apex.parallel import DistributedDataParallel as DDP
-except:
-    warnings.warn("Can't use apex to accelerate")
+from ..engine.builder import build_engine
 
 def train(cfg,
           args,
@@ -42,109 +35,29 @@ def train(cfg,
     """Train model entry
     """
     
+    # 1. init logger and output folder
     logger = get_logger("SVTAS")
     if args.use_tensorboard and local_rank <= 0:
         tensorboard_writer = get_logger("SVTAS", tensorboard=args.use_tensorboard)
-    temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    need_grad_accumulate = cfg.OPTIMIZER.get('need_grad_accumulate', True)
-
-    # default num worker: 0, which means no subprocess will be created
-    num_workers = cfg.DATASET.get('num_workers', 0)
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output/{model_name}")
     criterion_metric_name = cfg.get("criterion_metric_name", "F1@0.50")
     best_epoch = 0
     mkdir(output_dir)
-
-    # wheather use amp
-    if use_amp is True:
-        logger.info("use amp")
-        amp.register_float_function(torch.nn, 'ReLU6')
-        
-    if local_rank < 0:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # 1.construct model
-        model = build_model(cfg.MODEL).to(device)
-        criterion = build_loss(cfg.MODEL.loss).to(device)
-
-        # 2. Construct solver.
-        optimizer_cfg = cfg.OPTIMIZER
-        optimizer_cfg['model'] = model
-        optimizer = build_optimizer(optimizer_cfg)
-        # grad to zeros
-        optimizer.zero_grad()
-
-        # wheather to use amp
-        if use_amp is True:
-            model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
-    else:
-        torch.cuda.set_device(local_rank)
-        torch.distributed.init_process_group(backend='nccl')
-        # 1.construct model
-        model = build_model(cfg.MODEL).cuda(local_rank)
-        criterion = build_loss(cfg.MODEL.loss).cuda(local_rank)
-
-        # 2. Construct solver.
-        optimizer_cfg = cfg.OPTIMIZER
-        optimizer_cfg['model'] = model
-        optimizer = build_optimizer(optimizer_cfg)
-        # grad to zeros
-        optimizer.zero_grad()
     
-        # wheather to use amp
-        if use_amp is True:
-            device = torch.device('cuda:{}'.format(local_rank))
-            model = convert_syncbn_model(model).to(device)
-            model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
-            model = DDP(model, delay_allreduce=True)
-        else:
-            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
-
-    # 3. build metirc
+    # 2. build metirc
     metric_cfg = cfg.METRIC
     Metric = dict()
     for k, v in metric_cfg.items():
         v['train_mode'] = True
         Metric[k] = build_metric(v)
+    
+    # 3. build Recod
+    record_dict = build_recod(cfg.MODEL.architecture, mode="train")
 
-    # Resume
-    resume_epoch = cfg.get("resume_epoch", 0)
-    if resume_epoch:
-        path_checkpoint = osp.join(output_dir,
-                            model_name + f"_epoch_{resume_epoch:05d}" + ".pt")
-        
-        if local_rank < 0:
-            checkpoint = torch.load(path_checkpoint)
-        else:
-            # configure map_location properly
-            map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
-            checkpoint = torch.load(path_checkpoint, map_location=map_location)
-
-        if nprocs > 1:
-            model.module.load_state_dict(checkpoint['model_state_dict'])
-        else:
-            model.load_state_dict(checkpoint['model_state_dict'])
-
-        if "optimizer_state_dict" in checkpoint.keys():
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            
-        start_epoch = checkpoint['epoch']
-        if use_amp is True:
-            amp.load_state_dict(checkpoint['amp'])
-        resume_epoch = start_epoch
     # 4. construct Pipeline
     train_Pipeline = build_pipline(cfg.PIPELINE.train)
     val_Pipeline = build_pipline(cfg.PIPELINE.test)
-    scheduler_cfg = cfg.LRSCHEDULER
-    scheduler_cfg['optimizer'] = optimizer
-    scheduler = build_lr_scheduler(scheduler_cfg)
-    grad_clip_cfg = cfg.get("GRADCLIP", None)
-    if grad_clip_cfg is not None:
-        grad_clip = build_optimizer(grad_clip_cfg)
-    else:
-        grad_clip = None
 
     # wheather batch train
     batch_train = False
@@ -153,7 +66,11 @@ def train(cfg,
     batch_test = False
     if cfg.COLLATE.test.name in ["BatchCompose"]:
         batch_test = True
+        
     # 5. Construct Dataset
+    temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
+    video_batch_size = cfg.DATASET.get('video_batch_size', 8)
+    num_workers = cfg.DATASET.get('num_workers', 0)
     train_dataset_config = cfg.DATASET.train
     train_dataset_config['pipeline'] = train_Pipeline
     train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -179,29 +96,25 @@ def train(cfg,
             num_workers=num_workers,
             collate_fn=build_pipline(cfg.COLLATE.test))
 
-    # 6. Train Model
-    record_dict = build_recod(cfg.MODEL.architecture, mode="train")
-
-    # 7. Construct post precesing
-    post_processing = build_post_precessing(cfg.POSTPRECESSING)
-
-    # construct train runner
-    runner = Runner(optimizer=optimizer,
-                grad_clip=grad_clip,
-                logger=logger,
-                video_batch_size=video_batch_size,
-                Metric=Metric,
-                record_dict=record_dict,
-                cfg=cfg,
-                model=model,
-                criterion=criterion,
-                post_processing=post_processing,
-                use_amp=use_amp,
-                nprocs=nprocs,
-                local_rank=local_rank,
-                need_grad_accumulate=need_grad_accumulate)
+    # 6. Train
     best = 0.0
     epoch_start_time = time.time()
+
+    # 7. build engine
+    engine_config = cfg.ENGINE
+    engine_config['logger'] = logger
+    engine_config['Metric'] = Metric
+    engine_config['Dataloader'] = train_dataloader
+    engine = build_engine(engine_config)
+
+    # 8. resume engine
+    resume_epoch = cfg.get("resume_epoch", 0)
+    if resume_epoch:
+        resume_cfg_dict = dict()
+        engine.resume(resume_cfg_dict)
+
+    # 9. train
+    engine.run()
     for epoch in range(0, cfg.epochs):
         if epoch <= resume_epoch and resume_epoch != 0:
             logger.info(
@@ -209,16 +122,16 @@ def train(cfg,
             )
             continue
 
-        runner.epoch_init()
+        engine.epoch_init()
 
         # shuffle video data
         train_dataloader.dataset._viodeo_sample_shuffle()
         r_tic = time.time()
         for i, data in enumerate(train_dataloader):
             if batch_train is True:
-                runner.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
+                engine.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
             elif len(data) == temporal_clip_batch_size or len(data[0]['labels'].shape) != 0:
-                runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+                engine.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
             else:
                 break
             r_tic = time.time()
@@ -227,7 +140,7 @@ def train(cfg,
             
         if local_rank <= 0:
             # metric output
-            for k, v in runner.Metric.items():
+            for k, v in engine.Metric.items():
                 v.accumulate()
         
         if local_rank >= 0:
@@ -244,7 +157,7 @@ def train(cfg,
 
         def evaluate(best):
             record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
-            runner = Runner(logger=logger,
+            engine = Runner(logger=logger,
                 video_batch_size=video_batch_size,
                 Metric=Metric,
                 record_dict=record_dict,
@@ -255,17 +168,17 @@ def train(cfg,
                 use_amp=use_amp,
                 nprocs=nprocs,
                 local_rank=local_rank,
-                runner_mode='validation',
+                engine_mode='validation',
                 need_grad_accumulate=need_grad_accumulate)
 
             # model logger init
-            runner.epoch_init()
+            engine.epoch_init()
             r_tic = time.time()
             for i, data in enumerate(val_dataloader):
                 if batch_test is True:
-                    runner.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
+                    engine.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
                 elif len(data) == temporal_clip_batch_size or len(data[0]['labels'].shape) != 0:
-                    runner.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
+                    engine.run_one_iter(data=data, r_tic=r_tic, epoch=epoch)
                 else:
                     break
                 r_tic = time.time()
@@ -274,7 +187,7 @@ def train(cfg,
             if local_rank <= 0:
                 # metric output
                 Metric_dict = dict()
-                for k, v in runner.Metric.items():
+                for k, v in engine.Metric.items():
                     temp_Metric_dict = v.accumulate()
                     Metric_dict.update(temp_Metric_dict)
                 

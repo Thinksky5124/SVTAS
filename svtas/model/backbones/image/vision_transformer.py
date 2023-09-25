@@ -13,7 +13,7 @@ from typing import Callable, List, NamedTuple, Optional
 import torch
 import torch.nn as nn
 from ..utils import MLP, Conv2dNormActivation, _log_api_usage_once
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
@@ -144,7 +144,7 @@ class Encoder(nn.Module):
         input = input + self.pos_embedding
         return self.ln(self.layers(self.dropout(input)))
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class VisionTransformer(nn.Module):
     """Vision Transformer as per https://arxiv.org/abs/2010.11929.
     arch_settings = {

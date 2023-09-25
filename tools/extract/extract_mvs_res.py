@@ -17,7 +17,7 @@ import svtas.loader.builder as dataset_builder
 import argparse
 from svtas.utils.config import Config
 from svtas.utils.logger import get_logger, setup_logger
-from svtas.runner.extract_runner import ExtractMVResRunner
+from svtas.engine.extract_engine import ExtractMVResRunner
 
 @torch.no_grad()
 def extractor(cfg, outpath, res_extract):

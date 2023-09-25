@@ -229,7 +229,7 @@ class RecurrentAttentionEncoder(nn.Module):
 
         return feature * mask.transpose(1, 2)
     
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class BRTClassificationHead(nn.Module):
     """Block Recurrent Transformer
     paper: https://arxiv.org/pdf/2203.07852

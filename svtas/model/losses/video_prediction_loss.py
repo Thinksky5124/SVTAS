@@ -11,9 +11,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class VideoPredictionLoss(nn.Module):
     def __init__(self,
                  num_classes,

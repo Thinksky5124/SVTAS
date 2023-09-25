@@ -19,7 +19,7 @@ from mmcv.utils import _BatchNorm
 from torch.nn.modules.utils import _ntuple, _triple
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
 class BasicBlock3d(nn.Module):
@@ -326,7 +326,7 @@ class Bottleneck3d(nn.Module):
         return out
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class ResNet3d(nn.Module):
     """ResNet 3d backbone.
 

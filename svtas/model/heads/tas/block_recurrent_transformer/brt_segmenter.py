@@ -277,7 +277,7 @@ class Decoder(nn.Module):
 
         return out, feature
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class BRTSegmentationHead(nn.Module):
     """
     LinFormer Head for action segmentation

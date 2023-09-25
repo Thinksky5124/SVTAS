@@ -12,9 +12,9 @@ from ..utils.stlstm import SpatioTemporalLSTMCell
 import torch.nn.functional as F
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class PredRNNV2(nn.Module):
     def __init__(self,
                  num_layers=4,

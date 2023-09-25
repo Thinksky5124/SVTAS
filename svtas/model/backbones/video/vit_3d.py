@@ -10,7 +10,7 @@ import torch
 from torch import nn
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
@@ -90,7 +90,7 @@ class Transformer(nn.Module):
             x = ff(x) + x
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class ViT3D(nn.Module):
     def __init__(self,
                  image_size,

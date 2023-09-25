@@ -21,7 +21,7 @@ try:
 except ImportError: # py3k
     from itertools import  filterfalse as ifilterfalse
 from .segmentation_loss import SegmentationLoss
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 
 def lovasz_grad(gt_sorted):
     """
@@ -295,7 +295,7 @@ class LovaszSoftmaxLoss(nn.Module):
     def forward(self, probas, labels):
         return self.lovasz_softmax(probas, labels)
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class LovaszSegmentationLoss(SegmentationLoss):
     def __init__(self,
                  num_classes,

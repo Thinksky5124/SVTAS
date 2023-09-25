@@ -8,10 +8,10 @@ FilePath     : /SVTAS/svtas/model/post_precessings/stream_score_post_processing.
 '''
 import numpy as np
 import torch
-from ..builder import POSTPRECESSING
+from svtas.utils import AbstractBuildFactory
 from . import refine_method
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class StreamScorePostProcessing():
     def __init__(self,
                  sliding_window,
@@ -60,7 +60,7 @@ class StreamScorePostProcessing():
 
         return pred_score_list, pred_cls_list, ground_truth_list
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class StreamScorePostProcessingWithRefine(StreamScorePostProcessing):
     def __init__(self,
                  sliding_window,

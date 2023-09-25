@@ -17,7 +17,7 @@ import re
 import copy
 import numpy as np
 import math
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 def exponential_descrease(idx_decoder, p=3):
     return math.exp(-p*idx_decoder)
@@ -295,7 +295,7 @@ class Decoder(nn.Module):
 
         return out, feature
         
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class ASFormer(nn.Module):
     def __init__(self,
                  num_decoders=3,

@@ -6,10 +6,10 @@ LastEditTime : 2022-11-21 10:55:32
 Description  : file content
 FilePath     : /SVTAS/svtas/optimizer/grad_clip.py
 '''
-from .builder import OPTIMIZER
+from ..utils import AbstractBuildFactory
 import torch
 
-@OPTIMIZER.register()
+@AbstractBuildFactory.register('optimizer')
 class GradClip(object):
     def __init__(self,
                  max_norm=40,

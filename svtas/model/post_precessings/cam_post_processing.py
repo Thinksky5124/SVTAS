@@ -8,10 +8,10 @@ FilePath     : /SVTAS/svtas/model/post_precessings/cam_post_processing.py
 '''
 import numpy as np
 import torch
-from ..builder import POSTPRECESSING
+from svtas.utils import AbstractBuildFactory
 from ...utils.stream_writer import CAMVideoStreamWriter, CAMImageStreamWriter
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class CAMVideoPostProcessing():
     def __init__(self,
                  sample_rate,
@@ -64,7 +64,7 @@ class CAMVideoPostProcessing():
 
         return imags_list, labels_list, preds_list
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class CAMImagePostProcessing():
     def __init__(self,
                  sample_rate,

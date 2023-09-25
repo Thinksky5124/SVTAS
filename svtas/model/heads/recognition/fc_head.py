@@ -11,9 +11,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import constant_init, kaiming_init
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class FCHead(nn.Module):
     def __init__(self,
                  num_classes,

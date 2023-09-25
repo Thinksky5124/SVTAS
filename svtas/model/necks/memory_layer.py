@@ -20,7 +20,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import ConvModule
 from .convlstm import ConvLSTM
-from ...utils.logger import get_logger
+from svtas.utils.logger import get_logger
 
 class ConvLSTMResidualLayer(nn.Module):
     def __init__(self, in_channels, hidden_channels, num_classes, num_layers=1, bidirectional=False):

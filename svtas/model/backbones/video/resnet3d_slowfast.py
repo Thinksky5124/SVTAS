@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-22 21:16:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 21:42:18
+LastEditTime : 2023-09-25 13:43:18
 Description  : SlowFast ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/resnet3d_slowfast.py
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet3d_slowfast.py
 '''
@@ -16,9 +16,8 @@ from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import print_log
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from .resnet_3d import ResNet3d
-from ...builder import build_backbone
 
 
 class ResNet3dPathway(ResNet3d):
@@ -346,7 +345,7 @@ class ResNet3dPathway(ResNet3d):
                         kaiming_init(m)
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class ResNet3dSlowFast(nn.Module):
     """Slowfast backbone.
     This module is proposed in `SlowFast Networks for Video Recognition
@@ -418,8 +417,8 @@ class ResNet3dSlowFast(nn.Module):
             slow_pathway['speed_ratio'] = speed_ratio
             slow_pathway['channel_ratio'] = channel_ratio
 
-        self.slow_path = build_backbone(slow_pathway)
-        self.fast_path = build_backbone(fast_pathway)
+        self.slow_path = AbstractBuildFactory.create_factory('model').create(slow_pathway)
+        self.fast_path = AbstractBuildFactory.create_factory('model').create(fast_pathway)
 
     def _init_weights(self, pretrained=None, revise_keys=[(r'^module\.', '')]):
         """Initiate the parameters either from existing checkpoint or from

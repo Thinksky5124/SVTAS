@@ -12,9 +12,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class BridgePromptCLIPSegmentationLoss(nn.Module):
     def __init__(self,
                  num_classes,
@@ -152,7 +152,7 @@ class BridgePromptCLIPSegmentationLoss(nn.Module):
         loss_dict["clip_loss"] = all_loss + cnt_loss + act_loss
         return loss_dict
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class BridgePromptCLIPLoss(nn.Module):
     def __init__(self, loss_weight=1.0, need_logit_scale=True, ignore_index=-100) -> None:
         super().__init__()

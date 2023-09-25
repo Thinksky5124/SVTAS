@@ -12,10 +12,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import normal_init
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class I3DHead(nn.Module):
     """Classification head for I3D.
 

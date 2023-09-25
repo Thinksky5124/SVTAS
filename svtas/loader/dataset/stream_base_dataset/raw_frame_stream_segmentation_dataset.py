@@ -13,11 +13,11 @@ import os.path as osp
 import numpy as np
 import torch
 
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .stream_base_dataset import StreamDataset
 
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class RawFrameStreamSegmentationDataset(StreamDataset):
     """Video dataset for action recognition
         The dataset loads raw videos and apply specified transforms on them.

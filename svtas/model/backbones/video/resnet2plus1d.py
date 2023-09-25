@@ -7,7 +7,7 @@ Description  : ResNet 2 plus 1d
 FilePath     : /ETESVS/model/backbones/video/resnet2plus1d.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from .resnet_3d import ResNet3d, BasicBlock3d, Bottleneck3d
 import torch.nn as nn
 
@@ -17,7 +17,7 @@ from mmcv.utils import _BatchNorm
 from mmcv.cnn import constant_init, kaiming_init
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class ResNet2Plus1d(ResNet3d):
     """ResNet (2+1)d backbone.
     This model is proposed in `A Closer Look at Spatiotemporal Convolutions for

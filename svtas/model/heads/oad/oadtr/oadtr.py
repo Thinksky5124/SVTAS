@@ -17,7 +17,7 @@ from .decoder import Decoder, DecoderLayer
 from ....builder import HEADS
 
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class OadTRHead(nn.Module):
     def __init__(self,
                  clip_seg_num,

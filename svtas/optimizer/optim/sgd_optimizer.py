@@ -6,12 +6,12 @@ LastEditTime : 2023-02-27 21:07:01
 Description  : SGD optimizer
 FilePath     : /SVTAS/svtas/optimizer/optim/sgd_optimizer.py
 '''
-from ..builder import OPTIMIZER
+from svtas.utils import AbstractBuildFactory
 import torch
 from .helper_function import (filter_normal_optim_params, filter_no_decay_optim_params,
                               filter_no_decay_finetuning_optim_params, filter_finetuning_optim_params)
 
-@OPTIMIZER.register()
+@AbstractBuildFactory.register('optimizer')
 class SGDOptimizer(torch.optim.SGD):
     def __init__(self,
                  model,

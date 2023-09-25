@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 16:05:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-27 21:06:18
+LastEditTime : 2023-09-25 13:20:11
 Description  : adam optimizer
 FilePath     : /SVTAS/svtas/optimizer/optim/adam_optimizer.py
 '''
-from ..builder import OPTIMIZER
+from svtas.utils import AbstractBuildFactory
 import torch
 from .helper_function import (filter_normal_optim_params, filter_no_decay_optim_params,
                               filter_no_decay_finetuning_optim_params, filter_finetuning_optim_params)
 
-@OPTIMIZER.register()
+@AbstractBuildFactory.register('optimizer')
 class AdamOptimizer(torch.optim.Adam):
     def __init__(self,
                  model,

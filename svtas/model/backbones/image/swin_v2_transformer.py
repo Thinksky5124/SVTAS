@@ -21,7 +21,7 @@ from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import numpy as np
 from mmcv.runner import load_state_dict
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
 class Mlp(nn.Module):
@@ -510,7 +510,7 @@ class PatchEmbed(nn.Module):
             flops += Ho * Wo * self.embed_dim
         return flops
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class SwinTransformerV2(nn.Module):
     r""" Swin Transformer
         A PyTorch impl of : `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows`  -

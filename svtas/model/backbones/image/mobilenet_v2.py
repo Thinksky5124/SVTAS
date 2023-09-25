@@ -16,7 +16,7 @@ from ..utils import make_divisible
 
 from ....utils.logger import get_logger
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 # form neckwork
 # model_urls = {
@@ -108,7 +108,7 @@ class InvertedResidual(nn.Module):
 
         return out
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileNetV2(nn.Module):
     """MobileNetV2 backbone.
 

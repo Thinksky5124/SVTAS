@@ -9,11 +9,11 @@ FilePath     : /SVTAS/svtas/model/post_precessings/optical_flow_post_processing.
 import numpy as np
 import torch
 from ...utils.flow_vis import make_colorwheel
-from ..builder import POSTPRECESSING
+from svtas.utils import AbstractBuildFactory
 from ...loader.transform.transform import VideoTransform
 from ...utils.stream_writer import VideoStreamWriter
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class OpticalFlowPostProcessing():
     def __init__(self,
                  sliding_window,

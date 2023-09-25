@@ -17,7 +17,7 @@ import argparse
 from svtas.utils.logger import get_logger, setup_logger
 from svtas.utils.config import Config
 import svtas.loader.builder as dataset_builder
-from svtas.runner.extract_runner import ExtractOpticalFlowRunner
+from svtas.engine.extract_engine import ExtractOpticalFlowRunner
 
 @torch.no_grad()
 def extractor(cfg, args):

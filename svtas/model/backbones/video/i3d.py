@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from mmcv.runner import load_checkpoint
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
 def get_padding_shape(filter_shape, stride):
@@ -166,7 +166,7 @@ class Mixed(nn.Module):
         out = torch.cat((out_0, out_1, out_2, out_3), 1)
         return out
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class I3D(nn.Module):
     def __init__(self,
                  in_channels=3,

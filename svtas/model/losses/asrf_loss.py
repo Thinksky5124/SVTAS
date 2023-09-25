@@ -14,8 +14,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..builder import LOSSES
-
+from svtas.utils import AbstractBuildFactory
 
 class GaussianSimilarityTMSE(nn.Module):
     """
@@ -168,7 +167,7 @@ class BoundaryRegressionLoss(nn.Module):
         return loss / batch_size
 
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class ASRFLoss(nn.Module):
 
     def __init__(self,

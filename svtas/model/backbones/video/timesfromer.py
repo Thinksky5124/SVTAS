@@ -18,7 +18,7 @@ from mmcv.runner import _load_checkpoint, load_checkpoint
 from torch.nn.modules.utils import _pair
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
 class PatchEmbed(nn.Module):
@@ -69,7 +69,7 @@ class PatchEmbed(nn.Module):
         return x
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class TimeSformer(nn.Module):
     """TimeSformer. A PyTorch impl of `Is Space-Time Attention All You Need for
     Video Understanding? <https://arxiv.org/abs/2102.05095>`_

@@ -12,7 +12,7 @@ import random
 import numpy as np
 from PIL import Image
 
-from ..builder import SAMPLER
+from svtas.utils import AbstractBuildFactory
 
 
 class FrameIndexSample():
@@ -55,7 +55,7 @@ class FrameIndexSample():
         else:
             raise NotImplementedError
 
-@SAMPLER.register()
+@AbstractBuildFactory.register('dataset_sampler')
 class VideoStreamSampler():
     """
     Sample frames id.
@@ -249,7 +249,7 @@ class VideoStreamSampler():
 
         return results
 
-@SAMPLER.register()
+@AbstractBuildFactory.register('dataset_sampler')
 class VideoSampler(VideoStreamSampler):
     """
     Sample frames id.
@@ -275,7 +275,7 @@ class VideoSampler(VideoStreamSampler):
                          sample_mode=sample_mode,
                          frame_idx_key=frame_idx_key)
 
-@SAMPLER.register()
+@AbstractBuildFactory.register('dataset_sampler')
 class VideoClipSampler(VideoStreamSampler):
     """
     Sample frames id.

@@ -16,7 +16,7 @@ from ....utils.logger import get_logger
 from torch.nn.utils.rnn import pad_sequence
 from num2words import num2words
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 # from clip import clip
 from ..utils.clip import LayerNorm
 from ..utils.clip import SimpleTokenizer as _Tokenizer
@@ -24,7 +24,7 @@ from ..utils.clip import Transformer
 from ..utils.transducer import get_attn_pad_mask
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class LearnerPromptTextEncoder(nn.Module):
     def __init__(self,
                  actions_map_file_path,

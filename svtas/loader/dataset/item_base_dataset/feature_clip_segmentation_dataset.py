@@ -14,11 +14,11 @@ import os.path as osp
 import numpy as np
 import torch.utils.data as data
 
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .item_base_dataset import ItemDataset
 
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class FeatureClipSegmentationDataset(ItemDataset):
     def __init__(self, feature_path, flow_feature_path=None, sliding_window=60, **kwargs) -> None:
         self.flow_feature_path = flow_feature_path

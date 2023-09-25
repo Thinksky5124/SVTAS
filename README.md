@@ -26,6 +26,8 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 - [x] Support CAM Visualization
 - [x] Assemble the `pytest` testing framework
 - [x] Pytorch Profiler Suppport
+- [ ] Pulg-in DeepSpeed
+- [ ] Pulg-in Tritron
 
 # Envirnment Prepare
 
@@ -50,7 +52,7 @@ conda install -y jpeg libtiff
 ```bash
 conda create -n torch python=3.8
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements/requirements_base.txt
 
 # export
 pip freeze > requirements.txt

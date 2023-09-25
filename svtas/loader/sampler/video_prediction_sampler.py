@@ -9,12 +9,12 @@ FilePath     : /SVTAS/svtas/loader/sampler/video_prediction_sampler.py
 import numpy as np
 from PIL import Image
 
-from ..builder import SAMPLER
+from svtas.utils import AbstractBuildFactory
 from .feature_sampler import FeatureStreamSampler
 from .frame_sampler import VideoStreamSampler
 
 
-@SAMPLER.register()
+@AbstractBuildFactory.register('dataset_sampler')
 class VideoPredictionFeatureStreamSampler(FeatureStreamSampler):
     def __init__(self,
                  pred_clip_seg_num=8,

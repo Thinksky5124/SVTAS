@@ -11,9 +11,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class RecognitionSegmentationLoss(nn.Module):
     def __init__(self,
                  num_classes,
@@ -62,7 +62,7 @@ class RecognitionSegmentationLoss(nn.Module):
         loss_dict["loss"] = loss
         return loss_dict
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class SoftLabelRocgnitionLoss(nn.Module):
     def __init__(self,
                  num_classes,

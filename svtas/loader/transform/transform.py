@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-23 21:06:40
+LastEditTime : 2023-09-25 11:16:09
 Description  : Transform module
 FilePath     : /SVTAS/svtas/loader/transform/transform.py
 '''
@@ -11,7 +11,7 @@ import torch
 import copy
 import torchvision.transforms as transforms
 from . import transform_fn as custom_transforms
-from ..builder import TRANSFORM
+from svtas.utils import AbstractBuildFactory
 
 class BaseTransform(object):
     """Transform config to transform function
@@ -55,14 +55,14 @@ class BaseTransform(object):
             results[key] = output
         return results
 
-@TRANSFORM.register()
+@AbstractBuildFactory.register('dataset_transform')
 class FeatureStreamTransform(BaseTransform):
     def transform(self, inputs, transforms_pipeline):
         inputs = inputs.astype(np.float32)
         feature = transforms_pipeline(inputs).squeeze(0)
         return feature
 
-@TRANSFORM.register()
+@AbstractBuildFactory.register('dataset_transform')
 class VideoTransform(BaseTransform):
     def transform(self, inputs, transforms_pipeline):
         outputs = []
@@ -72,7 +72,7 @@ class VideoTransform(BaseTransform):
         outputs = torch.cat(outputs, dim=0)
         return outputs
 
-@TRANSFORM.register()
+@AbstractBuildFactory.register('dataset_transform')
 class VideoRawStoreTransform(VideoTransform):
     def __call__(self, results):
         for key, transforms_pipeline in self.transforms_pipeline_dict.items():
@@ -81,7 +81,7 @@ class VideoRawStoreTransform(VideoTransform):
             results[key] = output
         return results
 
-@TRANSFORM.register()
+@AbstractBuildFactory.register('dataset_transform')
 class FeatureRawStoreTransform(FeatureStreamTransform):
     def __call__(self, results):
         for key, transforms_pipeline in self.transforms_pipeline_dict.items():
@@ -90,7 +90,7 @@ class FeatureRawStoreTransform(FeatureStreamTransform):
             results[key] = output
         return results
         
-@TRANSFORM.register()
+@AbstractBuildFactory.register('dataset_transform')
 class VideoClipTransform(VideoTransform):
     
     def __call__(self, results):

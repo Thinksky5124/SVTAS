@@ -14,7 +14,7 @@ from functools import partial
 import torch.nn.functional as F
 from torch.nn.init import trunc_normal_
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from mmcv.runner import load_state_dict
 from collections import OrderedDict
 import re
@@ -27,7 +27,7 @@ from ..utils import (TwoStreamFusion, calc_mvit_feature_geometry,
     round_width, MultiScaleBlock)
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MViT(nn.Module):
     """
     Model builder for MViTv1 and MViTv2.

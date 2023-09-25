@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 20:42:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 15:47:18
+LastEditTime : 2023-09-25 14:27:49
 Description  : ref:https://github.com/facebookresearch/SlowFast
 FilePath     : /SVTAS/svtas/model/backbones/utils/mvit/utils.py
 '''
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import numpy as np
 
-from .....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 
 # --------------------------------------------------------
 # 2D sine-cosine position embedding

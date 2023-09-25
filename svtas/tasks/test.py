@@ -8,7 +8,7 @@ FilePath     : /SVTAS/svtas/tasks/test.py
 '''
 import torch
 from ..utils.logger import get_logger
-from ..runner.runner import Runner
+from ..engine.normal_engine_raw import Runner
 from ..utils.recorder import build_recod
 import time
 import numpy as np

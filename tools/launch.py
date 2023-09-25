@@ -18,7 +18,7 @@ import torch
 
 from svtas.tasks.infer import infer
 from svtas.tasks.test import test
-from svtas.tasks.train import train
+from svtas.tasks.train_raw import train
 from svtas.utils.config import get_config
 from svtas.utils.logger import get_logger
 from svtas.tasks.profile import profile

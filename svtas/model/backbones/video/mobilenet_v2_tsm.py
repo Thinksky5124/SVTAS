@@ -15,9 +15,9 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from ....utils.logger import get_logger
 from .resnet_tsm import TemporalShift
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileNetV2TSM(MobileNetV2):
     """MobileNetV2 backbone for TSM.
 

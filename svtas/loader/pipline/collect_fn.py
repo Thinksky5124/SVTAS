@@ -10,10 +10,10 @@ import copy
 
 import torch
 
-from ..builder import PIPLINE
+from svtas.utils import AbstractBuildFactory
 
 
-@PIPLINE.register()
+@AbstractBuildFactory.register('dataset_pipline')
 class StreamBatchCompose():
     def __init__(self, to_tensor_keys=["imgs", "masks", "labels"]):
         self.to_tensor_keys = to_tensor_keys
@@ -33,7 +33,7 @@ class StreamBatchCompose():
             result_batch.append(data)
         return result_batch
 
-@PIPLINE.register()
+@AbstractBuildFactory.register('dataset_pipline')
 class BatchCompose():
     def __init__(self,
                  ignore_index=-100,

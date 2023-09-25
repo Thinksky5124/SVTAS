@@ -14,7 +14,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from ....utils.logger import get_logger
 from mmcv.cnn import ConvModule
 from .mobilenet_v2_tsm import MobileNetV2TSM
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 class Conv3DLSTMCell(nn.Module):
     def __init__(self, in_channels, hidden_channels, kernel_size, bias):
@@ -220,7 +220,7 @@ class TemporalMemoryBlock(nn.Module):
         self.hidden_state = [[last_state_list[l][i].detach().clone() for i in range(len(last_state_list[l]))] for l in range(self.num_layers)]
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileNetV2TMM(MobileNetV2TSM):
     def __init__(self,
                  is_memory=True,

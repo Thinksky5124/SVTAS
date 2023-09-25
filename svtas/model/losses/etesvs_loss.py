@@ -13,9 +13,9 @@ import torch.nn.functional as F
 from .segmentation_loss import  SegmentationLoss
 from .recognition_segmentation_loss import SoftLabelRocgnitionLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class ETESVSLoss(nn.Module):
     def __init__(self,
                  num_classes,

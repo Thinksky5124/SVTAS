@@ -117,7 +117,7 @@ class RelPartialLearnableDecoderLayer(nn.Module):
 
         return output
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class TransformerXL(nn.Module):
     """Transformer-XL: Attentive Language Models Beyond a Fixed-Length Context
     paper: http://arxiv.org/abs/1901.02860

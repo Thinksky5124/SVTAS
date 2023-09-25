@@ -12,9 +12,9 @@ import torch
 import torch.nn.functional as F
 from mmcv.cnn import trunc_normal_init
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class TimeSformerHead(nn.Module):
     """Classification head for TimeSformer.
     Args:

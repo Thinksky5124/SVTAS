@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch
 from functools import partial
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 nonlinearity = partial(F.relu, inplace=True)
 
 class double_conv(nn.Module):
@@ -117,7 +117,7 @@ class TPPblock(nn.Module):
 
         return out
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class C2F_TCN(nn.Module):
     '''
         Features are extracted at the last layer of decoder. 

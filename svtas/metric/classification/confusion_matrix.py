@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 15:19:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-15 16:50:23
+LastEditTime : 2023-09-25 14:26:03
 Description  : file content
 FilePath     : /SVTAS/svtas/metric/classification/confusion_matrix.py
 '''
@@ -11,11 +11,11 @@ import matplotlib.pyplot as plt
 from prettytable import PrettyTable
 import os
 import datetime
-from ...utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from ..base_metric import BaseMetric
-from ..builder import METRIC
+from svtas.utils import AbstractBuildFactory
 
-@METRIC.register()
+@AbstractBuildFactory.register('metric')
 class ConfusionMatrix(BaseMetric):
     """
         ref:https://blog.csdn.net/weixin_43760844/article/details/115208925 \\

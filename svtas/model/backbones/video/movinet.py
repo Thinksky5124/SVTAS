@@ -16,7 +16,7 @@ from typing import Any, Callable, Optional, Tuple, Union
 from einops import rearrange
 from torch import nn, Tensor
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 class ObjectDict(dict):
     def __getattr__(self, item):
@@ -624,7 +624,7 @@ class BasicBneck(nn.Module):
         result = residual + self.alpha * x
         return result
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MoViNet(nn.Module):
     def __init__(self,
                  cfg_name="A0",

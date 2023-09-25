@@ -20,7 +20,7 @@ from mmcv.cnn.bricks import (ConvModule, DropPath, build_activation_layer,
 from mmcv.runner import BaseModule, ModuleList, Sequential
 from abc import ABCMeta, abstractmethod
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 class LayerScale(nn.Module):
     """LayerScale layer.
@@ -116,7 +116,7 @@ class AttentionWithBias(BaseModule):
                  attn_ratio=4.,
                  resolution=7,
                  init_cfg=None):
-        super().__init__(init_cfg=init_cfg)
+        super().__init__(weight_init_cfg=weight_init_cfg)
         self.num_heads = num_heads
         self.scale = key_dim**-0.5
         self.attn_ratio = attn_ratio
@@ -205,7 +205,7 @@ class LinearMlp(BaseModule):
                  act_cfg=dict(type='GELU'),
                  drop=0.,
                  init_cfg=None):
-        super().__init__(init_cfg=init_cfg)
+        super().__init__(weight_init_cfg=weight_init_cfg)
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
 
@@ -250,7 +250,7 @@ class ConvMlp(BaseModule):
                  act_cfg=dict(type='GELU'),
                  drop=0.,
                  init_cfg=None):
-        super().__init__(init_cfg=init_cfg)
+        super().__init__(weight_init_cfg=weight_init_cfg)
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1 = nn.Conv2d(in_features, hidden_features, 1)
@@ -289,7 +289,7 @@ class Meta3D(BaseModule):
                  drop_path=0.,
                  use_layer_scale=True,
                  init_cfg=None):
-        super().__init__(init_cfg=init_cfg)
+        super().__init__(weight_init_cfg=weight_init_cfg)
         self.norm1 = build_norm_layer(norm_cfg, dim)[1]
         self.token_mixer = AttentionWithBias(dim)
         self.norm2 = build_norm_layer(norm_cfg, dim)[1]
@@ -327,7 +327,7 @@ class Meta4D(BaseModule):
                  drop_path=0.,
                  use_layer_scale=True,
                  init_cfg=None):
-        super().__init__(init_cfg=init_cfg)
+        super().__init__(weight_init_cfg=weight_init_cfg)
 
         self.token_mixer = Pooling(pool_size=pool_size)
         mlp_hidden_dim = int(dim * mlp_ratio)
@@ -406,7 +406,7 @@ def basic_blocks(in_channels,
     return blocks
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class EfficientFormer(BaseBackbone):
     """EfficientFormer.
     A PyTorch implementation of EfficientFormer introduced by:
@@ -508,7 +508,7 @@ class EfficientFormer(BaseBackbone):
                  init_cfg=None,
                  pretrained=None):
 
-        super().__init__(init_cfg=init_cfg)
+        super().__init__(weight_init_cfg=weight_init_cfg)
         self.pretrained = pretrained
         self.num_extra_tokens = 0  # no cls_token, no dist_token
 

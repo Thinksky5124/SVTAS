@@ -14,10 +14,10 @@ from typing import Any, Optional, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 from .mstcn import DilatedResidualLayer, SingleStageModel
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class ActionSegmentRefinementFramework(nn.Module):
     """
     this model predicts both frame-level classes and boundaries.

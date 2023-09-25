@@ -9,7 +9,7 @@ FilePath     : /SVTAS/svtas/model/backbones/image/clip.py
 
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from einops import rearrange
 
 from collections import OrderedDict
@@ -320,7 +320,7 @@ class VisionTransformer(nn.Module):
         return x
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class CLIP(nn.Module):
     def __init__(self,
                  embed_dim: int,

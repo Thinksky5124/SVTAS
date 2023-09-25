@@ -17,7 +17,7 @@ from ....utils.logger import get_logger
 
 from ..image.resnet import ResNet
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
 class NL3DWrapper(nn.Module):
@@ -133,7 +133,7 @@ class TemporalShift(nn.Module):
         # restore the original dimension
         return out.view(n, c, h, w)
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class ResNetTSM(ResNet):
     """ResNet backbone for TSM.
 

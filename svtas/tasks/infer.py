@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-09 18:57:08
+LastEditTime : 2023-09-21 19:07:58
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
 import torch
 from ..utils.logger import get_logger
-from ..runner.infer_runner import InferONNXRunner 
+from ..engine.infer_engine import InferONNXRunner 
 from ..utils.logger import AverageMeter
 from .debug_infer_forward_func import infer_forward, debugger
 import time

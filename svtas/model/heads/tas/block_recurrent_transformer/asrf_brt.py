@@ -45,7 +45,7 @@ class RecurrentAttentionEncoderWithCls(RecurrentAttentionEncoder):
         output = self.cls(feature).transpose(1, 2)
         return output
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class ASRFWithBRT(nn.Module):
     """
     this model predicts both frame-level classes and boundaries.

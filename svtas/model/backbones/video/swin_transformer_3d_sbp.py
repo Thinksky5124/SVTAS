@@ -15,7 +15,7 @@ from timm.models.layers import DropPath, trunc_normal_
 
 from mmcv.runner import load_checkpoint
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from .swin_transformer_3d import get_window_size, window_partition, window_reverse, compute_mask, PatchEmbed3D, PatchMerging
 
 from functools import reduce, lru_cache
@@ -776,7 +776,7 @@ class BasicLayer(nn.Module):
         x = rearrange(x, "b d h w c -> b c d h w")
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class SwinTransformer3DWithSBP(nn.Module):
     """ Swin Transformer backbone.
         A PyTorch impl of : `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows`  -

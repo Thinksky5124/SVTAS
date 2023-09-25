@@ -69,7 +69,7 @@ class BaseFeatureHead(nn.Module):
         return fusion_input
 
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class LSTR(nn.Module):
 
     def __init__(self,

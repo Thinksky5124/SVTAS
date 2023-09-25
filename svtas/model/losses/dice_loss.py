@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 
 def dice_loss(pred,
               target,
@@ -52,7 +52,7 @@ def binary_dice_loss(pred, target, valid_mask, smooth=1, exponent=2, **kwargs):
     return 1 - num / den
 
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class DiceSegmentationLoss(SegmentationLoss):
     """DiceLoss.
     This loss is proposed in `V-Net: Fully Convolutional Neural Networks for

@@ -11,9 +11,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from ..builder import build_neck
 
-from ..builder import NECKS
+from svtas.utils import AbstractBuildFactory
 
-@NECKS.register()
+@AbstractBuildFactory.register('model')
 class IPBFusionNeck(nn.Module):
     def __init__(self,
                  gop_size=15,

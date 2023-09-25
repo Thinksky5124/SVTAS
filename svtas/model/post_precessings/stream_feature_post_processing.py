@@ -8,10 +8,10 @@ FilePath     : /SVTAS/svtas/model/post_precessings/stream_feature_post_processin
 '''
 import numpy as np
 import torch
-from ..builder import POSTPRECESSING
+from svtas.utils import AbstractBuildFactory
 from ...utils.stream_writer import NPYStreamWriter
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class StreamFeaturePostProcessing():
     def __init__(self,
                  sliding_window,

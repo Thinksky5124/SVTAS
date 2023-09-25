@@ -9,9 +9,9 @@ FilePath     : /SVTAS/svtas/metric/temporal_action_segmentation/temporal_action_
 import numpy as np
 import os
 from .tas_base_class import BaseTASegmentationMetric
-from ..builder import METRIC
+from svtas.utils import AbstractBuildFactory
 
-@METRIC.register()
+@AbstractBuildFactory.register('metric')
 class TASegmentationMetric(BaseTASegmentationMetric):
     """
     Test for Video Segmentation based model.

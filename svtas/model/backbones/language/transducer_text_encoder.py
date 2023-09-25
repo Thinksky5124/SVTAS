@@ -14,9 +14,9 @@ import torch.nn as nn
 import numpy as np
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class TransducerTextEncoder(nn.Module):
     """
     Converts the label to higher feature values

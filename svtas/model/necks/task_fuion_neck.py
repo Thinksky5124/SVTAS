@@ -10,9 +10,9 @@ import torch
 import math
 import torch.nn as nn
 import torch.nn.functional as F
-from ..builder import NECKS
+from svtas.utils import AbstractBuildFactory
 
-@NECKS.register()
+@AbstractBuildFactory.register('model')
 class TaskFusionPoolNeck(nn.Module):
     """Task Fusion Neck Module
     Fuion classification and pooling space information for different input size tensor.

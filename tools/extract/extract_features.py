@@ -18,7 +18,7 @@ import argparse
 from svtas.utils.config import Config
 from svtas.utils.logger import get_logger, setup_logger
 from mmcv.runner import load_state_dict
-from svtas.runner.extract_runner import ExtractFeatureRunner
+from svtas.engine.extract_engine import ExtractFeatureRunner
 
 @torch.no_grad()
 def extractor(cfg, outpath, flow_extract):

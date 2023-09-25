@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 20:05:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-28 20:13:29
+LastEditTime : 2023-09-25 15:32:49
 Description  : interplote align score
 FilePath     : /SVTAS/svtas/model/heads/align_heads/interplote_align.py
 '''
@@ -10,9 +10,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class InterploteAlignHead(nn.Module):
     def __init__(self):
         super(InterploteAlignHead, self).__init__()

@@ -21,7 +21,7 @@ from svtas.utils.logger import get_logger, setup_logger, coloring
 from loss_landspace import (create_random_directions, plot_landspace_1D_loss_err,
                             calulate_loss_landscape, plot_landspace_2D_loss_err, caculate_trajectory,
                             plot_contour_trajectory)
-from svtas.runner.extract_runner import LossLandSpaceRunner
+from svtas.engine.extract_engine import LossLandSpaceRunner
 
 def visulizer(cfg, outpath, weight_path,
               xmin=-1, xmax=1, xnum=10, ymin=-1, ymax=1, ynum=10,

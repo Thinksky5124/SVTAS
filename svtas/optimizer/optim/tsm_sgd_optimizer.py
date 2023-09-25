@@ -6,11 +6,11 @@ LastEditTime : 2022-11-04 15:30:07
 Description  : TSM SGD optimizer
 FilePath     : /SVTAS/svtas/optimizer/optim/tsm_sgd_optimizer.py
 '''
-from ..builder import OPTIMIZER
+from svtas.utils import AbstractBuildFactory
 import torch
 from mmcv.utils import SyncBatchNorm, _BatchNorm
 
-@OPTIMIZER.register()
+@AbstractBuildFactory.register('optimizer')
 class TSMSGDOptimizer(torch.optim.SGD):
     def __init__(self,
                  model,

@@ -6,12 +6,12 @@ LastEditTime : 2023-02-27 21:05:23
 Description  : AdamW optimizer
 FilePath     : /SVTAS/svtas/optimizer/optim/adamw_optimizer.py
 '''
-from ..builder import OPTIMIZER
+from svtas.utils import AbstractBuildFactory
 import torch
 from .helper_function import (filter_normal_optim_params, filter_no_decay_optim_params,
                               filter_no_decay_finetuning_optim_params, filter_finetuning_optim_params)
 
-@OPTIMIZER.register()
+@AbstractBuildFactory.register('optimizer')
 class AdamWOptimizer(torch.optim.AdamW):
     def __init__(self,
                  model,

@@ -9,7 +9,7 @@ FilePath     : /SVTAS/svtas/optimizer/lr_scheduler/multistep_warmup_lr.py
 
 from bisect import bisect_left
 
-from ..builder import LRSCHEDULER
+from svtas.utils import AbstractBuildFactory
 from torch.optim.lr_scheduler import _LRScheduler
 
 def _get_warmup_factor_at_iter(warmup_method,
@@ -27,7 +27,7 @@ def _get_warmup_factor_at_iter(warmup_method,
     else:
         raise ValueError('Unknown warmup method: {}'.format(warmup_method))
 
-@LRSCHEDULER.register()
+@AbstractBuildFactory.register('lr_scheduler')
 class WarmupMultiStepLR(_LRScheduler):
 
     def __init__(self,

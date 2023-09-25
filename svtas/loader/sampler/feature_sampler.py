@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-09 21:42:40
+LastEditTime : 2023-09-25 11:15:43
 Description  : feature sampler
 FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
 '''
@@ -11,9 +11,9 @@ import random
 import numpy as np
 from .frame_sampler import FrameIndexSample
 
-from ..builder import SAMPLER
+from svtas.utils import AbstractBuildFactory
 
-@SAMPLER.register()
+@AbstractBuildFactory.register('dataset_sampler')
 class FeatureStreamSampler():
     """
     Sample frames id.
@@ -138,7 +138,7 @@ class FeatureStreamSampler():
 
         return results
 
-@SAMPLER.register()
+@AbstractBuildFactory.register('dataset_sampler')
 class FeatureSampler(FeatureStreamSampler):
     """
     Sample frames id.
@@ -163,7 +163,7 @@ class FeatureSampler(FeatureStreamSampler):
                          sample_mode=sample_mode,
                          format=format)
 
-@SAMPLER.register()
+@AbstractBuildFactory.register('dataset_sampler')
 class FeatureClipSampler(FeatureStreamSampler):
     """
     Sample frames id.

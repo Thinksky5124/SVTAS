@@ -6,7 +6,7 @@ LastEditTime : 2023-02-28 10:36:55
 Description  : file content
 FilePath     : /SVTAS/svtas/optimizer/optim/helper_function.py
 '''
-from ...utils.logger import get_logger
+from svtas.utils.logger import get_logger
 
 def log_params(filter_params, name):
     if len(filter_params.keys()) > 0:

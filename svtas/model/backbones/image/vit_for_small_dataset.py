@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch import nn
 from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
@@ -111,7 +111,7 @@ class SPT(nn.Module):
         x_with_shifts = torch.cat((x, *shifted_x), dim = 1)
         return self.to_patch_tokens(x_with_shifts)
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class SLViT(nn.Module):
     def __init__(self,
                  image_size=224,

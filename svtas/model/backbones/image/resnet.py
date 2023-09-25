@@ -24,7 +24,7 @@ from mmcv.utils import _BatchNorm
 from torch.utils import checkpoint as cp
 from ....utils.logger import get_logger
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 class BasicBlock(nn.Module):
     """Basic block for ResNet.
@@ -309,7 +309,7 @@ def make_res_layer(block,
 
     return nn.Sequential(*layers)
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class ResNet(nn.Module):
     """ResNet backbone.
 

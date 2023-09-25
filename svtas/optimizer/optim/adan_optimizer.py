@@ -13,14 +13,14 @@ Implementation adapted from https://github.com/sail-sg/Adan
 """
 
 import math
-from ..builder import OPTIMIZER
+from svtas.utils import AbstractBuildFactory
 import torch
 from .helper_function import (filter_normal_optim_params, filter_no_decay_optim_params,
                               filter_no_decay_finetuning_optim_params, filter_finetuning_optim_params)
 
 from torch.optim import Optimizer
 
-@OPTIMIZER.register()
+@AbstractBuildFactory.register('optimizer')
 class AdanOptimizer(Optimizer):
     """
     Implements a pytorch variant of Adan

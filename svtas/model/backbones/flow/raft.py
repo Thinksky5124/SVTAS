@@ -22,7 +22,7 @@ from ..utils.raft.utils import bilinear_sampler, coords_grid, upflow8
 
 from mmcv.runner import load_checkpoint
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 try:
     autocast = torch.cuda.amp.autocast
@@ -59,7 +59,7 @@ class InputPadder:
         c = [self._pad[2], ht-self._pad[3], self._pad[0], wd-self._pad[1]]
         return x[..., c[0]:c[1], c[2]:c[3]]
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class RAFT(nn.Module):
 
     # (v-iashin) def __init__(self, model_is_small):

@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .asformer import ConvFeedForward, exponential_descrease
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 def get_EF(input_size, dim, method="learnable", head_dim=None, bias=True):
     """
@@ -191,7 +191,7 @@ class Decoder(nn.Module):
 
         return out, feature
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class LinformerHead(nn.Module):
     """
     LinFormer Head for action segmentation

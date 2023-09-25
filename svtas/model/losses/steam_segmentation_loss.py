@@ -10,10 +10,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 from ..builder import build_loss
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class StreamSegmentationLoss(nn.Module):
     def __init__(self,
                  backbone_loss_cfg,

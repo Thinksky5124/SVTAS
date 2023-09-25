@@ -21,7 +21,7 @@ from ....utils.logger import get_logger
 from mmcv.runner import load_checkpoint
 
 from .mobilenet_v2 import make_divisible
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from .efficientformer import BaseBackbone
 from ..utils import InvertedResidual, EdgeResidual
 
@@ -68,7 +68,7 @@ def model_scaling(layer_setting, arch_setting):
     return merge_layer_setting
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class EfficientNet(BaseBackbone):
     """EfficientNet backbone.
     Args:

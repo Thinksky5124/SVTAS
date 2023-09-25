@@ -14,11 +14,11 @@ import os.path as osp
 import numpy as np
 import torch
 
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .stream_base_dataset import StreamDataset
 
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class FeatureStreamSegmentationDataset(StreamDataset):
     def __init__(self,
                  feature_path,

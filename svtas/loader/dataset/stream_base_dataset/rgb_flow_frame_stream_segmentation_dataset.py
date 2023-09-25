@@ -13,12 +13,12 @@ import os.path as osp
 import numpy as np
 import torch
 
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .raw_frame_stream_segmentation_dataset import \
     RawFrameStreamSegmentationDataset
 
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class RGBFlowFrameStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
     def __init__(self,
                  flows_path,

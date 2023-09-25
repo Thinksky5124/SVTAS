@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:31:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 14:09:32
+LastEditTime : 2023-09-25 15:33:56
 Description  : ImageCLIP ref:https://github.com/sallymmx/ActionCLIP/blob/master/modules/Visual_Prompt.py
 FilePath     : /SVTAS/svtas/model/necks/action_clip_fusion_model.py
 '''
@@ -14,9 +14,9 @@ import torch
 from torch import nn
 from collections import OrderedDict
 
-from ...utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from mmcv.runner import load_checkpoint
-from ..builder import NECKS
+from svtas.utils import AbstractBuildFactory
 
 
 class LayerNorm(nn.Module):
@@ -118,7 +118,7 @@ class TemporalTransformer(nn.Module):
     def forward(self, x: torch.Tensor):
         return self.resblocks((x))
 
-@NECKS.register()
+@AbstractBuildFactory.register('model')
 class ActionCLIPFusionNeck(nn.Module):
     def __init__(self,
                  sim_head,

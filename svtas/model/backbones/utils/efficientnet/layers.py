@@ -235,7 +235,7 @@ class EdgeResidual(BaseModule):
                  drop_path_rate=0.,
                  with_cp=False,
                  init_cfg=None):
-        super(EdgeResidual, self).__init__(init_cfg=init_cfg)
+        super(EdgeResidual, self).__init__(weight_init_cfg=weight_init_cfg)
         assert stride in [1, 2]
         self.with_cp = with_cp
         self.drop_path = DropPath(

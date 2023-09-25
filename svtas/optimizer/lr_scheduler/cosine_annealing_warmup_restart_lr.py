@@ -9,9 +9,9 @@ FilePath     : /SVTAS/svtas/optimizer/lr_scheduler/cosine_annealing_warmup_lr.py
 import math
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
-from ..builder import LRSCHEDULER
+from svtas.utils import AbstractBuildFactory
 
-@LRSCHEDULER.register()
+@AbstractBuildFactory.register('lr_scheduler')
 class CosineAnnealingWarmupRestarts(_LRScheduler):
     """
         optimizer (Optimizer): Wrapped optimizer.

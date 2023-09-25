@@ -12,9 +12,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from ..tas.memory_tcn import MemoryDilationResidualLyaer
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class TransegerMemoryTCNJointNet(nn.Module):
     def __init__(self,
                  num_classes,

@@ -8,10 +8,10 @@ FilePath     : /SVTAS/svtas/model/post_precessings/score_post_processing.py
 '''
 import numpy as np
 import torch
-from ..builder import POSTPRECESSING
+from svtas.utils import AbstractBuildFactory
 from . import refine_method
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class ScorePostProcessing():
     def __init__(self,
                  ignore_index=-100):
@@ -56,7 +56,7 @@ class ScorePostProcessing():
 
         return pred_score_list, pred_cls_list, ground_truth_list
 
-@POSTPRECESSING.register()
+@AbstractBuildFactory.register('post_precessing')
 class ScorePostProcessingWithRefine(ScorePostProcessing):
     def __init__(self,
                  refine_method_cfg: dict = None,

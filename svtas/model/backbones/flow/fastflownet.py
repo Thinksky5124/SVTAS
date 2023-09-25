@@ -17,7 +17,7 @@ try:
 except:
     warnings.warn("Can't not use FastFlowNet")
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 class Correlation(nn.Module):
     def __init__(self, max_displacement):
@@ -76,7 +76,7 @@ class Decoder(nn.Module):
             out = self.conv7(self.conv6(self.conv5(out)))
         return out
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class FastFlowNet(nn.Module):
     def __init__(self,
                  pretrained=None,
