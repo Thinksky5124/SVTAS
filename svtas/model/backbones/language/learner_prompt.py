@@ -10,7 +10,7 @@ FilePath     : /SVTAS/svtas/model/backbones/language/learner_prompt.py
 import numpy as np
 import torch
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from torch.nn import functional as F
 from ....utils.logger import get_logger
 from torch.nn.utils.rnn import pad_sequence

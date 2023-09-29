@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 13:55:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 21:01:59
+LastEditTime : 2023-09-25 16:53:56
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientformer.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientformer.py
 '''
@@ -11,13 +11,13 @@ import itertools
 from typing import Optional, Sequence
 
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import (ConvModule, DropPath, build_activation_layer,
                              build_norm_layer)
-from mmcv.runner import BaseModule, ModuleList, Sequential
+from mmengine.model import BaseModule, ModuleList, Sequential
 from abc import ABCMeta, abstractmethod
 
 from svtas.utils import AbstractBuildFactory

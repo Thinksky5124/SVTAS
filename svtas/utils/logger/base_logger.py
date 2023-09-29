@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 10:48:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 10:27:50
+LastEditTime : 2023-09-25 19:52:14
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
 '''
@@ -34,7 +34,7 @@ class BaseLogger:
             logger_instance = super().__new__(cls)
             LOGGER_DICT[name] = logger_instance
             return logger_instance
-    
+
     @abc.abstractmethod
     def log(self, msg, *args, **kwargs):
         pass

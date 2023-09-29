@@ -2,43 +2,20 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:44:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 10:44:17
+LastEditTime : 2023-09-25 21:36:21
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/normal_engine.py
 '''
 import time
 import os.path as osp
-from svtas.utils.logger import log_batch, AverageMeter, get_logger
+from typing import Dict
 from .base_engine import BaseEngine
-from svtas.model_pipline import BaseModelPipline
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('engine')
 class TrainingBaseEngine(BaseEngine):
-    def __init__(self,
-                 logger,
-                 video_batch_size,
-                 Metric,
-                 cfg,
-                 model_pipline_cfg,
-                 record_dict=None,
-                 grad_clip=None,
-                 use_amp=False,
-                 nprocs=1,
-                 local_rank=-1,
-                 need_grad_accumulate=True):
-        super().__init__()
-        self.model_pipline: BaseModelPipline = build_model_pipline(**model_pipline_cfg)
-        self.grad_clip = grad_clip
-        self.logger = logger
-        self.video_batch_size = video_batch_size
-        self.Metric = Metric
-        self.record_dict = record_dict
-        self.cfg = cfg
-        self.nprocs = nprocs
-        self.local_rank = local_rank
-        self.use_amp = use_amp
-        self.need_grad_accumulate = need_grad_accumulate
+    def __init__(self, model_pipline: Dict, logger: Dict, record: Dict, iter_method: Dict, checkpointor: Dict) -> None:
+        super().__init__(model_pipline, logger, record, iter_method, checkpointor)
     
     def _init_loss_dict(self):
         self.loss_dict = {}
@@ -128,12 +105,12 @@ class TrainingBaseEngine(BaseEngine):
 
         self.current_step = step
     
-    def _model_forward(self, data_dict):
+    def _run_model_pipline(self, data_dict):
         score, loss_dict = self.model_pipline.forward(data_dict)
         return score, loss_dict
 
     def run_one_clip(self, data_dict):
-        score, loss_dict = self._model_forward(data_dict)
+        score, loss_dict = self._run_model_pipline(data_dict)
         data_dict['score'] = score
         self.seg_acc += self.model_pipline.after_forward('iter', data_dict)
 
@@ -172,7 +149,7 @@ class TrainingBaseEngine(BaseEngine):
             self.current_step = self.current_step + 1
             self.post_processing.init_flag = False
 
-@ENGINE.register()
+@AbstractBuildFactory.register('engine')
 class TrainEngine(TrainingBaseEngine):
     @property
     def runner_mode():
@@ -186,7 +163,7 @@ class TrainEngine(TrainingBaseEngine):
         for _, recod in self.record_dict.items():
             recod.reset()
     
-    def _model_forward(self, data_dict):
+    def _run_model_pipline(self, data_dict):
         score, loss_dict = self.model_pipline.forward(data_dict)
         self.model_pipline.caculate_loss(loss_dict)
         return score, loss_dict
@@ -195,7 +172,7 @@ class TrainEngine(TrainingBaseEngine):
         self.model_pipline.update_model()
         super().batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
 
-@ENGINE.register()
+@AbstractBuildFactory.register('engine')
 class ValidationEngine(TrainingBaseEngine):
     @property
     def runner_mode():
@@ -209,7 +186,7 @@ class ValidationEngine(TrainingBaseEngine):
         for _, recod in self.record_dict.items():
             recod.reset()
 
-@ENGINE.register()
+@AbstractBuildFactory.register('engine')
 class TestEngine(TrainingBaseEngine):
     @property
     def runner_mode():

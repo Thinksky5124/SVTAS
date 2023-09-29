@@ -13,7 +13,7 @@ import torch.utils.checkpoint as checkpoint
 import numpy as np
 from timm.models.layers import DropPath, trunc_normal_
 
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 from .swin_transformer_3d import get_window_size, window_partition, window_reverse, compute_mask, PatchEmbed3D, PatchMerging

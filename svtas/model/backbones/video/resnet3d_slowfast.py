@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-22 21:16:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 13:43:18
+LastEditTime : 2023-09-25 16:57:47
 Description  : SlowFast ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/resnet3d_slowfast.py
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet3d_slowfast.py
 '''
@@ -12,7 +12,7 @@ import warnings
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule, kaiming_init, constant_init
-from mmcv.runner import _load_checkpoint, load_checkpoint
+from mmengine.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import print_log
 
 from ....utils.logger import get_logger

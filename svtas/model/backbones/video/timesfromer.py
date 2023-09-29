@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:21:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-19 13:19:12
+LastEditTime : 2023-09-25 17:00:30
 Description  : Timesformer backbone ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/timesformer.py
 FilePath     : /SVTAS/svtas/model/backbones/video/timesfromer.py
 '''
@@ -13,8 +13,8 @@ from einops import rearrange
 from mmcv import ConfigDict
 from mmcv.cnn import build_conv_layer, build_norm_layer, kaiming_init
 from mmcv.cnn.bricks.transformer import build_transformer_layer_sequence
-from mmcv.cnn.utils.weight_init import trunc_normal_
-from mmcv.runner import _load_checkpoint, load_checkpoint
+from mmengine.model.weight_init import trunc_normal_
+from mmengine.runner import _load_checkpoint, load_checkpoint
 from torch.nn.modules.utils import _pair
 
 from ....utils.logger import get_logger

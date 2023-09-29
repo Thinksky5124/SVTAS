@@ -65,7 +65,7 @@ class ExtractEngine(BaseEngine):
         self.current_step = step
     
     @torch.no_grad()
-    def _model_forward(self, data_dict):
+    def _run_model_pipline(self, data_dict):
         return data_dict
     
     @torch.no_grad()
@@ -75,7 +75,7 @@ class ExtractEngine(BaseEngine):
         idx = data_dict['current_sliding_cnt']
         labels = data_dict['labels']
         # train segment
-        score = self._model_forward(data_dict)
+        score = self._run_model_pipline(data_dict)
             
         with torch.no_grad():
             if self.post_processing.init_flag is not True:
@@ -130,7 +130,7 @@ class ExtractModelEngine(ExtractEngine):
         self.model.eval()
     
     @torch.no_grad()
-    def _model_forward(self, data_dict):
+    def _run_model_pipline(self, data_dict):
         # move data
         input_data = {}
         for key, value in data_dict.items():
@@ -167,7 +167,7 @@ class LossLandSpaceEngine(ExtractModelEngine):
         self.record_dict['loss_sample'].reset()
 
     @torch.no_grad()
-    def _model_forward(self, data_dict):
+    def _run_model_pipline(self, data_dict):
         # move data
         input_data = {}
         for key, value in data_dict.items():
@@ -207,7 +207,7 @@ class LossLandSpaceEngine(ExtractModelEngine):
         idx = data_dict['current_sliding_cnt']
         labels = data_dict['labels']
         # train segment
-        score, loss = self._model_forward(data_dict)
+        score, loss = self._run_model_pipline(data_dict)
             
         with torch.no_grad():
             if self.post_processing.init_flag is not True:

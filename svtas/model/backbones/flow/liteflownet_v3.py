@@ -10,7 +10,7 @@ import torch
 import math
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from ..utils.liteflownet_v3 import Features, Matching, Regularization, Subpixel, BackWarp
 
 from ....utils.logger import get_logger

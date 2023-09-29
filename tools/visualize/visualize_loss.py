@@ -12,7 +12,7 @@ import torch
 import argparse
 path = os.path.join(os.getcwd())
 sys.path.append(path)
-from mmcv.runner import load_state_dict
+from mmengine.runner import load_state_dict
 from svtas.utils.config import Config
 import svtas.model.builder as model_builder
 import svtas.metric.builder as metric_builder

@@ -15,7 +15,7 @@ import torch
 from svtas.utils.config import Config
 import svtas.model.builder as model_builder
 import svtas.loader.builder as dataset_builder
-from mmcv.runner import load_state_dict
+from mmengine.runner import load_state_dict
 from svtas.utils.logger import get_logger, setup_logger
 from svtas.utils.cam import ModelForwardWrapper, get_match_fn_class
 from svtas.engine.visual_engine import VisualRunner

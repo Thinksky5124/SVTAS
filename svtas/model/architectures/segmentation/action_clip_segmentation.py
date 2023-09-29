@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 19:21:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 15:17:32
+LastEditTime : 2023-09-25 16:51:12
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/action_clip_segmentation.py
 '''
@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Tuple, Union
-from mmcv.runner import load_state_dict
+from mmengine.runner import load_state_dict
 from collections import OrderedDict
 import re
 

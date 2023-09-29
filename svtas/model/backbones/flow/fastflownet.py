@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 import warnings
 try:
     from spatial_correlation_sampler import SpatialCorrelationSampler

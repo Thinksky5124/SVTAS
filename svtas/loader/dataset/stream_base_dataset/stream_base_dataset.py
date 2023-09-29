@@ -2,18 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 16:48:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:38:08
+LastEditTime : 2023-09-28 16:38:50
 Description  : Stream Base Dataset
-FilePath     : /SVTAS/loader/dataset/stream_base_dataset/stream_base_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/stream_base_dataset.py
 '''
 from abc import abstractmethod
 
 import torch
 import os.path as osp
 import torch.utils.data as data
+from ..base_dataset import BaseTorchDataset
 
 
-class StreamDataset(data.IterableDataset):
+class StreamDataset(BaseTorchDataset, data.IterableDataset):
     def __init__(self,
                  file_path,
                  gt_path,
@@ -24,30 +25,14 @@ class StreamDataset(data.IterableDataset):
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
-                 train_mode=True,
                  drap_last=False,
                  local_rank=-1,
                  nprocs=1,
-                 data_path=None):
-        super().__init__()
-        self.suffix = suffix
-        self.data_path = data_path
-        self.gt_path = gt_path
-        self.actions_map_file_path = actions_map_file_path
-        self.dataset_type = dataset_type
-        
-        self.file_path = file_path
-        self.data_prefix = osp.realpath(data_prefix) if \
-            data_prefix is not None and osp.isdir(data_prefix) else data_prefix
-        self.pipeline = pipeline
-
-        # distribute
-        self.local_rank = local_rank
-        self.nprocs = nprocs
-        self.drap_last = drap_last
-        if self.nprocs > 1:
-            self.drap_last = True
-        self.video_batch_size = video_batch_size
+                 data_path=None) -> None:
+        super().__init__(file_path, gt_path, pipeline, actions_map_file_path,
+                         temporal_clip_batch_size, video_batch_size, suffix,
+                         dataset_type, data_prefix, drap_last, local_rank,
+                         nprocs, data_path)
 
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')
@@ -62,12 +47,12 @@ class StreamDataset(data.IterableDataset):
                 VideoSamplerDataset(file_path=file_path),
                                     batch_size=video_batch_size,
                                     num_workers=0,
-                                    shuffle=train_mode)
-        if train_mode == False:
+                                    shuffle=self.train_mode)
+        if self.train_mode == False:
             self._viodeo_sample_shuffle()
-        
-        # iterable
-        self.temporal_clip_batch_size = temporal_clip_batch_size
+    
+    def shuffle_dataset(self):
+        return self._viodeo_sample_shuffle()
     
     def _viodeo_sample_shuffle(self):
         # sampler video order

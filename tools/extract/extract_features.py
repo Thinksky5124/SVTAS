@@ -17,7 +17,7 @@ import svtas.loader.builder as dataset_builder
 import argparse
 from svtas.utils.config import Config
 from svtas.utils.logger import get_logger, setup_logger
-from mmcv.runner import load_state_dict
+from mmengine.runner import load_state_dict
 from svtas.engine.extract_engine import ExtractFeatureRunner
 
 @torch.no_grad()

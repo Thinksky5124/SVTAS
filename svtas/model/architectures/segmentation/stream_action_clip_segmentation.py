@@ -10,7 +10,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_state_dict
+from mmengine.runner import load_state_dict
 from collections import OrderedDict
 import re
 

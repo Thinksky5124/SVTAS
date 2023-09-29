@@ -2,18 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 16:33:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-12 16:33:20
+LastEditTime : 2023-09-25 16:57:09
 Description  : TimeSformer module
-FilePath     : /ETESVS/model/backbones/utils/timesformer/transformer.py
+FilePath     : /SVTAS/svtas/model/backbones/utils/timesformer/transformer.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 from einops import rearrange
 from mmcv.cnn import build_norm_layer, constant_init
-from mmcv.cnn.bricks.registry import ATTENTION, FEEDFORWARD_NETWORK
+from mmengine.registry import ATTENTION, FEEDFORWARD_NETWORK
 from mmcv.cnn.bricks.transformer import FFN, build_dropout
-from mmcv.runner.base_module import BaseModule
+from mmengine.model import BaseModule
 from mmcv.utils import digit_version
 
 

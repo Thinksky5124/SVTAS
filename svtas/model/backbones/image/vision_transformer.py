@@ -16,7 +16,7 @@ from ..utils import MLP, Conv2dNormActivation, _log_api_usage_once
 from svtas.utils import AbstractBuildFactory
 
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 
 class ConvStemConfig(NamedTuple):
     out_channels: int

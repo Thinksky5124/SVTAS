@@ -8,7 +8,7 @@ FilePath: /ETESVS/utils/config.py
 '''
 import os
 from .logger import coloring, get_logger, setup_logger
-from mmcv import Config
+from mmengine import Config
 
 def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path="output", need_coloring=False):
     """

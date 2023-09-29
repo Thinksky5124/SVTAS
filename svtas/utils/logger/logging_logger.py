@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 14:17:17
+LastEditTime : 2023-09-25 19:51:01
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
 from ..build import AbstractBuildFactory
-from .base_logger import BaseLogger, LoggerLevel
+from .base_logger import BaseLogger, LoggerLevel, RECORD_DICT
 import os
 import sys
 import datetime
@@ -26,7 +26,7 @@ class PythonLoggingLogger(BaseLogger):
         LoggerLevel.ERROR: logging.ERROR,
         LoggerLevel.CRITICAL: logging.CRITICAL}
     
-    def __init__(self, name: str, path: str, level=LoggerLevel.INFO) -> None:
+    def __init__(self, name: str, path: str = None, level=LoggerLevel.INFO) -> None:
         super().__init__(name, path, level)
         logging.Formatter.converter = time_zone
         self.local_rank = local_rank

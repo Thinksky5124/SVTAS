@@ -10,3 +10,5 @@ from .base_logger import LoggerLevel, get_logger
 from .logging_logger import PythonLoggingLogger
 from .tensorboard_logger import TensboardLogger
 from .meter import AverageMeter
+from .base_record import BaseRecord
+from .loss_record import LossValueRecord, ValueRecord

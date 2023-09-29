@@ -10,7 +10,7 @@ FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v2.py
 import torch.nn as nn
 import torch.utils.checkpoint as cp
 from mmcv.cnn import ConvModule, constant_init, kaiming_init
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from torch.nn.modules.batchnorm import _BatchNorm
 from ..utils import make_divisible
 

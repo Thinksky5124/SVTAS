@@ -10,7 +10,7 @@ import mmcv
 from .functions import make_divisible
 import torch.utils.checkpoint as cp
 import torch.nn as nn
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 from mmcv.cnn.bricks import ConvModule, DropPath
         
 class InvertedResidual(BaseModule):

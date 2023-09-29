@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 10:00:12
+LastEditTime : 2023-09-25 16:54:41
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
-FilePath     : /ETESVS/model/backbones/image/resnet.py
+FilePath     : /SVTAS/svtas/model/backbones/image/resnet.py
 '''
 
 # form neckwork
@@ -19,7 +19,7 @@ FilePath     : /ETESVS/model/backbones/image/resnet.py
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import ConvModule, constant_init, kaiming_init
-from mmcv.runner import _load_checkpoint, load_checkpoint
+from mmengine.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import _BatchNorm
 from torch.utils import checkpoint as cp
 from ....utils.logger import get_logger

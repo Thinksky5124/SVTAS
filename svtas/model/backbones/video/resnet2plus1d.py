@@ -11,7 +11,7 @@ from svtas.utils import AbstractBuildFactory
 from .resnet_3d import ResNet3d, BasicBlock3d, Bottleneck3d
 import torch.nn as nn
 
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from ....utils.logger import get_logger
 from mmcv.utils import _BatchNorm
 from mmcv.cnn import constant_init, kaiming_init

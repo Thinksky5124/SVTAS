@@ -15,10 +15,10 @@ import torch
 import torch.nn as nn
 
 from mmcv.cnn.bricks import ConvModule, DropPath
-from mmcv.runner import Sequential
+from mmengine.model import Sequential
 
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 
 from .mobilenet_v2 import make_divisible
 from svtas.utils import AbstractBuildFactory

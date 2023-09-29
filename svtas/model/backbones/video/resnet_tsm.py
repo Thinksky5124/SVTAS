@@ -12,7 +12,7 @@ import torch.nn as nn
 from mmcv.cnn import NonLocal3d
 from torch.nn.modules.utils import _ntuple
 from mmcv.cnn import constant_init, kaiming_init
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from ....utils.logger import get_logger
 
 from ..image.resnet import ResNet

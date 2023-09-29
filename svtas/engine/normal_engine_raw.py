@@ -196,7 +196,7 @@ class TrainEngine(BaseEngine):
 
         self.current_step = step
     
-    def _model_forward(self, data_dict):
+    def _run_model_pipline(self, data_dict):
         # move data
         input_data = {}
         for key, value in data_dict.items():
@@ -238,10 +238,10 @@ class TrainEngine(BaseEngine):
         if self.nprocs > 1 and idx < sliding_num - 1 and self.use_amp is False:
             with self.model.no_sync():
                 # multi-gpus
-                score, loss_dict = self._model_forward(data_dict)
+                score, loss_dict = self._run_model_pipline(data_dict)
         else:
             # single gpu
-            score, loss_dict = self._model_forward(data_dict)
+            score, loss_dict = self._run_model_pipline(data_dict)
             
         with torch.no_grad():
             if self.post_processing.init_flag is not True:

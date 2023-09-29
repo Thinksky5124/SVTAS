@@ -2,66 +2,69 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 21:16:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-24 21:16:11
+LastEditTime : 2023-09-25 20:14:08
 Description  : file content
-FilePath     : /SVTAS/svtas/utils/logger/metric.py
+FilePath     : /SVTAS/svtas/utils/logger/meter.py
 '''
 import torch
 
 class AverageMeter(object):
     """
-    Computes and stores the average and current value
+    Computes and stores the average and current _value
     """
 
-    def __init__(self, name='', fmt='f', need_avg=True, output_mean=False):
+    def __init__(self, name='', fmt='f'):
         self.name = name
         self.fmt = fmt
-        self.need_avg = need_avg
-        self.output_mean = output_mean
         self.reset()
 
     def reset(self):
         """ reset """
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
+        self._val = 0
+        self._avg = 0
+        self._sum = 0
+        self._count = 0
 
-    def update(self, val, n=1):
+    def update(self, _val, n=1):
         """ update """
-        if isinstance(val, torch.Tensor):
-            val = val.cpu().detach().numpy()
-        self.val = val
-        self.sum += val * n
-        self.count += n
+        if isinstance(_val, torch.Tensor):
+            _val = _val.cpu().detach().numpy()
+        self._val = _val
+        self._sum += _val * n
+        self._count += n
 
     @property
     def total(self):
-        return '{self.name}_sum: {self.sum:{self.fmt}}'.format(self=self)
+        return '{self.name}__sum: {self._sum:{self.fmt}}'.format(self=self)
 
     @property
     def total_minute(self):
-        return '{self.name}_sum: {s:{self.fmt}} min'.format(s=self.sum / 60,
+        return '{self.name}__sum: {s:{self.fmt}} min'.format(s=self._sum / 60,
                                                             self=self)
 
     @property
-    def get_mean(self):
-        self.avg = self.sum / self.count
-        return self.avg if self.need_avg else self.val
+    def cnt(self):
+        return self._count
+
+    @property
+    def val(self):
+        return self._val
     
     @property
-    def get_sum(self):
-        return self.sum
+    def avg(self):
+        self._avg = self._sum / self._count
+        return self._avg
+    
+    @property
+    def sum(self):
+        return self._sum
 
     @property
-    def mean(self):
-        self.avg = self.sum / self.count
-        return '{self.name}_avg: {self.avg:{self.fmt}}'.format(
-            self=self) if self.need_avg else ''
+    def str_avg(self):
+        self._avg = self._sum / self._count
+        return '{self.name}__avg: {self._avg:{self.fmt}}'.format(
+            self=self)
 
     @property
-    def value(self):
-        if self.output_mean:
-            self.avg = self.sum / self.count
-            return '{self.name}: {self.avg:{self.fmt}}'.format(self=self)
-        return '{self.name}: {self.val:{self.fmt}}'.format(self=self)
+    def str_value(self):
+        return '{self.name}: {self._val:{self.fmt}}'.format(self=self)

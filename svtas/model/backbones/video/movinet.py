@@ -11,7 +11,7 @@ from collections import OrderedDict
 import torch
 from torch.nn.modules.utils import _triple, _pair
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from typing import Any, Callable, Optional, Tuple, Union
 from einops import rearrange
 from torch import nn, Tensor
