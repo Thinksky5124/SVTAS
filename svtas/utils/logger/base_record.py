@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 19:51:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 20:40:43
+LastEditTime : 2023-09-30 10:05:09
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_record.py
 '''
@@ -43,6 +43,10 @@ class BaseRecord(metaclass=abc.ABCMeta):
     
     @abc.abstractmethod
     def update_record(self, update_dict: Dict):
+        pass
+    
+    @abc.abstractmethod
+    def update_loss_dict(self, update_dict: Dict):
         pass
 
     @abc.abstractmethod

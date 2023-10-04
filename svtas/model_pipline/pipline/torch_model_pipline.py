@@ -117,7 +117,7 @@ class TorchModelPipline(BaseModelPipline):
     def memory_clear(self):
         self.model._clear_memory_buffer()
 
-    def update_model(self):
+    def update_model_param(self):
         if self.need_grad_accumulate:
             self.optimizer.step()
         self.optimizer.zero_grad()

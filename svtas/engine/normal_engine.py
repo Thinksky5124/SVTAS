@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:44:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 21:36:21
+LastEditTime : 2023-10-04 16:26:41
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/normal_engine.py
 '''
@@ -14,6 +14,21 @@ from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('engine')
 class TrainingBaseEngine(BaseEngine):
+    def __init__(self,
+                 model_pipline: Dict,
+                 logger: Dict,
+                 record: Dict,
+                 iter_method: Dict,
+                 checkpointor: Dict) -> None:
+        super().__init__(model_pipline,
+                         logger,
+                         record,
+                         iter_method,
+                         checkpointor)
+
+
+
+class TrainingBaseEngineModify(BaseEngine):
     def __init__(self, model_pipline: Dict, logger: Dict, record: Dict, iter_method: Dict, checkpointor: Dict) -> None:
         super().__init__(model_pipline, logger, record, iter_method, checkpointor)
     
@@ -169,7 +184,7 @@ class TrainEngine(TrainingBaseEngine):
         return score, loss_dict
     
     def batch_end_step(self, sliding_num, vid_list, step, epoch):
-        self.model_pipline.update_model()
+        self.model_pipline.update_model_param()
         super().batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
 
 @AbstractBuildFactory.register('engine')

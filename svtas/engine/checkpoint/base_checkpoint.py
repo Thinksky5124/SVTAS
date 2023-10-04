@@ -2,19 +2,34 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 17:06:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 17:06:27
+LastEditTime : 2023-10-04 17:41:22
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/checkpoint/base_checkpoint.py
 '''
 import abc
-from typing import Any
+from typing import Any, Dict
 
 class BaseCheckpointor(metaclass=abc.ABCMeta):
+    save_path: str
+    load_path: str
+    def __init__(self,
+                 save_path: str = None,
+                 load_path: str = None) -> None:
+        self.save_path = save_path
+        self.load_path = load_path
+    
+    @property
+    def load_flag(self) -> bool:
+        if self.load_path is not None:
+            return True
+        return False
 
     @abc.abstractmethod
-    def save(self, *args: Any, **kwds: Any) -> bool:
-        raise NotImplementedError("You must implement __call__ function!")
+    def save(self,
+             save_dict: Dict,
+             path: str = None) -> bool:
+        raise NotImplementedError("You must implement save function!")
     
     @abc.abstractmethod
-    def load(self, *args: Any, **kwds: Any) -> Any:
-        raise NotImplementedError("You must implement __call__ function!")
+    def load(self, path: str = None) -> Dict:
+        raise NotImplementedError("You must implement load function!")
