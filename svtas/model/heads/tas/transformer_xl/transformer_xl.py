@@ -9,7 +9,7 @@ FilePath     : /SVTAS/svtas/model/heads/tas/transformer_xl/transformer_xl.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 from .utils.position_encoding import PositionalEmbedding, PositionwiseFF
 from .utils.attention_layer import MultiHeadAttn, RelLearnableMultiHeadAttn, RelPartialLearnableMultiHeadAttn

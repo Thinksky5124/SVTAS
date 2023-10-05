@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-19 14:41:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 13:15:37
+LastEditTime : 2023-10-05 11:52:52
 Description  : file content
 FilePath     : /SVTAS/svtas/model/necks/unsample_decoder_neck.py
 '''
@@ -11,7 +11,7 @@ import copy
 import random
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import constant_init, kaiming_init
+from mmengine.model import constant_init, kaiming_init
 from svtas.utils import AbstractBuildFactory
 
 class Adaptive3DTo1DPooling(nn.Module):

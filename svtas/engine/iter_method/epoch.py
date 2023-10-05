@@ -2,11 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-30 10:08:21
+LastEditTime : 2023-10-05 21:19:21
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
-from typing import Any
+from typing import Any, Dict
 import time
 from .base_iter_method import BaseIterMethod
 from svtas.utils import AbstractBuildFactory
@@ -15,7 +15,7 @@ from svtas.utils import AbstractBuildFactory
 class EpochMethod(BaseIterMethod):
     def __init__(self,
                  epoch_num: int,
-                 logger_record_step: int,
+                 logger_record_step: int = 5,
                  test_interval: int = -1) -> None:
         super().__init__()
         self.epoch_num = epoch_num
@@ -65,6 +65,9 @@ class EpochMethod(BaseIterMethod):
         pass
 
     def logger_epoch(self):
+        pass
+
+    def batch_end_step(self, sliding_num, vid_list, step, epoch):
         pass
 
     def run_one_batch(self, data, r_tic=None, epoch=None):
@@ -130,3 +133,11 @@ class EpochMethod(BaseIterMethod):
             self.end_epoch()
         self.exec_hook("epoch_end")
     
+    def end(self):
+        return super().end()
+
+    def save(self) -> Dict:
+        return super().save()
+    
+    def load(self, load_dict: Dict) -> None:
+        return super().load(load_dict)

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-26 20:14:37
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-26 20:39:10
+LastEditTime : 2023-10-05 15:19:41
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/asrf_brt.py
 '''
@@ -11,7 +11,7 @@ from typing import Any, Optional, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 from .block_recurrent_transformer import RecurrentAttentionEncoder
 
 class RecurrentAttentionEncoderWithCls(RecurrentAttentionEncoder):

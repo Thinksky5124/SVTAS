@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 16:33:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 16:57:09
+LastEditTime : 2023-10-05 11:54:38
 Description  : TimeSformer module
 FilePath     : /SVTAS/svtas/model/backbones/utils/timesformer/transformer.py
 '''
@@ -10,14 +10,15 @@ FilePath     : /SVTAS/svtas/model/backbones/utils/timesformer/transformer.py
 import torch
 import torch.nn as nn
 from einops import rearrange
-from mmcv.cnn import build_norm_layer, constant_init
-from mmengine.registry import ATTENTION, FEEDFORWARD_NETWORK
+from mmcv.cnn import build_norm_layer
+from mmengine.model import constant_init
+from mmengine.registry import MODELS
 from mmcv.cnn.bricks.transformer import FFN, build_dropout
 from mmengine.model import BaseModule
-from mmcv.utils import digit_version
+from mmengine.utils import digit_version
 
 
-@ATTENTION.register_module()
+@MODELS.register_module()
 class DividedTemporalAttentionWithNorm(BaseModule):
     """Temporal Attention in Divided Space Time Attention.
     Args:
@@ -94,7 +95,7 @@ class DividedTemporalAttentionWithNorm(BaseModule):
         return new_query
 
 
-@ATTENTION.register_module()
+@MODELS.register_module()
 class DividedSpatialAttentionWithNorm(BaseModule):
     """Spatial Attention in Divided Space Time Attention.
     Args:
@@ -182,7 +183,7 @@ class DividedSpatialAttentionWithNorm(BaseModule):
         return new_query
 
 
-@FEEDFORWARD_NETWORK.register_module()
+@MODELS.register_module()
 class FFNWithNorm(FFN):
     """FFN with pre normalization layer.
     FFNWithNorm is implemented to be compatible with `BaseTransformerLayer`

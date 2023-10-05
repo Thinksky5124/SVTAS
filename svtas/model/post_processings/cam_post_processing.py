@@ -2,23 +2,25 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-20 11:58:40
+LastEditTime : 2023-10-05 19:40:42
 Description  : file content
-FilePath     : /SVTAS/svtas/model/post_precessings/cam_post_processing.py
+FilePath     : /SVTAS/svtas/model/post_processings/cam_post_processing.py
 '''
 import numpy as np
 import torch
 from svtas.utils import AbstractBuildFactory
 from ...utils.stream_writer import CAMVideoStreamWriter, CAMImageStreamWriter
+from .base_post_processing import BasePostProcessing
 
-@AbstractBuildFactory.register('post_precessing')
-class CAMVideoPostProcessing():
+@AbstractBuildFactory.register('post_processing')
+class CAMVideoPostProcessing(BasePostProcessing):
     def __init__(self,
                  sample_rate,
                  output_frame_size,
                  fps=15,
                  ignore_index=-100,
                  need_label=True):
+        super().__init__()
         self.init_flag = False
         self.ignore_index = ignore_index
         self.sample_rate = sample_rate
@@ -64,7 +66,7 @@ class CAMVideoPostProcessing():
 
         return imags_list, labels_list, preds_list
 
-@AbstractBuildFactory.register('post_precessing')
+@AbstractBuildFactory.register('post_processing')
 class CAMImagePostProcessing():
     def __init__(self,
                  sample_rate,

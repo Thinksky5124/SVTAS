@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 22:07:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 19:51:12
+LastEditTime : 2023-10-05 20:28:27
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/tensorboard_logger.py
 '''
@@ -16,9 +16,9 @@ from torch.utils.tensorboard import SummaryWriter
 
 @AbstractBuildFactory.register('logger')
 class TensboardLogger(BaseLogger):
-    def __init__(self, name: str, path: str = None, level=LoggerLevel.INFO) -> None:
-        super().__init__(name, path, level)
-        self.logger = SummaryWriter(path, comment=name)
+    def __init__(self, name: str, root_path: str = None, level=LoggerLevel.INFO) -> None:
+        super().__init__(name, root_path, level)
+        self.logger = SummaryWriter(self.root_path, comment=name)
         self.step = 0
         self.batch = 0
         self.epoch = 0

@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from .encoder import ConformerEncoder, ConformerDecoder
 from .modules import ConFormerLinear
 
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('model')
 class Conformer(nn.Module):

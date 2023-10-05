@@ -9,7 +9,7 @@ FilePath     : /ETESVS/model/heads/movinet_head.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import constant_init, kaiming_init
+from mmengine.model import constant_init, kaiming_init
 from ...backbones.video.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
 
 from svtas.utils import AbstractBuildFactory

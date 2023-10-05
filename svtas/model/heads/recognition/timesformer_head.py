@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:25:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-16 21:03:38
+LastEditTime : 2023-10-05 15:21:06
 Description  : Timesformer Head ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/heads/timesformer_head.py
-FilePath     : /ETESVS/model/heads/timesformer_head.py
+FilePath     : /SVTAS/svtas/model/heads/recognition/timesformer_head.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from mmcv.cnn import trunc_normal_init
+from mmengine.model import trunc_normal_init
 
 from svtas.utils import AbstractBuildFactory
 

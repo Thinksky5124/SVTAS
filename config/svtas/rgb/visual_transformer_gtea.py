@@ -96,7 +96,7 @@ DATASET = dict(
 
 PIPELINE = dict(
     train = dict(
-        name = "BasePipline",
+        name = "BaseDatasetPipline",
         decode = dict(
             name="VideoDecoder",
             backend=dict(
@@ -127,7 +127,7 @@ PIPELINE = dict(
         )
     ),
     test = dict(
-        name = "BasePipline",
+        name = "BaseDatasetPipline",
         decode = dict(
             name="VideoDecoder",
             backend=dict(

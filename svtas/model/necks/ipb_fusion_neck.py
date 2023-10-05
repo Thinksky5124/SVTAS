@@ -2,14 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-11-07 14:52:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-08 10:26:27
+LastEditTime : 2023-10-05 15:22:41
 Description  : file content
 FilePath     : /SVTAS/svtas/model/necks/ipb_fusion_neck.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..builder import build_neck
 
 from svtas.utils import AbstractBuildFactory
 
@@ -26,7 +25,7 @@ class IPBFusionNeck(nn.Module):
         self.gop_size = gop_size
         self.spatial_expan_mode = spatial_expan_mode
         if fusion_neck_module is not None:
-            self.fusion_neck_module = build_neck(fusion_neck_module)
+            self.fusion_neck_module = AbstractBuildFactory.create_factory('model').create(fusion_neck_module)
         else:
             self.fusion_neck_module = None
 

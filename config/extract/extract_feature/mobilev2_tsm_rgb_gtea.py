@@ -67,7 +67,7 @@ DATASET = dict(
 )
 
 PIPELINE = dict(
-    name = "BasePipline",
+    name = "BaseDatasetPipline",
     decode = dict(
         name = "VideoDecoder",
         backend = dict(name="DecordContainer")

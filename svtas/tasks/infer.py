@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-21 19:07:58
+LastEditTime : 2023-10-05 11:51:02
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
 import torch
 from ..utils.logger import get_logger
-from ..engine.infer_engine import InferONNXRunner 
+from ..engine.infer_engine import InferONNXEngine 
 from ..utils.logger import AverageMeter
 from .debug_infer_forward_func import infer_forward, debugger
 import time
@@ -19,11 +19,11 @@ import os
 from types import MethodType
 
 from ..utils.save_load import mkdir
-from ..model.builder import build_model
-from ..loader.builder import build_dataset
-from ..loader.builder import build_pipline
-from ..metric.builder import build_metric
-from ..model.builder import build_post_precessing
+# from ..model.builder import build_model
+# from ..loader.builder import build_dataset
+# from ..loader.builder import build_pipline
+# from ..metric.builder import build_metric
+# from ..model.builder import build_post_precessing
 from ..utils.collect_env import collect_env
 
 def infer(cfg,

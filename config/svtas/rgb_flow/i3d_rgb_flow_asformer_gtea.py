@@ -95,7 +95,7 @@ DATASET = dict(
 
 PIPELINE = dict(
     train = dict(
-        name = "BasePipline",
+        name = "BaseDatasetPipline",
         decode = dict(
             name = "TwoPathwayVideoDecoder",
             rgb_backend=dict(
@@ -138,7 +138,7 @@ PIPELINE = dict(
         )
     ),
     test = dict(
-        name = "BasePipline",
+        name = "BaseDatasetPipline",
         decode = dict(
             name = "TwoPathwayVideoDecoder",
             rgb_backend=dict(

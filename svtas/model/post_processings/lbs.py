@@ -2,16 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:56:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:30:29
+LastEditTime : 2023-10-05 19:40:31
 Description  : Local Burr Suppression ref:https://github.com/lyhisme/ETSN
-FilePath     : /SVTAS/svtas/model/post_precessings/lbs.py
+FilePath     : /SVTAS/svtas/model/post_processings/lbs.py
 '''
 import torch
 import numpy as np
 from svtas.utils import AbstractBuildFactory
+from .base_post_processing import BasePostProcessing
 
-@AbstractBuildFactory.register('post_precessing')
-class StreamScorePostProcessingWithLBS():
+@AbstractBuildFactory.register('post_processing')
+class StreamScorePostProcessingWithLBS(BasePostProcessing):
     def __init__(self,
                  num_classes,
                  sliding_window,
@@ -21,6 +22,7 @@ class StreamScorePostProcessingWithLBS():
                  lbs_Confidence=3.1,
                  ignore_index=-100,
                  bg_class_name=["background", "None"]):
+        super().__init__()
         self.sliding_window = sliding_window
         self.num_classes = num_classes
         self.ignore_index = ignore_index

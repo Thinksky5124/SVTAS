@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 14:23:44
+LastEditTime : 2023-10-05 11:49:33
 Description  : Extract Engine Class
 FilePath     : /SVTAS/svtas/engine/extract_engine.py
 '''
@@ -11,7 +11,7 @@ import numpy as np
 import os
 import torch
 from .base_engine import BaseEngine
-from svtas.utils.recorder import AverageMeter
+from svtas.utils.logger import AverageMeter
 
 from svtas.utils import AbstractBuildFactory
 

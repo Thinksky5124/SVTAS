@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 18:57:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 21:03:40
+LastEditTime : 2023-10-05 19:59:06
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/loss_record.py
 '''
@@ -14,7 +14,7 @@ from svtas.utils import AbstractBuildFactory
 @AbstractBuildFactory.register('record')
 class ValueRecord(BaseRecord):
     def __init__(self,
-                 mode,
+                 mode: str = "train",
                  addition_record: List[Dict] = [],
                  accumulate_type: Dict[str, str] = {}) -> None:
         assert isinstance(addition_record, list), "You must input list!"
@@ -73,7 +73,7 @@ class ValueRecord(BaseRecord):
 
 @AbstractBuildFactory.register('record')
 class LossValueRecord(ValueRecord):
-    def __init__(self, mode, addition_record: List[Dict] = [], accumulate_type: Dict[str, str] = {}) -> None:
+    def __init__(self, mode: str = "train", addition_record: List[Dict] = [], accumulate_type: Dict[str, str] = {}) -> None:
         super().__init__(mode, addition_record, accumulate_type)
         self.loss_dict: Dict[str, AverageMeter] = {}
     

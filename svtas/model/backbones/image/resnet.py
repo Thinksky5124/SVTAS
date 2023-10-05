@@ -18,9 +18,9 @@ FilePath     : /SVTAS/svtas/model/backbones/image/resnet.py
 
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
-from mmcv.cnn import ConvModule, constant_init, kaiming_init
-from mmengine.runner import _load_checkpoint, load_checkpoint
-from mmcv.utils import _BatchNorm
+from mmengine.model import constant_init, kaiming_init
+from mmengine.runner.checkpoint import _load_checkpoint, load_checkpoint
+from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
 from torch.utils import checkpoint as cp
 from ....utils.logger import get_logger
 

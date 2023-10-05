@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 16:12:36
+LastEditTime : 2023-10-05 19:04:15
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -11,34 +11,20 @@ import time
 
 import torch
 import torch.distributed as dist
-from ..utils.logger import get_logger, log_epoch, coloring
-from ..utils.save_load import mkdir
-from ..utils.recorder import build_recod
-from ..model.builder import build_model
-from ..model.builder import build_loss
-from ..loader.builder import build_dataset
-from ..loader.builder import build_pipline
-from ..metric.builder import build_metric
-from ..model.builder import build_post_precessing
-from ..optimizer.builder import build_optimizer
-from ..optimizer.builder import build_lr_scheduler
-
-from ..engine.builder import build_engine
+from svtas.utils.logger import get_logger
+from svtas.utils.save_load import mkdir
+from svtas.utils import AbstractBuildFactory
+from svtas.engine import BaseEngine
 
 def train(cfg,
           args,
           local_rank,
-          nprocs,
-          use_amp=False,
-          weights=None,
-          validate=True,):
+          nprocs):
     """Train model entry
     """
     
     # 1. init logger and output folder
     logger = get_logger("SVTAS")
-    if args.use_tensorboard and local_rank <= 0:
-        tensorboard_writer = get_logger("SVTAS", tensorboard=args.use_tensorboard)
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output/{model_name}")
     criterion_metric_name = cfg.get("criterion_metric_name", "F1@0.50")
@@ -47,17 +33,14 @@ def train(cfg,
     
     # 2. build metirc
     metric_cfg = cfg.METRIC
-    Metric = dict()
+    metrics = dict()
     for k, v in metric_cfg.items():
         v['train_mode'] = True
-        Metric[k] = build_metric(v)
-    
-    # 3. build Recod
-    record_dict = build_recod(cfg.MODEL.architecture, mode="train")
+        metrics[k] = AbstractBuildFactory.create_factory('metric').create(v)
 
-    # 4. construct Pipeline
-    train_Pipeline = build_pipline(cfg.PIPELINE.train)
-    val_Pipeline = build_pipline(cfg.PIPELINE.test)
+    # 3. construct Pipeline
+    train_Pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.PIPELINE.train)
+    val_Pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.PIPELINE.test)
 
     # wheather batch train
     batch_train = False
@@ -67,7 +50,7 @@ def train(cfg,
     if cfg.COLLATE.test.name in ["BatchCompose"]:
         batch_test = True
         
-    # 5. Construct Dataset
+    # 4. Construct Dataset
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     num_workers = cfg.DATASET.get('num_workers', 0)
@@ -78,43 +61,43 @@ def train(cfg,
     train_dataset_config['local_rank'] = local_rank
     train_dataset_config['nprocs'] = nprocs
     train_dataloader = torch.utils.data.DataLoader(
-        build_dataset(train_dataset_config),
+        AbstractBuildFactory.create_factory('dataset').create(train_dataset_config),
         batch_size=temporal_clip_batch_size,
         num_workers=num_workers,
-        collate_fn=build_pipline(cfg.COLLATE.train))
+        collate_fn=AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.train))
     
-    if validate:
-        val_dataset_config = cfg.DATASET.test
-        val_dataset_config['pipeline'] = val_Pipeline
-        val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-        val_dataset_config['video_batch_size'] = video_batch_size * nprocs
-        val_dataset_config['local_rank'] = local_rank
-        val_dataset_config['nprocs'] = nprocs
-        val_dataloader = torch.utils.data.DataLoader(
-            build_dataset(val_dataset_config),
-            batch_size=temporal_clip_batch_size,
-            num_workers=num_workers,
-            collate_fn=build_pipline(cfg.COLLATE.test))
+    # if validate:
+    #     val_dataset_config = cfg.DATASET.test
+    #     val_dataset_config['pipeline'] = val_Pipeline
+    #     val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
+    #     val_dataset_config['video_batch_size'] = video_batch_size * nprocs
+    #     val_dataset_config['local_rank'] = local_rank
+    #     val_dataset_config['nprocs'] = nprocs
+    #     val_dataloader = torch.utils.data.DataLoader(
+    #         build_dataset(val_dataset_config),
+    #         batch_size=temporal_clip_batch_size,
+    #         num_workers=num_workers,
+    #         collate_fn=build_pipline(cfg.COLLATE.test))
 
-    # 6. Train
-    best = 0.0
-    epoch_start_time = time.time()
+    # 5. build model_pipline
+    model_pipline = AbstractBuildFactory.create_factory('model_pipline').create(cfg.MODEL_PIPLINE)
 
-    # 7. build engine
+    # 6. build engine
     engine_config = cfg.ENGINE
-    engine_config['logger'] = logger
-    engine_config['Metric'] = Metric
-    engine_config['Dataloader'] = train_dataloader
-    engine = build_engine(engine_config)
+    engine_config['logger_dict'] = cfg.LOGGER_LIST
+    engine_config['metric'] = metrics
+    engine_config['model_pipline'] = model_pipline
+    train_engine: BaseEngine = AbstractBuildFactory.create_factory('engine').create(engine_config)
+    train_engine.set_dataloader(train_dataloader)
 
     # 8. resume engine
     resume_epoch = cfg.get("resume_epoch", 0)
     if resume_epoch:
         resume_cfg_dict = dict()
-        engine.resume(resume_cfg_dict)
+        train_engine.resume(resume_cfg_dict)
 
     # 9. train
-    engine.run()
+    train_engine.run()
     
     for epoch in range(0, cfg.epochs):
         if epoch <= resume_epoch and resume_epoch != 0:

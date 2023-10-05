@@ -2,20 +2,22 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-25 11:06:23
+LastEditTime : 2023-10-05 19:41:19
 Description: model postprecessing
-FilePath     : /SVTAS/svtas/model/post_precessings/stream_feature_post_processing.py
+FilePath     : /SVTAS/svtas/model/post_processings/stream_feature_post_processing.py
 '''
 import numpy as np
 import torch
 from svtas.utils import AbstractBuildFactory
 from ...utils.stream_writer import NPYStreamWriter
+from .base_post_processing import BasePostProcessing
 
-@AbstractBuildFactory.register('post_precessing')
-class StreamFeaturePostProcessing():
+@AbstractBuildFactory.register('post_processing')
+class StreamFeaturePostProcessing(BasePostProcessing):
     def __init__(self,
                  sliding_window,
                  ignore_index=-100):
+        super().__init__()
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
         self.init_flag = False

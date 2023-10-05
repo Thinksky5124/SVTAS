@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 19:51:01
+LastEditTime : 2023-10-05 20:36:09
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
 from ..build import AbstractBuildFactory
-from .base_logger import BaseLogger, LoggerLevel, RECORD_DICT
+from .base_logger import BaseLogger, LoggerLevel
 import os
 import sys
 import datetime
@@ -19,6 +19,7 @@ def time_zone(sec, fmt):
 
 @AbstractBuildFactory.register('logger')
 class PythonLoggingLogger(BaseLogger):
+    logger: logging.Logger
     level_map = {
         LoggerLevel.DEBUG: logging.DEBUG,
         LoggerLevel.INFO: logging.INFO,
@@ -26,13 +27,13 @@ class PythonLoggingLogger(BaseLogger):
         LoggerLevel.ERROR: logging.ERROR,
         LoggerLevel.CRITICAL: logging.CRITICAL}
     
-    def __init__(self, name: str, path: str = None, level=LoggerLevel.INFO) -> None:
-        super().__init__(name, path, level)
+    def __init__(self, name: str = "SVTAS", root_path: str = None, level=LoggerLevel.INFO) -> None:
+        super().__init__(name, root_path, level)
         logging.Formatter.converter = time_zone
-        self.local_rank = local_rank
         self.logger = logging.getLogger(name)
-        self.set_level(level)
+        self.set_level = level
         self.logger.propagate = False
+        self.logger.level = self.level
 
         if level == "DEBUG":
             plain_formatter = logging.Formatter(
@@ -43,33 +44,34 @@ class PythonLoggingLogger(BaseLogger):
                 "[%(asctime)s] %(message)s",
                 datefmt="%m/%d %H:%M:%S")
         local_rank = int(os.environ['LOCAL_RANK'])
+        self.local_rank = local_rank
         if local_rank < 0:
             local_rank = 0
 
         if local_rank == 0:
             # stdout logging: master only
             ch = logging.StreamHandler(stream=sys.stdout)
-            ch.setLevel(logging.DEBUG)
+            ch.setLevel(self.level)
             formatter = plain_formatter
             ch.setFormatter(formatter)
             self.logger.addHandler(ch)
 
         # file logging: all workers
-        if path is not None:
-            if path.endswith(".txt") or path.endswith(".log"):
-                filename = path
+        if self.path is not None:
+            if self.path.endswith(".txt") or self.path.endswith(".log"):
+                filename = self.path
             else:
                 # aviod cover
-                filename = os.path.join(path, name + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") +".log")
+                filename = os.path.join(self.path, name + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") +".log")
                 if(os.path.exists(filename)):
-                    filename = os.path.join(path, name + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") +".log")
+                    filename = os.path.join(self.path, name + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") +".log")
 
             # PathManager.mkdirs(os.path.dirname(filename))
             os.makedirs(os.path.dirname(filename), exist_ok=True)
 
             # fh = logging.StreamHandler(_cached_log_stream(filename)
             fh = logging.FileHandler(filename, mode='a')
-            fh.setLevel(logging.DEBUG)
+            fh.setLevel(self.level)
             fh.setFormatter(plain_formatter)
             self.logger.addHandler(fh)
 
@@ -81,7 +83,7 @@ class PythonLoggingLogger(BaseLogger):
         return self.level_map[self._level]
     
     @level.setter
-    def set_level(self, level: LoggerLevel):
+    def level(self, level: LoggerLevel):
         assert level in LoggerLevel, f"Unsupport logging Level: {self._level}!"
         self._level = level
         self.logger.setLevel(self.level_map[level])
@@ -110,12 +112,7 @@ class PythonLoggingLogger(BaseLogger):
                      stack_info: bool = False,
                      stacklevel: int = 1,
                      extra = None):
-        logging_fn(msg,
-                    *args,
-                    exc_info = exc_info,
-                    stack_info = stack_info,
-                    stacklevel = stacklevel,
-                    extra = extra)
+        logging_fn(msg)
     
     def log(self,
             msg: object,

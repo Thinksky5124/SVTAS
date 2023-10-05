@@ -82,7 +82,7 @@ DATASET = dict(
 
 PIPELINE = dict(
     train = dict(
-        name = "BasePipline",
+        name = "BaseDatasetPipline",
         decode = dict(
             backend=dict(
                     name='OpenCVContainer')
@@ -111,7 +111,7 @@ PIPELINE = dict(
         )
     ),
     test = dict(
-        name = "BasePipline",
+        name = "BaseDatasetPipline",
         decode = dict(
             backend=dict(
                     name='OpenCVContainer')

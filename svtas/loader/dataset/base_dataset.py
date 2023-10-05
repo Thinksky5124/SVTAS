@@ -34,6 +34,7 @@ class BaseTorchDataset(BaseDataset):
                  actions_map_file_path,
                  temporal_clip_batch_size,
                  video_batch_size,
+                 train_mode=False,
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
@@ -47,6 +48,7 @@ class BaseTorchDataset(BaseDataset):
         self.gt_path = gt_path
         self.actions_map_file_path = actions_map_file_path
         self.dataset_type = dataset_type
+        self.train_mode = train_mode
         
         self.file_path = file_path
         self.data_prefix = osp.realpath(data_prefix) if \

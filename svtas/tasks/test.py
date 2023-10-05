@@ -8,28 +8,15 @@ FilePath     : /SVTAS/svtas/tasks/test.py
 '''
 import torch
 from ..utils.logger import get_logger
-from ..engine.normal_engine_raw import Runner
-from ..utils.recorder import build_recod
+from ..engine.normal_engine_raw import BaseEngine
 import time
 import numpy as np
 
-from ..model.builder import build_model
-from ..model.builder import build_loss
-from ..loader.builder import build_dataset
-from ..loader.builder import build_pipline
-from ..metric.builder import build_metric
-from ..model.builder import build_post_precessing
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
 from ..utils.collect_env import collect_env
 import warnings
-try:
-    from apex import amp
-    from apex.parallel import convert_syncbn_model
-    from apex.parallel import DistributedDataParallel as DDP
-except:
-    pass
 
 @torch.no_grad()
 def test(cfg,

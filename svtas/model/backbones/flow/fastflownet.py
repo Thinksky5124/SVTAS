@@ -210,7 +210,7 @@ class FastFlowNet(nn.Module):
         
         return img1, img2, input_size, orig_size, temporal_len
     
-    def post_precessing(self, flow, input_size, orig_size, temporal_len):
+    def post_processing(self, flow, input_size, orig_size, temporal_len):
         # [N * T, C, H, W]
         flow = self.div_flow * F.interpolate(flow, size=orig_size, mode='bilinear', align_corners=False)
         if input_size != orig_size:

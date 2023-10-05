@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 10:19:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-27 21:06:47
+LastEditTime : 2023-10-05 19:14:30
 Description  : Adan Optimizer ref:https://github.com/sail-sg/Adan
 FilePath     : /SVTAS/svtas/optimizer/optim/adan_optimizer.py
 '''
@@ -15,13 +15,12 @@ Implementation adapted from https://github.com/sail-sg/Adan
 import math
 from svtas.utils import AbstractBuildFactory
 import torch
-from .helper_function import (filter_normal_optim_params, filter_no_decay_optim_params,
-                              filter_no_decay_finetuning_optim_params, filter_finetuning_optim_params)
+from .base_optim import TorchOptimizer
 
 from torch.optim import Optimizer
 
 @AbstractBuildFactory.register('optimizer')
-class AdanOptimizer(Optimizer):
+class AdanOptimizer(TorchOptimizer, Optimizer):
     """
     Implements a pytorch variant of Adan
     Adan was proposed in
@@ -65,28 +64,6 @@ class AdanOptimizer(Optimizer):
         defaults = dict(lr=learning_rate, betas=betas, eps=eps, weight_decay=weight_decay, no_prox=no_prox)
         params = self.get_optim_policies(model, finetuning_key, finetuning_scale_factor, no_decay_key, freeze_key, learning_rate, weight_decay)
         super(AdanOptimizer, self).__init__(params, defaults)
-
-    def get_optim_policies(self, model, finetuning_key, finetuning_scale_factor, no_decay_key, freeze_key, learning_rate, weight_decay):
-        params = list(model.named_parameters())
-        no_main = no_decay_key + finetuning_key
-
-        for n, p in params:
-            for nd in freeze_key:
-                if nd in n:
-                    p.requires_grad = False
-
-        normal_optim_params = filter_normal_optim_params(params=params, no_main=no_main)
-        no_decay_optim_params = filter_no_decay_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
-        no_decay_finetuning_optim_params = filter_no_decay_finetuning_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
-        finetuning_optim_params = filter_finetuning_optim_params(params=params, finetuning_key=finetuning_key, no_decay_key=no_decay_key)
-
-        param_group = [
-            {'params':normal_optim_params, 'weight_decay':weight_decay, 'lr':learning_rate},
-            {'params':no_decay_optim_params, 'weight_decay':0, 'lr':learning_rate},
-            {'params':no_decay_finetuning_optim_params, 'weight_decay':0, 'lr':learning_rate * finetuning_scale_factor},
-            {'params':finetuning_optim_params, 'weight_decay':weight_decay, 'lr':learning_rate * finetuning_scale_factor}
-        ]
-        return param_group
         
     @torch.no_grad()
     def restart_opt(self):

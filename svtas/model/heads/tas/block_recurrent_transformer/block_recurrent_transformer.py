@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-25 15:33:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-28 08:49:52
+LastEditTime : 2023-10-05 15:19:08
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/block_recurrent_transformer.py
 '''
@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
 from torch import einsum, nn
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 from .helper_function import (default, exists, apply_rotary_pos_emb, cast_tuple,
                               RMSNorm, RotaryEmbedding, FeedForward)
 

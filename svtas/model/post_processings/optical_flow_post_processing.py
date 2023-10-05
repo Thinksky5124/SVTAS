@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:28:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-16 12:53:34
+LastEditTime : 2023-10-05 19:40:55
 Description  : Optical Flow Post Processing
-FilePath     : /SVTAS/svtas/model/post_precessings/optical_flow_post_processing.py
+FilePath     : /SVTAS/svtas/model/post_processings/optical_flow_post_processing.py
 '''
 import numpy as np
 import torch
@@ -12,9 +12,10 @@ from ...utils.flow_vis import make_colorwheel
 from svtas.utils import AbstractBuildFactory
 from ...loader.transform.transform import VideoTransform
 from ...utils.stream_writer import VideoStreamWriter
+from .base_post_processing import BasePostProcessing
 
-@AbstractBuildFactory.register('post_precessing')
-class OpticalFlowPostProcessing():
+@AbstractBuildFactory.register('post_processing')
+class OpticalFlowPostProcessing(BasePostProcessing):
     def __init__(self,
                  sliding_window,
                  post_transforms=dict(imgs=[dict(Clamp = dict(min_val=-20, max_val=20)),
@@ -22,6 +23,7 @@ class OpticalFlowPostProcessing():
                  fps=15,
                  need_visualize=False,
                  ignore_index=-100):
+        super().__init__()
         self.sliding_window = sliding_window
         self.fps = fps
         self.need_visualize = need_visualize

@@ -6,5 +6,5 @@ LastEditTime : 2023-09-22 13:54:42
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/__init__.py
 '''
-from .base import BaseWapper
+from .base import BaseModel
 from .torch_model import TorchModel

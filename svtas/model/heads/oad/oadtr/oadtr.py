@@ -14,7 +14,7 @@ from .attn import FullAttention, ProbAttention, AttentionLayer
 from .transformer import TransformerModel
 from .position_encoding import FixedPositionalEncoding, LearnedPositionalEncoding
 from .decoder import Decoder, DecoderLayer
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 
 @AbstractBuildFactory.register('model')

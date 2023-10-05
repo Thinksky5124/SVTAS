@@ -12,9 +12,10 @@ from ...utils.flow_vis import make_colorwheel
 from svtas.utils import AbstractBuildFactory
 from ...loader.transform.transform import VideoTransform
 from ...utils.stream_writer import VideoStreamWriter
+from .base_post_processing import BasePostProcessing
 
-@AbstractBuildFactory.register('post_precessing')
-class MVsResPostProcessing():
+@AbstractBuildFactory.register('post_processing')
+class MVsResPostProcessing(BasePostProcessing):
     def __init__(self,
                  sliding_window,
                  mvs_post_transforms=dict(imgs=[dict(Clamp = dict(min_val=-20, max_val=20)),
@@ -24,6 +25,7 @@ class MVsResPostProcessing():
                  fps=15,
                  need_visualize=False,
                  ignore_index=-100):
+        super().__init__()
         self.sliding_window = sliding_window
         self.fps = fps
         self.need_visualize = need_visualize

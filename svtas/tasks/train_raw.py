@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-22 15:48:10
+LastEditTime : 2023-10-05 15:25:02
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train_raw.py
 '''
@@ -11,26 +11,26 @@ import time
 
 import torch
 import torch.distributed as dist
-from ..utils.logger import get_logger, log_epoch, coloring
-from ..utils.save_load import mkdir
-from ..utils.recorder import build_recod
-from ..model.builder import build_model
-from ..model.builder import build_loss
-from ..loader.builder import build_dataset
-from ..loader.builder import build_pipline
-from ..metric.builder import build_metric
-from ..model.builder import build_post_precessing
-from ..optimizer.builder import build_optimizer
-from ..optimizer.builder import build_lr_scheduler
+# from ..utils.logger import get_logger, log_epoch, coloring
+# from ..utils.save_load import mkdir
+# from ..utils.recorder import build_recod
+# from ..model.builder import build_model
+# from ..model.builder import build_loss
+# from ..loader.builder import build_dataset
+# from ..loader.builder import build_pipline
+# from ..metric.builder import build_metric
+# from ..model.builder import build_post_precessing
+# from ..optimizer.builder import build_optimizer
+# from ..optimizer.builder import build_lr_scheduler
 
-from ..engine.normal_engine_raw import Runner
-import warnings
-try:
-    from apex import amp
-    from apex.parallel import convert_syncbn_model
-    from apex.parallel import DistributedDataParallel as DDP
-except:
-    warnings.warn("Can't use apex to accelerate")
+# from ..engine.normal_engine_raw import Runner
+# import warnings
+# try:
+#     from apex import amp
+#     from apex.parallel import convert_syncbn_model
+#     from apex.parallel import DistributedDataParallel as DDP
+# except:
+#     warnings.warn("Can't use apex to accelerate")
 
 def train(cfg,
           args,

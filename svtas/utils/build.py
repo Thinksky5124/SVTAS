@@ -130,7 +130,7 @@ class FromConfigBuildFactory(BaseBuildFactory):
         """
         if cfg is None:
             return None
-        assert isinstance(cfg, dict) and key in cfg
+        assert isinstance(cfg, dict) and key in cfg, "Not specify class name"
 
         cfg_copy = cfg.copy()
         obj_type = cfg_copy.pop(key)

@@ -197,7 +197,7 @@ class RAFT(nn.Module):
         
         return img1, img2, input_size, orig_size, temporal_len
     
-    def post_precessing(self, flow, input_size, orig_size, temporal_len):
+    def post_processing(self, flow, input_size, orig_size, temporal_len):
         flow = self.padder.unpad(flow)
         # [N, T, C, H, W]
         refine_flow = torch.reshape(flow, shape=[-1] + [temporal_len, 2] + list(flow.shape[-2:]))

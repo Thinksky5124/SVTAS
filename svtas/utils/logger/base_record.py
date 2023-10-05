@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 19:51:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-30 10:05:09
+LastEditTime : 2023-10-05 21:21:42
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_record.py
 '''
@@ -11,7 +11,7 @@ from typing import List, Dict, Any
 
 class BaseRecord(metaclass=abc.ABCMeta):
     def __init__(self,
-                 mode,
+                 mode: str = "train",
                  addition_record: List[Dict] = None) -> None:
         self.mode = mode
         self.addition_record = addition_record
@@ -44,11 +44,13 @@ class BaseRecord(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def update_record(self, update_dict: Dict):
         pass
-    
-    @abc.abstractmethod
-    def update_loss_dict(self, update_dict: Dict):
-        pass
 
     @abc.abstractmethod
     def accumulate_record(self):
         pass
+
+    def save(self) -> Dict:
+        return self._record
+
+    def load(self, load_dict: Dict):
+        self._record = load_dict

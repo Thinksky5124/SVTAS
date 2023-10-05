@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 20:15:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-28 20:40:50
+LastEditTime : 2023-10-05 15:17:59
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/tasegformer.py
 '''
@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .token_mixer_layer import *
 import copy
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
     
 class Encoder(nn.Module):
     def __init__(self,

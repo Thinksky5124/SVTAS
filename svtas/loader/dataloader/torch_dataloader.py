@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2023-09-28 19:42:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-28 19:45:06
+LastEditTime : 2023-10-05 11:48:37
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataloader/torch_dataloader.py
 '''
 from typing import Iterable, Optional, Sequence, Union
 from .base_dataloader import BaseDataloader
-from torch.utils.data import DataLoader, Dataset, Sampler, _collate_fn_t, _worker_init_fn_t
+from torch.utils.data import DataLoader, Dataset, Sampler
 
 class TorchDataLoader(BaseDataloader, DataLoader):
     def __init__(self,
@@ -18,11 +18,11 @@ class TorchDataLoader(BaseDataloader, DataLoader):
                  sampler: Sampler = None,
                  batch_sampler: Sampler[Sequence] = None,
                  num_workers: int = 0,
-                 collate_fn: _collate_fn_t | None = None,
+                 collate_fn: None = None,
                  pin_memory: bool = False,
                  drop_last: bool = False,
                  timeout: float = 0,
-                 worker_init_fn: _worker_init_fn_t | None = None,
+                 worker_init_fn: None = None,
                  multiprocessing_context=None,
                  generator=None, *,
                  prefetch_factor: int  = None,

@@ -10,7 +10,7 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 from ...utils.attention_helper.attention_layer import MultiHeadAttention
 from .block_recurrent_transformer import RecurrentStateGate
 from .helper_function import (exists, FeedForward)

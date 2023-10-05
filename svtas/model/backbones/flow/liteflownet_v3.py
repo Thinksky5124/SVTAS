@@ -88,7 +88,7 @@ class LiteFlowNetV3(nn.Module):
         
         return img1, img2, input_size, orig_size, temporal_len
     
-    def post_precessing(self, flow, input_size, orig_size, temporal_len):
+    def post_processing(self, flow, input_size, orig_size, temporal_len):
         flow = F.interpolate(flow, size=orig_size, mode='bilinear', align_corners=False) * self.scale_factor_flow
         flow[:, 0, :, :] *= float(orig_size[1]) / float(input_size[1])
         flow[:, 1, :, :] *= float(orig_size[0]) / float(input_size[0])

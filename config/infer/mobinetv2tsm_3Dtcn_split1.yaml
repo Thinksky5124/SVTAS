@@ -58,7 +58,7 @@ DATASET: #DATASET field
 
 PIPELINE: #PIPELINE field
     infer:
-        name: "BasePipline"
+        name: "BaseDatasetPipline"
         decode:
             name: "VideoDecoder"
             backend: "decord"

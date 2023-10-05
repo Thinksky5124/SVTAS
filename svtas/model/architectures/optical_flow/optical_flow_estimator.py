@@ -37,7 +37,7 @@ class OpticalFlowEstimation(SeriousModel):
             flows = flow_imgs
         
         if not self.training and self.model.extract_mode is True:
-            flows = self.model.post_precessing(flow2, input_size, orig_size, temporal_len)
+            flows = self.model.post_processing(flow2, input_size, orig_size, temporal_len)
         else:
             flows = flow2
         # seg_score [N,T,C,H,W]

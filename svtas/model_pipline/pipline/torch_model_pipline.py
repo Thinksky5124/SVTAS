@@ -2,11 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 10:42:19
+LastEditTime : 2023-10-05 20:51:21
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_pipline.py
 '''
-from ...utils.logger import log_batch, AverageMeter
+from typing import Any, Dict
+from svtas.utils.logger import AverageMeter
 from .base_pipline import BaseModelPipline
 from svtas.utils import AbstractBuildFactory
 
@@ -24,16 +25,14 @@ class TorchModelPipline(BaseModelPipline):
     def __init__(self,
                  model,
                  post_processing,
-                 lr_scheduler,
                  criterion=None,
                  optimizer=None,
+                 lr_scheduler=None,
                  use_amp=False,
                  grad_clip=None,
                  need_grad_accumulate=True) -> None:
-        super().__init__(model, criterion, optimizer)
-        self.lr_scheduler = lr_scheduler
+        super().__init__(model, post_processing, criterion, optimizer, lr_scheduler)
         self.grad_clip = grad_clip
-        self.post_processing = post_processing
         self.use_amp = use_amp
         self.need_grad_accumulate = need_grad_accumulate
         self.current_step_vid_list = None
@@ -73,7 +72,7 @@ class TorchModelPipline(BaseModelPipline):
         elif mode == 'batch':
             return self.batch_end_after_forward(end_info_dict=end_info_dict)
     
-    @torch.no_grad
+    @torch.no_grad()
     def iter_end_after_forward(self, end_info_dict):
         vid_list = end_info_dict['vid_list']
         sliding_num = end_info_dict['sliding_num']
@@ -85,7 +84,8 @@ class TorchModelPipline(BaseModelPipline):
                 self.current_step_vid_list = vid_list
             output = self.post_processing.update(score, labels, idx) / sliding_num
         return output
-    @torch.no_grad
+    
+    @torch.no_grad()
     def batch_end_after_forward(self, end_info_dict):
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
@@ -106,13 +106,19 @@ class TorchModelPipline(BaseModelPipline):
         loss_dict = self.criterion(outputs, input_data)
         score = outputs['output']
         return score, loss_dict
-        
+    
+    def pre_backward(self, loss_dict):
+        return super().pre_backward(loss_dict)
+    
     def backward(self, loss_dict):
         loss = loss_dict["loss"]
         loss.backward()
         if self.grad_clip is not None:
             for param_group in self.optimizer.param_groups:
                 self.grad_clip(param_group['params'])
+    
+    def after_backward(self, loss_dict):
+        return super().after_backward(loss_dict)
     
     def memory_clear(self):
         self.model._clear_memory_buffer()
@@ -127,8 +133,20 @@ class TorchModelPipline(BaseModelPipline):
     def init_model_param(self, *args, **kwargs):
         self.model.init_weights()
     
-    def save_model(self, path):
+    def resert_model_pipline(self, *args, **kwargs):
+        return super().resert_model_pipline(*args, **kwargs)
+    
+    def end_model_pipline(self):
+        return super().end_model_pipline()
+    
+    def save(self, path):
         pass
+
+    def load(self, param_dict: Dict) -> None:
+        pass
+
+    def __call__(self, data_dict) -> Any:
+        self.forward(data_dict)
 
 @AbstractBuildFactory.register('model_pipline')
 class TorchDDPModelPipline(TorchModelPipline):

@@ -72,7 +72,7 @@ DATASET = dict(
 )
 
 PIPELINE = dict(
-    name = "BasePipline",
+    name = "BaseDatasetPipline",
     decode = dict(
         name='FeatureDecoder',
         backend=dict(

@@ -2,12 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 10:48:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 19:52:14
+LastEditTime : 2023-10-05 20:25:55
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
 '''
+import os
 import abc
 from enum import Enum, auto
+from svtas.utils.build import AbstractBuildFactory
 
 class LoggerLevel(Enum):
     DEBUG = auto()
@@ -21,13 +23,16 @@ LOGGER_DICT = dict()
 class BaseLogger:
     def __init__(self,
                  name: str,
-                 path: str = None,
+                 root_path: str = None,
                  level=LoggerLevel.INFO) -> None:
         self.name = name
-        self.path = path
+        if root_path is None:
+            self.path = os.environ['SVTAS_LOG_DIR']
+        else:
+            self.path = root_path
         self._level = level
 
-    def __new__(cls, name: str, path: str = None, level=LoggerLevel.INFO):
+    def __new__(cls, name: str, root_path: str = None, level=LoggerLevel.INFO):
         if name in LOGGER_DICT.keys():
             return LOGGER_DICT[name]
         else:
@@ -37,6 +42,41 @@ class BaseLogger:
 
     @abc.abstractmethod
     def log(self, msg, *args, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def info(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def debug(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+    
+    @abc.abstractmethod
+    def warn(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+    
+    @abc.abstractmethod
+    def error(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+    
+    @abc.abstractmethod
+    def critical(self,
+             msg: object,
+             *args: object,
+             **kwargs):
         pass
 
     @abc.abstractmethod
@@ -55,6 +95,11 @@ class BaseLogger:
     def close(self):
         pass
 
-def get_logger(name: str):
+def get_logger(name: str) -> BaseLogger:
     assert name in LOGGER_DICT.keys(), f"The log with the name of {name} was not initialized!"
     return LOGGER_DICT[name]
+
+def setup_logger(cfg):
+    for logger_class, logger_cfg in cfg.items():
+        logger_cfg['logger_class'] = logger_class
+        AbstractBuildFactory.create_factory('logger').create(logger_cfg, key="logger_class")

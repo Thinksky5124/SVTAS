@@ -11,7 +11,7 @@ import copy
 import random
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import constant_init, kaiming_init
+from mmengine.model import constant_init, kaiming_init
 from .memory_layer import ConvLSTMResidualLayer
 
 from svtas.utils import AbstractBuildFactory

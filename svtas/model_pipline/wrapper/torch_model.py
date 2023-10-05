@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 20:35:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 13:24:03
+LastEditTime : 2023-10-05 20:56:22
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/torch_model.py
 '''
 import abc
 from typing import Any
-from .base import BaseWapper
+from .base import BaseModel
 import torch
 
-class TorchModel(BaseWapper, torch.nn.Module):
+class TorchModel(torch.nn.Module, BaseModel):
     def __init__(self) -> None:
         super().__init__()
     

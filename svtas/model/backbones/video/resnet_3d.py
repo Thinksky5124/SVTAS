@@ -3,7 +3,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 16:57:24
+LastEditTime : 2023-10-05 12:02:30
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet_3d.py
 '''
@@ -12,10 +12,10 @@ import warnings
 
 import torch.nn as nn
 import torch.utils.checkpoint as cp
-from mmcv.cnn import (ConvModule, NonLocal3d, build_activation_layer,
-                      constant_init, kaiming_init)
-from mmengine.runner import _load_checkpoint, load_checkpoint
-from mmcv.utils import _BatchNorm
+from mmcv.cnn import (ConvModule, NonLocal3d, build_activation_layer)
+from mmengine.model import kaiming_init, constant_init
+from mmengine.runner.checkpoint import _load_checkpoint, load_checkpoint
+from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
 from torch.nn.modules.utils import _ntuple, _triple
 
 from ....utils.logger import get_logger

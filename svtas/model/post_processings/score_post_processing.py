@@ -2,19 +2,21 @@
 Author       : Thyssen Wen
 Date         : 2022-05-26 18:50:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-08 16:46:32
+LastEditTime : 2023-10-05 19:41:07
 Description  : Score Post precessing Module
-FilePath     : /SVTAS/svtas/model/post_precessings/score_post_processing.py
+FilePath     : /SVTAS/svtas/model/post_processings/score_post_processing.py
 '''
 import numpy as np
 import torch
 from svtas.utils import AbstractBuildFactory
 from . import refine_method
+from .base_post_processing import BasePostProcessing
 
-@AbstractBuildFactory.register('post_precessing')
-class ScorePostProcessing():
+@AbstractBuildFactory.register('post_processing')
+class ScorePostProcessing(BasePostProcessing):
     def __init__(self,
                  ignore_index=-100):
+        super().__init__()
         self.ignore_index = ignore_index
         self.init_flag = False
         self.epls = 1e-10
@@ -56,7 +58,7 @@ class ScorePostProcessing():
 
         return pred_score_list, pred_cls_list, ground_truth_list
 
-@AbstractBuildFactory.register('post_precessing')
+@AbstractBuildFactory.register('post_processing')
 class ScorePostProcessingWithRefine(ScorePostProcessing):
     def __init__(self,
                  refine_method_cfg: dict = None,

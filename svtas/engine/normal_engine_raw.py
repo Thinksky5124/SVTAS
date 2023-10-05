@@ -2,21 +2,16 @@
 Author: Thyssen Wen
 Date: 2022-03-21 15:22:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-21 19:44:40
+LastEditTime : 2023-10-05 11:50:02
 Description: runner script
 FilePath     : /SVTAS/svtas/engine/normal_engine_raw.py
 '''
 import torch
 import time
-from ..utils.logger import log_batch, AverageMeter, get_logger
+# from ..utils.logger import log_batch, AverageMeter, get_logger
 import torch.distributed as dist
-from .builder import ENGINE
+# from .builder import ENGINE
 from .base_engine import BaseEngine
-
-try:
-    from apex import amp
-except:
-    pass
 
 def reduce_mean(tensor, nprocs):
     rt = tensor.clone()

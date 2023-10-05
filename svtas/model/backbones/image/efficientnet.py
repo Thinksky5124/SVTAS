@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 16:12:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 20:12:02
+LastEditTime : 2023-10-05 15:38:04
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientnet.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientnet.py
 '''
@@ -18,7 +18,7 @@ from mmcv.cnn.bricks import ConvModule, DropPath
 from mmengine.model import Sequential
 
 from ....utils.logger import get_logger
-from mmengine.runner import load_state_dict
+from mmengine.runner import load_state_dict, load_checkpoint
 
 from .mobilenet_v2 import make_divisible
 from svtas.utils import AbstractBuildFactory

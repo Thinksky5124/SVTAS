@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-28 18:37:54
+LastEditTime : 2023-10-05 16:30:42
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -18,10 +18,10 @@ import torch
 
 from svtas.tasks.infer import infer
 from svtas.tasks.test import test
-from svtas.tasks.train_raw import train
+from svtas.tasks.train import train
+from svtas.tasks.profile import profile
 from svtas.utils.config import get_config
 from svtas.utils.logger import get_logger
-from svtas.tasks.profile import profile
 
 
 def parse_args():
@@ -32,7 +32,7 @@ def parse_args():
                         default='configs/example.yaml',
                         help='config file path')
     parser.add_argument('--mode',
-                        '--m',
+                        '-m',
                         choices=["train", "test", "infer", "profile"],
                         help='run mode')
     parser.add_argument('-o',
@@ -40,26 +40,10 @@ def parse_args():
                         action='append',
                         default=[],
                         help='config options to be overridden')
-    parser.add_argument('-w',
-                        '--weights',
-                        type=str,
-                        help='weights for finetuning or testing')
     parser.add_argument('--local_rank',
         default=-1,
         type=int,
         help='node rank for distributed training')
-    parser.add_argument(
-        '--validate',
-        action='store_true',
-        help='whether to evaluate the checkpoint during training')
-    parser.add_argument(
-        '--use_amp',
-        action='store_true',
-        help='whether to use amp to accelerate')
-    parser.add_argument(
-        '--use_tensorboard',
-        action='store_true',
-        help='whether to use tensorboard to visualize train')
     parser.add_argument(
         '--seed',
         type=int,
@@ -68,12 +52,7 @@ def parse_args():
     parser.add_argument(
         '--benchmark',
         action='store_true',
-        help='whether to use amp to accelerate')
-    parser.add_argument(
-        '--max_iters',
-        type=int,
-        default=None,
-        help='max iterations when training(this argonly used in test_tipc)')
+        help='whether to use benchmark to reproduct')
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch'],
@@ -87,7 +66,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cfg = get_config(args.config, overrides=args.override, tensorboard=args.use_tensorboard)
+    cfg = get_config(args.config, overrides=args.override)
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
@@ -115,30 +94,22 @@ def main():
         test(cfg,
              args=args,
              local_rank=args.local_rank,
-             nprocs=nprocs,
-             use_amp=args.use_amp,
-             weights=args.weights)
+             nprocs=nprocs)
     elif args.mode in ["train"]:
         train(cfg,
             args=args,
             local_rank=args.local_rank,
-            nprocs=nprocs,
-            use_amp=args.use_amp,
-            weights=args.weights,
-            validate=args.validate)
+            nprocs=nprocs)
     elif args.mode in ["infer"]:
         infer(cfg,
             args=args,
             local_rank=args.local_rank,
-            nprocs=nprocs,
-            weights=args.weights,
-            validate=args.validate)
+            nprocs=nprocs)
     elif args.mode in ["profile"]:
         profile(cfg,
             args=args,
             local_rank=args.local_rank,
-            nprocs=nprocs,
-            weights=args.weights)
+            nprocs=nprocs)
     else:
         raise NotImplementedError(args.mode + " mode not support!")
 

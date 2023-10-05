@@ -7,8 +7,8 @@ Description  : Pipline function
 FilePath     : /ETESVS/loader/pipline/__init__.py
 '''
 from .collect_fn import BatchCompose, StreamBatchCompose
-from .base_pipline import BasePipline
+from .base_pipline import BaseDatasetPipline
 
 __all__ = [
-    'BatchCompose', 'BasePipline', 'StreamBatchCompose'
+    'BatchCompose', 'BaseDatasetPipline', 'StreamBatchCompose'
 ]

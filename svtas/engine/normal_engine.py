@@ -2,33 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:44:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-04 16:26:41
+LastEditTime : 2023-10-05 21:27:55
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/normal_engine.py
 '''
 import time
 import os.path as osp
 from typing import Dict
-from .base_engine import BaseEngine
+from .base_engine import BaseImplementEngine
 from svtas.utils import AbstractBuildFactory
-
-@AbstractBuildFactory.register('engine')
-class TrainingBaseEngine(BaseEngine):
-    def __init__(self,
-                 model_pipline: Dict,
-                 logger: Dict,
-                 record: Dict,
-                 iter_method: Dict,
-                 checkpointor: Dict) -> None:
-        super().__init__(model_pipline,
-                         logger,
-                         record,
-                         iter_method,
-                         checkpointor)
+from svtas.loader.dataloader import BaseDataloader
 
 
-
-class TrainingBaseEngineModify(BaseEngine):
+class TrainingBaseEngineModify(BaseImplementEngine):
     def __init__(self, model_pipline: Dict, logger: Dict, record: Dict, iter_method: Dict, checkpointor: Dict) -> None:
         super().__init__(model_pipline, logger, record, iter_method, checkpointor)
     
@@ -165,9 +151,9 @@ class TrainingBaseEngineModify(BaseEngine):
             self.post_processing.init_flag = False
 
 @AbstractBuildFactory.register('engine')
-class TrainEngine(TrainingBaseEngine):
+class TrainEngine(BaseImplementEngine):
     @property
-    def runner_mode():
+    def runner_mode(self):
         return 'train'
     
     def epoch_init(self):
@@ -188,21 +174,7 @@ class TrainEngine(TrainingBaseEngine):
         super().batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
 
 @AbstractBuildFactory.register('engine')
-class ValidationEngine(TrainingBaseEngine):
-    @property
-    def runner_mode():
-        return 'validation'
-
-    def epoch_init(self):
-        super().epoch_init()
-        self.model.eval()
-        self.b_tic = time.time()
-        # reset recoder
-        for _, recod in self.record_dict.items():
-            recod.reset()
-
-@AbstractBuildFactory.register('engine')
-class TestEngine(TrainingBaseEngine):
+class TestEngine(BaseImplementEngine):
     @property
     def runner_mode():
         return 'test'

@@ -2,21 +2,21 @@
 Author       : Thyssen Wen
 Date         : 2022-09-24 14:59:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 16:14:47
+LastEditTime : 2023-10-05 11:49:50
 Description  : Infer Engine Class
 FilePath     : /SVTAS/svtas/engine/infer_engine.py
 '''
 import torch
 import time
-from svtas.utils.logger import log_batch
+# from svtas.utils.logger import log_batch
 
 from svtas.utils.logger import get_logger
 import numpy as np
-from .normal_engine_raw import Engine
+from .normal_engine_raw import TrainEngine
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('engine')
-class InferONNXEngine(Engine):
+class InferONNXEngine(TrainEngine):
     def __init__(self,
                  logger,
                  video_batch_size,

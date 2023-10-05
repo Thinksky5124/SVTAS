@@ -7,10 +7,11 @@ Description: config load function
 FilePath: /ETESVS/utils/config.py
 '''
 import os
-from .logger import coloring, get_logger, setup_logger
+from .logger import get_logger, setup_logger
 from mmengine import Config
+import datetime
 
-def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path="output", need_coloring=False):
+def get_config(fname, overrides=None, show=True):
     """
     Read config from file
     """
@@ -20,14 +21,14 @@ def get_config(fname, overrides=None, show=True, tensorboard=False, logger_path=
         config.work_dir = "output"
 
     if os.path.isabs(config.work_dir):
-        os.environ['ROS_LOG_DIR'] = config.work_dir
+        os.environ['SVTAS_LOG_DIR'] = os.path.join(config.work_dir, config.model_name, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
     else:
-        os.environ['ROS_LOG_DIR'] = os.path.join(os.getcwd(), config.work_dir)
+        os.environ['SVTAS_LOG_DIR'] = os.path.join(os.getcwd(), config.work_dir, config.model_name, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
-    logger = setup_logger(f"./"+ logger_path + f"/{config.model_name}", name="SVTAS", level="INFO", tensorboard=tensorboard)
+    setup_logger(cfg=config.LOGGER_LIST)
     override_config(config._cfg_dict, overrides)
     if show:
-        print_config(config, need_coloring=need_coloring)
+        print_config(config)
     return config
 
 def override(dl, ks, v):
@@ -94,15 +95,15 @@ def override_config(config, options=None):
 
     return config
 
-def print_config(config, need_coloring=False):
+def print_config(config):
     """
     visualize configs
     Arguments:
         config: configs
     """
-    print_dict(config, need_coloring=need_coloring)
+    print_dict(config)
 
-def print_dict(d, delimiter=0, need_coloring=False):
+def print_dict(d, delimiter=0):
     """
     Recursively visualize a dict and
     indenting acrrording by the relationship of keys.
@@ -111,27 +112,14 @@ def print_dict(d, delimiter=0, need_coloring=False):
     placeholder = "-" * 60
     for k, v in sorted(d.items()):
         if isinstance(v, dict):
-            if not need_coloring:
-                logger.info("{}{} : ".format(delimiter * " ", k))
-            else:
-                logger.info("{}{} : ".format(delimiter * " ", coloring(k,
-                                                                    "HEADER")))
-            print_dict(v, delimiter + 4, need_coloring)
+            logger.info("{}{} : ".format(delimiter * " ", k))
+            print_dict(v, delimiter + 4)
         elif isinstance(v, list) and len(v) >= 1 and isinstance(v[0], dict):
-            if not need_coloring:
-                logger.info("{}{} : ".format(delimiter * " ", str(k)))
-            else:
-                logger.info("{}{} : ".format(delimiter * " ",
-                                            coloring(str(k), "HEADER")))
+            logger.info("{}{} : ".format(delimiter * " ", str(k)))
             for value in v:
-                print_dict(value, delimiter + 4, need_coloring)
+                print_dict(value, delimiter + 4)
         else:
-            if not need_coloring:
-                logger.info("{}{} : {}".format(delimiter * " ", k, v))
-            else:
-                logger.info("{}{} : {}".format(delimiter * " ",
-                                            coloring(k, "HEADER"),
-                                            coloring(v, "OKGREEN")))
+            logger.info("{}{} : {}".format(delimiter * " ", k, v))
         try:
             if k.isupper():
                 logger.info(placeholder)

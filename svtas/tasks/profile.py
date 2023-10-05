@@ -2,22 +2,17 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 15:41:55
+LastEditTime : 2023-10-05 15:25:23
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/profile.py
 '''
 import torch
 import torch.profiler
 from ..utils.logger import get_logger
-from ..loader.builder import build_dataset
-from ..loader.builder import build_pipline
 import time
 import numpy as np
 import datetime
 
-from ..model.builder import build_model
-from ..model.builder import build_loss
-from ..optimizer.builder import build_optimizer
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
