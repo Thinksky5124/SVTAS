@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 13:34:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-06 15:00:57
+LastEditTime : 2023-10-07 20:09:57
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/general/serious.py
 '''
@@ -19,13 +19,13 @@ class SeriousModel(TorchModel):
                  **kwargs) -> None:
         super().__init__()
         self.component_list = []
-        self.init_weights(weight_init_cfg)
         for name, cfg in kwargs.items():
             if cfg is not None:
                 setattr(self, name, AbstractBuildFactory.create_factory('model').create(cfg))
                 self.component_list.append(name)
             else:
                 setattr(self, name, None)
+        self.init_weights(weight_init_cfg)
     
     def init_weights(self, init_cfg: dict = None):
         for component_name in self.component_list:

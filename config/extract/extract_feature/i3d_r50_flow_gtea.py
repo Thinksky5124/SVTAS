@@ -60,7 +60,7 @@ DATASET = dict(
     )
 )
 
-PIPELINE = dict(
+DATASETPIPLINE = dict(
     name = "BaseDatasetPipline",
     decode = dict(
         name = "VideoDecoder",

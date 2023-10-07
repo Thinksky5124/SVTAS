@@ -152,7 +152,7 @@ class FastFlowNet(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()
                     for param in self.parameters():

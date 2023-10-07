@@ -17,7 +17,7 @@ import argparse
 from svtas.utils.logger import get_logger, setup_logger
 from svtas.utils.config import Config
 import svtas.loader.builder as dataset_builder
-from svtas.engine.extract_engine import ExtractOpticalFlowRunner
+from svtas.engine.extract_engine_raw import ExtractOpticalFlowRunner
 
 @torch.no_grad()
 def extractor(cfg, args):
@@ -35,7 +35,7 @@ def extractor(cfg, args):
     assert video_batch_size == 1, "Only support 1 batch size"
 
     sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.test)
-    Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
+    Pipeline = dataset_builder.build_pipline(cfg.DATASETPIPLINE)
     dataset_config = cfg.DATASET.config
     dataset_config['pipeline'] = Pipeline
     dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size

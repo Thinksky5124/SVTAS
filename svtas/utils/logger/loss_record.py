@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 18:57:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 15:18:49
+LastEditTime : 2023-10-07 21:24:24
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/loss_record.py
 '''
@@ -86,7 +86,8 @@ class StreamValueRecord(ValueRecord):
 
     def stream_update_dict(self, update_dict: Dict):
         for key, value in update_dict.items():
-            self.loss_dict[key].update(value)
+            if key in self.loss_dict:
+                self.loss_dict[key].update(value)
     
     def accumulate_loss_dict(self):
         for key, value in self.loss_dict.items():
@@ -95,3 +96,27 @@ class StreamValueRecord(ValueRecord):
     def accumulate_record(self):
         self.accumulate_loss_dict()
         super().accumulate_record()
+
+@AbstractBuildFactory.register('record')
+class ExtractRecord(BaseRecord):
+    def __init__(self,
+                 addition_record: List[Dict] = [],
+                 accumulate_type: Dict[str, str] = {}) -> None:
+        assert isinstance(addition_record, list), "You must input list!"
+        assert isinstance(accumulate_type, dict), "You must input dict!"
+        addition_record += [
+            dict(name='batch_time', fmt='.5f'),
+            dict(name='reader_time', fmt='.5f')]
+
+        accumulate_type['batch_time'] = 'avg'
+        accumulate_type['reader_time'] = 'avg'
+        super().__init__(addition_record)
+        for a in self.addition_record:
+            self._record[a['name']] = AverageMeter(**a)
+        
+        for key in self._record.keys():
+            if key not in accumulate_type:
+                accumulate_type[key] = 'avg'
+            else:
+                assert accumulate_type[key] in ['avg', 'sum', 'val'], f'Unsupport accumulate_type: {accumulate_type}!'
+        self.accumulate_type = accumulate_type

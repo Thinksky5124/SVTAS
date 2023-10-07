@@ -18,7 +18,7 @@ import argparse
 from svtas.utils.config import Config
 from svtas.utils.logger import get_logger, setup_logger
 from mmengine.runner import load_state_dict
-from svtas.engine.extract_engine import ExtractFeatureRunner
+from svtas.engine.extract_engine_raw import ExtractFeatureRunner
 
 @torch.no_grad()
 def extractor(cfg, outpath, flow_extract):
@@ -50,7 +50,7 @@ def extractor(cfg, outpath, flow_extract):
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.test)
-    Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
+    Pipeline = dataset_builder.build_pipline(cfg.DATASETPIPLINE)
     dataset_config = cfg.DATASET.config
     dataset_config['pipeline'] = Pipeline
     dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size

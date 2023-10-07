@@ -14,4 +14,4 @@ export DECORD_EOF_RETRY_MAX=20480
 ### gtea ###
 # python tools/launch.py --mode train --validate -c config/svtas/feature/fc_50salads.py --seed 0 # 记得检查一下
 # python tools/launch.py --mode train --validate -c config/svtas/feature/asformer_50salads.py --seed 0 # 记得检查一下
-python tools/launch.py --mode train -c config/base_config.py --seed 0
+python tools/launch.py --mode train -c config/models/svtas-rl/svtas_rl_gtea.py --seed 0

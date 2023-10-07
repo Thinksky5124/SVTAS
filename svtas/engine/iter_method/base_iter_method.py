@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:37:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 14:06:13
+LastEditTime : 2023-10-07 20:59:22
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/base_iter_method.py
 '''
@@ -59,6 +59,7 @@ class BaseIterMethod(metaclass=abc.ABCMeta):
         """
         You should not modify value in hook function!
         """
+        assert key in ['epoch_pre', 'iter_pre', 'iter_end', 'epoch_end', 'every_iter_end', 'every_batch_end']
         if key not in self.hook_dict:
             self.hook_dict[key] = [func]
         else:

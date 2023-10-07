@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:28:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 14:20:28
+LastEditTime : 2023-10-07 20:45:33
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/base_engine.py
 '''
@@ -66,7 +66,7 @@ class BaseEngine(metaclass=abc.ABCMeta):
     
     @running_mode.setter
     def running_mode(self, val: str):
-        assert val in ['train', 'test', 'validation', 'infer', 'profile', 'visulaize']
+        assert val in ['train', 'test', 'validation', 'infer', 'profile', 'visulaize', 'extract']
         # set running mode
         self._running_mode = val
         self.iter_method.mode = self.running_mode
@@ -104,6 +104,7 @@ class BaseEngine(metaclass=abc.ABCMeta):
     def shutdown(self):
         pass
 
+@AbstractBuildFactory.register('engine')
 class BaseImplementEngine(BaseEngine):
     def __init__(self,
                  model_name: str,
@@ -150,8 +151,12 @@ class BaseImplementEngine(BaseEngine):
     def resume(self, path: str = None):
         if self.checkpointor.load_flag and path is None:
             load_dict = self.checkpointor.load()
+            for key, logger in self.logger_dict.items():
+                logger.info(f"resume engine from checkpoint file: {self.checkpointor.load_path}")
         elif path is not None:
             load_dict = self.checkpointor.load(path)
+            for key, logger in self.logger_dict.items():
+                logger.info(f"resume engine from checkpoint file: {path}")
         else:
             raise FileNotFoundError("You must specify a valid path!")
         self.resume_impl(load_dict)

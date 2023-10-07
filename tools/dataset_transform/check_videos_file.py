@@ -40,8 +40,8 @@ def main():
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     num_workers = cfg.DATASET.get('num_workers', 0)
 
-    train_Pipeline = build_pipline(cfg.PIPELINE.train)
-    val_Pipeline = build_pipline(cfg.PIPELINE.test)
+    train_Pipeline = build_pipline(cfg.DATASETPIPLINE.train)
+    val_Pipeline = build_pipline(cfg.DATASETPIPLINE.test)
 
     # Construct Dataset
     train_dataset_config = cfg.DATASET.train

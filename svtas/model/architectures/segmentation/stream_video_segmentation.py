@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 14:34:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 15:07:17
+LastEditTime : 2023-10-07 19:24:33
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video_segmentation.py
 '''
@@ -31,8 +31,8 @@ class StreamVideoSegmentation(VideoRocognition):
     def forward_with_backbone_loss(self, input_data):
         input_data = self.preprocessing(input_data)
 
-        masks = input_data['masks']
-        imgs = input_data['imgs']
+        masks = input_data['masks_m']
+        imgs = input_data['imgs_m']
         
         if self.backbone is not None:
             backbone_masks = input_data['backbone_masks']
@@ -62,8 +62,8 @@ class StreamVideoSegmentation(VideoRocognition):
     def forward_with_backbone_neck_loss(self, input_data):
         input_data = self.preprocessing(input_data)
 
-        masks = input_data['masks']
-        imgs = input_data['imgs']
+        masks = input_data['masks_m']
+        imgs = input_data['imgs_m']
         
         if self.backbone is not None:
             backbone_masks = input_data['backbone_masks']

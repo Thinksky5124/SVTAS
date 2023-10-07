@@ -75,7 +75,7 @@ def override_config(config, options=None):
         options(list): list of pairs(key0.key1.idx.key2=value)
             such as: [
                 epochs=20',
-                'PIPELINE.train.transform.1.ResizeImage.resize_short=300'
+                'DATASETPIPLINE.train.transform.1.ResizeImage.resize_short=300'
             ]
     Returns:
         config(dict): replaced config

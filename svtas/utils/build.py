@@ -91,8 +91,15 @@ class Registry(object):
         return ret
 
 class BaseBuildFactory(metaclass=abc.ABCMeta):
-    def __init__(self, registry_table):
+    def __init__(self, registry_table = None):
         self.registry_table = registry_table
+    
+    @staticmethod
+    def get_registry_table(object_type_name):
+        for registry_table_name, registry_table in AbstractBuildFactory.REGISTRY_MAP.items():
+            if object_type_name in registry_table:
+                return registry_table
+        raise KeyError("No object named '{}' found in all registry!".format(object_type_name))
     
     @abc.abstractmethod
     def create(self, *args, **kwargs):
@@ -107,6 +114,9 @@ class FromArgsBuildFactory(BaseBuildFactory):
         Returns:
             obj: The constructed object.
         """
+
+        if self.registry_table is None:
+            self.registry_table = self.get_registry_table(object_type_name)
 
         obj_cls = self.registry_table.get(object_type_name)
         if obj_cls is None:
@@ -135,6 +145,9 @@ class FromConfigBuildFactory(BaseBuildFactory):
         cfg_copy = cfg.copy()
         obj_type = cfg_copy.pop(key)
 
+        if self.registry_table is None:
+            self.registry_table = self.get_registry_table(obj_type)
+
         obj_cls = self.registry_table.get(obj_type)
         if obj_cls is None:
             raise KeyError('{} is not in the {} registry'.format(
@@ -162,6 +175,9 @@ class FromConfigWithSBPBuildFactory(FromConfigBuildFactory):
         cfg_copy = cfg.copy()
         obj_type = cfg_copy.pop(key)
 
+        if self.registry_table is None:
+            self.registry_table = self.get_registry_table(obj_type)
+            
         obj_cls = self.registry_table.get(obj_type)
         if obj_cls is None:
             raise KeyError('{} is not in the {} registry'.format(
@@ -202,6 +218,8 @@ class AbstractBuildFactory(metaclass=abc.ABCMeta):
         else:
             assert build_method in AbstractBuildFactory.BUILD_METHOD_MAP.keys(), f"Unsupport build_method: {build_method}!"
             assert registory_name in AbstractBuildFactory.REGISTRY_MAP.keys(), f"Unsupport registory_name: {registory_name}!"
+            if registory_name is None:
+                return AbstractBuildFactory.BUILD_METHOD_MAP[build_method]()
             return AbstractBuildFactory.BUILD_METHOD_MAP[build_method](AbstractBuildFactory.REGISTRY_MAP[registory_name])
     
     @staticmethod
@@ -218,7 +236,7 @@ class AbstractBuildFactory(metaclass=abc.ABCMeta):
         assert build_method in AbstractBuildFactory.BUILD_METHOD_MAP.keys(), f"Unsupport build_method: {build_method}!"
         assert registory_name in AbstractBuildFactory.REGISTRY_MAP.keys(), f"Unsupport registory_name: {registory_name}!"
         return AbstractBuildFactory.BUILD_METHOD_MAP[build_method](AbstractBuildFactory.REGISTRY_MAP[registory_name]) 
-    
+
     @staticmethod
     def register(registory_name: str):
         """

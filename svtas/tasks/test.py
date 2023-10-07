@@ -2,37 +2,26 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 15:00:14
+LastEditTime : 2023-10-07 20:29:16
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
 import torch
-from ..utils.logger import get_logger
-from ..engine.normal_engine_raw import BaseEngine
-import time
-import numpy as np
-
-from mmcv.cnn.utils.flops_counter import get_model_complexity_info
-from fvcore.nn import FlopCountAnalysis, flop_count_table
-from thop import clever_format
+from svtas.utils.logger import get_logger
+from svtas.utils.save_load import mkdir
+from svtas.utils import AbstractBuildFactory
+from svtas.engine import BaseEngine
 from ..utils.collect_env import collect_env
-import warnings
 
 @torch.no_grad()
 def test(cfg,
          args,
          local_rank,
-         nprocs,
-         use_amp=False,
-         weights=None):
+         nprocs):
     logger = get_logger("SVTAS")
-    if args.use_tensorboard and local_rank <= 0:
-        tensorboard_writer = get_logger("SVTAS", tensorboard=args.use_tensorboard)
-    # wheather use amp
-    if use_amp is True:
-        logger.info("use amp")
-    need_grad_accumulate = cfg.OPTIMIZER.get('need_grad_accumulate', True)
-    
+    model_name = cfg.model_name
+    output_dir = cfg.get("output_dir", f"./output/{model_name}")
+    mkdir(output_dir)
     # env info logger
     env_info_dict = collect_env()
     env_info = '\n'.join([f'{k}: {v}' for k, v in env_info_dict.items()])
@@ -40,110 +29,49 @@ def test(cfg,
     logger.info('Environment info:\n' + dash_line + env_info + '\n' +
                 dash_line)
 
-    # 1. Construct model.
-    if local_rank < 0:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # 1.construct model
-        model = build_model(cfg.MODEL).to(device)
-        criterion = build_loss(cfg.MODEL.loss).to(device)
-
-        # wheather to use amp
-        if use_amp is True:
-            model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
-    else:
-        torch.cuda.set_device(local_rank)
-        torch.distributed.init_process_group(backend='nccl')
-        # 1.construct model
-        model = build_model(cfg.MODEL).cuda(local_rank)
-        criterion = build_loss(cfg.MODEL.loss).cuda(local_rank)
-
-        device = torch.device('cuda:{}'.format(local_rank))
+   # 2. build metirc
+    metric_cfg = cfg.METRIC
+    metrics = dict()
+    for k, v in metric_cfg.items():
+        v['train_mode'] = True
+        metrics[k] = AbstractBuildFactory.create_factory('metric').create(v)
     
-        # wheather to use amp
-        if use_amp is True:
-            model = convert_syncbn_model(model).to(device)
-            model = DDP(model, delay_allreduce=True)
-        else:
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
+    # 3. construct model_pipline
+    model_pipline = AbstractBuildFactory.create_factory('model_pipline').create(cfg.MODEL_PIPLINE)
 
-    # wheather batch train
-    batch_test = False
-    if cfg.COLLATE.test.name in ["BatchCompose"]:
-        batch_test = True
-
-    # 2. Construct dataset and dataloader.
-    # default num worker: 0, which means no subprocess will be created
-    num_workers = cfg.DATASET.get('num_workers', 0)
-    test_num_workers = cfg.DATASET.get('test_num_workers', num_workers)
+    # 4. Construct Dataset
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    sliding_concate_fn = build_pipline(cfg.COLLATE.test)
-    test_Pipeline = build_pipline(cfg.PIPELINE.test)
+    num_workers = cfg.DATASET.get('num_workers', 0)
+    test_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
     test_dataset_config = cfg.DATASET.test
-    test_dataset_config['pipeline'] = test_Pipeline
+    test_dataset_config['pipeline'] = test_pipeline
     test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
     test_dataset_config['video_batch_size'] = video_batch_size * nprocs
     test_dataset_config['local_rank'] = local_rank
     test_dataset_config['nprocs'] = nprocs
     test_dataloader = torch.utils.data.DataLoader(
-        build_dataset(test_dataset_config),
+        AbstractBuildFactory.create_factory('dataset').create(test_dataset_config),
         batch_size=temporal_clip_batch_size,
-        num_workers=test_num_workers,
-        collate_fn=sliding_concate_fn)
-
-    if local_rank < 0:
-        checkpoint = torch.load(weights)
-    else:
-        # configure map_location properly
-        map_location = {'cuda:%d' % 0: 'cuda:%d' % local_rank}
-        checkpoint = torch.load(weights, map_location=map_location)
-
-    state_dicts = checkpoint['model_state_dict']
-
-    if nprocs > 1:
-        model.module.load_state_dict(state_dicts)
-    else:
-        model.load_state_dict(state_dicts)
-
-    if use_amp is True:
-        amp.load_state_dict(checkpoint['amp'])
-
-    # add params to metrics
-    metric_cfg = cfg.METRIC
-    Metric = dict()
-    for k, v in metric_cfg.items():
-        Metric[k] = build_metric(v)
+        num_workers=num_workers,
+        collate_fn=AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test))
     
-    record_dict = build_recod(cfg.MODEL.architecture, mode="validation")
-
-    post_processing = build_post_precessing(cfg.POSTPRECESSING)
-
-    runner = Runner(logger=logger,
-                video_batch_size=video_batch_size,
-                Metric=Metric,
-                record_dict=record_dict,
-                cfg=cfg,
-                model=model,
-                criterion=criterion,
-                post_processing=post_processing,
-                use_amp=use_amp,
-                nprocs=nprocs,
-                local_rank=local_rank,
-                runner_mode='test',
-                need_grad_accumulate=need_grad_accumulate)
-
-    runner.epoch_init()
-    r_tic = time.time()
-    for i, data in enumerate(test_dataloader):
-        if batch_test is True:
-            runner.run_one_batch(data=data, r_tic=r_tic)
-        elif len(data) == temporal_clip_batch_size or len(data[0]['labels'].shape) != 0:
-            runner.run_one_iter(data=data, r_tic=r_tic)
-        else:
-            break
-        r_tic = time.time()
-
-    if local_rank <= 0:
-        # metric output
-        for k, v in runner.Metric.items():
-            v.accumulate()
+    # 5. build engine
+    engine_config = cfg.ENGINE
+    engine_config['logger_dict'] = cfg.LOGGER_LIST
+    engine_config['metric'] = metrics
+    engine_config['model_pipline'] = model_pipline
+    engine_config['model_name'] = model_name
+    test_engine: BaseEngine = AbstractBuildFactory.create_factory('engine').create(engine_config)
+    test_engine.set_dataloader(test_dataloader)
+    test_engine.running_mode = 'test'
+    
+    # 6. resume engine
+    if cfg.ENGINE.checkpointor.get('load_path', None) is not None:
+        test_engine.resume()
+        
+    # 7. run engine
+    test_engine.init_engine()
+    test_engine.run()
+    test_engine.shutdown()
+    

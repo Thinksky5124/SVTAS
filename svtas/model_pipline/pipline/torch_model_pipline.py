@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 16:25:28
+LastEditTime : 2023-10-07 21:10:26
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_pipline.py
 '''
@@ -46,8 +46,6 @@ class TorchModelPipline(BaseModelPipline):
         if amp is not None:
             self.scaler = GradScaler(**amp)
             self.use_amp = True
-
-        self.current_step_vid_list = None
     
     def to(self, device):
         super().to(device=device)
@@ -76,8 +74,7 @@ class TorchModelPipline(BaseModelPipline):
     def init_post_processing(self, input_data) -> None:
         vid_list = input_data['vid_list']
         sliding_num = input_data['sliding_num']
-        self.current_step_vid_list = vid_list
-        if len(self.current_step_vid_list) > 0:
+        if len(vid_list) > 0:
             self.post_processing.init_scores(sliding_num, len(vid_list))
 
     @torch.no_grad()
@@ -88,15 +85,16 @@ class TorchModelPipline(BaseModelPipline):
         labels = input_data['labels']
         score = model_outputs['output']
         with torch.no_grad():
-            output = self.post_processing.update(score, labels, idx) / sliding_num
+            output = self.post_processing.update(score, labels, idx)
+        return output
 
     @torch.no_grad()
-    def output_post_processing(self, model_outputs = None, input_data = None):
+    def output_post_processing(self, cur_vid, model_outputs = None, input_data = None):
         # get pred result
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
         outputs = dict(predict=pred_cls_list,
                        output_np=pred_score_list)
-        vid = self.current_step_vid_list
+        vid = cur_vid
         output_dict = dict(
             vid=vid,
             outputs=outputs,
@@ -176,13 +174,6 @@ class TorchModelPipline(BaseModelPipline):
         else:
             outputs, input_data = self.forward(data_dict)
             loss_dict = self.caculate_loss(outputs=outputs, input_data=input_data)
-        
-        with torch.no_grad():
-            if self.post_processing.init_flag is not True:
-                vid_list = data_dict['vid_list']
-                sliding_num = data_dict['sliding_num']
-                self.current_step_vid_list = vid_list
-                self.post_processing.init_scores(sliding_num, len(vid_list))
 
         self.backward(loss_dict=loss_dict)
         self.update_model_param()
@@ -203,12 +194,5 @@ class TorchModelPipline(BaseModelPipline):
                 loss_dict = self.caculate_loss(outputs=outputs, input_data=input_data)
             else:
                 loss_dict = {}
-        
-        with torch.no_grad():
-            if self.post_processing.init_flag is not True:
-                vid_list = data_dict['vid_list']
-                sliding_num = data_dict['sliding_num']
-                self.current_step_vid_list = vid_list
-                self.post_processing.init_scores(sliding_num, len(vid_list))
 
         return outputs, loss_dict

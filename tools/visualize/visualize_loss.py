@@ -21,7 +21,7 @@ from svtas.utils.logger import get_logger, setup_logger, coloring
 from loss_landspace import (create_random_directions, plot_landspace_1D_loss_err,
                             calulate_loss_landscape, plot_landspace_2D_loss_err, caculate_trajectory,
                             plot_contour_trajectory)
-from svtas.engine.extract_engine import LossLandSpaceRunner
+from svtas.engine.extract_engine_raw import LossLandSpaceRunner
 
 def visulizer(cfg, outpath, weight_path,
               xmin=-1, xmax=1, xnum=10, ymin=-1, ymax=1, ynum=10,
@@ -55,7 +55,7 @@ def visulizer(cfg, outpath, weight_path,
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.test)
-    Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.test)
+    Pipeline = dataset_builder.build_pipline(cfg.DATASETPIPLINE.test)
     dataset_config = cfg.DATASET.test
     dataset_config['pipeline'] = Pipeline
     dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -67,7 +67,7 @@ def visulizer(cfg, outpath, weight_path,
         collate_fn=sliding_concate_fn)
     if plot_1D:
         sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.train)
-        Pipeline = dataset_builder.build_pipline(cfg.PIPELINE.train)
+        Pipeline = dataset_builder.build_pipline(cfg.DATASETPIPLINE.train)
         dataset_config = cfg.DATASET.train
         dataset_config['pipeline'] = Pipeline
         dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size

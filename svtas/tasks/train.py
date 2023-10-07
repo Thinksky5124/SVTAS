@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 14:34:15
+LastEditTime : 2023-10-07 20:18:52
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
@@ -21,10 +21,8 @@ def train(cfg,
     """
     
     # 1. init logger and output folder
-    logger = get_logger("SVTAS")
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output/{model_name}")
-    criterion_metric_name = cfg.get("criterion_metric_name", "F1@0.50")
     mkdir(output_dir)
     
     # 2. build metirc
@@ -35,23 +33,14 @@ def train(cfg,
         metrics[k] = AbstractBuildFactory.create_factory('metric').create(v)
 
     # 3. construct Pipeline
-    train_Pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.PIPELINE.train)
-    val_Pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.PIPELINE.test)
-
-    # wheather batch train
-    batch_train = False
-    if cfg.COLLATE.train.name in ["BatchCompose"]:
-        batch_train = True
-    batch_test = False
-    if cfg.COLLATE.test.name in ["BatchCompose"]:
-        batch_test = True
+    train_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.train)
         
     # 4. Construct Dataset
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     num_workers = cfg.DATASET.get('num_workers', 0)
     train_dataset_config = cfg.DATASET.train
-    train_dataset_config['pipeline'] = train_Pipeline
+    train_dataset_config['pipeline'] = train_pipeline
     train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
     train_dataset_config['video_batch_size'] = video_batch_size * nprocs
     train_dataset_config['local_rank'] = local_rank
@@ -80,6 +69,7 @@ def train(cfg,
         train_engine.resume()
     
     if cfg.ENGINE.iter_method.get("test_interval", -1) > -1:
+        val_Pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
         val_dataset_config = cfg.DATASET.test
         val_dataset_config['pipeline'] = val_Pipeline
         val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size

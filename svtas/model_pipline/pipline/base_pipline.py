@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 14:44:57
+LastEditTime : 2023-10-07 23:14:13
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
@@ -144,3 +144,58 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
             return self.train_run(data_dict=data_dict)
         else:
             return self.test_run(data_dict=data_dict)
+
+class FakeModelPipline(BaseModelPipline):
+    def __init__(self, post_processing) -> None:
+        super().__init__(None, post_processing, None)
+    
+    def forward(self, data_dict):
+        pass
+    
+    def caculate_loss(self, loss_dict) -> Dict:
+        pass
+    
+    def init_post_processing(self, input_data: Dict) -> None:
+        pass
+
+    def update_post_processing(self, model_outputs: Dict, input_data: Dict) -> None:
+        pass
+
+    def output_post_processing(self, model_outputs: Dict = None, input_data: Dict = None) -> List:
+        pass
+
+    def backward(self, loss_dict):
+        pass
+    
+    def update_model_param(self):
+        pass
+    
+    def init_model_param(self, *args, **kwargs):
+        pass
+
+    def resert_model_pipline(self, *args, **kwargs):
+        pass
+
+    def update_optim_policy(self):
+        pass
+
+    def end_model_pipline(self):
+        pass
+    
+    def save(self) -> Dict:
+        """
+        Return model param dict readly to save
+        """
+        pass
+
+    def load(self, param_dict: Dict) -> None:
+        pass
+
+    def train_run(self, data_dict) -> Dict:
+        pass
+    
+    def test_run(self, data_dict) -> Dict:
+        pass
+    
+    def __call__(self, data_dict) -> Any:
+        return data_dict

@@ -77,7 +77,7 @@ def profile(cfg,
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     sliding_concate_fn = build_pipline(cfg.COLLATE.test)
-    test_Pipeline = build_pipline(cfg.PIPELINE.test)
+    test_Pipeline = build_pipline(cfg.DATASETPIPLINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_Pipeline
     test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -121,11 +121,11 @@ def profile(cfg,
         score = outputs['output']
         return score, loss_dict
     
-    clip_seg_num = list(cfg.PIPELINE.test.sample.get('clip_seg_num_dict', {'sample':32}).values())[0]
-    sample_rate = list(cfg.PIPELINE.test.sample.get('sample_rate_dict', {'sample':1}).values())[0]
+    clip_seg_num = list(cfg.DATASETPIPLINE.test.sample.get('clip_seg_num_dict', {'sample':32}).values())[0]
+    sample_rate = list(cfg.DATASETPIPLINE.test.sample.get('sample_rate_dict', {'sample':1}).values())[0]
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        for transform_op in list(cfg.PIPELINE.test.transform.transform_dict.values())[0]:
+        for transform_op in list(cfg.DATASETPIPLINE.test.transform.transform_dict.values())[0]:
             if list(transform_op.keys())[0] in ['CenterCrop']:
                 image_size = transform_op['CenterCrop']['size']
         x_shape = [clip_seg_num, 3, image_size, image_size]

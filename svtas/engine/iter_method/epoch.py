@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 16:58:42
+LastEditTime : 2023-10-07 23:20:11
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -39,6 +39,7 @@ class EpochMethod(BaseIterMethod):
         self.logger_epoch_interval = logger_epoch_interval
         self.cur_epoch = 0
         self.resume_flag = False
+        self.current_step_vid_list = None
     
     @property
     def mode(self):
@@ -46,7 +47,7 @@ class EpochMethod(BaseIterMethod):
     
     @mode.setter
     def mode(self, val):
-        assert val in ['train', 'test', 'validation', 'infer', 'profile', 'visulaize'], f"Unsupport mode val: {val}!"
+        assert val in ['train', 'test', 'validation', 'infer', 'profile', 'visulaize', 'extract'], f"Unsupport mode val: {val}!"
         self._mode = val
         if self.mode in ['test', 'validation']:
             self.epoch_num = 1
@@ -76,6 +77,9 @@ class EpochMethod(BaseIterMethod):
         """
         self.register_hook("iter_end", func)
     
+    def register_every_batch_end_hook(self, func):
+        self.register_hook("every_batch_end", func)
+    
     def set_test_engine(self, test_engine):
         self.test_engine = test_engine
     
@@ -90,6 +94,7 @@ class EpochMethod(BaseIterMethod):
         self.model_pipline.resert_model_pipline()
         self.record.init_record()
         self.model_pipline.post_processing.init_flag = False
+        self.current_step_vid_list = None
     
     def end_epoch(self, epoch):
         if self.mode in ['train']:
@@ -138,8 +143,14 @@ class EpochMethod(BaseIterMethod):
         self.record['batch_time'].update(time.time() - b_tic)
         if self.mode == 'train':
             self.record['lr'].update(self.model_pipline.optimizer.state_dict()['param_groups'][0]['lr'], self.batch_size)
-        if step % self.logger_iter_interval == 0:
+        
+        if step % self.logger_iter_interval == 0 and self.mode in ['train', 'test', 'validation']:
             self.logger_iter(step, epoch)
+
+        if self.mode in ['infer', 'extract']:
+            self.record.accumulate_record()
+            for name, logger in self.logger_dict.items():
+                logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(self.current_step_vid_list))
     
     def end_run(self):
         super().end_run()
@@ -164,15 +175,28 @@ class EpochMethod(BaseIterMethod):
     def batch_end_step(self, input_data, outputs):
         # post processing
         if not self.model_pipline.post_processing.init_flag:
+            vid_list = input_data['vid_list']
+            self.current_step_vid_list = vid_list
             self.model_pipline.init_post_processing(input_data=input_data)
+            if self.mode in ['infer', 'extract']:
+                for name, logger in self.logger_dict.items():
+                    logger.info("Current process video: " + ",".join(self.current_step_vid_list))
         self.model_pipline.update_post_processing(model_outputs=outputs, input_data=input_data)
-        output_dict = self.model_pipline.output_post_processing()
-        self.model_pipline.init_post_processing(input_data=input_data)
-
+        output_dict = self.model_pipline.output_post_processing(self.current_step_vid_list)
+       
+        # exec hook
+        self.exec_hook('every_batch_end', output_dict, self.current_step_vid_list)
+        
         # update metric
         for k, v in self.metric.items():
             acc = v.update(output_dict['vid'], output_dict['ground_truth'], output_dict['outputs'])
-        self.record['Acc'].update(acc, len(input_data['vid_list']))
+        if self.mode in ['train', 'test', 'validation']:
+            self.record['Acc'].update(acc, len(input_data['vid_list']))
+
+        # init post processing
+        self.model_pipline.init_post_processing(input_data=input_data)
+        vid_list = input_data['vid_list']
+        self.current_step_vid_list = vid_list
 
     def run_one_batch(self, data):
         # videos batch train
@@ -187,35 +211,37 @@ class EpochMethod(BaseIterMethod):
         """
         run function processing
         ```
-        +----------------------+
-        |   init run           |
-        +----------------------+
-        |   epoch pre hook     |
-        +----------------------+
-        |   start epoch enmu   |
-        +----------------------+
-        |   init epoch         |
-        +----------------------+
-        |   iter pre hook      |
-        +----------------------+
-        |   start iter enmu    |
-        +----------------------+
-        |   init iter          |
-        +----------------------+
-        |   run one bactch     |
-        +----------------------+
-        |   end iter           |
-        +----------------------+
-        |   end iter enmu      |
-        +----------------------+
-        |   iter end hook      |
-        +----------------------+
-        |   end epoch          |
-        +----------------------+
-        |   epoch end hook     |
-        +----------------------+
-        |   end run            |
-        +----------------------+
+        +-----------------------+
+        |  init run             |
+        +-----------------------+
+        |  epoch pre hook       |
+        +-----------------------+
+        |  start epoch enmu     |
+        +-----------------------+
+        |  init epoch           |
+        +-----------------------+
+        |  iter pre hook        |
+        +-----------------------+
+        |  start iter enmu      |
+        +-----------------------+
+        |  init iter            |
+        +-----------------------+
+        |  run one bactch       |
+        +-----------------------+
+        |  every batch end hook  |
+        +-----------------------+
+        |  end iter             |
+        +-----------------------+
+        |  end iter enmu        |
+        +-----------------------+
+        |  iter end hook        |
+        +-----------------------+
+        |  end epoch            |
+        +-----------------------+
+        |  epoch end hook       |
+        +-----------------------+
+        |  end run              |
+        +-----------------------+
         ```
         """
         self.run_check()

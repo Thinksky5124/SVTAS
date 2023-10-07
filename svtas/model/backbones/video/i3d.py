@@ -230,7 +230,7 @@ class I3D(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     # (v-iashin) adding features arg to have an ability to output features
     def forward(self, x, masks):

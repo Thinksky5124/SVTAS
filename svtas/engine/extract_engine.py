@@ -2,40 +2,45 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 11:49:33
+LastEditTime : 2023-10-07 23:17:32
 Description  : Extract Engine Class
 FilePath     : /SVTAS/svtas/engine/extract_engine.py
 '''
+from typing import Any, Dict
 import cv2
 import numpy as np
 import os
 import torch
-from .base_engine import BaseEngine
-from svtas.utils.logger import AverageMeter
 
+from svtas.loader.dataloader import BaseDataloader
+from .base_engine import BaseImplementEngine
+from svtas.utils.logger import AverageMeter
+from svtas.model_pipline import FakeModelPipline
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('engine')
-class ExtractEngine(BaseEngine):
+class BaseExtractEngine(BaseImplementEngine):
     def __init__(self,
-                 logger,
-                 post_processing,
-                 out_path,
-                 logger_interval=10):
-        self.logger = logger
-        self.post_processing = post_processing
+                 model_name: str,
+                 post_processing: Dict,
+                 out_path: str,
+                 logger_dict: Dict,
+                 record: Dict,
+                 metric: Dict,
+                 iter_method: Dict,
+                 checkpointor: Dict,
+                 running_mode='extract') -> None:
+        super().__init__(model_name, FakeModelPipline(post_processing), logger_dict, record,
+                         metric, iter_method, checkpointor, running_mode)
         self.out_path = out_path
-        self.logger_interval = logger_interval
     
-    def epoch_init(self):
-        # batch videos sampler
-        self.post_processing.init_flag = False
-        self.current_step = 0
-        self.current_step_vid_list = None
+    def init_engine(self, dataloader: BaseDataloader = None):
         self.init_file_dir()
-
-        # self.cnt = 0
-
+        self.iter_method.register_every_batch_end_hook(self.duil_will_end_extract)
+        if hasattr(self.iter_method, "register_every_iter_end_hook"):
+            self.iter_method.register_every_iter_end_hook(self.duil_will_iter_end_extract)
+        return super().init_engine(dataloader)
+    
     @classmethod
     def init_file_dir(self):
         pass
@@ -47,101 +52,41 @@ class ExtractEngine(BaseEngine):
     @classmethod
     def duil_will_end_extract(self, extract_output, current_vid_list):
         pass
-    
-    @torch.no_grad()
-    def batch_end_step(self, sliding_num, vid_list, step):
-        # get extract feature
-        extract_output = self.post_processing.output()
-        
-        # save feature file
-        self.duil_will_end_extract(extract_output, self.current_step_vid_list)
-
-        if len(self.current_step_vid_list) > 0:
-            self.post_processing.init_scores(sliding_num, len(vid_list))
-
-        self.logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(self.current_step_vid_list))
-        self.current_step_vid_list = vid_list
-
-        self.current_step = step
-    
-    @torch.no_grad()
-    def _run_model_pipline(self, data_dict):
-        return data_dict
-    
-    @torch.no_grad()
-    def run_one_clip(self, data_dict):
-        vid_list = data_dict['vid_list']
-        sliding_num = data_dict['sliding_num']
-        idx = data_dict['current_sliding_cnt']
-        labels = data_dict['labels']
-        # train segment
-        score = self._run_model_pipline(data_dict)
-            
-        with torch.no_grad():
-            if self.post_processing.init_flag is not True:
-                self.post_processing.init_scores(sliding_num, len(vid_list))
-                self.current_step_vid_list = vid_list
-                self.logger.info("Current process video: " + ",".join(vid_list))
-            extract_output = self.post_processing.update(score, labels, idx)
-        
-            # save feature file
-            self.duil_will_iter_end_extract(extract_output, self.current_step_vid_list)
-        
-        if idx % self.logger_interval == 0:
-            self.logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
-        
-        # np.save(f"output/test/raw_data_{self.cnt}.npy", data_dict["imgs"].detach().clone().numpy())
-        # self.cnt = self.cnt+1
-
-    @torch.no_grad()
-    def run_one_iter(self, data):
-        # videos sliding stream train
-        for sliding_seg in data:
-            step = sliding_seg['step']
-            vid_list = sliding_seg['vid_list']
-            sliding_num = sliding_seg['sliding_num']
-            idx = sliding_seg['current_sliding_cnt']
-            # wheather next step
-            if self.current_step != step or (len(vid_list) <= 0 and step == 1):
-                self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step)
-
-            if idx >= 0: 
-                self.run_one_clip(sliding_seg)
 
 @AbstractBuildFactory.register('engine')
-class ExtractModelEngine(ExtractEngine):
+class ExtractModelEngine(BaseImplementEngine):
     def __init__(self,
-                 logger,
-                 model,
-                 post_processing,
-                 out_path,
-                 logger_interval=10):
-        super().__init__(
-            logger = logger,
-            post_processing = post_processing,
-            out_path = out_path,
-            logger_interval = logger_interval
-        )
-        self.model = model
+                 model_name: str,
+                 model_pipline: Dict,
+                 out_path: str,
+                 logger_dict: Dict,
+                 record: Dict,
+                 metric: Dict,
+                 iter_method: Dict,
+                 checkpointor: Dict,
+                 running_mode='extract') -> None:
+        super().__init__(model_name, model_pipline, logger_dict, record,
+                         metric, iter_method, checkpointor, running_mode)
+        self.out_path = out_path
         
+    def init_engine(self, dataloader: BaseDataloader = None):
+        self.init_file_dir()
+        self.iter_method.register_every_batch_end_hook(self.duil_will_end_extract)
+        if hasattr(self.iter_method, "register_every_iter_end_hook"):
+            self.iter_method.register_every_iter_end_hook(self.duil_will_iter_end_extract)
+        return super().init_engine(dataloader)
     
-    def epoch_init(self):
-        super().epoch_init()
-        self.model.eval()
+    @classmethod
+    def init_file_dir(self):
+        pass
     
-    @torch.no_grad()
-    def _run_model_pipline(self, data_dict):
-        # move data
-        input_data = {}
-        for key, value in data_dict.items():
-            if torch.is_tensor(value):
-                input_data[key] = value.cuda()
-
-        outputs = self.model(input_data)
-        
-        score = outputs['output']
-            
-        return score
+    @classmethod
+    def duil_will_iter_end_extract(self, extract_output, current_vid_list):
+        pass
+    
+    @classmethod
+    def duil_will_end_extract(self, extract_output, current_vid_list):
+        pass
 
 @AbstractBuildFactory.register('engine')
 class LossLandSpaceEngine(ExtractModelEngine):

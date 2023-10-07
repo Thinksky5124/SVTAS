@@ -113,7 +113,7 @@ if __name__ == '__main__':
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     sliding_concate_fn = dataset_builder.build_pipline(cfg.COLLATE.test)
-    Pipeline = dataset_builder.build_pipline(cfg.PIPELINE)
+    Pipeline = dataset_builder.build_pipline(cfg.DATASETPIPLINE)
     dataset_config = cfg.DATASET.config
     dataset_config['pipeline'] = Pipeline
     dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size

@@ -6,7 +6,7 @@ LastEditTime : 2022-10-28 14:57:50
 Description  : file content
 FilePath     : /SVTAS/config/_base_/pipline/video_pipline.py
 '''
-PIPELINE = dict(
+DATASETPIPLINE = dict(
     train = dict(
         name = "BaseDatasetPipline",
         decode = dict(

@@ -69,7 +69,7 @@ def infer(cfg,
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     assert video_batch_size == 1, "Only Support video_batch_size equal to 1!"
     sliding_concate_fn = build_pipline(cfg.COLLATE.infer)
-    infer_Pipeline = build_pipline(cfg.PIPELINE.infer)
+    infer_Pipeline = build_pipline(cfg.DATASETPIPLINE.infer)
     infer_dataset_config = cfg.DATASET.infer
     infer_dataset_config['pipeline'] = infer_Pipeline
     infer_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -101,7 +101,7 @@ def infer(cfg,
         
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        for transform_op in list(cfg.PIPELINE.test.transform.transform_dict.values())[0]:
+        for transform_op in list(cfg.DATASETPIPLINE.test.transform.transform_dict.values())[0]:
             if list(transform_op.keys())[0] in ['CenterCrop']:
                 image_size = transform_op['CenterCrop']['size']
         x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]

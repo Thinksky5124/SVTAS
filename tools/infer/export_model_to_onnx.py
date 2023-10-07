@@ -40,7 +40,7 @@ def export_model_to_onnx(cfg,
 
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        image_size = cfg.PIPELINE.infer.transform.transform_list[1]['CenterCrop']['size']
+        image_size = cfg.DATASETPIPLINE.infer.transform.transform_list[1]['CenterCrop']['size']
         x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]
         mask_shape = [cfg.DATASET.infer.clip_seg_num * cfg.DATASET.infer.sample_rate]
         input_shape = (x_shape, mask_shape)
