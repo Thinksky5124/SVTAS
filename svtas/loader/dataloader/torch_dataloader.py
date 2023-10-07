@@ -2,15 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2023-09-28 19:42:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 11:48:37
+LastEditTime : 2023-10-07 10:42:43
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataloader/torch_dataloader.py
 '''
 from typing import Iterable, Optional, Sequence, Union
 from .base_dataloader import BaseDataloader
 from torch.utils.data import DataLoader, Dataset, Sampler
+from svtas.utils import AbstractBuildFactory
 
-class TorchDataLoader(BaseDataloader, DataLoader):
+@AbstractBuildFactory.register('dataloader')
+class TorchDataLoader(DataLoader, BaseDataloader):
     def __init__(self,
                  dataset: Dataset,
                  batch_size: int = 1,

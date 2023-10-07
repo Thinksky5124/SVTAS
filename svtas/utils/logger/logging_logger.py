@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 20:36:09
+LastEditTime : 2023-10-07 10:10:22
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
@@ -201,14 +201,14 @@ class PythonLoggingLogger(BaseLogger):
             self.base_dist_logging(self.logger.critical, msg, *args, exc_info, stack_info, stacklevel, extra)
     
     def log_epoch(self, metric_list, epoch, mode, ips):
-        batch_cost = 'avg_' + str(metric_list['batch_time'].value) + ' sec,'
-        reader_cost = 'avg_' + str(metric_list['reader_time'].value) + ' sec,'
+        batch_cost = 'avg_' + str(metric_list['batch_time'].str_value) + ' sec,'
+        reader_cost = 'avg_' + str(metric_list['reader_time'].str_value) + ' sec,'
         batch_sum = str(metric_list['batch_time'].total) + ' sec,'
 
         metric_values = []
         for m in metric_list:
             if not (m == 'batch_time' or m == 'reader_time'):
-                metric_values.append(metric_list[m].mean)
+                metric_values.append(metric_list[m].str_avg)
         metric_str = ' '.join([str(v) for v in metric_values])
 
         end_epoch_str = "END epoch:{:<3d}".format(epoch)
@@ -216,13 +216,13 @@ class PythonLoggingLogger(BaseLogger):
             end_epoch_str, mode, metric_str, batch_cost, reader_cost, batch_sum, ips))
 
     def log_batch(self, metric_list, batch_id, mode, ips, epoch_id=None, total_epoch=None):
-        batch_cost = str(metric_list['batch_time'].value) + ' sec,'
-        reader_cost = str(metric_list['reader_time'].value) + ' sec,'
+        batch_cost = str(metric_list['batch_time'].str_value) + ' sec,'
+        reader_cost = str(metric_list['reader_time'].str_value) + ' sec,'
 
         metric_values = []
         for m in metric_list:
             if not (m == 'batch_time' or m == 'reader_time'):
-                metric_values.append(metric_list[m].value)
+                metric_values.append(metric_list[m].str_value)
         metric_str = ' '.join([str(v) for v in metric_values])
         if epoch_id and total_epoch:
             epoch_str = "epoch:[{:>3d}/{:<3d}]".format(epoch_id, total_epoch)
@@ -236,13 +236,13 @@ class PythonLoggingLogger(BaseLogger):
                 step_str, metric_str, batch_cost, reader_cost, ips))
     
     def log_step(self, metric_list, step_id, mode, ips, total_step=None):
-        batch_cost = str(metric_list['batch_time'].value) + ' sec,'
-        reader_cost = str(metric_list['reader_time'].value) + ' sec,'
+        batch_cost = str(metric_list['batch_time'].str_value) + ' sec,'
+        reader_cost = str(metric_list['reader_time'].str_value) + ' sec,'
 
         metric_values = []
         for m in metric_list:
             if not (m == 'batch_time' or m == 'reader_time'):
-                metric_values.append(metric_list[m].value)
+                metric_values.append(metric_list[m].str_value)
         metric_str = ' '.join([str(v) for v in metric_values])
         if total_step:
             step_str = "{:s} step:[{:>3d}/{:<3d}]".format(mode, step_id, total_step)

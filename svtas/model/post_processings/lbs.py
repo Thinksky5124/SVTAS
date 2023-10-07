@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:56:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 19:40:31
+LastEditTime : 2023-10-07 16:33:19
 Description  : Local Burr Suppression ref:https://github.com/lyhisme/ETSN
 FilePath     : /SVTAS/svtas/model/post_processings/lbs.py
 '''
@@ -26,7 +26,6 @@ class StreamScorePostProcessingWithLBS(BasePostProcessing):
         self.sliding_window = sliding_window
         self.num_classes = num_classes
         self.ignore_index = ignore_index
-        self.init_flag = False
         self.epls = 1e-10
         self.bg_class = bg_class_name
         self.lbs_window = lbs_window

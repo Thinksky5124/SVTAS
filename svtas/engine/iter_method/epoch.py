@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 21:19:21
+LastEditTime : 2023-10-07 16:58:42
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -10,17 +10,47 @@ from typing import Any, Dict
 import time
 from .base_iter_method import BaseIterMethod
 from svtas.utils import AbstractBuildFactory
+from svtas.utils.logger import coloring
 
 @AbstractBuildFactory.register('engine_component')
 class EpochMethod(BaseIterMethod):
+    """
+    Args:
+        epoch_num: int,
+        batch_size: int,
+        mode: str = 'train',
+        logger_iter_interval: int = 5,
+        logger_epoch_interval: int = 1,
+        save_interval: int = 10,
+        test_interval: int = -1, without test
+    """
     def __init__(self,
                  epoch_num: int,
-                 logger_record_step: int = 5,
+                 batch_size: int,
+                 criterion_metric_name: str,
+                 mode: str = 'train',
+                 logger_iter_interval: int = 5,
+                 logger_epoch_interval: int = 1,
+                 save_interval: int = 10,
                  test_interval: int = -1) -> None:
-        super().__init__()
+        super().__init__(batch_size, mode, criterion_metric_name, save_interval, test_interval)
         self.epoch_num = epoch_num
-        self.logger_record_step = logger_record_step
-        self.test_interval = test_interval
+        self.logger_iter_interval = logger_iter_interval
+        self.logger_epoch_interval = logger_epoch_interval
+        self.cur_epoch = 0
+        self.resume_flag = False
+    
+    @property
+    def mode(self):
+        return self._mode
+    
+    @mode.setter
+    def mode(self, val):
+        assert val in ['train', 'test', 'validation', 'infer', 'profile', 'visulaize'], f"Unsupport mode val: {val}!"
+        self._mode = val
+        if self.mode in ['test', 'validation']:
+            self.epoch_num = 1
+            self.test_interval = -1
     
     def register_epoch_pre_hook(self, func):
         """
@@ -49,47 +79,116 @@ class EpochMethod(BaseIterMethod):
     def set_test_engine(self, test_engine):
         self.test_engine = test_engine
     
-    def init_epoch(self):
-        self.dataloader.dataset.shuffle_dataset()
+    def init_run(self):
+        super().init_run()
+        self.epoch_start_time = time.time()
+        self.best_epoch = 0
     
-    def end_epoch(self):
-        self.logger_epoch()
+    def init_epoch(self, epoch):
+        self.cur_epoch = epoch
+        self.dataloader.dataset.shuffle_dataset()
+        self.model_pipline.resert_model_pipline()
+        self.record.init_record()
+        self.model_pipline.post_processing.init_flag = False
+    
+    def end_epoch(self, epoch):
+        if self.mode in ['train']:
+            # report metric
+            for k, v in self.metric.items():
+                v.accumulate()
+            # exec test if need
+            if self.test_interval > 0 and epoch % self.test_interval == 0:
+                test_score = self.test_hook(self.best_score)
+                if test_score > self.best_score:
+                    self.best_score = test_score
+                    self.best_epoch = epoch
 
-    def init_iter(self):
-        pass
+            # resume traing mode
+            self.model_pipline.train()
+            # update lr
+            self.model_pipline.update_optim_policy()
 
-    def end_iter(self):
-        self.logger_iter()
+        elif self.mode in ['validation', 'test']:
+            # metric output
+            Metric_dict = dict()
+            for k, v in self.metric.items():
+                temp_Metric_dict = v.accumulate()
+                Metric_dict.update(temp_Metric_dict)
+            
+            if Metric_dict[self.criterion_metric_name] > self.best_score:
+                self.best_score = Metric_dict[self.criterion_metric_name]
 
-    def logger_iter(self):
-        pass
+        # Computer ETA
+        epoch_duration_time = time.time() - self.epoch_start_time
+        if self.epoch_num > 1:
+            timeArray = time.gmtime(epoch_duration_time * (self.epoch_num - (epoch + 1)))
+            formatTime = f"{timeArray.tm_mday - 1} day : {timeArray.tm_hour} h : {timeArray.tm_min} m : {timeArray.tm_sec} s."
+            for name, logger in self.logger_dict.items():
+                logger.log(coloring(f"ETA: {formatTime}", 'OKBLUE'))
+        self.epoch_start_time = time.time()
 
-    def logger_epoch(self):
-        pass
+        # logger
+        if epoch % self.logger_epoch_interval == 0:
+            self.logger_epoch(epoch)
 
-    def batch_end_step(self, sliding_num, vid_list, step, epoch):
-        pass
+    def init_iter(self, r_tic):
+        self.record['reader_time'].update(time.time() - r_tic)
 
-    def run_one_batch(self, data, r_tic=None, epoch=None):
+    def end_iter(self, b_tic, step, epoch):
+        self.record['batch_time'].update(time.time() - b_tic)
+        if self.mode == 'train':
+            self.record['lr'].update(self.model_pipline.optimizer.state_dict()['param_groups'][0]['lr'], self.batch_size)
+        if step % self.logger_iter_interval == 0:
+            self.logger_iter(step, epoch)
+    
+    def end_run(self):
+        super().end_run()
+        if self.mode == 'train':
+            for key , logger in self.logger_dict.items():
+                logger.info(coloring(f"The best performance on {self.criterion_metric_name} is {int(self.best_score * 10000) / 10000}, in epoch {self.best_epoch + 1}.", "PURPLE"))
+
+    def logger_iter(self, step, epoch):
+        # do log
+        self.record.accumulate_record()
+        ips = "ips: {:.5f} instance/sec.".format(self.batch_size / self.record["batch_time"].val)
+        for name, logger in self.logger_dict.items():
+            logger.log_batch(self.record, step, self.mode, ips, epoch + 1, self.epoch_num)
+
+    def logger_epoch(self, epoch):
+        ips = "avg_ips: {:.5f} instance/sec.".format(
+            self.batch_size * self.record["batch_time"].count /
+            (self.record["batch_time"].sum + 1e-10))
+        for name, logger in self.logger_dict.items():
+            logger.log_epoch(self.record, epoch + 1, self.mode, ips)
+
+    def batch_end_step(self, input_data, outputs):
+        # post processing
+        if not self.model_pipline.post_processing.init_flag:
+            self.model_pipline.init_post_processing(input_data=input_data)
+        self.model_pipline.update_post_processing(model_outputs=outputs, input_data=input_data)
+        output_dict = self.model_pipline.output_post_processing()
+        self.model_pipline.init_post_processing(input_data=input_data)
+
+        # update metric
+        for k, v in self.metric.items():
+            acc = v.update(output_dict['vid'], output_dict['ground_truth'], output_dict['outputs'])
+        self.record['Acc'].update(acc, len(input_data['vid_list']))
+
+    def run_one_batch(self, data):
         # videos batch train
-        self.record_dict['reader_time'].update(time.time() - r_tic)
 
         for sliding_seg in data:
-            step = self.current_step
-            vid_list = sliding_seg['vid_list']
-            sliding_num = sliding_seg['sliding_num']
-            idx = sliding_seg['current_sliding_cnt']
-
             # run one batch
-            self.run_one_forward(sliding_seg)
-            self.batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
-            self.current_step = self.current_step + 1
-            self.post_processing.init_flag = False
-    
-    def run(self, *args: Any, **kwds: Any) -> Any:
+            outputs, loss_dict = self.run_one_forward(sliding_seg)
+            self.batch_end_step(input_data=sliding_seg, outputs=outputs)
+            self.record.update_record(loss_dict)
+
+    def run(self) -> float:
         """
         run function processing
         ```
+        +----------------------+
+        |   init run           |
         +----------------------+
         |   epoch pre hook     |
         +----------------------+
@@ -115,29 +214,55 @@ class EpochMethod(BaseIterMethod):
         +----------------------+
         |   epoch end hook     |
         +----------------------+
+        |   end run            |
+        +----------------------+
         ```
         """
-        super().run()
-
+        self.run_check()
+        
         self.exec_hook("epoch_pre")
+        self.init_run()
         for epoch in range(0, self.epoch_num):
-            self.init_epoch()
-            r_tic = time.time()
+            if epoch <= self.cur_epoch and self.cur_epoch != 0:
+                for key, logger in self.logger_dict.items():
+                    logger.info(
+                        f"| epoch: [{epoch+1}] <= resume_epoch: [{ self.cur_epoch}], continue... "
+                    )
+                continue
+
+            self.init_epoch(epoch)
             self.exec_hook("iter_pre")
+            r_tic = time.time()
             for i, data in enumerate(self.dataloader):
-                self.init_iter()
-                self.run_one_batch(data=data, r_tic=r_tic, epoch=epoch)
-                r_tic = time.time()
-                self.end_iter()
+                self.init_iter(r_tic=r_tic)
+                self.run_one_batch(data=data)
+                self.end_iter(b_tic=r_tic, step=i, epoch=epoch)
             self.exec_hook("iter_end")
-            self.end_epoch()
+            self.end_epoch(epoch=epoch)
+
+            if epoch % self.save_interval == 0 and self.mode in ['train']:
+                yield epoch
+
+            if self.mode in ['validation'] and self.best_score > self.memory_score:
+                for key, logger in self.logger_dict.items():
+                    logger.log(coloring("Save the best model (" + self.criterion_metric_name + f"){int(self.best_score * 10000) / 10000}.", "OKGREEN"))
+                yield epoch
+
         self.exec_hook("epoch_end")
+        self.end_run()
     
     def end(self):
+        self.model_pipline.end_model_pipline()
         return super().end()
 
     def save(self) -> Dict:
-        return super().save()
+        save_dict = super().save()
+        if self.mode == 'train':
+            save_dict['cur_epoch'] = self.cur_epoch
+        return save_dict
     
     def load(self, load_dict: Dict) -> None:
+        if self.mode == 'train':
+            self.cur_epoch = load_dict['cur_epoch']
+            self.resume_flag = True
         return super().load(load_dict)

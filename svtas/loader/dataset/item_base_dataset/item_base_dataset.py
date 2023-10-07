@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 16:50:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-28 16:37:11
+LastEditTime : 2023-10-06 22:54:18
 Description  : Item Base Dataset
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/item_base_dataset.py
 '''
@@ -12,7 +12,7 @@ import torch.utils.data as data
 from ..base_dataset import BaseTorchDataset
 
 
-class ItemDataset(BaseTorchDataset, data.Dataset):
+class ItemDataset(data.Dataset, BaseTorchDataset):
     """
     ItemDataset For Temporal Video Segmentation
     Other TVS ItemDataset should inherite it.
@@ -50,7 +50,6 @@ class ItemDataset(BaseTorchDataset, data.Dataset):
     def shuffle_dataset(self):
         return self._viodeo_sample_shuffle()
 
-    @abstractmethod
     def _viodeo_sample_shuffle(self):
         pass
 
@@ -64,3 +63,4 @@ class ItemDataset(BaseTorchDataset, data.Dataset):
     
     def __len__(self):
         return len(self.info)
+    

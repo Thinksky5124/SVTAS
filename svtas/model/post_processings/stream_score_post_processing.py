@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 19:41:33
+LastEditTime : 2023-10-07 16:33:47
 Description: model postprecessing
 FilePath     : /SVTAS/svtas/model/post_processings/stream_score_post_processing.py
 '''
@@ -20,7 +20,6 @@ class StreamScorePostProcessing(BasePostProcessing):
         super().__init__()
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
-        self.init_flag = False
         self.epls = 1e-10
     
     def init_scores(self, sliding_num, batch_size):

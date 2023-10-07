@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 15:53:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-24 17:53:28
+LastEditTime : 2023-10-06 23:01:54
 Description  : misc ref:https://github.com/open-mmlab/mmcv/blob/master/mmcv/utils/misc.py
 FilePath     : /SVTAS/svtas/utils/misc.py
 '''
@@ -20,6 +20,7 @@ import cv2
 import copy
 import numpy as np
 from PIL import Image
+from .build import AbstractBuildFactory
 
 # From PyTorch internals
 def _ntuple(n):
@@ -434,3 +435,10 @@ def label_arr2img(label_queue, palette):
     img = img.convert("P")
     img.putpalette(palette)
     return img
+
+
+def set_property(cls, name, value, build_name):
+    if value is not None:
+        setattr(cls, name, AbstractBuildFactory.create_factory(build_name).create(value))
+    else:
+        setattr(cls, name, value)

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:44:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 21:27:55
+LastEditTime : 2023-10-07 12:52:20
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/normal_engine.py
 '''
@@ -152,37 +152,8 @@ class TrainingBaseEngineModify(BaseImplementEngine):
 
 @AbstractBuildFactory.register('engine')
 class TrainEngine(BaseImplementEngine):
-    @property
-    def runner_mode(self):
-        return 'train'
-    
-    def epoch_init(self):
-        super().epoch_init()
-        self.model.train()
-        self.b_tic = time.time()
-        # reset recoder
-        for _, recod in self.record_dict.items():
-            recod.reset()
-    
-    def _run_model_pipline(self, data_dict):
-        score, loss_dict = self.model_pipline.forward(data_dict)
-        self.model_pipline.caculate_loss(loss_dict)
-        return score, loss_dict
-    
-    def batch_end_step(self, sliding_num, vid_list, step, epoch):
-        self.model_pipline.update_model_param()
-        super().batch_end_step(sliding_num=sliding_num, vid_list=vid_list, step=step, epoch=epoch)
+    pass
 
 @AbstractBuildFactory.register('engine')
 class TestEngine(BaseImplementEngine):
-    @property
-    def runner_mode():
-        return 'test'
-
-    def epoch_init(self):
-        super().epoch_init()
-        self.model.eval()
-        self.b_tic = time.time()
-        # reset recoder
-        for _, recod in self.record_dict.items():
-            recod.reset()
+    pass

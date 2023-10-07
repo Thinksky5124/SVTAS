@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 09:40:18
+LastEditTime : 2023-10-07 14:28:38
 Description  : Swin Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
 FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer_3d.py
 '''
@@ -13,7 +13,7 @@ import torch.utils.checkpoint as checkpoint
 import numpy as np
 from timm.models.layers import DropPath, trunc_normal_
 
-from mmengine.runner import load_state_dict
+from mmengine.runner import load_state_dict, load_checkpoint
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 

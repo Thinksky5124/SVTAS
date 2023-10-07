@@ -31,7 +31,6 @@ class MVsResPostProcessing(BasePostProcessing):
         self.need_visualize = need_visualize
         self.mvs_post_transforms = VideoTransform(mvs_post_transforms)
         self.res_post_transforms = VideoTransform(res_post_transforms)
-        self.init_flag = False
         self.colorwheel = make_colorwheel()  # shape [55x3]
         self.ignore_index = ignore_index
     

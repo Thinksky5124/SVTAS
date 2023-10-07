@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 21:16:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 20:14:08
+LastEditTime : 2023-10-07 10:11:51
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/meter.py
 '''
@@ -43,7 +43,7 @@ class AverageMeter(object):
                                                             self=self)
 
     @property
-    def cnt(self):
+    def count(self):
         return self._count
 
     @property
@@ -62,7 +62,7 @@ class AverageMeter(object):
     @property
     def str_avg(self):
         self._avg = self._sum / self._count
-        return '{self.name}__avg: {self._avg:{self.fmt}}'.format(
+        return '{self.name}_avg: {self._avg:{self.fmt}}'.format(
             self=self)
 
     @property

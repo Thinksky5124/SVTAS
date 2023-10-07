@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 19:40:42
+LastEditTime : 2023-10-07 16:33:13
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_processings/cam_post_processing.py
 '''
@@ -21,7 +21,6 @@ class CAMVideoPostProcessing(BasePostProcessing):
                  ignore_index=-100,
                  need_label=True):
         super().__init__()
-        self.init_flag = False
         self.ignore_index = ignore_index
         self.sample_rate = sample_rate
         self.fps = fps

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 19:51:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 21:21:42
+LastEditTime : 2023-10-07 13:09:55
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_record.py
 '''
@@ -11,11 +11,18 @@ from typing import List, Dict, Any
 
 class BaseRecord(metaclass=abc.ABCMeta):
     def __init__(self,
-                 mode: str = "train",
                  addition_record: List[Dict] = None) -> None:
-        self.mode = mode
         self.addition_record = addition_record
         self._record = {}
+    
+    def __getitem__(self, key):
+        return self._record[key]
+    
+    def __setitem__(self, key, value):
+        self._record[key] = value
+    
+    def __iter__(self):
+        return iter(self._record)
 
     @property
     def record_dict(self) -> Dict[str, Any]:
@@ -32,6 +39,9 @@ class BaseRecord(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def update_one_record(self, name, value, n = 1):
         pass
+
+    def remove_one_record(self, name):
+        self._record.pop(name)
     
     @abc.abstractmethod
     def get_one_record(self, name):

@@ -18,7 +18,6 @@ class ScorePostProcessing(BasePostProcessing):
                  ignore_index=-100):
         super().__init__()
         self.ignore_index = ignore_index
-        self.init_flag = False
         self.epls = 1e-10
     
     def init_scores(self, sliding_num, batch_size):

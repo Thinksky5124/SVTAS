@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 22:07:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 20:28:27
+LastEditTime : 2023-10-07 09:30:43
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/tensorboard_logger.py
 '''
@@ -30,7 +30,7 @@ class TensboardLogger(BaseLogger):
         for k, v in metric_list.items():
             if not (k == 'batch_time' or k == 'reader_time'):
                 if isinstance(v, AverageMeter):
-                    self.logger.add_scalar(mode + "/" + k, v.get_mean, epoch)
+                    self.logger.add_scalar(mode + "/" + k, v.mean, epoch)
                 elif isinstance(v, float):
                     self.logger.add_scalar(mode + "/" + k, v, epoch)
         if ips:
@@ -58,7 +58,11 @@ class TensboardLogger(BaseLogger):
             step = self.step
         self.logger.add_histogram(tag=name, values=tensor, global_step=self.step)
 
-    def log(self, msg, value, step=None):
+    def log(self, msg, value=None, step=None):
+        # ignore string
+        if isinstance(msg, str) and value is None:
+            return
+        
         if step is None:
             step = self.step
         self.logger.add_scalar(msg, value, step)
@@ -82,3 +86,32 @@ class TensboardLogger(BaseLogger):
     def close(self):
         self.logger.close()
     
+    def info(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+
+    def debug(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+    
+    def warn(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+    
+    def error(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass
+    
+    def critical(self,
+             msg: object,
+             *args: object,
+             **kwargs):
+        pass

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 13:48:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 15:30:04
+LastEditTime : 2023-10-06 23:30:28
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition.py
 '''
@@ -50,24 +50,24 @@ class VideoRocognition(Recognition):
     
     def preprocessing(self, input_data):
         masks = input_data['masks'].unsqueeze(1)
-        input_data['masks'] = masks
+        input_data['masks_m'] = masks
 
         if self.backbone is not None:
             if self.architecture_type == '2d':
                 imgs = torch.reshape(imgs, [-1] + list(imgs.shape[2:])).contiguous()
-                input_data['imgs'] = imgs
+                input_data['imgs_m'] = imgs
                 input_data['backbone_masks'] = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             elif self.architecture_type == '3d':
                 imgs = torch.permute(imgs, dims=[0, 2, 1, 3, 4]).contiguous()
-                input_data['imgs'] = imgs
+                input_data['imgs_m'] = imgs
                 input_data['backbone_masks'] = masks[:, :, ::self.sample_rate].unsqueeze(-1).unsqueeze(-1)
         return input_data
     
     def forward(self, input_data):
         input_data = self.preprocessing(input_data)
 
-        masks = input_data['masks']
-        imgs = input_data['imgs']
+        masks = input_data['masks_m']
+        imgs = input_data['imgs_m']
         
         if self.backbone is not None:
             backbone_masks = input_data['backbone_masks']

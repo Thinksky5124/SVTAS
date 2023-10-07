@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 10:48:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 20:25:55
+LastEditTime : 2023-10-07 15:05:33
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
 '''
@@ -11,6 +11,25 @@ import abc
 from enum import Enum, auto
 from svtas.utils.build import AbstractBuildFactory
 
+Color = {
+    'RED': '\033[31m',
+    'HEADER': '\033[35m',  # deep purple
+    'PURPLE': '\033[95m',  # purple
+    'OKBLUE': '\033[94m',
+    'OKGREEN': '\033[92m',
+    'WARNING': '\033[93m',
+    'FAIL': '\033[91m',
+    'ENDC': '\033[0m'
+}
+
+
+def coloring(message, color="OKGREEN"):
+    assert color in Color.keys()
+    if os.environ.get('COLORING', True):
+        return Color[color] + str(message) + Color["ENDC"]
+    else:
+        return message
+    
 class LoggerLevel(Enum):
     DEBUG = auto()
     INFO = auto()
@@ -34,7 +53,7 @@ class BaseLogger:
 
     def __new__(cls, name: str, root_path: str = None, level=LoggerLevel.INFO):
         if name in LOGGER_DICT.keys():
-            return LOGGER_DICT[name]
+            raise NameError(f"You can't build two logger with the same name: {name}!")
         else:
             logger_instance = super().__new__(cls)
             LOGGER_DICT[name] = logger_instance

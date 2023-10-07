@@ -20,7 +20,6 @@ class StreamFeaturePostProcessing(BasePostProcessing):
         super().__init__()
         self.sliding_window = sliding_window
         self.ignore_index = ignore_index
-        self.init_flag = False
     
     def init_scores(self, sliding_num, batch_size):
         self.pred_feature = []

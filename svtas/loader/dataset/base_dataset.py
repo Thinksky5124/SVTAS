@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-28 16:24:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-28 16:39:41
+LastEditTime : 2023-10-06 22:54:12
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/base_dataset.py
 '''
@@ -21,9 +21,6 @@ class BaseDataset(metaclass=abc.ABCMeta):
     def __len__(self):
         pass
 
-    @abc.abstractmethod
-    def __iter__(self):
-        pass
 
 
 class BaseTorchDataset(BaseDataset):

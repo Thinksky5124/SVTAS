@@ -11,7 +11,7 @@ from typing import List
 
 class BasePostProcessing(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
-        pass
+        self.init_flag = False
 
     @abc.abstractmethod
     def init_scores(self, sliding_num, batch_size):

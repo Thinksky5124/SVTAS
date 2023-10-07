@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 14:56:25
+LastEditTime : 2023-10-06 23:30:09
 Description: feaeture segmentation model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature_segmentation.py
 '''
@@ -34,21 +34,22 @@ class FeatureSegmentation(SeriousModel):
 
     def preprocessing(self, input_data):
         masks = input_data['masks'].unsqueeze(1)
-        input_data['masks'] = masks
+        input_data['masks_m'] = masks
         
         if self.backbone is not None:
             input_data['backbone_masks'] = torch.reshape(masks[:, :, ::self.sample_rate], [-1]).unsqueeze(-1)
-            if self.architecture_type == '1d':
-                feature = torch.permute(feature, dims=[0, 2, 1]).contiguous()
-                input_data['feature'] = feature
-            elif self.architecture_type == '3d':
-                pass
+            
+        if self.architecture_type == '1d':
+            feature = torch.permute(input_data['feature'], dims=[0, 2, 1]).contiguous()
+            input_data['feature_m'] = feature
+        elif self.architecture_type == '3d':
+            pass
         return input_data
     
     def forward(self, input_data):
         input_data = self.preprocessing(input_data)
-        masks = input_data['masks']
-        feature = input_data['feature']
+        masks = input_data['masks_m']
+        feature = input_data['feature_m']
 
         if self.backbone is not None:
              # masks.shape [N C T]

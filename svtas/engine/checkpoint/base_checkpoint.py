@@ -2,13 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 17:06:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 20:39:36
+LastEditTime : 2023-10-07 10:40:23
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/checkpoint/base_checkpoint.py
 '''
 import os
 import abc
 from typing import Any, Dict
+from svtas.utils.save_load import mkdir
 
 class BaseCheckpointor(metaclass=abc.ABCMeta):
     save_path: str
@@ -19,6 +20,7 @@ class BaseCheckpointor(metaclass=abc.ABCMeta):
         if save_path is None:
             save_path = os.path.join(os.environ['SVTAS_LOG_DIR'], "ckpt")
         self.save_path = save_path
+        mkdir(save_path)
         self.load_path = load_path
     
     @property
@@ -36,7 +38,8 @@ class BaseCheckpointor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def save(self,
              save_dict: Dict,
-             path: str = None) -> bool:
+             path: str = None,
+             file_name: str = None) -> bool:
         raise NotImplementedError("You must implement save function!")
     
     @abc.abstractmethod

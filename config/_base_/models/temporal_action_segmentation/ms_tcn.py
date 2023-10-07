@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:23:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:22:19
+LastEditTime : 2023-10-07 14:14:15
 Description  : MS-TCN model
 FilePath     : /SVTAS/config/_base_/models/temporal_action_segmentation/ms_tcn.py
 '''
