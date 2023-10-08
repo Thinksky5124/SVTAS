@@ -2,20 +2,21 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 21:10:26
+LastEditTime : 2023-10-08 14:04:23
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_pipline.py
 '''
 from typing import Any, Dict
 from svtas.utils.logger import AverageMeter
 from .base_pipline import BaseModelPipline
-from svtas.utils import AbstractBuildFactory
+from svtas.utils import AbstractBuildFactory, get_logger
 from svtas.utils.misc import set_property
 from svtas.optimizer.grad_clip import GradAccumulate, GradClip
 
 import torch
 from torch.cuda.amp import autocast as autocast
 from torch.cuda.amp.grad_scaler import GradScaler
+from mmengine.runner import load_state_dict
 
 @AbstractBuildFactory.register('model_pipline')
 class TorchModelPipline(BaseModelPipline):
@@ -30,6 +31,7 @@ class TorchModelPipline(BaseModelPipline):
                  criterion=None,
                  optimizer=None,
                  lr_scheduler=None,
+                 pretrained: str = None,
                  amp: Dict = None,
                  grad_clip: Dict = None,
                  grad_accumulate: Dict = None) -> None:
@@ -38,7 +40,7 @@ class TorchModelPipline(BaseModelPipline):
                 device = torch.device("cuda")
             else:
                 device = torch.device("cpu")
-        super().__init__(model, post_processing, device, criterion, optimizer, lr_scheduler)
+        super().__init__(model, post_processing, device, criterion, optimizer, lr_scheduler, pretrained)
         set_property(self, 'grad_clip', grad_clip, 'optimizer')
         set_property(self, 'grad_accumulate', grad_accumulate, 'optimizer')
 
@@ -47,6 +49,13 @@ class TorchModelPipline(BaseModelPipline):
             self.scaler = GradScaler(**amp)
             self.use_amp = True
     
+    def load_from_ckpt_file(self, ckpt_path: str = None):
+        ckpt_path = self.load_from_ckpt_file_ckeck(ckpt_path)
+        checkpoint = torch.load(ckpt_path)
+        state_dicts = checkpoint["model_state_dict"]
+        logger = get_logger("SVTAS").logger
+        load_state_dict(self.model, state_dicts, logger=logger)
+
     def to(self, device):
         super().to(device=device)
         if self.optimizer is not None:
@@ -79,8 +88,6 @@ class TorchModelPipline(BaseModelPipline):
 
     @torch.no_grad()
     def update_post_processing(self, model_outputs, input_data) -> None:
-        vid_list = input_data['vid_list']
-        sliding_num = input_data['sliding_num']
         idx = input_data['current_sliding_cnt']
         labels = input_data['labels']
         score = model_outputs['output']
@@ -100,6 +107,12 @@ class TorchModelPipline(BaseModelPipline):
             outputs=outputs,
             ground_truth=ground_truth_list
         )
+        return output_dict
+    
+    @torch.no_grad()
+    def direct_output_post_processing(self, cur_vid, model_outputs = None, input_data = None):
+        # get pred result
+        output_dict = self.post_processing.output()
         return output_dict
     
     def caculate_loss(self, outputs, input_data) -> dict:

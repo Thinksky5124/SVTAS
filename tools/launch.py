@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 16:30:42
+LastEditTime : 2023-10-08 11:23:50
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -16,6 +16,7 @@ import random
 import numpy as np
 import torch
 
+from svtas.tasks.extract import extract
 from svtas.tasks.infer import infer
 from svtas.tasks.test import test
 from svtas.tasks.train import train
@@ -33,7 +34,7 @@ def parse_args():
                         help='config file path')
     parser.add_argument('--mode',
                         '-m',
-                        choices=["train", "test", "infer", "profile"],
+                        choices=["train", "test", "infer", "profile", 'visulaize', 'extract'],
                         help='run mode')
     parser.add_argument('-o',
                         '--override',
@@ -110,6 +111,11 @@ def main():
             args=args,
             local_rank=args.local_rank,
             nprocs=nprocs)
+    elif args.mode in ["extract"]:
+        extract(cfg,
+                args=args,
+                local_rank=args.local_rank,
+                nprocs=nprocs)
     else:
         raise NotImplementedError(args.mode + " mode not support!")
 

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:37:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 20:59:22
+LastEditTime : 2023-10-08 15:07:03
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/base_iter_method.py
 '''
@@ -86,12 +86,20 @@ class BaseIterMethod(metaclass=abc.ABCMeta):
 
     def test_hook(self, best_score) -> float:
         return self.hook_dict['test_hook'](best_score)
+    
+    def register_pre_forward_hook(self, func):
+        self.register_hook('pre_forward', func)
+    
+    def register_full_forward_hook(self, func):
+        self.register_hook('full_forward', func)
 
     def set_dataloader(self, dataloader: BaseDataloader):
         self.dataloader = dataloader
     
     def run_one_forward(self, data_dict):
+        self.exec_hook('pre_forward', data_dict)
         outputs, loss_dict = self.model_pipline(data_dict)
+        self.exec_hook('full_forward', outputs, loss_dict)
         return outputs, loss_dict
 
     def run_check(self) -> bool:

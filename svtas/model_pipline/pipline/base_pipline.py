@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 23:14:13
+LastEditTime : 2023-10-08 10:30:26
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
@@ -25,11 +25,13 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
                  device,
                  criterion=None,
                  optimizer=None,
-                 lr_scheduler=None) -> None:
+                 lr_scheduler=None,
+                 pretrained: str = None) -> None:
         self.model = AbstractBuildFactory.create_factory('architecture').create(model, key='architecture')
         self.criterion = AbstractBuildFactory.create_factory('loss').create(criterion)
         self.post_processing = AbstractBuildFactory.create_factory('post_processing').create(post_processing)
         self._device = device
+        self.pretrained = pretrained
 
         # construct optimizer
         if isinstance(optimizer, dict):
@@ -49,6 +51,9 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
             self.train()
         else:
             self.eval()
+        
+        if self.pretrained is not None:
+            self.load_from_ckpt_file()
 
     @property
     def training(self):
@@ -130,6 +135,18 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def load(self, param_dict: Dict) -> None:
         raise NotImplementedError("You must implement load_model function!")
+    
+    def load_from_ckpt_file_ckeck(self, ckpt_path: str = None):
+        if ckpt_path is None:
+            if self.pretrained is None:
+                raise FileExistsError("Not ckpt file exits!")
+            else:
+                ckpt_path = self.pretrained
+        return ckpt_path
+    
+    @abc.abstractmethod
+    def load_from_ckpt_file(self, ckpt_path: str = None):
+        ckpt_path = self.load_from_ckpt_file_ckeck(ckpt_path)
 
     @abc.abstractmethod
     def train_run(self, data_dict) -> Dict:

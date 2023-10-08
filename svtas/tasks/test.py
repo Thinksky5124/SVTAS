@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 20:29:16
+LastEditTime : 2023-10-08 10:34:05
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -29,7 +29,7 @@ def test(cfg,
     logger.info('Environment info:\n' + dash_line + env_info + '\n' +
                 dash_line)
 
-   # 2. build metirc
+    # 2. build metirc
     metric_cfg = cfg.METRIC
     metrics = dict()
     for k, v in metric_cfg.items():
@@ -40,9 +40,8 @@ def test(cfg,
     model_pipline = AbstractBuildFactory.create_factory('model_pipline').create(cfg.MODEL_PIPLINE)
 
     # 4. Construct Dataset
-    temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    num_workers = cfg.DATASET.get('num_workers', 0)
+    temporal_clip_batch_size = cfg.DATALOADER.get('temporal_clip_batch_size', 3)
+    video_batch_size = cfg.DATALOADER.get('video_batch_size', 8)
     test_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_pipeline
@@ -50,11 +49,10 @@ def test(cfg,
     test_dataset_config['video_batch_size'] = video_batch_size * nprocs
     test_dataset_config['local_rank'] = local_rank
     test_dataset_config['nprocs'] = nprocs
-    test_dataloader = torch.utils.data.DataLoader(
-        AbstractBuildFactory.create_factory('dataset').create(test_dataset_config),
-        batch_size=temporal_clip_batch_size,
-        num_workers=num_workers,
-        collate_fn=AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test))
+    test_dataloader_config = cfg.DATALOADER
+    test_dataloader_config['dataset'] = AbstractBuildFactory.create_factory('dataset').create(test_dataset_config)
+    test_dataloader_config['collate_fn'] = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test)
+    test_dataloader = AbstractBuildFactory.create_factory('dataloader').create(test_dataloader_config)
     
     # 5. build engine
     engine_config = cfg.ENGINE

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-28 19:42:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 10:42:43
+LastEditTime : 2023-10-08 09:37:43
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataloader/torch_dataloader.py
 '''
@@ -31,6 +31,32 @@ class TorchDataLoader(DataLoader, BaseDataloader):
                  persistent_workers: bool = False,
                  pin_memory_device: str = ""):
         super().__init__(dataset, batch_size, shuffle, sampler, batch_sampler,
+                         num_workers, collate_fn, pin_memory, drop_last, timeout,
+                         worker_init_fn, multiprocessing_context, generator,
+                         prefetch_factor=prefetch_factor, persistent_workers=persistent_workers,
+                         pin_memory_device=pin_memory_device)
+
+@AbstractBuildFactory.register('dataloader')
+class TorchStreamDataLoader(TorchDataLoader):
+    def __init__(self,
+                 dataset: Dataset,
+                 video_batch_size: int = 1,
+                 temporal_clip_batch_size: int = 3,
+                 shuffle: bool = None,
+                 sampler: Sampler = None,
+                 batch_sampler: Sampler[Sequence] = None,
+                 num_workers: int = 0,
+                 collate_fn: None = None,
+                 pin_memory: bool = False,
+                 drop_last: bool = False,
+                 timeout: float = 0,
+                 worker_init_fn: None = None,
+                 multiprocessing_context=None,
+                 generator=None, *,
+                 prefetch_factor: int  = None,
+                 persistent_workers: bool = False,
+                 pin_memory_device: str = ""):
+        super().__init__(dataset, temporal_clip_batch_size, shuffle, sampler, batch_sampler,
                          num_workers, collate_fn, pin_memory, drop_last, timeout,
                          worker_init_fn, multiprocessing_context, generator,
                          prefetch_factor=prefetch_factor, persistent_workers=persistent_workers,

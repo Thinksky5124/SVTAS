@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 16:33:13
+LastEditTime : 2023-10-08 14:58:58
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_processings/cam_post_processing.py
 '''
@@ -34,7 +34,8 @@ class CAMVideoPostProcessing(BasePostProcessing):
         self.score_lsit = []
         self.init_flag = True
 
-    def update(self, cam_images, labels, score, idx):
+    def update(self, cams_dict, labels, idx):
+        cam_images, score = cams_dict['cam_images'], cams_dict['output']
         # seg_scores [stage_num N C T]
         # gt [N T]
         score = torch.transpose(score[-1], -1, -2)

@@ -2,20 +2,69 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 11:09:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-16 14:25:44
+LastEditTime : 2023-10-08 14:32:39
 Description  : RAFT extract flow Config
 FilePath     : /SVTAS/config/extract/extract_flow/raft_gtea.py
 '''
 _base_ = [
-    '../../_base_/collater/stream_compose.py', '../../_base_/models/optical_flow_estimate/raft.py',
-    '../../_base_/dataset/gtea/gtea_stream_video.py'
+    '../../_base_/dataloader/collater/stream_compose.py',
+    '../../_base_/logger/python_logger.py',
 ]
 sliding_window = 32
 clip_seg_num = 32
 sample_rate = 1
+batch_size = 1
+
+model_name = "RAFT_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea"
+
+ENGINE = dict(
+    name = "ExtractOpticalFlowEngine",
+    out_path = "data/gtea/test/extract_flow",
+    record = dict(
+        name = "StreamValueRecord"
+    ),
+    iter_method = dict(
+        name = "StreamEpochMethod",
+        epoch_num = 1,
+        batch_size = batch_size,
+        logger_iter_interval = 10,
+        test_interval = 1,
+        criterion_metric_name = "F1@0.50"
+    ),
+    checkpointor = dict(
+        name = "TorchCheckpointor"
+    )
+)
+
+MODEL_PIPLINE = dict(
+    name = "TorchModelPipline",
+    # pretrained = "",
+    model = dict(
+        architecture = "OpticalFlowEstimation",
+        model = dict(
+            name = "RAFT",
+            pretrained = "./data/checkpoint/raft-sintel.pth",
+            extract_mode = True,
+            freeze = True,
+            mode = "sintel"
+        )
+    ),
+    post_processing = dict(
+        name = "OpticalFlowPostProcessing",
+        fps = 15,
+        need_visualize = False,
+        sliding_window = sliding_window
+    ),
+)
+
+DATALOADER = dict(
+    name = "TorchStreamDataLoader",
+    temporal_clip_batch_size = 3,
+    video_batch_size = batch_size,
+    num_workers = 2
+)
 
 DATASET = dict(
-    video_batch_size = 1,
     config = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
@@ -29,12 +78,6 @@ DATASET = dict(
     )
 )
 
-POSTPRECESSING = dict(
-    name = "OpticalFlowPostProcessing",
-    fps = 15,
-    need_visualize = False,
-    sliding_window = sliding_window
-)
 
 DATASETPIPLINE = dict(
     name = "BaseDatasetPipline",

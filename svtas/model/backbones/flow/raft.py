@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 13:44:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:05:56
+LastEditTime : 2023-10-08 14:33:21
 Description  : RAFT ref:https://github.com/princeton-vl/RAFT
 FilePath     : /SVTAS/svtas/model/backbones/flow/raft.py
 '''
@@ -20,7 +20,7 @@ from ..utils.raft.extractor import BasicEncoder, SmallEncoder
 from ..utils.raft.corr import CorrBlock, AlternateCorrBlock
 from ..utils.raft.utils import bilinear_sampler, coords_grid, upflow8
 
-from mmengine.runner import load_state_dict
+from mmengine.runner import load_state_dict, load_checkpoint
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 

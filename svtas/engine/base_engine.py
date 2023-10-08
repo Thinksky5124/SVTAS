@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:28:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 20:45:33
+LastEditTime : 2023-10-08 15:38:17
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/base_engine.py
 '''
@@ -45,11 +45,14 @@ class BaseEngine(metaclass=abc.ABCMeta):
         set_property('checkpointor', checkpointor, build_name='engine_component')
         set_property('record', record, build_name='record')
 
-        for name, cfg in metric.items():
-            if isinstance(cfg, dict):
-                self.metric[name] = AbstractBuildFactory.create_factory('metric').create(cfg)
-            else:
-                self.metric = metric
+        if metric is not None and len(metric) > 0:
+            for name, cfg in metric.items():
+                if isinstance(cfg, dict):
+                    self.metric[name] = AbstractBuildFactory.create_factory('metric').create(cfg)
+                else:
+                    self.metric = metric
+        else:
+            self.metric = None
 
         self.logger_dict = {}
         for class_name, cfg in logger_dict.items():

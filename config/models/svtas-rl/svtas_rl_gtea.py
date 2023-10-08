@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2023-10-07 19:11:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 21:16:43
+LastEditTime : 2023-10-08 11:09:28
 Description  : file content
-FilePath     : /SVTAS/config/models/svtas-rl/svtas_rl_gtea.py
+FilePath     : /SVTAS/config/svtas/svtas-rl/svtas_rl_gtea.py
 '''
 _base_ = [
-    '../../_base_/collater/stream_compose.py',
+    '../../_base_/dataloader/collater/stream_compose.py',
     '../../_base_/engine/train_engine.py',
     '../../_base_/logger/python_logger.py',
-    '../../_base_/dataset/gtea/gtea_stream_video.py'
+    '../../_base_/dataloader/dataset/gtea/gtea_stream_video.py'
 ]
 
 num_classes = 11
@@ -31,7 +31,7 @@ ENGINE = dict(
     ),
     iter_method = dict(
         name = "StreamEpochMethod",
-        epoch_num = 50,
+        epoch_num = epochs,
         batch_size = 1,
         test_interval = 1,
         criterion_metric_name = "F1@0.50"
@@ -131,10 +131,14 @@ MODEL_PIPLINE = dict(
     )
 )
 
-DATASET = dict(
+DATALOADER = dict(
+    name = "TorchStreamDataLoader",
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 2,
+    num_workers = 2
+)
+
+DATASET = dict(
     train = dict(
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         sliding_window = sliding_window

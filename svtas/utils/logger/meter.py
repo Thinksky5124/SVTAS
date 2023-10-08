@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 21:16:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 10:11:51
+LastEditTime : 2023-10-08 14:15:25
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/meter.py
 '''
@@ -61,10 +61,13 @@ class AverageMeter(object):
 
     @property
     def str_avg(self):
-        self._avg = self._sum / self._count
+        if self._count != 0:
+            self._avg = self._sum / self._count
+        else:
+            self._avg = self._sum
         return '{self.name}_avg: {self._avg:{self.fmt}}'.format(
             self=self)
-
+        
     @property
     def str_value(self):
         return '{self.name}: {self._val:{self.fmt}}'.format(self=self)

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 23:17:32
+LastEditTime : 2023-10-08 14:40:39
 Description  : Extract Engine Class
 FilePath     : /SVTAS/svtas/engine/extract_engine.py
 '''
@@ -26,13 +26,16 @@ class BaseExtractEngine(BaseImplementEngine):
                  out_path: str,
                  logger_dict: Dict,
                  record: Dict,
-                 metric: Dict,
                  iter_method: Dict,
                  checkpointor: Dict,
-                 running_mode='extract') -> None:
+                 metric: Dict = {}) -> None:
         super().__init__(model_name, FakeModelPipline(post_processing), logger_dict, record,
-                         metric, iter_method, checkpointor, running_mode)
+                         metric, iter_method, checkpointor, "extract")
         self.out_path = out_path
+        isExists = os.path.exists(self.out_path)
+        if not isExists:
+            os.makedirs(self.out_path)
+            print(self.out_path + ' created successful')
     
     def init_engine(self, dataloader: BaseDataloader = None):
         self.init_file_dir()
@@ -61,13 +64,17 @@ class ExtractModelEngine(BaseImplementEngine):
                  out_path: str,
                  logger_dict: Dict,
                  record: Dict,
-                 metric: Dict,
                  iter_method: Dict,
                  checkpointor: Dict,
+                 metric: Dict = {},
                  running_mode='extract') -> None:
         super().__init__(model_name, model_pipline, logger_dict, record,
                          metric, iter_method, checkpointor, running_mode)
         self.out_path = out_path
+        isExists = os.path.exists(self.out_path)
+        if not isExists:
+            os.makedirs(self.out_path)
+            print(self.out_path + ' created successful')
         
     def init_engine(self, dataloader: BaseDataloader = None):
         self.init_file_dir()
@@ -91,81 +98,26 @@ class ExtractModelEngine(BaseImplementEngine):
 @AbstractBuildFactory.register('engine')
 class LossLandSpaceEngine(ExtractModelEngine):
     def __init__(self,
-                 logger,
-                 model,
-                 post_processing,
-                 Metric,
-                 out_path,
-                 criterion,
-                 need_grad_accumulate=True,
-                 logger_interval=10):
-        super().__init__(logger, model, post_processing, out_path, logger_interval)
-        self.criterion = criterion
-        self.Metric = Metric
-        self.need_grad_accumulate = need_grad_accumulate
-        self.record_dict = {'loss': AverageMeter('loss'), 'loss_sample': AverageMeter('loss_sample')}
+                 model_name: str,
+                 model_pipline: Dict,
+                 out_path: str,
+                 logger_dict: Dict,
+                 metric: Dict,
+                 iter_method: Dict,
+                 checkpointor: Dict,
+                 record: Dict = {},
+                 running_mode='extract') -> None:
+        if 'addition_record' not in record:
+            record['addition_record'] += [dict(name='loss_sample', fmt='.5f')]
+            record['accumulate_type']['loss_sample'] = 'avg'
+        super().__init__(model_name, model_pipline, out_path, logger_dict,
+                         record, metric, iter_method, checkpointor, running_mode)
 
-    def epoch_init(self):
-        super().epoch_init()
-        self.model.eval()
-        self.record_dict['loss'].reset()
-        self.record_dict['loss_sample'].reset()
-
-    @torch.no_grad()
-    def _run_model_pipline(self, data_dict):
-        # move data
-        input_data = {}
-        for key, value in data_dict.items():
-            if torch.is_tensor(value):
-                input_data[key] = value.cuda()
-        if not self.need_grad_accumulate:
-            input_data['precise_sliding_num'] = torch.ones_like(input_data['precise_sliding_num'])
-
-        outputs = self.model(input_data)
-        loss_dict = self.criterion(outputs, input_data)
-        
-        score = outputs['output']
-        loss = loss_dict["loss"]
-            
-        return score, loss
-
-    def duil_will_iter_end_losslandspace(self, loss, current_step_vid_list):
-        self.record_dict['loss_sample'].update(loss)
+    def duil_will_iter_end_losslandspace(self, extract_output, current_step_vid_list):
+        pass
     
     def duil_will_end_extract(self, extract_output, current_vid_list):
-        pred_score_list, pred_cls_list, ground_truth_list = extract_output
-        outputs = dict(predict=pred_cls_list,
-                        output_np=pred_score_list)
-        for k, v in self.Metric.items():
-            acc = v.update(current_vid_list, ground_truth_list, outputs)
-
-        if not self.need_grad_accumulate:
-            self.record_dict['loss'].update(self.record_dict['loss_sample'].get_mean)
-        else:
-            self.record_dict['loss'].update(self.record_dict['loss_sample'].get_sum)
-        self.record_dict['loss_sample'].reset()
-
-    @torch.no_grad()
-    def run_one_clip(self, data_dict):
-        vid_list = data_dict['vid_list']
-        sliding_num = data_dict['sliding_num']
-        idx = data_dict['current_sliding_cnt']
-        labels = data_dict['labels']
-        # train segment
-        score, loss = self._run_model_pipline(data_dict)
-            
-        with torch.no_grad():
-            if self.post_processing.init_flag is not True:
-                self.post_processing.init_scores(sliding_num, len(vid_list))
-                self.current_step_vid_list = vid_list
-                self.logger.info("Current process video: " + ",".join(vid_list))
-            extract_output = self.post_processing.update(score, labels, idx)
-        
-            # save feature file
-            self.duil_will_iter_end_losslandspace(loss, self.current_step_vid_list)
-        
-        if idx % self.logger_interval == 0:
-            self.logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
+        pass
 
 @AbstractBuildFactory.register('engine')
 class ExtractFeatureEngine(ExtractModelEngine):
@@ -187,14 +139,16 @@ class ExtractOpticalFlowEngine(ExtractModelEngine):
         isExists = os.path.exists(self.flow_out_path)
         if not isExists:
             os.makedirs(self.flow_out_path)
-            print(self.flow_out_path + ' created successful')
+            for key, logger in self.logger_dict.items():
+                logger.log(self.flow_out_path + ' created successful')
 
-        if self.post_processing.need_visualize:
+        if self.model_pipline.post_processing.need_visualize:
             self.video_out_path = os.path.join(self.out_path, "flow_videos")
             isExists = os.path.exists(self.video_out_path)
             if not isExists:
                 os.makedirs(self.video_out_path)
-                print(self.video_out_path + ' created successful')
+                for key, logger in self.logger_dict.items():
+                    logger.log(self.video_out_path + ' created successful')
 
     def duil_will_end_extract(self, extract_output, current_vid_list):
         if len(extract_output) > 1:
@@ -215,17 +169,20 @@ class ExtractOpticalFlowEngine(ExtractModelEngine):
                 stream_writer.save(optical_flow_save_path, v_len)
 
 @AbstractBuildFactory.register('engine')
-class ExtractMVResEngine(ExtractEngine):
+class ExtractMVResEngine(BaseExtractEngine):
     def __init__(self,
-                 logger,
-                 post_processing,
-                 out_path,
-                 res_extract=True,
-                 logger_interval=10):
-        self.logger = logger
-        self.post_processing = post_processing
-        self.out_path = out_path
-        self.logger_interval = logger_interval
+                 model_name: str,
+                 post_processing: Dict,
+                 out_path: str,
+                 logger_dict: Dict,
+                 record: Dict,
+                 metric: Dict,
+                 iter_method: Dict,
+                 checkpointor: Dict,
+                 res_extract: bool = True,
+                 running_mode: str = 'extract') -> None:
+        super().__init__(model_name, post_processing, out_path, logger_dict,
+                         record, metric, iter_method, checkpointor, running_mode)
         self.res_extract = res_extract
     
     def init_file_dir(self):
@@ -237,7 +194,7 @@ class ExtractMVResEngine(ExtractEngine):
                 print(res_out_path + ' created successful')
             self.res_out_path = res_out_path
         mvs_outpath = os.path.join(self.out_path, "mvs_videos")
-        if self.post_processing.need_visualize:
+        if self.model_pipline.post_processing.need_visualize:
             mvs_vis_outpath = os.path.join(self.out_path, "mvs_vis_videos")
             isExists = os.path.exists(mvs_vis_outpath)
             if not isExists:
@@ -263,7 +220,7 @@ class ExtractMVResEngine(ExtractEngine):
                 stream_writer.save(mvs_outpath, v_len)
 
         elif len(extract_output) == 2:
-            if self.post_processing.need_visualize:
+            if self.model_pipline.post_processing.need_visualize:
                 flow_imgs_list, flow_visual_imgs_list = extract_output
                 for extract_flow, extract_flow_vis, vid in zip(flow_imgs_list, flow_visual_imgs_list, current_vid_list):
                     mvs_outpath = os.path.join(self.mvs_outpath, vid + ".mp4")

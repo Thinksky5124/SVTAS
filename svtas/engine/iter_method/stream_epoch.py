@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:41:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 23:20:52
+LastEditTime : 2023-10-08 14:55:33
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/stream_epoch.py
 '''
@@ -37,17 +37,26 @@ class StreamEpochMethod(EpochMethod):
     
     def batch_end_step(self, input_data, epoch):
         # update param
-        if self.model_pipline.grad_accumulate is not None:
-            self.model_pipline.grad_accumulate.set_update_conf()
-        self.model_pipline.update_model_param()
+        if self.mode in ['train']:
+            if self.model_pipline.grad_accumulate is not None:
+                self.model_pipline.grad_accumulate.set_update_conf()
+            self.model_pipline.update_model_param()
+
         # post processing
-        output_dict = self.model_pipline.output_post_processing(self.current_step_vid_list)
-        
+        if self.mode in ['train', 'test', 'validation']:
+            output_dict = self.model_pipline.output_post_processing(self.current_step_vid_list)
+        elif self.mode in ['extract', 'visulaize']:
+            output_dict = self.model_pipline.direct_output_post_processing(self.current_step_vid_list)
+        else:
+            output_dict = {}
+
         # exec hook
         self.exec_hook('every_batch_end', output_dict, self.current_step_vid_list)
         
-        for k, v in self.metric.items():
-            acc = v.update(output_dict['vid'], output_dict['ground_truth'], output_dict['outputs'])
+        if self.metric:
+            for k, v in self.metric.items():
+                acc = v.update(output_dict['vid'], output_dict['ground_truth'], output_dict['outputs'])
+                
         if self.mode in ['train', 'test', 'validation']:
             self.record['Acc'].update(acc, len(input_data['vid_list']))
 
@@ -57,7 +66,7 @@ class StreamEpochMethod(EpochMethod):
             self.record['lr'].update(self.model_pipline.optimizer.state_dict()['param_groups'][0]['lr'], self.batch_size)
         if step % self.logger_iter_interval == 0 and self.mode in ['train', 'test', 'validation']:
             self.logger_iter(step, epoch)
-        elif self.mode in ['infer', 'extract']:
+        elif self.mode in ['infer', 'extract', 'visulaize']:
             for key, logger in self.logger_dict.items():
                 logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(self.current_step_vid_list))
 
@@ -87,7 +96,7 @@ class StreamEpochMethod(EpochMethod):
                     vid_list = sliding_seg['vid_list']
                     self.current_step_vid_list = vid_list
                     self.model_pipline.init_post_processing(input_data=sliding_seg)
-                    if self.mode in ['infer', 'extract']:
+                    if self.mode in ['infer', 'extract', 'visulaize']:
                         for name, logger in self.logger_dict.items():
                             logger.info("Current process video: " + ",".join(self.current_step_vid_list))
                 post_processing_output = self.model_pipline.update_post_processing(model_outputs=outputs, input_data=sliding_seg)
@@ -95,7 +104,7 @@ class StreamEpochMethod(EpochMethod):
                 self.exec_hook('every_iter_end', post_processing_output, self.current_step_vid_list)
                 self.record.stream_update_dict(loss_dict)
             
-            if self.mode in ['infer', 'extract'] and idx % self.logger_iter_interval == 0:
+            if self.mode in ['infer', 'extract', 'visulaize'] and idx % self.logger_iter_interval == 0:
                 for name, logger in self.logger_dict.items():
                     logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
     
