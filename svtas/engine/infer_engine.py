@@ -12,11 +12,11 @@ import time
 
 from svtas.utils.logger import get_logger
 import numpy as np
-from .base_engine import BaseImplementEngine
+from .base_engine import StandaloneEngine
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('engine')
-class InferONNXEngine(BaseImplementEngine):
+class InferONNXEngine(StandaloneEngine):
     def __init__(self,
                  logger,
                  video_batch_size,

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 14:40:39
+LastEditTime : 2023-10-08 16:47:04
 Description  : Extract Engine Class
 FilePath     : /SVTAS/svtas/engine/extract_engine.py
 '''
@@ -13,13 +13,16 @@ import os
 import torch
 
 from svtas.loader.dataloader import BaseDataloader
-from .base_engine import BaseImplementEngine
+from .base_engine import StandaloneEngine
 from svtas.utils.logger import AverageMeter
 from svtas.model_pipline import FakeModelPipline
 from svtas.utils import AbstractBuildFactory
+from svtas.utils.loss_landspace import (create_random_directions, plot_landspace_1D_loss_err,
+                            calulate_loss_landscape, plot_landspace_2D_loss_err, caculate_trajectory,
+                            plot_contour_trajectory)
 
 @AbstractBuildFactory.register('engine')
-class BaseExtractEngine(BaseImplementEngine):
+class BaseExtractEngine(StandaloneEngine):
     def __init__(self,
                  model_name: str,
                  post_processing: Dict,
@@ -57,7 +60,7 @@ class BaseExtractEngine(BaseImplementEngine):
         pass
 
 @AbstractBuildFactory.register('engine')
-class ExtractModelEngine(BaseImplementEngine):
+class ExtractModelEngine(StandaloneEngine):
     def __init__(self,
                  model_name: str,
                  model_pipline: Dict,
@@ -101,10 +104,22 @@ class LossLandSpaceEngine(ExtractModelEngine):
                  model_name: str,
                  model_pipline: Dict,
                  out_path: str,
+                 weight_path: str,
                  logger_dict: Dict,
                  metric: Dict,
                  iter_method: Dict,
                  checkpointor: Dict,
+                 xmin=-0.5,
+                 xmax=0.5,
+                 xnum=51,
+                 ymin=-0.5,
+                 ymax=0.5,
+                 ynum=51,
+                 vmin = 0,
+                 vmax = 10,
+                 vlevel = 0.05,
+                 plot_1D=False,
+                 plot_optimization_path=False,
                  record: Dict = {},
                  running_mode='extract') -> None:
         if 'addition_record' not in record:
@@ -112,13 +127,41 @@ class LossLandSpaceEngine(ExtractModelEngine):
             record['accumulate_type']['loss_sample'] = 'avg'
         super().__init__(model_name, model_pipline, out_path, logger_dict,
                          record, metric, iter_method, checkpointor, running_mode)
+        self.xmin, self.xmax, self.xnum = xmin, xmax, xnum
+        self.ymin, self.ymin, self.ynum = ymin, ymax, ynum
+        self.vmin, self.vmax, self.vlevel = vmin, vmax, vlevel
+        self.plot_1D = plot_1D
+        self.plot_optimization_path = plot_optimization_path
+        self.weight_path = weight_path
+    
+    def set_all_dataloader(self, train_dataloader: BaseDataloader, test_dataloader: BaseDataloader):
+        self.test_dataloader = test_dataloader
+        self.train_dataloader = train_dataloader
 
     def duil_will_iter_end_losslandspace(self, extract_output, current_step_vid_list):
         pass
     
     def duil_will_end_extract(self, extract_output, current_vid_list):
         pass
-
+    
+    def run(self):
+        super().run()
+        logger = self.logger_dict['SVTAS'].logger
+        rand_directions = create_random_directions(self.model_pipline.model, plot_1D=self.plot_1D)
+        if not self.plot_1D:
+            calulate_loss_landscape(self.model_pipline.model, rand_directions, self.out_path, logger, self, self.test_dataloader, False, self.iter_method.criterion_metric_name, key='test',
+                                    xmin=self.xmin, xmax=self.xmax, xnum=self.xnum, ymin=self.ymin, ymax=self.ymax, ynum=self.ynum)
+            plot_landspace_2D_loss_err(self.out_path, logger, self.iter_method.criterion_metric_name, vmin = self.vmin, vmax = self.vmax, vlevel = self.vlevel, surf_name = "test_loss")
+        else:
+            calulate_loss_landscape(self.model_pipline.model, rand_directions, self.out_path, logger, self, self.test_dataloader, True, self.iter_method.criterion_metric_name, key='test',
+                                xmin=self.xmin, xmax=self.xmax, xnum=self.xnum, ymin=self.ymin, ymax=self.ymax, ynum=self.ynum)
+            calulate_loss_landscape(self.model_pipline.model, rand_directions, self.out_path, logger, self, self.train_dataloader, True, self.iter_method.criterion_metric_name, key='train',
+                                xmin=self.xmin, xmax=self.xmax, xnum=self.xnum, ymin=self.ymin, ymax=self.ymax, ynum=self.ynum)
+            plot_landspace_1D_loss_err(self.out_path, logger, self.iter_method.criterion_metric_name, xmin=self.xmin, xmax=self.xmax, loss_max=5, log=False, show=False)
+        if self.plot_optimization_path:
+            caculate_trajectory(self.model_name, self.weight_path, self.model_pipline.model, self.out_path, logger, dir_type='weights', ignore_bias=False)
+            plot_contour_trajectory(self.out_path, logger, surf_name='loss_vals', vmin=self.vmin, vmax=self.vmax, vlevel=self.vlevel, show=False)
+    
 @AbstractBuildFactory.register('engine')
 class ExtractFeatureEngine(ExtractModelEngine):
 

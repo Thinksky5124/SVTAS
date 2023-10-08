@@ -19,12 +19,12 @@ from thop import clever_format
 from ..utils.collect_env import collect_env
 
 @torch.no_grad()
-def profile(cfg,
-         args,
-         local_rank,
-         nprocs,
-         use_amp=False,
-         weights=None):
+def profile(local_rank,
+            nprocs,
+            cfg,
+            args,
+            use_amp=False,
+            weights=None):
     logger = get_logger("SVTAS")
     if hasattr(cfg,'PROFILER'):
         wait = cfg.PROFILER.get('wait', 1)

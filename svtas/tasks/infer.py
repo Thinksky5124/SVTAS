@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 11:51:02
+LastEditTime : 2023-10-08 20:05:04
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
@@ -26,10 +26,10 @@ from ..utils.save_load import mkdir
 # from ..model.builder import build_post_precessing
 from ..utils.collect_env import collect_env
 
-def infer(cfg,
-          args,
-          local_rank,
+def infer(local_rank,
           nprocs,
+          cfg,
+          args,
           weights=None,
           validate=True,):
     """

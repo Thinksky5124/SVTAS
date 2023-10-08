@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 17:07:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 14:45:57
+LastEditTime : 2023-10-08 21:03:40
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/checkpoint/torch_ckpt.py
 '''
@@ -34,3 +34,6 @@ class TorchCheckpointor(BaseCheckpointor):
         if path is None:
             path = self.load_path
         return torch.load(path, map_location=self.map_loaction)
+    
+    def shutdown(self) -> None:
+        return super().shutdown()

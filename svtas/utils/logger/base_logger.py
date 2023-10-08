@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 10:48:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 15:05:33
+LastEditTime : 2023-10-08 20:31:51
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
 '''
@@ -50,6 +50,8 @@ class BaseLogger:
         else:
             self.path = root_path
         self._level = level
+        self.local_rank = int(os.environ['LOCAL_RANK'])
+        self.world_size = int(os.environ['WORLD_SIZE'])
 
     def __new__(cls, name: str, root_path: str = None, level=LoggerLevel.INFO):
         if name in LOGGER_DICT.keys():

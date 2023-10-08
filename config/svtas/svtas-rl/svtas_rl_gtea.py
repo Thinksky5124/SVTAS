@@ -25,7 +25,7 @@ epochs = 80
 model_name = "SVTAS-RL_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 ENGINE = dict(
-    name = "BaseImplementEngine",
+    name = "StandaloneEngine",
     record = dict(
         name = "StreamValueRecord"
     ),

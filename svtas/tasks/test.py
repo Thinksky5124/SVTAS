@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 10:34:05
+LastEditTime : 2023-10-08 20:30:09
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -14,10 +14,10 @@ from svtas.engine import BaseEngine
 from ..utils.collect_env import collect_env
 
 @torch.no_grad()
-def test(cfg,
-         args,
-         local_rank,
-         nprocs):
+def test(local_rank,
+         nprocs,
+         cfg,
+         args):
     logger = get_logger("SVTAS")
     model_name = cfg.model_name
     output_dir = cfg.get("output_dir", f"./output/{model_name}")

@@ -2,10 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 10:30:26
+LastEditTime : 2023-10-08 20:51:38
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
+import os
 import abc
 from typing import Any, Dict, List
 from svtas.utils import AbstractBuildFactory
@@ -18,6 +19,8 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
     optimizer: TorchOptimizer
     lr_scheduler: BaseLRScheduler
     post_processing: None
+    local_rank: int
+    world_size: int
 
     def __init__(self,
                  model,
@@ -54,6 +57,10 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
         
         if self.pretrained is not None:
             self.load_from_ckpt_file()
+        
+        # prepare for distribution train
+        self.local_rank = int(os.environ['LOCAL_RANK'])
+        self.world_size = int(os.environ['WORLD_SIZE'])
 
     @property
     def training(self):

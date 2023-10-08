@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 17:06:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 10:40:23
+LastEditTime : 2023-10-08 21:03:09
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/checkpoint/base_checkpoint.py
 '''
@@ -45,3 +45,7 @@ class BaseCheckpointor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def load(self, path: str = None) -> Dict:
         raise NotImplementedError("You must implement load function!")
+
+    @abc.abstractmethod
+    def shutdown(self) -> None:
+        pass

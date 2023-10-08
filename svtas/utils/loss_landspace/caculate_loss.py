@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-04-07 15:21:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-11 14:33:22
+LastEditTime : 2023-10-08 16:43:16
 Description  : file content
-FilePath     : /SVTAS/tools/visualize/loss_landspace/caculate_loss.py
+FilePath     : /SVTAS/svtas/utils/loss_landspace/caculate_loss.py
 '''
 import torch
 import numpy as np
@@ -13,17 +13,16 @@ import os
 
 
 def eval_loss(runner, dataloader, criterion_metric_name='F1@0.50'):
-    runner.epoch_init()
-    with torch.no_grad():
-        for i, data in enumerate(dataloader):
-            runner.run_one_iter(data=data)
-    
+    runner.set_dataloader(dataloader)
+    runner.init_engine()
+    runner.run()
+
     Metric_dict = dict()
-    for k, v in runner.Metric.items():
+    for k, v in runner.metric.items():
         temp_Metric_dict = v.accumulate()
         Metric_dict.update(temp_Metric_dict)
 
-    return runner.record_dict['loss'].get_mean, Metric_dict[criterion_metric_name]
+    return runner.record['loss'].get_mean, Metric_dict[criterion_metric_name]
 
 def calulate_loss_landscape(model, directions, outpath, logger, runner, dataloader, plot_1D, criterion_metric_name,
                             key='test', xmin=-1, xmax=1, xnum=51, ymin=-1, ymax=1, ynum=51):

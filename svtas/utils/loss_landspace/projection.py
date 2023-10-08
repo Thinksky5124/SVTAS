@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-04-08 10:48:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-08 12:13:27
+LastEditTime : 2023-10-08 16:32:21
 Description  : file content
-FilePath     : /SVTAS/tools/visualize/loss_landspace/projection.py
+FilePath     : /SVTAS/svtas/utils/loss_landspace/projection.py
 '''
 """
     Project a model or multiple models to a plane spaned by given directions.
@@ -241,7 +241,7 @@ def setup_PCA_directions(outpath, model, model_files, w, s, logger, dir_type='we
 
     return surface_path
 
-def caculate_trajectory(cfg, weight_path, model, outpath, logger, dir_type='weights', ignore_bias=False):
+def caculate_trajectory(model_name, weight_path, model, outpath, logger, dir_type='weights', ignore_bias=False):
     # --------------------------------------------------------------------------
     # load the final model
     # --------------------------------------------------------------------------
@@ -254,7 +254,7 @@ def caculate_trajectory(cfg, weight_path, model, outpath, logger, dir_type='weig
     model_files = []
     files = os.listdir(weight_path)
     def file_filter(f):
-        if fnmatch(f, cfg.model_name + "_epoch_[0-9]*.pt"):
+        if fnmatch(f, model_name + "_epoch_[0-9]*.pt"):
             return True
         else:
             return False

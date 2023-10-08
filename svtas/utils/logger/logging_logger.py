@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 10:10:22
+LastEditTime : 2023-10-08 20:24:03
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
@@ -43,8 +43,6 @@ class PythonLoggingLogger(BaseLogger):
             plain_formatter = logging.Formatter(
                 "[%(asctime)s] %(message)s",
                 datefmt="%m/%d %H:%M:%S")
-        local_rank = int(os.environ['LOCAL_RANK'])
-        self.local_rank = local_rank
         if local_rank < 0:
             local_rank = 0
 
@@ -143,7 +141,7 @@ class PythonLoggingLogger(BaseLogger):
              stack_info: bool = False,
              stacklevel: int = 1,
              extra = None):
-        if not log_dist:
+        if not log_dist and self.world_size <= 1:
             self.base_logging(self.logger.info, msg, *args, exc_info, stack_info, stacklevel, extra)
         else:
             self.base_dist_logging(self.logger.info, msg, *args, exc_info, stack_info, stacklevel, extra)
@@ -156,7 +154,7 @@ class PythonLoggingLogger(BaseLogger):
              stack_info: bool = False,
              stacklevel: int = 1,
              extra = None):
-        if not log_dist:
+        if not log_dist and self.world_size <= 1:
             self.base_logging(self.logger.debug, msg, *args, exc_info, stack_info, stacklevel, extra)
         else:
             self.base_dist_logging(self.logger.debug, msg, *args, exc_info, stack_info, stacklevel, extra)
@@ -169,7 +167,7 @@ class PythonLoggingLogger(BaseLogger):
              stack_info: bool = False,
              stacklevel: int = 1,
              extra = None):
-        if not log_dist:
+        if not log_dist and self.world_size <= 1:
             self.base_logging(self.logger.warn, msg, *args, exc_info, stack_info, stacklevel, extra)
         else:
             self.base_dist_logging(self.logger.warn, msg, *args, exc_info, stack_info, stacklevel, extra)
@@ -182,7 +180,7 @@ class PythonLoggingLogger(BaseLogger):
              stack_info: bool = False,
              stacklevel: int = 1,
              extra = None):
-        if not log_dist:
+        if not log_dist and self.world_size <= 1:
             self.base_logging(self.logger.error, msg, *args, exc_info, stack_info, stacklevel, extra)
         else:
             self.base_dist_logging(self.logger.error, msg, *args, exc_info, stack_info, stacklevel, extra)
@@ -195,7 +193,7 @@ class PythonLoggingLogger(BaseLogger):
              stack_info: bool = False,
              stacklevel: int = 1,
              extra = None):
-        if not log_dist:
+        if not log_dist and self.world_size <= 1:
             self.base_logging(self.logger.critical, msg, *args, exc_info, stack_info, stacklevel, extra)
         else:
             self.base_dist_logging(self.logger.critical, msg, *args, exc_info, stack_info, stacklevel, extra)
@@ -212,7 +210,7 @@ class PythonLoggingLogger(BaseLogger):
         metric_str = ' '.join([str(v) for v in metric_values])
 
         end_epoch_str = "END epoch:{:<3d}".format(epoch)
-        self.logger.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
+        self.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
             end_epoch_str, mode, metric_str, batch_cost, reader_cost, batch_sum, ips))
 
     def log_batch(self, metric_list, batch_id, mode, ips, epoch_id=None, total_epoch=None):
@@ -229,10 +227,10 @@ class PythonLoggingLogger(BaseLogger):
         step_str = "{:s} step:{:<4d}".format(mode, batch_id)
 
         if epoch_id and total_epoch:
-            self.logger.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+            self.info("{:s} {:s} {:s} {:s} {:s} {}".format(
                 epoch_str, step_str, metric_str, batch_cost, reader_cost, ips))
         else:
-            self.logger.info("{:s} {:s} {:s} {:s} {}".format(
+            self.info("{:s} {:s} {:s} {:s} {}".format(
                 step_str, metric_str, batch_cost, reader_cost, ips))
     
     def log_step(self, metric_list, step_id, mode, ips, total_step=None):
@@ -249,7 +247,7 @@ class PythonLoggingLogger(BaseLogger):
         else:
             step_str = "{:s} step:{:<4d}".format(mode, step_id)
 
-        self.logger.info("{:s} {:s} {:s} {:s} {}".format(
+        self.info("{:s} {:s} {:s} {:s} {}".format(
                 step_str, metric_str, batch_cost, reader_cost, ips))
     
     def close(self):

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-08 15:29:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 15:55:56
+LastEditTime : 2023-10-08 16:14:01
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_cam_model_pipline.py
 '''
@@ -12,6 +12,16 @@ from typing import Dict
 from .torch_model_pipline import TorchModelPipline
 from svtas.utils.cam import get_model_target_class
 from pytorch_grad_cam.ablation_layer import AblationLayerVit
+from svtas.utils.cam import ModelForwardWrapper, get_match_fn_class
+from pytorch_grad_cam import GradCAM, \
+    ScoreCAM, \
+    GradCAMPlusPlus, \
+    AblationCAM, \
+    XGradCAM, \
+    EigenCAM, \
+    EigenGradCAM, \
+    LayerCAM, \
+    FullGrad
 
 def reshape_transform(transform_form):
 # # class activation transform [N C T]
@@ -61,9 +71,18 @@ class TorchCAMModelPipline(TorchModelPipline):
                  cam_method,
                  eigen_smooth,
                  aug_smooth,
-                 visualize_cfg,
-                 methods,
-                 match_fn,
+                 method,
+                 batch_size,
+                 sample_rate,
+                 ignore_index = -100,
+                 layer_name = [],
+                 data_key = "imgs",
+                 return_targets_name = dict(
+                     CategorySegmentationTarget = dict(category=None)
+                 ),
+                 reshape_transform = "NPC",
+                 label_path = "./data/gtea/mapping.txt",
+                 match_fn = "rgb_stream_match_fn",
                  device=None,
                  criterion=None,
                  optimizer=None,
@@ -74,43 +93,65 @@ class TorchCAMModelPipline(TorchModelPipline):
                  grad_accumulate: Dict = None) -> None:
         super().__init__(model, post_processing, device, criterion, optimizer,
                          lr_scheduler, pretrained, amp, grad_clip, grad_accumulate)
-        self.visualize_cfg = visualize_cfg
+        self.model = ModelForwardWrapper(model=self.model, data_key=data_key, sample_rate=sample_rate)
+        self.methods = \
+            {"gradcam": GradCAM,
+            "scorecam": ScoreCAM,
+            "gradcam++": GradCAMPlusPlus,
+            "ablationcam": AblationCAM,
+            "xgradcam": XGradCAM,
+            "eigencam": EigenCAM,
+            "eigengradcam": EigenGradCAM,
+            "layercam": LayerCAM,
+            "fullgrad": FullGrad}
+
+        if method not in list(self.methods.keys()):
+            raise Exception(f"method should be one of {list(self.methods.keys())}")
+        
         self.cam_method = cam_method
         self.eigen_smooth = eigen_smooth
         self.aug_smooth = aug_smooth
-        self.methods = methods
-        self.match_fn = match_fn
+        self.method = method
+        self.label_path = label_path
+        self.data_key = data_key
+        self.return_targets_name = return_targets_name
+        self.match_fn = get_match_fn_class(match_fn)
+        self.layer_name = layer_name
+        self.ignore_index = ignore_index
+        self.sample_rate = sample_rate
+        self.batch_size = batch_size
+        self.reshape_transform = reshape_transform
 
         self.target_layers = []
         # batch videos sampler
         for layer in self.model_pipline.model.named_modules():
-            if layer[0] in set(self.visualize_cfg.layer_name):
+            if layer[0] in set(self.layer_name):
                 self.target_layers.append(layer[1])
 
         if self.cam_method == "ablationcam":
             self.cam = self.methods[self.cam_method](model=self.model,
                                     target_layers=self.target_layers,
                                     use_cuda=self.use_cuda,
-                                    reshape_transform=reshape_transform(self.visualize_cfg.reshape_transform),
+                                    reshape_transform=reshape_transform(self.reshape_transform),
                                     ablation_layer=AblationLayerVit())
         else:
             self.cam = self.methods[self.cam_method](model=self.model,
                                     target_layers=self.target_layers,
                                     use_cuda=self.use_cuda,
-                                    reshape_transform=reshape_transform(self.visualize_cfg.reshape_transform))
-        self.cam.batch_size = self.visualize_cfg.batch_size
+                                    reshape_transform=reshape_transform(self.reshape_transform))
+        self.cam.batch_size = self.batch_size
         # If None, returns the map for the highest scoring category.
         # Otherwise, targets the requested category.
-        if self.visualize_cfg.return_targets_name is None:
+        if self.return_targets_name is None:
             self.targets = None
         else:
             self.targets = []
-            for k, cfg in self.visualize_cfg.return_targets_name.items():
+            for k, cfg in self.return_targets_name.items():
                 self.targets.append(get_model_target_class(target_name=k, cfg=cfg))
 
     @torch.no_grad()
     def forward(self, data_dict):
-        input_tensor = input_data[self.visualize_cfg.data_key]
+        input_tensor = input_data[self.data_key]
         # move data
         input_data = {}
         for key, value in data_dict.items():

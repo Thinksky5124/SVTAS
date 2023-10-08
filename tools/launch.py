@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 11:23:50
+LastEditTime : 2023-10-08 20:22:58
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -16,6 +16,8 @@ import random
 import numpy as np
 import torch
 
+from svtas.tasks.visualize_loss import visulize_loss
+from svtas.tasks.visualize import visualize
 from svtas.tasks.extract import extract
 from svtas.tasks.infer import infer
 from svtas.tasks.test import test
@@ -34,7 +36,7 @@ def parse_args():
                         help='config file path')
     parser.add_argument('--mode',
                         '-m',
-                        choices=["train", "test", "infer", "profile", 'visulaize', 'extract'],
+                        choices=["train", "test", "infer", "profile", 'visualize', 'extract', 'visualize_loss'],
                         help='run mode')
     parser.add_argument('-o',
                         '--override',
@@ -45,6 +47,10 @@ def parse_args():
         default=-1,
         type=int,
         help='node rank for distributed training')
+    parser.add_argument('--world_size',
+        default=1,
+        type=int,
+        help='num of world size')
     parser.add_argument(
         '--seed',
         type=int,
@@ -56,12 +62,17 @@ def parse_args():
         help='whether to use benchmark to reproduct')
     parser.add_argument(
         '--launcher',
-        choices=['none', 'pytorch'],
-        default='none',
+        choices=['pytorch'],
+        default='pytorch',
         help='job launcher')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
+        os.environ['WORLD_SIZE'] = str(args.world_size)
+    else:
+        os.environ["MASTER_ADDR"] = "127.0.0.1"
+        os.environ["MASTER_PORT"] = "29500"
+        os.environ['WORLD_SIZE'] = str(args.world_size)
     return args
 
 
@@ -70,10 +81,7 @@ def main():
     cfg = get_config(args.config, overrides=args.override)
 
     # init distributed env first, since logger depends on the dist info.
-    if args.launcher == 'none':
-        nprocs = 1
-    else:
-        nprocs = torch.cuda.device_count()
+    nprocs = args.world_size
     # set seed if specified
     seed = args.seed
     if seed is not None:
@@ -91,34 +99,24 @@ def main():
         logger = get_logger("SVTAS")
         logger.info("Current Seed is: " + str(seed))
 
-    if args.mode in ["test"]:
-        test(cfg,
-             args=args,
-             local_rank=args.local_rank,
-             nprocs=nprocs)
-    elif args.mode in ["train"]:
-        train(cfg,
-            args=args,
-            local_rank=args.local_rank,
-            nprocs=nprocs)
-    elif args.mode in ["infer"]:
-        infer(cfg,
-            args=args,
-            local_rank=args.local_rank,
-            nprocs=nprocs)
-    elif args.mode in ["profile"]:
-        profile(cfg,
-            args=args,
-            local_rank=args.local_rank,
-            nprocs=nprocs)
-    elif args.mode in ["extract"]:
-        extract(cfg,
-                args=args,
-                local_rank=args.local_rank,
-                nprocs=nprocs)
+    task_func_dict = {
+        "train": train,
+        "test": test,
+        "infer": infer,
+        "profile": profile,
+        "extract": extract,
+        "visualize": visualize,
+        "visulize_loss": visulize_loss
+    }
+    
+    if nprocs <= 1:
+        # single process run task
+        task_func_dict[args.mode](local_rank=args.local_rank, nprocs=nprocs, cfg=cfg, args=args)
     else:
-        raise NotImplementedError(args.mode + " mode not support!")
-
+        # multi process run task
+        if args.launcher == "pytorch":
+            import torch.multiprocessing as mp
+            mp.spawn(task_func_dict[args.mode], nprocs=nprocs, args=(nprocs, cfg, args))
 
 if __name__ == '__main__':
     main()

@@ -7,7 +7,7 @@ Description  : file content
 FilePath     : /SVTAS/config/_base_/engine/train_engine.py
 '''
 ENGINE = dict(
-    name = "BaseImplementEngine",
+    name = "StandaloneEngine",
     record = dict(
         name = "StreamValueRecord"
     ),

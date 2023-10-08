@@ -6,12 +6,15 @@ LastEditTime : 2023-10-08 10:11:02
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/__init__.py
 '''
-from .base_engine import BaseEngine, BaseImplementEngine
+from .base_engine import BaseEngine
 from .extract_engine import (ExtractFeatureEngine, ExtractMVResEngine,
                              ExtractOpticalFlowEngine, ExtractModelEngine, LossLandSpaceEngine)
-
+from .standalone_engine import StandaloneEngine
+from .deepspeed_engine import DeepSpeedDistributedDataParallelEngine
+from .torch_ddp_engine import TorchDistributedDataParallelEngine
 __all__ = [
-    'BaseEngine', 'BaseImplementEngine',
+    'BaseEngine', 'StandaloneEngine',
     'ExtractFeatureEngine', 'ExtractMVResEngine', 'ExtractOpticalFlowEngine',
-    'ExtractModelEngine', 'LossLandSpaceEngine'
+    'ExtractModelEngine', 'LossLandSpaceEngine',
+    'DeepSpeedDistributedDataParallelEngine', 'TorchDistributedDataParallelEngine'
 ]

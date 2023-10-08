@@ -2,21 +2,19 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 15:40:35
+LastEditTime : 2023-10-08 20:04:43
 Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
 
-import torch
-from svtas.utils.logger import get_logger
 from svtas.utils.save_load import mkdir
 from svtas.utils import AbstractBuildFactory
 from svtas.engine import BaseEngine
 
-def train(cfg,
-          args,
-          local_rank,
-          nprocs):
+def train(local_rank,
+          nprocs,
+          cfg,
+          args):
     """Train model entry
     """
     
@@ -79,12 +77,12 @@ def train(cfg,
         val_dataloader_config['collate_fn'] = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test)
         val_dataloader = AbstractBuildFactory.create_factory('dataloader').create(val_dataloader_config)
         
-        engine_config = cfg.ENGINE
-        engine_config['logger_dict'] = cfg.LOGGER_LIST
-        engine_config['metric'] = metrics
-        engine_config['model_pipline'] = model_pipline
-        engine_config['model_name'] = model_name
-        test_engine: BaseEngine = AbstractBuildFactory.create_factory('engine').create(engine_config)
+        test_engine_config = cfg.ENGINE
+        test_engine_config['logger_dict'] = cfg.LOGGER_LIST
+        test_engine_config['metric'] = metrics
+        test_engine_config['model_pipline'] = model_pipline
+        test_engine_config['model_name'] = model_name
+        test_engine: BaseEngine = AbstractBuildFactory.create_factory('engine').create(test_engine_config)
         test_engine.set_dataloader(val_dataloader)
         test_engine.running_mode = 'validation'
 
