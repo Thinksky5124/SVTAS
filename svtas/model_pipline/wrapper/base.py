@@ -38,7 +38,7 @@ class BaseModel(metaclass=abc.ABCMeta):
         raise NotImplementedError("You must implement train function!")
     
     @abc.abstractmethod
-    def run_infer(*args: Any, **kwds: Any):
+    def run_test(*args: Any, **kwds: Any):
         raise NotImplementedError("You must implement infer function!")
     
     @abc.abstractmethod

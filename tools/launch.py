@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:22:58
+LastEditTime : 2023-10-08 22:24:41
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -62,7 +62,7 @@ def parse_args():
         help='whether to use benchmark to reproduct')
     parser.add_argument(
         '--launcher',
-        choices=['pytorch'],
+        choices=['pytorch', 'torchrun'],
         default='pytorch',
         help='job launcher')
     args = parser.parse_args()
@@ -70,9 +70,9 @@ def parse_args():
         os.environ['LOCAL_RANK'] = str(args.local_rank)
         os.environ['WORLD_SIZE'] = str(args.world_size)
     else:
+        # Todo: pass args
         os.environ["MASTER_ADDR"] = "127.0.0.1"
         os.environ["MASTER_PORT"] = "29500"
-        os.environ['WORLD_SIZE'] = str(args.world_size)
     return args
 
 
@@ -117,6 +117,8 @@ def main():
         if args.launcher == "pytorch":
             import torch.multiprocessing as mp
             mp.spawn(task_func_dict[args.mode], nprocs=nprocs, args=(nprocs, cfg, args))
-
+        elif args.launcher == "torchrun":
+            # Todo: torchrun pass args
+            pass
 if __name__ == '__main__':
     main()

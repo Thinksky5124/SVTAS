@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-03 20:08:42
+LastEditTime : 2023-10-08 23:12:41
 Description: dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_stream_segmentation_dataset.py
 '''
@@ -87,6 +87,8 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
 
     def load_file(self, sample_videos_list):
         """Load index file to get video information."""
+        # Todo: accelerate this will dist, only sample and process that need by itself
+        # Todo: dynamic segment len dataloader, set other random iter len dataloader
         video_segment_lists = self.parse_file_paths(self.file_path)
         info_list = [[] for i in range(self.nprocs)]
         # sample step
@@ -98,6 +100,7 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
                 sample_idx = sample_idx_list[sample_idx_list_idx]
                 video_sample_segment_lists[nproces_idx].append(video_segment_lists[sample_idx])
 
+            # Todo: add a len control
             max_len = 0
             info_proc = [[] for i in range(self.nprocs)]
             for proces_idx in range(self.nprocs):

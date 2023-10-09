@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-04 21:23:45
+LastEditTime : 2023-10-08 22:40:57
 Description  : Collect function
 FilePath     : /SVTAS/svtas/loader/pipline/collect_fn.py
 '''
@@ -103,4 +103,4 @@ class BatchCompose():
                 pass
             else:
                 data[key] = copy.deepcopy(self._compose_list(batch, key))
-        return [data]
+        return data

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-06 15:16:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:59:59
+LastEditTime : 2023-10-08 22:19:31
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_ddp_pipline.py
 '''
@@ -33,6 +33,7 @@ class TorchDistributedDataParallelModelPipline(TorchModelPipline):
                  grad_accumulate: Dict = None) -> None:
         super().__init__(model, post_processing, device, criterion, optimizer,
                          lr_scheduler, pretrained, amp, grad_clip, grad_accumulate)
+        # Todo 1.: Distributed Module Replace e.g.: batchnorm
         dist.init_process_group("nccl", init_method="tcp://" + os.environ['MASTER_ADDR'] + ":" + os.environ['MASTER_PORT'], rank=self.rank, world_size=self.world_size)
         self.model = DistributedDataParallel(self.model, device_ids=[self.rank])
 

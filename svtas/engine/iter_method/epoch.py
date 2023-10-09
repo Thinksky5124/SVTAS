@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 14:55:01
+LastEditTime : 2023-10-08 22:41:53
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -214,12 +214,10 @@ class EpochMethod(BaseIterMethod):
 
     def run_one_batch(self, data):
         # videos batch train
-
-        for sliding_seg in data:
-            # run one batch
-            outputs, loss_dict = self.run_one_forward(sliding_seg)
-            self.batch_end_step(input_data=sliding_seg, outputs=outputs)
-            self.record.update_record(loss_dict)
+        # run one batch
+        outputs, loss_dict = self.run_one_forward(data)
+        self.batch_end_step(input_data=data, outputs=outputs)
+        self.record.update_record(loss_dict)
 
     def run(self) -> float:
         """

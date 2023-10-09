@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 20:35:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 14:36:09
+LastEditTime : 2023-10-09 09:16:07
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/torch_model.py
 '''
@@ -30,11 +30,11 @@ class TorchModel(torch.nn.Module, BaseModel):
     def run_train(*args: Any, **kwds: Any):
         raise NotImplementedError("You must implement train function!")
     
-    def run_infer(*args: Any, **kwds: Any):
+    def run_test(*args: Any, **kwds: Any):
         raise NotImplementedError("You must implement infer function!")
     
     def forward(self, *args: Any, **kwds: Any) -> Any:
         if self.training:
             return self.run_train(*args, **kwds)
         else:
-            return self.run_infer(*args, **kwds)
+            return self.run_test(*args, **kwds)
