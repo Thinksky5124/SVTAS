@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:24:03
+LastEditTime : 2023-10-09 09:28:09
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
@@ -43,10 +43,10 @@ class PythonLoggingLogger(BaseLogger):
             plain_formatter = logging.Formatter(
                 "[%(asctime)s] %(message)s",
                 datefmt="%m/%d %H:%M:%S")
-        if local_rank < 0:
-            local_rank = 0
+        if self.local_rank < 0:
+            self.local_rank = 0
 
-        if local_rank == 0:
+        if self.local_rank == 0:
             # stdout logging: master only
             ch = logging.StreamHandler(stream=sys.stdout)
             ch.setLevel(self.level)

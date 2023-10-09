@@ -12,7 +12,7 @@ import time
 
 from svtas.utils.logger import get_logger
 import numpy as np
-from .base_engine import StandaloneEngine
+from .standalone_engine import StandaloneEngine
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('engine')
