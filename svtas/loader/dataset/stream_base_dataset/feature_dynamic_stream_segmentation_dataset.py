@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 17:05:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 18:35:40
+LastEditTime : 2023-10-09 21:10:14
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/feature_dynamic_stream_segmentation_dataset.py
 '''
@@ -16,10 +16,9 @@ from typing import Iterator, Dict, List
 
 from svtas.utils import AbstractBuildFactory
 from .dynamic_stream_base_dataset import DynamicStreamDataset
-from .feature_stream_segmentation_dataset import FeatureStreamSegmentationDataset
 
 @AbstractBuildFactory.register('dataset')
-class FeatureDynamicStreamSegmentationDataset(DynamicStreamDataset, FeatureStreamSegmentationDataset):
+class FeatureDynamicStreamSegmentationDataset(DynamicStreamDataset):
     def __init__(self,
                  feature_path,
                  dynamic_stream_generator: Dict,
@@ -28,6 +27,13 @@ class FeatureDynamicStreamSegmentationDataset(DynamicStreamDataset, FeatureStrea
         self.flow_feature_path = flow_feature_path
         self.feature_path = feature_path
         super().__init__(dynamic_stream_generator=dynamic_stream_generator, **kwargs)
+    
+    def parse_file_paths(self, input_path):
+        if self.dataset_type in ['gtea', '50salads', 'breakfast', 'thumos14']:
+            file_ptr = open(input_path, 'r')
+            info = file_ptr.read().split('\n')[:-1]
+            file_ptr.close()
+        return info
     
     def load_file(self, sample_videos_list):
         """Load index file to get video feature information."""
@@ -63,6 +69,7 @@ class FeatureDynamicStreamSegmentationDataset(DynamicStreamDataset, FeatureStrea
                         classes[i] = self.actions_dict[content[i]]
 
                     # caculate sliding num
+                    vid_len_batch.append(len(content))
                     if max_len < len(content):
                         max_len = len(content)
 
@@ -83,13 +90,60 @@ class FeatureDynamicStreamSegmentationDataset(DynamicStreamDataset, FeatureStrea
 
             # dynamic generator
             dynamic_sample_list = []
-            for sample_dict in self.dynamic_stream_generator(max_len, vid_len_batch):
+            self.dynamic_stream_generator.set_start_args(max_len, vid_len_batch)
+            for sample_dict in self.dynamic_stream_generator:
                 dynamic_sample_list.append(sample_dict)
             # construct sliding num
             sliding_num = len(dynamic_sample_list)
 
             # nprocs sync
             for proces_idx in range(self.nprocs):
-                info_proc[proces_idx]['precise_sliding_num'] = self.dynamic_stream_generator.precise_sliding_num[proces_idx]
-                info_list[proces_idx].append([step, sliding_num, info_proc[proces_idx]])
+                for info in info_proc[proces_idx]:
+                    info['precise_sliding_num'] = self.dynamic_stream_generator.precise_sliding_num[proces_idx]
+                info_list[proces_idx].append([step, sliding_num, dynamic_sample_list, info_proc[proces_idx]])
         return info_list
+    
+    def _get_one_videos_clip(self, idx, info):
+        feature_list = []
+        labels_list = []
+        masks_list = []
+        vid_list = []
+        precise_sliding_num_list = []
+
+        for single_info in info:
+            sample_segment = single_info.copy()
+            sample_segment['sample_sliding_idx'] = idx
+            sample_segment = self.pipeline(sample_segment)
+            # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
+            feature_list.append(copy.deepcopy(sample_segment['feature'].unsqueeze(0)))
+            labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
+            masks_list.append(np.expand_dims(sample_segment['masks'], axis=0).copy())
+            vid_list.append(copy.deepcopy(sample_segment['video_name']))
+            precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
+
+        feature = copy.deepcopy(torch.concat(feature_list, dim=0))
+        labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
+        masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
+        precise_sliding_num = copy.deepcopy(np.concatenate(precise_sliding_num_list, axis=0).astype(np.float32))
+
+        # compose result
+        data_dict = {}
+        data_dict['feature'] = feature
+        data_dict['labels'] = labels
+        data_dict['masks'] = masks
+        data_dict['precise_sliding_num'] = precise_sliding_num
+        data_dict['vid_list'] = vid_list
+        return data_dict
+    
+    def _get_end_videos_clip(self):
+        # compose result
+        data_dict = {}
+        data_dict['feature'] = 0
+        data_dict['labels'] = 0
+        data_dict['masks'] = 0
+        data_dict['vid_list'] = []
+        data_dict['sliding_num'] = 0
+        data_dict['precise_sliding_num'] = 0
+        data_dict['step'] = self.step_num
+        data_dict['current_sliding_cnt'] = -1
+        return data_dict

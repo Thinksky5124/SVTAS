@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:30:09
+LastEditTime : 2023-10-09 21:41:31
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/test.py
 '''
@@ -33,7 +33,7 @@ def test(local_rank,
     metric_cfg = cfg.METRIC
     metrics = dict()
     for k, v in metric_cfg.items():
-        v['train_mode'] = True
+        v['train_mode'] = False
         metrics[k] = AbstractBuildFactory.create_factory('metric').create(v)
     
     # 3. construct model_pipline

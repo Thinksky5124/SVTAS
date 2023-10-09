@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 17:04:10
+LastEditTime : 2023-10-09 21:16:07
 Description  : feature sampler
 FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
 '''
@@ -32,7 +32,7 @@ class FeatureStreamSampler():
                  sample_mode='random',
                  format="NTC",
                  frame_idx_key='sample_sliding_idx'):
-        assert len(sample_rate_dict)==len(clip_seg_num_dict)==len(sliding_window_dict)==(len(sample_add_key_pair)+1)
+        # assert len(sample_rate_dict)==len(clip_seg_num_dict)==len(sliding_window_dict)==(len(sample_add_key_pair)+1)
         
         self.sample_rate_dict = sample_rate_dict
         self.is_train = is_train
@@ -228,8 +228,8 @@ class FeatureDynamicStreamSampler(FeatureStreamSampler):
     
     def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):
         frames_len = int(results['frames_len'])
-        video_len = int(results['video_len'])
-        small_frames_video_len = min(frames_len, video_len)
+        feature_len = int(results['feature_len'])
+        small_frames_video_len = min(frames_len, feature_len)
 
         # generate sample index
         if self.frame_idx_key in results.keys():

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 09:28:09
+LastEditTime : 2023-10-09 21:28:08
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
@@ -251,4 +251,4 @@ class PythonLoggingLogger(BaseLogger):
                 step_str, metric_str, batch_cost, reader_cost, ips))
     
     def close(self):
-        self.logger.shutdown()
+        pass

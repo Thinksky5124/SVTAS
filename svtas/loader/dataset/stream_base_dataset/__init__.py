@@ -17,9 +17,12 @@ from .video_cam_raw_frame_stream_dataset import RawFrameStreamCAMDataset
 from .compressed_video_stream_segmentation_dataset import CompressedVideoStreamSegmentationDataset
 from .rgb_mvs_res_stream_segmentation_dataset import RGBMVsResFrameStreamSegmentationDataset
 from .cam_feature_stream_segmentation_dataset import CAMFeatureStreamSegmentationDataset
+from .feature_dynamic_stream_segmentation_dataset import FeatureDynamicStreamSegmentationDataset
+from .raw_frame_dynamic_stream_segmentation_dataset import RawFrameDynamicStreamSegmentationDataset
 
 __all__ = [
     "FeatureStreamSegmentationDataset", "FeatureVideoPredictionDataset", "RawFrameStreamSegmentationDataset",
     "RGBFlowFrameStreamSegmentationDataset", "RawFrameStreamCAMDataset", "CompressedVideoStreamSegmentationDataset",
-    "RGBMVsResFrameStreamSegmentationDataset", "CAMFeatureStreamSegmentationDataset"
+    "RGBMVsResFrameStreamSegmentationDataset", "CAMFeatureStreamSegmentationDataset",
+    "FeatureDynamicStreamSegmentationDataset", "RawFrameDynamicStreamSegmentationDataset"
 ]

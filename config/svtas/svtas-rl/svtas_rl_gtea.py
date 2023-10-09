@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-07 19:11:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 11:09:28
+LastEditTime : 2023-10-09 21:38:36
 Description  : file content
 FilePath     : /SVTAS/config/svtas/svtas-rl/svtas_rl_gtea.py
 '''
@@ -32,7 +32,7 @@ ENGINE = dict(
     iter_method = dict(
         name = "StreamEpochMethod",
         epoch_num = epochs,
-        batch_size = 1,
+        batch_size = batch_size,
         test_interval = 1,
         criterion_metric_name = "F1@0.50"
     ),
@@ -147,6 +147,15 @@ DATASET = dict(
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         sliding_window = sliding_window,
     )
+)
+
+METRIC = dict(
+    TAS = dict(
+        name = "TASegmentationMetric",
+        overlap = [.1, .25, .5],
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        file_output = True,
+        score_output = True),
 )
 
 DATASETPIPLINE = dict(

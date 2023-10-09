@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 19:41:19
+LastEditTime : 2023-10-09 18:49:52
 Description: model postprecessing
 FilePath     : /SVTAS/svtas/model/post_processings/stream_feature_post_processing.py
 '''
@@ -15,7 +15,7 @@ from .base_post_processing import BasePostProcessing
 @AbstractBuildFactory.register('post_processing')
 class StreamFeaturePostProcessing(BasePostProcessing):
     def __init__(self,
-                 sliding_window,
+                 sliding_window=None,
                  ignore_index=-100):
         super().__init__()
         self.sliding_window = sliding_window
@@ -34,14 +34,26 @@ class StreamFeaturePostProcessing(BasePostProcessing):
                 for bs in range(seg_scores.shape[1]):
                     if len(self.pred_feature) < (bs + 1):
                         self.pred_feature.append(NPYStreamWriter())
-                    self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, 0:self.sliding_window].detach().cpu().numpy().copy())
-                self.video_gt.append(gt[:, 0:self.sliding_window].detach().cpu().numpy().copy())
+                    if self.sliding_window:
+                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, 0:self.sliding_window].detach().cpu().numpy().copy())
+                    else:
+                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, :].detach().cpu().numpy().copy())
+                if self.sliding_window:
+                    self.video_gt.append(gt[:, 0:self.sliding_window].detach().cpu().numpy().copy())
+                else:
+                    self.video_gt.append(gt[:, :].detach().cpu().numpy().copy())
             else:
                 for bs in range(seg_scores.shape[1]):
                     if len(self.pred_feature) < (bs + 1):
                         self.pred_feature.append(NPYStreamWriter())
-                    self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, 0:self.sliding_window].detach().cpu().numpy().copy())
-                self.video_gt.append(gt[:, 0:self.sliding_window].copy())
+                    if self.sliding_window:
+                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, 0:self.sliding_window].detach().cpu().numpy().copy())
+                    else:
+                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, :].detach().cpu().numpy().copy())
+                if self.sliding_window:
+                    self.video_gt.append(gt[:, 0:self.sliding_window].copy())
+                else:
+                    self.video_gt.append(gt[:, :].copy())
 
 
     def output(self):
