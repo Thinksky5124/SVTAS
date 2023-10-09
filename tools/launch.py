@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 22:24:41
+LastEditTime : 2023-10-09 16:16:39
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -51,6 +51,14 @@ def parse_args():
         default=1,
         type=int,
         help='num of world size')
+    parser.add_argument('--master_addr',
+        default="127.0.0.1",
+        type=str,
+        help='master address')
+    parser.add_argument('--master_port',
+        default="29500",
+        type=str,
+        help='master port')
     parser.add_argument(
         '--seed',
         type=int,
@@ -70,9 +78,8 @@ def parse_args():
         os.environ['LOCAL_RANK'] = str(args.local_rank)
         os.environ['WORLD_SIZE'] = str(args.world_size)
     else:
-        # Todo: pass args
-        os.environ["MASTER_ADDR"] = "127.0.0.1"
-        os.environ["MASTER_PORT"] = "29500"
+        os.environ["MASTER_ADDR"] = args.master_addr
+        os.environ["MASTER_PORT"] = args.master_port
     return args
 
 

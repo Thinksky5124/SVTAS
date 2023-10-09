@@ -22,6 +22,7 @@ except ImportError: # py3k
     from itertools import  filterfalse as ifilterfalse
 from .segmentation_loss import SegmentationLoss
 from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
 def lovasz_grad(gt_sorted):
     """
@@ -257,7 +258,7 @@ def mean(l, ignore_nan=False, empty=0):
         return acc
     return acc / n
 
-class LovaszSoftmaxLoss(nn.Module):
+class LovaszSoftmaxLoss(BaseLoss):
     def __init__(self, num_classes, classes='present') -> None:
         super().__init__()
         self.num_classes = num_classes

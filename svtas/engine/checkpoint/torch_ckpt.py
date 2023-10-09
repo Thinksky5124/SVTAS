@@ -22,6 +22,9 @@ class TorchCheckpointor(BaseCheckpointor):
         self.map_loaction = map_location
         self.cnt = 0
 
+    def init_ckpt(self, *args, **kwargs):
+        pass
+    
     def save(self, save_dict: Dict, path: str = None, file_name: str = None) -> bool:
         if path is None:
             path = self.save_path

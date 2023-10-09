@@ -34,6 +34,10 @@ class BaseCheckpointor(metaclass=abc.ABCMeta):
         if self.save_path is not None:
             return True
         return False
+    
+    @abc.abstractmethod
+    def init_ckpt(self, *args, **kwargs):
+        pass
 
     @abc.abstractmethod
     def save(self,

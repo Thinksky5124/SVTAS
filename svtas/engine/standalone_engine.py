@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-08 20:55:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 21:03:52
+LastEditTime : 2023-10-09 14:41:41
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/standalone_engine.py
 '''
@@ -40,6 +40,7 @@ class StandaloneEngine(BaseEngine):
                                           model_pipline=self.model_pipline)
         self.model_pipline.to(device=self.model_pipline.device)
         self.record.init_record()
+        self.checkpointor.init_ckpt()
         # set running mode
         self.iter_method.mode = self.running_mode
         if self.running_mode == 'train':

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-15 19:43:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:32:35
+LastEditTime : 2023-10-09 09:39:17
 Description  : Bridge Prompt CLIP Loss ref:https://github.com/ttlmh/Bridge-Prompt/blob/master/train.py
 FilePath     : /SVTAS/svtas/model/losses/bridge_prompt_clip_loss.py
 '''
@@ -13,9 +13,10 @@ import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
 from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
 @AbstractBuildFactory.register('loss')
-class BridgePromptCLIPSegmentationLoss(nn.Module):
+class BridgePromptCLIPSegmentationLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  cnt_max=7,

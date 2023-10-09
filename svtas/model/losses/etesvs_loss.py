@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:33:58
+LastEditTime : 2023-10-09 09:40:08
 Description: loss function
 FilePath     : /SVTAS/svtas/model/losses/etesvs_loss.py
 '''
@@ -14,9 +14,10 @@ from .segmentation_loss import  SegmentationLoss
 from .recognition_segmentation_loss import SoftLabelRocgnitionLoss
 
 from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
 @AbstractBuildFactory.register('loss')
-class ETESVSLoss(nn.Module):
+class ETESVSLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  sample_rate=4,
@@ -79,7 +80,7 @@ class ETESVSLoss(nn.Module):
         loss_dict["head_loss"] = head_loss
         return loss_dict
 
-class TemporalSplitMeanPoolingLoss(nn.Module):
+class TemporalSplitMeanPoolingLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  ignore_index=-100):
@@ -125,7 +126,7 @@ class TemporalSplitMeanPoolingLoss(nn.Module):
         loss = torch.mean(loss)
         return loss
 
-class TemporalClassNumMSELoss(nn.Module):
+class TemporalClassNumMSELoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  ignore_index=-100):
@@ -173,7 +174,7 @@ class TemporalClassNumMSELoss(nn.Module):
         loss = torch.mean(loss)
         return loss
             
-class FocalLoss(nn.Module):
+class FocalLoss(BaseLoss):
     def __init__(self, num_classes, alpha=0.25, gamma=2, size_average=True):
         super(FocalLoss,self).__init__()
         self.size_average = size_average

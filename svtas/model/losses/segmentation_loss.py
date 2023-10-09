@@ -12,9 +12,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
 @AbstractBuildFactory.register('loss')
-class SegmentationLoss(nn.Module):
+class SegmentationLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  loss_weight=1.0,
@@ -89,7 +90,7 @@ class ActionCLIPSegmentationLoss(SegmentationLoss):
         return loss_dict
 
 @AbstractBuildFactory.register('loss')
-class LSTRSegmentationLoss(nn.Module):
+class LSTRSegmentationLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  loss_weight=1.0,

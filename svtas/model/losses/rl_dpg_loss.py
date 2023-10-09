@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
 def dice_loss(pred,
               target,

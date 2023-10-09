@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 11:15:43
+LastEditTime : 2023-10-09 17:04:10
 Description  : feature sampler
 FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
 '''
@@ -210,3 +210,54 @@ class FeatureClipSampler(FeatureStreamSampler):
             end_frame = small_frames_feature_len
 
         return start_frame, end_frame
+
+@AbstractBuildFactory.register('dataset_sampler')
+class FeatureDynamicStreamSampler(FeatureStreamSampler):
+    def __init__(self,
+                 feature_dim_dict={ "feature": 2048 },
+                 is_train=False,
+                 sample_rate_name_dict={ "feature": 'sample_rate',"labels": 'sample_rate' },
+                 clip_seg_num_name_dict={ "feature": 'clip_seg_num',"labels": 'clip_seg_num' },
+                 sample_add_key_pair={ "frames": "feature" },
+                 ignore_index=-100,
+                 sample_mode='uniform',
+                 format="NTC",
+                 frame_idx_key='sample_sliding_idx'):
+        super().__init__(feature_dim_dict, is_train, sample_rate_name_dict, clip_seg_num_name_dict,
+                         None, sample_add_key_pair, ignore_index, sample_mode, format, frame_idx_key)
+    
+    def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):
+        frames_len = int(results['frames_len'])
+        video_len = int(results['video_len'])
+        small_frames_video_len = min(frames_len, video_len)
+
+        # generate sample index
+        if self.frame_idx_key in results.keys():
+            start_frame = results[self.frame_idx_key]
+            end_frame = start_frame + sample_num * sample_rate
+        else:
+            start_frame = 0
+            end_frame = small_frames_video_len
+        
+        small_end_frame_idx = min(end_frame, small_frames_video_len)
+        return start_frame, small_end_frame_idx
+    
+    def __call__(self, results):
+        """
+        Args:
+            results: data dict.
+        return:
+           data dict.
+        """
+        for sample_key, add_key in self.sample_add_key_pair.items():
+            feature_dim = self.feature_dim_dict[add_key]
+            sample_rate = results[self.sample_rate_dict[add_key]]
+            clip_seg_num = results[self.clip_seg_num_dict[add_key]]
+            sliding_window = sample_rate * clip_seg_num
+            results = self._sample_frames(results, sample_rate, feature_dim, clip_seg_num, sliding_window, add_key=add_key, sample_key=sample_key)
+        sample_rate = results[self.sample_rate_dict["labels"]]
+        clip_seg_num = results[self.clip_seg_num_dict["labels"]]
+        sliding_window = sample_rate * clip_seg_num
+        results = self._sample_label(results, sample_rate, clip_seg_num, sliding_window, add_key='labels', sample_key='raw_labels')
+
+        return results

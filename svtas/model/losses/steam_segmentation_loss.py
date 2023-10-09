@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 15:23:14
+LastEditTime : 2023-10-09 09:42:09
 Description: loss function
 FilePath     : /SVTAS/svtas/model/losses/steam_segmentation_loss.py
 '''
@@ -11,9 +11,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
 @AbstractBuildFactory.register('loss')
-class StreamSegmentationLoss(nn.Module):
+class StreamSegmentationLoss(BaseLoss):
     def __init__(self,
                  backbone_loss_cfg,
                  head_loss_cfg,

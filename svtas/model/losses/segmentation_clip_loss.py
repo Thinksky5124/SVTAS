@@ -13,9 +13,10 @@ import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
 from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
 @AbstractBuildFactory.register('loss')
-class SgementationCLIPLoss(nn.Module):
+class SgementationCLIPLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  sample_rate=4,
@@ -55,7 +56,7 @@ class SgementationCLIPLoss(nn.Module):
         return loss_dict
 
 @AbstractBuildFactory.register('loss')
-class CLIPLoss(nn.Module):
+class CLIPLoss(BaseLoss):
     def __init__(self,
                  sample_rate=4,
                  loss_weights=1.0):
