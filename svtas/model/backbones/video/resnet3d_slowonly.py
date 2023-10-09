@@ -2,15 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2023-02-22 21:25:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 21:25:40
+LastEditTime : 2023-10-09 23:23:11
 Description  : SlowOnly ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/resnet3d_slowonly.py
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet3d_slowonly.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 from svtas.utils import AbstractBuildFactory
 from .resnet3d_slowfast import ResNet3dPathway
-
-
 
 @AbstractBuildFactory.register('model')
 class ResNet3dSlowOnly(ResNet3dPathway):
