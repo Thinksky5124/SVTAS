@@ -2,16 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:19:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-04 15:30:03
+LastEditTime : 2023-10-05 19:12:16
 Description  : TSM Adam optimizer
 FilePath     : /SVTAS/svtas/optimizer/optim/tsm_adam_optimizer.py
 '''
-from ..builder import OPTIMIZER
+from svtas.utils import AbstractBuildFactory
 import torch
-from mmcv.utils import SyncBatchNorm, _BatchNorm
+from .base_optim import TorchOptimizer
+from mmengine.utils.dl_utils.parrots_wrapper import SyncBatchNorm, _BatchNorm
 
-@OPTIMIZER.register()
-class TSMAdamOptimizer(torch.optim.Adam):
+@AbstractBuildFactory.register('optimizer')
+class TSMAdamOptimizer(TorchOptimizer, torch.optim.Adam):
     def __init__(self,
                  model,
                  fc_lr5=True,

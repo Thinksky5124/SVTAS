@@ -10,11 +10,11 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import constant_init, kaiming_init
+from mmengine.model import constant_init, kaiming_init
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class MultiStageModel(nn.Module):
     def __init__(self,
                  num_stages,
@@ -68,7 +68,7 @@ class MultiStageModel(nn.Module):
             return feature, outputs
         return outputs
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class SingleStageModel(nn.Module):
     def __init__(self, num_layers, num_f_maps, dim, num_classes, out_feature=False):
         super(SingleStageModel, self).__init__()

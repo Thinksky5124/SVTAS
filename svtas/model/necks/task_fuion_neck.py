@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 21:24:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 11:21:07
+LastEditTime : 2023-04-01 09:56:58
 Description  : file content
 FilePath     : /SVTAS/svtas/model/necks/task_fuion_neck.py
 '''
@@ -10,22 +10,9 @@ import torch
 import math
 import torch.nn as nn
 import torch.nn.functional as F
-from ..builder import NECKS
-from typing import Any
+from svtas.utils import AbstractBuildFactory
 
-class TensorCopyOperator(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx: Any, x) -> Any:
-        copy_x = x.detach().clone()
-        return copy_x, x
-    
-    @staticmethod
-    def backward(ctx: Any, copy_x_grad_outpt, x_grad_output) -> Any:
-        if TaskFusionPoolNeck.FUSION_RATIO == 0.0:
-            return copy_x_grad_outpt
-        return copy_x_grad_outpt + TaskFusionPoolNeck.FUSION_RATIO * x_grad_output
-
-@NECKS.register()
+@AbstractBuildFactory.register('model')
 class TaskFusionPoolNeck(nn.Module):
     """Task Fusion Neck Module
     Fuion classification and pooling space information for different input size tensor.
@@ -35,15 +22,13 @@ class TaskFusionPoolNeck(nn.Module):
     2: [N*T C H W] -> [N T C]
     3: [N P C] -> [N T C]
     """
-    FUSION_RATIO=1.0
     def __init__(self,
                  num_classes=11,
                  in_channels=1280,
                  clip_seg_num=30,
                  drop_ratio=0.5,
                  need_pool=True,
-                 pool_type='mean',
-                 fusion_ratio=1.0):
+                 pool_type='mean'):
         super().__init__()
         self.clip_seg_num = clip_seg_num
         self.in_channels = in_channels
@@ -51,7 +36,6 @@ class TaskFusionPoolNeck(nn.Module):
         self.drop_ratio = drop_ratio
         self.need_pool = need_pool
         assert pool_type in ['mean', 'max'], "f{pool_type} doesn't support!"
-        self.FUSION_RATIO = fusion_ratio
         
         if pool_type =='mean':
             self.backbone_pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -85,7 +69,7 @@ class TaskFusionPoolNeck(nn.Module):
             feature = torch.reshape(feature, [feature.shape[0], feature.shape[1], int(math.sqrt(feature.shape[-1])), int(math.sqrt(feature.shape[-1]))])
         
         if self.need_pool is True:
-            copy_feature, feature = TensorCopyOperator.apply(feature)
+            copy_feature = feature.clone()
             # backbone branch
             # x.shape = [N * num_segs, in_channels, 1, 1]
             backbone_x = self.backbone_pool(copy_feature)
@@ -106,7 +90,7 @@ class TaskFusionPoolNeck(nn.Module):
             backbone_x = torch.squeeze(backbone_x)
             # [N, in_channels, num_segs]
             backbone_feature = torch.reshape(backbone_x, shape=[-1, self.clip_seg_num, backbone_x.shape[-1]]).transpose(1, 2) * masks[:, 0:1, :]
-            copy_backbone_feature, backbone_feature = TensorCopyOperator.apply(backbone_feature)
+            copy_backbone_feature = feature.clone()
             
             # get pass feature
             backbone_cls_feature = torch.reshape(copy_backbone_feature.transpose(1, 2), shape=[-1, self.in_channels])

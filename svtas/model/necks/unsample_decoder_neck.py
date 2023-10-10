@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-19 14:41:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 13:15:37
+LastEditTime : 2023-10-05 11:52:52
 Description  : file content
 FilePath     : /SVTAS/svtas/model/necks/unsample_decoder_neck.py
 '''
@@ -11,8 +11,8 @@ import copy
 import random
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import constant_init, kaiming_init
-from ..builder import NECKS
+from mmengine.model import constant_init, kaiming_init
+from svtas.utils import AbstractBuildFactory
 
 class Adaptive3DTo1DPooling(nn.Module):
     def __init__(self) -> None:
@@ -42,7 +42,7 @@ class Up1DConv(nn.Module):
         x = self.conv(x)
         return x
 
-@NECKS.register()
+@AbstractBuildFactory.register('model')
 class UnsampleDecoderNeck(nn.Module):
     def __init__(self,
                  in_channels_list=[3072, 2048, 1280],

@@ -2,15 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:27:58
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-06 15:38:38
+LastEditTime : 2023-10-05 21:08:56
 Description  : multi-step learning rate schedular
-FilePath     : /ETESVS/optimizer/multistep_lr.py
+FilePath     : /SVTAS/svtas/optimizer/lr_scheduler/multistep_lr.py
 '''
-from ..builder import LRSCHEDULER
+from svtas.utils import AbstractBuildFactory
 import torch
+from .base_lr_scheduler import TorchLRScheduler
 
-@LRSCHEDULER.register()
-class MultiStepLR(torch.optim.lr_scheduler.MultiStepLR):
+@AbstractBuildFactory.register('lr_scheduler')
+class MultiStepLR(TorchLRScheduler, torch.optim.lr_scheduler.MultiStepLR):
     def __init__(self,
                  optimizer,
                  step_size=[10, 30],

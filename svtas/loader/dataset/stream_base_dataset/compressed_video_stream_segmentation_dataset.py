@@ -9,10 +9,10 @@ FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/compressed_video_
 import copy
 import numpy as np
 import torch
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .raw_frame_stream_segmentation_dataset import RawFrameStreamSegmentationDataset
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class CompressedVideoStreamSegmentationDataset(RawFrameStreamSegmentationDataset):
     def __init__(self, videos_path,need_residual=True, need_mvs=True, sliding_window=60, need_precise_grad_accumulate=True, **kwargs):
         super().__init__(videos_path, sliding_window, need_precise_grad_accumulate, **kwargs)

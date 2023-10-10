@@ -13,10 +13,10 @@ FilePath     : /SVTAS/svtas/model/backbones/language/text_clip.py
 import torch
 import torch.nn as nn
 import numpy
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from ..utils.clip import SimpleTokenizer as _Tokenizer
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class TextCLIP(nn.Module):
     def __init__(self,
                  clip_model,

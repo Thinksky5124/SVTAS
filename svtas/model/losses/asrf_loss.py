@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-08 11:14:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-08 21:17:49
+LastEditTime : 2023-10-09 09:38:56
 Description  : file content
 FilePath     : /SVTAS/svtas/model/losses/asrf_loss.py
 '''
@@ -14,10 +14,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..builder import LOSSES
+from .base_loss import BaseLoss
+from svtas.utils import AbstractBuildFactory
 
-
-class GaussianSimilarityTMSE(nn.Module):
+class GaussianSimilarityTMSE(BaseLoss):
     """
     Temporal MSE Loss Function with Gaussian Similarity Weighting
     """
@@ -69,7 +69,7 @@ class GaussianSimilarityTMSE(nn.Module):
         return total_loss / batch_size
 
 
-class ActionSegmentationLoss(nn.Module):
+class ActionSegmentationLoss(BaseLoss):
     """
     Loss Function for Action Segmentation
     You can choose the below loss functions and combine them.
@@ -131,7 +131,7 @@ class ActionSegmentationLoss(nn.Module):
         return loss
 
 
-class BoundaryRegressionLoss(nn.Module):
+class BoundaryRegressionLoss(BaseLoss):
     """
     Boundary Regression Loss
         bce: Binary Cross Entropy Loss for Boundary Prediction
@@ -168,8 +168,8 @@ class BoundaryRegressionLoss(nn.Module):
         return loss / batch_size
 
 
-@LOSSES.register()
-class ASRFLoss(nn.Module):
+@AbstractBuildFactory.register('loss')
+class ASRFLoss(BaseLoss):
 
     def __init__(self,
                  num_classes,

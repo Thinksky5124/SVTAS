@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 13:44:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:05:56
+LastEditTime : 2023-10-08 14:33:21
 Description  : RAFT ref:https://github.com/princeton-vl/RAFT
 FilePath     : /SVTAS/svtas/model/backbones/flow/raft.py
 '''
@@ -20,9 +20,9 @@ from ..utils.raft.extractor import BasicEncoder, SmallEncoder
 from ..utils.raft.corr import CorrBlock, AlternateCorrBlock
 from ..utils.raft.utils import bilinear_sampler, coords_grid, upflow8
 
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict, load_checkpoint
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 try:
     autocast = torch.cuda.amp.autocast
@@ -59,7 +59,7 @@ class InputPadder:
         c = [self._pad[2], ht-self._pad[3], self._pad[0], wd-self._pad[1]]
         return x[..., c[0]:c[1], c[2]:c[3]]
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class RAFT(nn.Module):
 
     # (v-iashin) def __init__(self, model_is_small):
@@ -144,7 +144,8 @@ class RAFT(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                revise_keys = revise_keys + [(r'module.', r'')]
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()
                     for param in self.parameters():
@@ -196,7 +197,7 @@ class RAFT(nn.Module):
         
         return img1, img2, input_size, orig_size, temporal_len
     
-    def post_precessing(self, flow, input_size, orig_size, temporal_len):
+    def post_processing(self, flow, input_size, orig_size, temporal_len):
         flow = self.padder.unpad(flow)
         # [N, T, C, H, W]
         refine_flow = torch.reshape(flow, shape=[-1] + [temporal_len, 2] + list(flow.shape[-2:]))

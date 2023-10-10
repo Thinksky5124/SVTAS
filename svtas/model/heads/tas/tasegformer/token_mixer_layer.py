@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-30 16:11:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-21 14:40:15
+LastEditTime : 2023-02-28 20:25:48
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/token_mixer_layer.py
 '''
@@ -11,9 +11,10 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ...utils.attention_helper.attention_layer import MultiHeadChunkAttentionLayer, MHRPRChunkAttentionLayer
+from einops import rearrange
+from ...utils.attention_helper.attention_layer import MultiHeadChunkAttentionLayer, MHRPRChunkAttentionLayer, padding_to_multiple_of
 
-class PoolFormerMixTokenLayer(nn.Module):
+class ChunkPoolFormerMixTokenLayer(nn.Module):
     """
     Implementation of pooling for PoolFormer
     implement by pytorch (ref:https://github.com/sail-sg/poolformer/blob/main/models/poolformer.py),
@@ -21,21 +22,85 @@ class PoolFormerMixTokenLayer(nn.Module):
 
     --pool_size: pooling size
     """
-    def __init__(self, pool_size=3, stride=1):
+    def __init__(self, hidden_channels, pool_size=3, stride=1, chunck_size=1):
         super().__init__()
-        # if mode == 'enocder':
-        center_pool_size_list = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-        # center_pool_size_list = [3, 5, 7, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
-        # else:
-        #     center_pool_size_list = [3, 5, 7, 9, 11, 13, 17, 33, 65, 127, 255, 511]
-        center_pool_size = center_pool_size_list[pool_size]
-        self.pool = nn.AvgPool1d(
-            center_pool_size, stride=stride, padding=center_pool_size//2, count_include_pad=False)
+        self.chunck_size = chunck_size
+        self.pool = nn.AvgPool1d(pool_size, stride=stride, padding=pool_size//2, count_include_pad=True)
 
+        self.fc1 = nn.Linear(hidden_channels, hidden_channels)
+        self.act = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_channels, hidden_channels)
+
+    def gen_causal_mask(self, input_size, device):
+        """
+        Generates a causal mask of size (input_size, input_size) for attention
+        """
+        # [T, T]
+        l_l_mask = torch.triu(torch.ones(input_size, input_size), diagonal=1) == 1
+        l_l_mask = l_l_mask.to(device)
+        return l_l_mask
+    
+    def gen_key_padding_mask(self, masks):
+        sum_masks = torch.sum(masks.squeeze(1), dim=-1) == 0.0
+        for bs in range(sum_masks.shape[0]):
+            if sum_masks[bs]:
+                masks[bs] = 1.0
+        return (masks == 0.0).squeeze(1)
+    
     def forward(self, x, masks):
-        x = self.pool(x)
+        x = torch.transpose(x, 1, 2)
+
+        # chunck
+        # padding for groups
+        padding = padding_to_multiple_of(x.shape[1], self.chunck_size)
+        temporal_size = x.shape[1]
+        if padding > 0:
+            x = F.pad(x, (0, 0, 0, padding), value = 0.)
+        g_size = x.shape[1] // self.chunck_size
+        x = rearrange(x, 'b (g n) d -> (b g) n d', n = self.chunck_size)
+
+        # token mix
+        x = self.pool(x) - x
+        
+        # segmenter transformer
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.fc2(x)
+        # x = self.drop(x)
+        x = rearrange(x, '(b g) n d -> b (g n) d', g = g_size)
+        x = torch.transpose(x, 1, 2)[:, :, :temporal_size]
         return x * masks[:, 0:1, :]
 
+class MixTokenFormerEncoderBlock(nn.Module):
+    def __init__(self, dim, dilation=3, drop=0., chunck_size=16, position_encoding=True):
+        super().__init__()
+        self.token_norm = nn.InstanceNorm1d(dim)
+        self.mlp_norm = nn.InstanceNorm1d(dim)
+        self.token_mixer = ChunkPoolFormerMixTokenLayer(dim, pool_size=3, stride=1, chunck_size=chunck_size)
+        # self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
+        self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
+
+    def forward(self, x, masks):
+        out = x + self.token_mixer(self.token_norm(x), masks)
+        out = self.ffn(self.mlp_norm(out)) + out
+        return out * masks[:, 0:1, :]
+
+class MixTokenFormerDecoderBlock(nn.Module):
+    def __init__(self, dim, dilation=3, drop=0., chunck_size=16, position_encoding=True):
+        super().__init__()
+        self.dilation = dilation
+        self.token_norm = nn.InstanceNorm1d(dim)
+        self.mlp_norm = nn.InstanceNorm1d(dim)
+        # self.token_mixer = ChunkPoolFormerMixTokenLayer(dim, pool_size=3, stride=1, chunck_size=chunck_size)
+        self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
+        self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
+
+    def forward(self, x, value, masks):
+        out = self.token_norm(x)
+        out = self.conv(out, masks) + out
+        out = self.ffn(self.mlp_norm(out)) + out
+        return out * masks[:, 0:1, :]
+    
 class ShfitTokenMixerLayer(nn.Module):
     def __init__(self, shift_div=8) -> None:
         super().__init__()
@@ -47,7 +112,7 @@ class ShfitTokenMixerLayer(nn.Module):
         n, c, t = x.size()
         g =  c // shift_div
 
-        chunk_start = random.choice(range(shift_div - 3))
+        chunk_start = 0
         
         # left shfit
         shift_x[:, g * chunk_start:g * (chunk_start+1), :-shift_len] = x[:, g * chunk_start:g * (chunk_start+1), shift_len:]
@@ -194,9 +259,6 @@ class DilationConvBlock(nn.Module):
         out = self.dropout(out)
         return out * masks[:, 0:1, :]
 
-def exponential_descrease(idx_decoder, p=3):
-    return math.exp(-p*idx_decoder)
-
 class ShfitTokenFormerEncoderBlock(nn.Module):
     def __init__(self, dim, dilation=3, drop=0., chunck_size=16, position_encoding=True):
         super().__init__()
@@ -206,8 +268,8 @@ class ShfitTokenFormerEncoderBlock(nn.Module):
         # self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
         self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
 
-        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=0.2)
-        self.shift_len = 2**dilation
+        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=drop)
+        self.shift_len = 2**(dilation)
 
     def forward(self, x, masks):
         # out = self.conv(x, masks)
@@ -227,8 +289,8 @@ class ShfitTokenFormerDecoderBlock(nn.Module):
         # self.conv = DilationConvBlock(dilation=2**dilation, in_channels=dim, hidden_features=dim, dropout=drop)
         self.ffn = Mlp(in_features=dim, hidden_features=dim, drop=drop)
 
-        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=0.2)
-        self.shift_len = 2**dilation
+        self.attn = MultiHeadChunkAttentionLayer(embed_dim=dim, num_heads=1, chunck_size=chunck_size, position_encoding=position_encoding, dropout=drop)
+        self.shift_len = 2**(dilation)
 
     def forward(self, x, value, masks):
         shfit_x = self.token_mixer(x, shift_len=self.shift_len)

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 16:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:38:36
+LastEditTime : 2023-10-09 09:42:19
 Description  : Video prediction loss
 FilePath     : /SVTAS/svtas/model/losses/video_prediction_loss.py
 '''
@@ -11,10 +11,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
-@LOSSES.register()
-class VideoPredictionLoss(nn.Module):
+@AbstractBuildFactory.register('loss')
+class VideoPredictionLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  sample_rate=1,

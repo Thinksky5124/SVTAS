@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-16 09:40:18
+LastEditTime : 2023-10-07 20:12:16
 Description  : Swin Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
 FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer_3d.py
 '''
@@ -13,9 +13,9 @@ import torch.utils.checkpoint as checkpoint
 import numpy as np
 from timm.models.layers import DropPath, trunc_normal_
 
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict, load_checkpoint
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 from functools import reduce, lru_cache
 from operator import mul
@@ -463,7 +463,7 @@ class PatchEmbed3D(nn.Module):
 
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class SwinTransformer3D(nn.Module):
     """ Swin Transformer backbone.
         A PyTorch impl of : `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows`  -
@@ -651,7 +651,7 @@ class SwinTransformer3D(nn.Module):
                     self.inflate_weights(logger)
                 else:
                     # Directly load 3D model.
-                    load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                    load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 self.apply(_init_weights)
             else:

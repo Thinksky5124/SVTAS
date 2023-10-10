@@ -12,11 +12,11 @@ import os.path as osp
 
 import numpy as np
 
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .item_base_dataset import ItemDataset
 
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class RawFrameSegmentationDataset(ItemDataset):
     """Video dataset for action recognition
         The dataset loads raw videos and apply specified transforms on them.

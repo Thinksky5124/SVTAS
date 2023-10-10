@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 16:12:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 20:12:02
+LastEditTime : 2023-10-05 15:38:04
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientnet.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientnet.py
 '''
@@ -15,13 +15,13 @@ import torch
 import torch.nn as nn
 
 from mmcv.cnn.bricks import ConvModule, DropPath
-from mmcv.runner import Sequential
+from mmengine.model import Sequential
 
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict, load_checkpoint
 
 from .mobilenet_v2 import make_divisible
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from .efficientformer import BaseBackbone
 from ..utils import InvertedResidual, EdgeResidual
 
@@ -68,7 +68,7 @@ def model_scaling(layer_setting, arch_setting):
     return merge_layer_setting
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class EfficientNet(BaseBackbone):
     """EfficientNet backbone.
     Args:
@@ -303,7 +303,7 @@ class EfficientNet(BaseBackbone):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):
         outs = []

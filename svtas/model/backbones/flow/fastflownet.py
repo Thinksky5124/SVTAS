@@ -10,14 +10,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 import warnings
 try:
     from spatial_correlation_sampler import SpatialCorrelationSampler
 except:
     warnings.warn("Can't not use FastFlowNet")
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 class Correlation(nn.Module):
     def __init__(self, max_displacement):
@@ -76,7 +76,7 @@ class Decoder(nn.Module):
             out = self.conv7(self.conv6(self.conv5(out)))
         return out
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class FastFlowNet(nn.Module):
     def __init__(self,
                  pretrained=None,
@@ -152,7 +152,7 @@ class FastFlowNet(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()
                     for param in self.parameters():
@@ -210,7 +210,7 @@ class FastFlowNet(nn.Module):
         
         return img1, img2, input_size, orig_size, temporal_len
     
-    def post_precessing(self, flow, input_size, orig_size, temporal_len):
+    def post_processing(self, flow, input_size, orig_size, temporal_len):
         # [N * T, C, H, W]
         flow = self.div_flow * F.interpolate(flow, size=orig_size, mode='bilinear', align_corners=False)
         if input_size != orig_size:

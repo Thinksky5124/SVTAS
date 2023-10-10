@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 15:21:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-19 13:19:12
+LastEditTime : 2023-10-05 12:03:00
 Description  : Timesformer backbone ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/timesformer.py
 FilePath     : /SVTAS/svtas/model/backbones/video/timesfromer.py
 '''
@@ -10,15 +10,16 @@ import numpy as np
 import torch
 import torch.nn as nn
 from einops import rearrange
-from mmcv import ConfigDict
-from mmcv.cnn import build_conv_layer, build_norm_layer, kaiming_init
+from mmengine import ConfigDict
+from mmcv.cnn import build_conv_layer, build_norm_layer
+from mmengine.model import kaiming_init
 from mmcv.cnn.bricks.transformer import build_transformer_layer_sequence
-from mmcv.cnn.utils.weight_init import trunc_normal_
-from mmcv.runner import _load_checkpoint, load_checkpoint
+from mmengine.model.weight_init import trunc_normal_
+from mmengine.runner.checkpoint import _load_checkpoint, load_checkpoint
 from torch.nn.modules.utils import _pair
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
 class PatchEmbed(nn.Module):
@@ -69,7 +70,7 @@ class PatchEmbed(nn.Module):
         return x
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class TimeSformer(nn.Module):
     """TimeSformer. A PyTorch impl of `Is Space-Time Attention All You Need for
     Video Understanding? <https://arxiv.org/abs/2102.05095>`_
@@ -234,7 +235,7 @@ class TimeSformer(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):
         """Defines the computation performed at every call."""

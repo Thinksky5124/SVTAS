@@ -8,7 +8,7 @@ FilePath     : /SVTAS/svtas/model/necks/bridge_fusion_earlyhyp.py
 '''
 import torch
 from torch import nn
-from ..builder import NECKS
+from svtas.utils import AbstractBuildFactory
 
 class LayerNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-12):
@@ -77,7 +77,7 @@ class BPromptFusing(nn.Module):
         return x[:, :, 0], x[:, :, -self.clip_length:]
 
 
-@NECKS.register()
+@AbstractBuildFactory.register('model')
 class BridgePromptFusionEarlyhyp(nn.Module):
     def __init__(self,
                  embedding_dim=512,

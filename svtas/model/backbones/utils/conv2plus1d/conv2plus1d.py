@@ -8,11 +8,13 @@ FilePath     : /ETESVS/model/backbones/utils/conv2plus1d/conv2plus1d.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
-from mmcv.cnn import CONV_LAYERS, build_norm_layer, constant_init, kaiming_init
+from mmcv.cnn import build_norm_layer
+from mmengine.model import constant_init, kaiming_init
 from torch.nn.modules.utils import _triple
+from mmengine.registry import MODELS
 
 
-@CONV_LAYERS.register_module()
+@MODELS.register_module()
 class Conv2plus1d(nn.Module):
     """(2+1)d Conv module for R(2+1)d backbone.
     https://arxiv.org/pdf/1711.11248.pdf.

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-04 21:23:45
+LastEditTime : 2023-10-08 22:40:57
 Description  : Collect function
 FilePath     : /SVTAS/svtas/loader/pipline/collect_fn.py
 '''
@@ -10,10 +10,10 @@ import copy
 
 import torch
 
-from ..builder import PIPLINE
+from svtas.utils import AbstractBuildFactory
 
 
-@PIPLINE.register()
+@AbstractBuildFactory.register('dataset_pipline')
 class StreamBatchCompose():
     def __init__(self, to_tensor_keys=["imgs", "masks", "labels"]):
         self.to_tensor_keys = to_tensor_keys
@@ -33,7 +33,7 @@ class StreamBatchCompose():
             result_batch.append(data)
         return result_batch
 
-@PIPLINE.register()
+@AbstractBuildFactory.register('dataset_pipline')
 class BatchCompose():
     def __init__(self,
                  ignore_index=-100,
@@ -103,4 +103,4 @@ class BatchCompose():
                 pass
             else:
                 data[key] = copy.deepcopy(self._compose_list(batch, key))
-        return [data]
+        return data

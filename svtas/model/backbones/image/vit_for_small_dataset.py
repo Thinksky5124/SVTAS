@@ -11,8 +11,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from mmengine.runner import load_state_dict
+from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
@@ -111,7 +111,7 @@ class SPT(nn.Module):
         x_with_shifts = torch.cat((x, *shifted_x), dim = 1)
         return self.to_patch_tokens(x_with_shifts)
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class SLViT(nn.Module):
     def __init__(self,
                  image_size=224,
@@ -155,7 +155,7 @@ class SLViT(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(self, img, masks):
         x = self.to_patch_embedding(img)

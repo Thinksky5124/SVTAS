@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-29 10:56:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 15:22:19
+LastEditTime : 2023-10-09 09:41:03
 Description: Action recognition model loss
 FilePath     : /SVTAS/svtas/model/losses/recognition_segmentation_loss.py
 '''
@@ -11,10 +11,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
-@LOSSES.register()
-class RecognitionSegmentationLoss(nn.Module):
+@AbstractBuildFactory.register('loss')
+class RecognitionSegmentationLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  label_mode='soft',
@@ -62,8 +63,8 @@ class RecognitionSegmentationLoss(nn.Module):
         loss_dict["loss"] = loss
         return loss_dict
 
-@LOSSES.register()
-class SoftLabelRocgnitionLoss(nn.Module):
+@AbstractBuildFactory.register('loss')
+class SoftLabelRocgnitionLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  loss_weight=1.0,

@@ -1,13 +1,15 @@
 '''
 Author       : Thyssen Wen
-Date         : 2022-06-11 11:11:53
+Date         : 2023-09-25 13:32:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-06-11 11:14:50
-Description  : General Framework
-FilePath     : /ETESVS/model/architectures/general/__init__.py
+LastEditTime : 2023-09-25 13:48:51
+Description  : file content
+FilePath     : /SVTAS/svtas/model/architectures/general/__init__.py
 '''
-from .encoder_2_decoder import Encoder2Decoder
+from .autoencoder import AutoEncoder
+from .diffusion import Diffusion
+from .serious import SeriousModel
 
 __all__ = [
-    'Encoder2Decoder'
+    'AutoEncoder', 'Diffusion', 'SeriousModel'
 ]

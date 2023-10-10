@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 13:59:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-22 14:31:39
+LastEditTime : 2023-10-09 09:39:50
 Description  : ref:https://github.com/open-mmlab/mmsegmentation/blob/master/mmseg/models/losses/dice_loss.py
 FilePath     : /SVTAS/svtas/model/losses/dice_loss.py
 '''
@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .segmentation_loss import SegmentationLoss
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
 
 def dice_loss(pred,
               target,
@@ -52,7 +52,7 @@ def binary_dice_loss(pred, target, valid_mask, smooth=1, exponent=2, **kwargs):
     return 1 - num / den
 
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class DiceSegmentationLoss(SegmentationLoss):
     """DiceLoss.
     This loss is proposed in `V-Net: Fully Convolutional Neural Networks for

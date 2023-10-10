@@ -10,11 +10,11 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import constant_init, kaiming_init
+from mmengine.model import constant_init, kaiming_init
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class MemoryTCNHead(nn.Module):
     def __init__(self,
                  num_stages,

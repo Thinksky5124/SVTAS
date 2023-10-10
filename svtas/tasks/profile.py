@@ -2,34 +2,29 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 15:41:55
+LastEditTime : 2023-10-05 15:25:23
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/profile.py
 '''
 import torch
 import torch.profiler
 from ..utils.logger import get_logger
-from ..loader.builder import build_dataset
-from ..loader.builder import build_pipline
 import time
 import numpy as np
 import datetime
 
-from ..model.builder import build_model
-from ..model.builder import build_loss
-from ..optimizer.builder import build_optimizer
 from mmcv.cnn.utils.flops_counter import get_model_complexity_info
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from thop import clever_format
 from ..utils.collect_env import collect_env
 
 @torch.no_grad()
-def profile(cfg,
-         args,
-         local_rank,
-         nprocs,
-         use_amp=False,
-         weights=None):
+def profile(local_rank,
+            nprocs,
+            cfg,
+            args,
+            use_amp=False,
+            weights=None):
     logger = get_logger("SVTAS")
     if hasattr(cfg,'PROFILER'):
         wait = cfg.PROFILER.get('wait', 1)
@@ -82,7 +77,7 @@ def profile(cfg,
     temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     sliding_concate_fn = build_pipline(cfg.COLLATE.test)
-    test_Pipeline = build_pipline(cfg.PIPELINE.test)
+    test_Pipeline = build_pipline(cfg.DATASETPIPLINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_Pipeline
     test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -126,11 +121,11 @@ def profile(cfg,
         score = outputs['output']
         return score, loss_dict
     
-    clip_seg_num = list(cfg.PIPELINE.test.sample.get('clip_seg_num_dict', {'sample':32}).values())[0]
-    sample_rate = list(cfg.PIPELINE.test.sample.get('sample_rate_dict', {'sample':1}).values())[0]
+    clip_seg_num = list(cfg.DATASETPIPLINE.test.sample.get('clip_seg_num_dict', {'sample':32}).values())[0]
+    sample_rate = list(cfg.DATASETPIPLINE.test.sample.get('sample_rate_dict', {'sample':1}).values())[0]
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        for transform_op in list(cfg.PIPELINE.test.transform.transform_dict.values())[0]:
+        for transform_op in list(cfg.DATASETPIPLINE.test.transform.transform_dict.values())[0]:
             if list(transform_op.keys())[0] in ['CenterCrop']:
                 image_size = transform_op['CenterCrop']['size']
         x_shape = [clip_seg_num, 3, image_size, image_size]

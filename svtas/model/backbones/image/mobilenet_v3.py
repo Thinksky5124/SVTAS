@@ -9,12 +9,12 @@ FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v3.py
 from mmcv.cnn import ConvModule
 from torch.nn.modules.batchnorm import _BatchNorm
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from mmengine.runner import load_state_dict
+from svtas.utils import AbstractBuildFactory
 from .efficientnet import BaseBackbone, InvertedResidual
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileNetV3(BaseBackbone):
     """MobileNetV3 backbone.
     Args:
@@ -184,7 +184,7 @@ class MobileNetV3(BaseBackbone):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):
         outs = []

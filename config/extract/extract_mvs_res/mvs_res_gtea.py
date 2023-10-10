@@ -41,8 +41,8 @@ POSTPRECESSING = dict(
     sliding_window = sliding_window
 )
 
-PIPELINE = dict(
-    name = "BasePipline",
+DATASETPIPLINE = dict(
+    name = "BaseDatasetPipline",
     decode = dict(
         name = "VideoDecoder",
         backend=dict(

@@ -2,21 +2,21 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-30 16:58:45
+LastEditTime : 2023-10-05 11:54:23
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
 FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v2.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 import torch.utils.checkpoint as cp
-from mmcv.cnn import ConvModule, constant_init, kaiming_init
-from mmcv.runner import load_checkpoint
+from mmengine.model import constant_init, kaiming_init
+from mmengine.runner import load_state_dict
 from torch.nn.modules.batchnorm import _BatchNorm
 from ..utils import make_divisible
 
 from ....utils.logger import get_logger
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 # form neckwork
 # model_urls = {
@@ -108,7 +108,7 @@ class InvertedResidual(nn.Module):
 
         return out
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileNetV2(nn.Module):
     """MobileNetV2 backbone.
 
@@ -246,7 +246,7 @@ class MobileNetV2(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 for m in self.modules():
                     if isinstance(m, nn.Conv2d):

@@ -11,12 +11,12 @@ import copy
 import numpy as np
 import torch
 
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .feature_stream_segmentation_dataset import \
     FeatureStreamSegmentationDataset
 
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class FeatureVideoPredictionDataset(FeatureStreamSegmentationDataset):
     def __init__(self,
                  **kwargs):

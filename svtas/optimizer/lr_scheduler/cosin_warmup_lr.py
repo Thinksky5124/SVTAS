@@ -2,17 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 16:45:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 16:46:40
+LastEditTime : 2023-10-05 21:02:56
 Description  : ref:https://github.com/amazon-science/long-short-term-transformer
 FilePath     : /SVTAS/svtas/optimizer/lr_scheduler/cosin_warmup_lr.py
 '''
 import math
-from ..builder import LRSCHEDULER
-from torch.optim.lr_scheduler import _LRScheduler
+from svtas.utils import AbstractBuildFactory
+from .base_lr_scheduler import TorchLRScheduler
 from .multistep_warmup_lr import _get_warmup_factor_at_iter
 
-@LRSCHEDULER.register()
-class WarmupCosineLR(_LRScheduler):
+@AbstractBuildFactory.register('lr_scheduler')
+class WarmupCosineLR(TorchLRScheduler):
 
     def __init__(self,
                  optimizer,

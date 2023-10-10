@@ -6,11 +6,12 @@ LastEditTime : 2022-10-28 16:17:35
 Description  : file content
 FilePath     : /SVTAS/svtas/optimizer/cosine_annealing_lr.py
 '''
-from ..builder import LRSCHEDULER
+from svtas.utils import AbstractBuildFactory
 import torch
+from .base_lr_scheduler import TorchLRScheduler
 
-@LRSCHEDULER.register()
-class CosineAnnealingLR(torch.optim.lr_scheduler.CosineAnnealingLR):
+@AbstractBuildFactory.register('lr_scheduler')
+class CosineAnnealingLR(TorchLRScheduler, torch.optim.lr_scheduler.CosineAnnealingLR):
     def __init__(self,
                  optimizer,
                  T_max,

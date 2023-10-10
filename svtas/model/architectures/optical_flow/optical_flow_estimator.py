@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:57:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 19:27:21
+LastEditTime : 2023-09-25 14:53:48
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/optical_flow/optical_flow_estimator.py
 '''
@@ -10,30 +10,16 @@ FilePath     : /SVTAS/svtas/model/architectures/optical_flow/optical_flow_estima
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from ..general import SeriousModel
+from svtas.utils import AbstractBuildFactory
 
-from ...builder import build_backbone
-
-from ...builder import ARCHITECTURE
-
-@ARCHITECTURE.register()
-class OpticalFlowEstimation(nn.Module):
+@AbstractBuildFactory.register('architecture')
+class OpticalFlowEstimation(SeriousModel):
     def __init__(self,
                  model=None,
-                 loss=None):
-        super().__init__()
-        if model is not None:
-            self.model = build_backbone(model)
-        else:
-            self.model = None
-
-        self.init_weights()
-
-    def init_weights(self):
-        if self.model is not None:
-            self.model.init_weights(child_model=False)
-    
-    def _clear_memory_buffer(self):
-        self.model._clear_memory_buffer()
+                 weight_init_cfg = dict(
+                     model=dict(child_model=False))):
+        super().__init__(weight_init_cfg=weight_init_cfg, model=model)
 
     def forward(self, input_data):
         flow_imgs = input_data['imgs']
@@ -51,7 +37,7 @@ class OpticalFlowEstimation(nn.Module):
             flows = flow_imgs
         
         if not self.training and self.model.extract_mode is True:
-            flows = self.model.post_precessing(flow2, input_size, orig_size, temporal_len)
+            flows = self.model.post_processing(flow2, input_size, orig_size, temporal_len)
         else:
             flows = flow2
         # seg_score [N,T,C,H,W]

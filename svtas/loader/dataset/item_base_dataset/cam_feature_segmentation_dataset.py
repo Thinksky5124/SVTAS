@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-24 16:02:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 16:05:07
+LastEditTime : 2023-09-25 10:56:30
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/cam_feature_segmentation_dataset.py
 '''
@@ -11,12 +11,11 @@ import os
 import os.path as osp
 
 import numpy as np
-
-from ...builder import DATASET
+from svtas.utils import AbstractBuildFactory
 from .feature_segmentation_dataset import \
     FeatureSegmentationDataset
 
-@DATASET.register()
+@AbstractBuildFactory.register('dataset')
 class CAMFeatureSegmentationDataset(FeatureSegmentationDataset):
     def __getitem__(self, index):
         output_data_dict = {}

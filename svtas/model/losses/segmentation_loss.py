@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 10:09:26
+LastEditTime : 2023-02-23 19:19:31
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''
@@ -11,10 +11,11 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..builder import LOSSES
+from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
-@LOSSES.register()
-class SegmentationLoss(nn.Module):
+@AbstractBuildFactory.register('loss')
+class SegmentationLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  loss_weight=1.0,
@@ -61,7 +62,7 @@ class SegmentationLoss(nn.Module):
         loss_dict["loss"] = loss * self.loss_weight
         return loss_dict
 
-@LOSSES.register()
+@AbstractBuildFactory.register('loss')
 class ActionCLIPSegmentationLoss(SegmentationLoss):
     def __init__(self,
                  **kwargs):
@@ -88,8 +89,8 @@ class ActionCLIPSegmentationLoss(SegmentationLoss):
         loss_dict["loss"] = loss * self.loss_weight
         return loss_dict
 
-@LOSSES.register()
-class LSTRSegmentationLoss(nn.Module):
+@AbstractBuildFactory.register('loss')
+class LSTRSegmentationLoss(BaseLoss):
     def __init__(self,
                  num_classes,
                  loss_weight=1.0,

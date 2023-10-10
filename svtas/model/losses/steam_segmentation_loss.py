@@ -2,19 +2,19 @@
 Author: Thyssen Wen
 Date: 2022-03-16 20:52:46
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-27 10:24:19
+LastEditTime : 2023-10-09 09:42:09
 Description: loss function
-FilePath     : \SVTAS\svtas\model\losses\steam_segmentation_loss.py
+FilePath     : /SVTAS/svtas/model/losses/steam_segmentation_loss.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..builder import LOSSES
-from ..builder import build_loss
+from svtas.utils import AbstractBuildFactory
+from .base_loss import BaseLoss
 
-@LOSSES.register()
-class StreamSegmentationLoss(nn.Module):
+@AbstractBuildFactory.register('loss')
+class StreamSegmentationLoss(BaseLoss):
     def __init__(self,
                  backbone_loss_cfg,
                  head_loss_cfg,
@@ -27,8 +27,8 @@ class StreamSegmentationLoss(nn.Module):
         self.head_loss_cfg = head_loss_cfg
         self.elps = 1e-10
 
-        self.backbone_clip_loss = build_loss(backbone_loss_cfg)
-        self.segmentation_loss = build_loss(head_loss_cfg)
+        self.backbone_clip_loss = AbstractBuildFactory.create_factory('loss').create(backbone_loss_cfg)
+        self.segmentation_loss = AbstractBuildFactory.create_factory('loss').create(head_loss_cfg)
 
     def forward(self, model_output, input_data):
         backbone_score, head_score = model_output["backbone_score"], model_output["output"]

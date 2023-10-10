@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 20:15:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-21 14:55:49
+LastEditTime : 2023-10-05 15:17:59
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/tas/tasegformer/tasegformer.py
 '''
@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .token_mixer_layer import *
 import copy
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
     
 class Encoder(nn.Module):
     def __init__(self,
@@ -25,7 +25,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.layers = nn.ModuleList(
-            [ShfitTokenFormerEncoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
+            [MixTokenFormerEncoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)
@@ -53,7 +53,7 @@ class Decoder(nn.Module):
         self.conv_1x1 = nn.Conv1d(in_channels, embed_dim, 1)
         self.layers = nn.ModuleList(
             # [DilationConvBlock(dilation=2**i, in_channels=embed_dim, hidden_features=embed_dim, dropout=dropout)
-            [ShfitTokenFormerDecoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
+            [MixTokenFormerDecoderBlock(dim=embed_dim, drop=dropout, dilation=i, position_encoding=position_encoding, chunck_size=2**i)
                 for i in range(num_layers)])
         
         self.conv_out = nn.Conv1d(embed_dim, num_classes, 1)
@@ -67,7 +67,7 @@ class Decoder(nn.Module):
 
         return out, feature
         
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class TASegFormer(nn.Module):
     def __init__(self,
                  in_channels,

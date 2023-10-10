@@ -11,13 +11,13 @@ from torch import nn
 import torch.nn.functional as F
 import math
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
-from mmcv.runner import load_state_dict
+from svtas.utils import AbstractBuildFactory
+from mmengine.runner import load_state_dict
 from fvcore.nn.weight_init import c2_msra_fill, c2_xavier_fill
 from ..utils import get_norm, VideoModelStem, ResStage
 from ..utils import (round_width)
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class X3D(nn.Module):
     """
     X3D model builder. It builds a X3D network backbone, which is a ResNet.

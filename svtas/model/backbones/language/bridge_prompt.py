@@ -10,15 +10,15 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import numpy as np
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 # from clip import clip
 from ..utils.clip import LayerNorm
 from ..utils.clip import SimpleTokenizer as _Tokenizer
 from ..utils.clip import Transformer
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class BridgePromptTextEncoder(nn.Module):
     def __init__(self,
                  clip_model,

@@ -2,18 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 16:50:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:37:34
+LastEditTime : 2023-10-06 22:54:18
 Description  : Item Base Dataset
-FilePath     : /SVTAS/loader/dataset/item_base_dataset/item_base_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/item_base_dataset.py
 '''
 from abc import abstractmethod
 
-import torch
-import os.path as osp
 import torch.utils.data as data
+from ..base_dataset import BaseTorchDataset
 
 
-class ItemDataset(data.Dataset):
+class ItemDataset(data.Dataset, BaseTorchDataset):
     """
     ItemDataset For Temporal Video Segmentation
     Other TVS ItemDataset should inherite it.
@@ -25,31 +24,18 @@ class ItemDataset(data.Dataset):
                  actions_map_file_path,
                  temporal_clip_batch_size,
                  video_batch_size,
-                 data_path=None,
+                 train_mode=False,
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
                  drap_last=False,
                  local_rank=-1,
-                 nprocs=1):
-        super().__init__()
-        self.suffix = suffix
-        self.data_path = data_path
-        self.gt_path = gt_path
-        self.actions_map_file_path = actions_map_file_path
-        self.dataset_type = dataset_type
-        
-        self.file_path = file_path
-        self.data_prefix = osp.realpath(data_prefix) if \
-            data_prefix is not None and osp.isdir(data_prefix) else data_prefix
-        self.pipeline = pipeline
-
-        # distribute
-        self.local_rank = local_rank
-        self.nprocs = nprocs
-        self.drap_last = drap_last
-        if self.nprocs > 1:
-            self.drap_last = True
+                 nprocs=1,
+                 data_path=None) -> None:
+        super().__init__(file_path, gt_path, pipeline, actions_map_file_path,
+                         temporal_clip_batch_size, video_batch_size, train_mode,
+                         suffix, dataset_type, data_prefix, drap_last, local_rank,
+                         nprocs, data_path)
 
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')
@@ -60,8 +46,10 @@ class ItemDataset(data.Dataset):
             self.actions_dict[a.split()[1]] = int(a.split()[0])
         
         self.info = self.load_file()
+    
+    def shuffle_dataset(self):
+        return self._viodeo_sample_shuffle()
 
-    @abstractmethod
     def _viodeo_sample_shuffle(self):
         pass
 
@@ -75,3 +63,4 @@ class ItemDataset(data.Dataset):
     
     def __len__(self):
         return len(self.info)
+    

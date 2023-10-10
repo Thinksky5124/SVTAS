@@ -11,12 +11,12 @@ from collections import OrderedDict
 import torch
 from torch.nn.modules.utils import _triple, _pair
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from typing import Any, Callable, Optional, Tuple, Union
 from einops import rearrange
 from torch import nn, Tensor
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 class ObjectDict(dict):
     def __getattr__(self, item):
@@ -624,7 +624,7 @@ class BasicBneck(nn.Module):
         result = residual + self.alpha * x
         return result
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MoViNet(nn.Module):
     def __init__(self,
                  cfg_name="A0",
@@ -703,7 +703,7 @@ class MoViNet(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
             else:
                 self.apply(self._weight_init)
         else:

@@ -9,8 +9,8 @@ FilePath     : /SVTAS/svtas/model/backbones/image/sample_vit.py
 import torch
 from torch import nn
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from mmengine.runner import load_state_dict
+from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange
 from einops.layers.torch import Rearrange
@@ -89,7 +89,7 @@ class Transformer(nn.Module):
             x = ff(x) + x
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class SimpleViT(nn.Module):
     def __init__(self, 
                  image_size,
@@ -127,7 +127,7 @@ class SimpleViT(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(self, img, masks):
         x = self.to_patch_embedding(img)

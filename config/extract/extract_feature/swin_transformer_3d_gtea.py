@@ -2,65 +2,92 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 16:37:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-12 19:49:14
+LastEditTime : 2023-10-08 13:53:02
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_gtea.py
 '''
 _base_ = [
-    '../../_base_/collater/stream_compose.py'
+    '../../_base_/dataloader/collater/stream_compose.py',
+    '../../_base_/logger/python_logger.py',
 ]
 
 sample_rate = 1
+batch_size = 4
 ignore_index = -100
 sliding_window = 128
 clip_seg_num = 128
-output_dir_name = 'extract_features'
 
-MODEL = dict(
-    architecture = "Recognition3D",
-    backbone = dict(
-        name = "SwinTransformer3D",
-        # pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
-        # pretrained2d = False,
-        patch_size = [2, 4, 4],
-        embed_dim = 96,
-        depths = [2, 2, 6, 2],
-        num_heads = [3, 6, 12, 24],
-        window_size = [8,7,7],
-        mlp_ratio = 4.,
-        qkv_bias = True,
-        qk_scale = None,
-        drop_rate = 0.,
-        attn_drop_rate = 0.,
-        drop_path_rate = 0.2,
-        patch_norm = True
+model_name = "SwinTransformer3D_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea"
+
+ENGINE = dict(
+    name = "ExtractFeatureEngine",
+    out_path = "data/gtea/test/extract_feature",
+    record = dict(
+        name = "StreamValueRecord"
     ),
-    neck = None,
-    head = dict(
-        name = "FeatureExtractHead",
-        in_channels = 768,
-        input_seg_num = clip_seg_num // 2,
-        output_seg_num = clip_seg_num,
-        sample_rate = sample_rate * 2,
-        pool_space = True,
-        in_format = "N,C,T,H,W",
-        out_format = "NCT"
+    iter_method = dict(
+        name = "StreamEpochMethod",
+        epoch_num = 1,
+        batch_size = batch_size,
+        logger_iter_interval = 10,
+        test_interval = 1,
+        criterion_metric_name = "F1@0.50"
     ),
-    loss = None
+    checkpointor = dict(
+        name = "TorchCheckpointor"
+    )
 )
 
-PRETRAINED = "./output/SwinTransformer3D_FC_64x2_gtea_split1_baseline/SwinTransformer3D_FC_64x2_gtea_split1_best.pt"
+MODEL_PIPLINE = dict(
+    name = "TorchModelPipline",
+    # pretrained = "",
+    model = dict(
+        architecture = "StreamVideoSegmentation",
+        architecture_type ='3d',
+        backbone = dict(
+            name = "SwinTransformer3D",
+            pretrained = "./data/checkpoint/swin_tiny_patch244_window877_kinetics400_1k.pth",
+            pretrained2d = False,
+            patch_size = [2, 4, 4],
+            embed_dim = 96,
+            depths = [2, 2, 6, 2],
+            num_heads = [3, 6, 12, 24],
+            window_size = [8,7,7],
+            mlp_ratio = 4.,
+            qkv_bias = True,
+            qk_scale = None,
+            drop_rate = 0.,
+            attn_drop_rate = 0.,
+            drop_path_rate = 0.2,
+            patch_norm = True
+        ),
+        neck = None,
+        head = dict(
+            name = "FeatureExtractHead",
+            in_channels = 768,
+            input_seg_num = clip_seg_num // 2,
+            output_seg_num = clip_seg_num,
+            sample_rate = sample_rate * 2,
+            pool_space = True,
+            in_format = "N,C,T,H,W",
+            out_format = "NCT"
+        )
+    ),
+    post_processing = dict(
+        name = "StreamFeaturePostProcessing",
+        sliding_window = sliding_window,
+        ignore_index = ignore_index
+    ),
+)
 
-POSTPRECESSING = dict(
-    name = "StreamFeaturePostProcessing",
-    sliding_window = sliding_window,
-    ignore_index = ignore_index
+DATALOADER = dict(
+    name = "TorchStreamDataLoader",
+    temporal_clip_batch_size = 3,
+    video_batch_size = batch_size,
+    num_workers = 2
 )
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
-    video_batch_size = 4,
-    num_workers = 2,
     config = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
@@ -74,8 +101,8 @@ DATASET = dict(
     )
 )
 
-PIPELINE = dict(
-    name = "BasePipline",
+DATASETPIPLINE = dict(
+    name = "BaseDatasetPipline",
     decode = dict(
         name = "VideoDecoder",
         backend = dict(name="DecordContainer")

@@ -1,14 +1,6 @@
-'''
-Author       : Thyssen Wen
-Date         : 2022-11-21 21:20:35
-LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 20:57:29
-Description  : file content
-FilePath     : /SVTAS/config/cam_visualize/swin_v2_transformer_fc_visualize.py
-'''
 _base_ = [
-    '../_base_/models/image_classification/swin_v2_transformer.py',
-    '../_base_/default_runtime.py', '../_base_/collater/stream_compose.py',
+    '../_base_/dataloader/collater/stream_compose.py',
+    '../../_base_/logger/python_logger.py',
 ]
 
 num_classes = 11
@@ -18,47 +10,30 @@ ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
-epochs = 50
 
-MODEL = dict(
-    architecture = "Recognition2D",
-    backbone = dict(
-        name = "SwinTransformerV2",
-        pretrained = "./data/checkpoint/swinv2_tiny_patch4_window8_256.pth",
-        img_size=256,
-        in_chans=3,
-        embed_dim=96,
-        depths=[2, 2, 6, 2],
-        num_heads=[3, 6, 12, 24],
-        window_size=8,
-        drop_path_rate=0.2,
-    ), 
-    neck = dict(
-       name = "PoolNeck",
-        in_channels = 768,
-        clip_seg_num = clip_seg_num,
-        need_pool = True
+model_name = "SwinV2_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea"
+
+ENGINE = dict(
+    name = "LossLandSpaceEngine",
+    out_path = "data/gtea/test/extract_feature",
+    record = dict(
+        name = "StreamValueRecord"
     ),
-    head = dict(
-        name = "FCHead",
-        num_classes = num_classes,
-        sample_rate = sample_rate,
-        clip_seg_num = clip_seg_num,
-        drop_ratio=0.5,
-        in_channels=768
+    iter_method = dict(
+        name = "StreamEpochMethod",
+        epoch_num = 1,
+        batch_size = batch_size,
+        logger_iter_interval = 10,
+        test_interval = 1,
+        criterion_metric_name = "F1@0.50"
     ),
-    loss = dict(
-        name = "SegmentationLoss",
-        num_classes = num_classes,
-        sample_rate = sample_rate,
-        smooth_weight = 0.0,
-        ignore_index = ignore_index
-    )        
+    checkpointor = dict(
+        name = "TorchCheckpointor"
+    )
 )
 
-PRETRAINED = "./output/SwinTransformerV2_FC_32x2_gtea_split1/SwinTransformerV2_FC_32x2_gtea_split1_best.pt"
-
-VISUALIZE = dict(
+MODEL_PIPLINE = dict(
+    name = "TorchCAMModelPipline",
     layer_name = ["model.backbone.norm"],
     batch_size = batch_size,
     sample_rate = sample_rate,
@@ -69,7 +44,52 @@ VISUALIZE = dict(
     ),
     reshape_transform = "NPC",
     label_path = "./data/gtea/mapping.txt",
-    match_fn_name = "rgb_stream_match_fn"
+    match_fn = "rgb_stream_match_fn",
+    # pretrained = "",
+    model = dict(
+        architecture = "StreamVideoSegmentation",
+        architecture_type ='2d',
+        backbone = dict(
+            name = "SwinTransformerV2",
+            pretrained = "./data/checkpoint/swinv2_tiny_patch4_window8_256.pth",
+            img_size=256,
+            in_chans=3,
+            embed_dim=96,
+            depths=[2, 2, 6, 2],
+            num_heads=[3, 6, 12, 24],
+            window_size=8,
+            drop_path_rate=0.2,
+        ), 
+        neck = dict(
+            name = "PoolNeck",
+            in_channels = 768,
+            clip_seg_num = clip_seg_num,
+            need_pool = True
+        ),
+        head = dict(
+            name = "FCHead",
+            num_classes = num_classes,
+            sample_rate = sample_rate,
+            clip_seg_num = clip_seg_num,
+            drop_ratio=0.5,
+            in_channels=768
+        ),
+    ),
+    post_processing = dict(
+        name = "CAMVideoPostProcessing",
+        sample_rate=sample_rate,
+        ignore_index=ignore_index,
+        fps=4,
+        output_frame_size = [720, 404],
+        need_label=True
+    ),
+    criterion = dict(
+        name = "SegmentationLoss",
+        num_classes = num_classes,
+        sample_rate = sample_rate,
+        smooth_weight = 0.0,
+        ignore_index = ignore_index
+    ),
 )
 
 POSTPRECESSING = dict(
@@ -81,10 +101,14 @@ POSTPRECESSING = dict(
     need_label=True
 )
 
-DATASET = dict(
+DATALOADER = dict(
+    name = "TorchStreamDataLoader",
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 2,
+    num_workers = 2
+)
+
+DATASET = dict(
     config = dict(
         name = "RawFrameStreamCAMDataset",
         data_prefix = "./",
@@ -98,7 +122,7 @@ DATASET = dict(
     ),
 )
 
-PIPELINE = dict(
+DATASETPIPLINE = dict(
     name = "BasePipline",
     decode = dict(
         name="VideoDecoder",

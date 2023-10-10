@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:02:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:05:30
+LastEditTime : 2023-09-25 15:32:29
 Description  : Transducer AudioEncoder ref:https://github.com/upskyy/Transformer-Transducer/blob/main/transformer_transducer/audio_encoder.py
 FilePath     : /SVTAS/svtas/model/backbones/audio/transudcer_audio_encoder.py
 '''
@@ -13,10 +13,10 @@ import torch
 import torch.nn as nn
 
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from mmengine.runner import load_state_dict
+from svtas.utils import AbstractBuildFactory
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class TransducerAudioEncoder(nn.Module):
     """
     Converts the audio signal to higher feature values
@@ -68,7 +68,7 @@ class TransducerAudioEncoder(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(
             self,

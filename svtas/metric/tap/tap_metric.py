@@ -8,13 +8,13 @@ FilePath     : /SVTAS/svtas/metric/tap/tap_metric.py
 '''
 import os
 import numpy as np
-from ...utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from ..base_metric import BaseMetric
-from ..builder import METRIC
+from svtas.utils import AbstractBuildFactory
 from ..tas.tas_metric_utils import get_labels_scores_start_end_time
 from .utils import boundary_AR
 
-@METRIC.register()
+@AbstractBuildFactory.register('metric')
 class TAProposalMetric(BaseMetric):
     def __init__(self,
                  actions_map_file_path,

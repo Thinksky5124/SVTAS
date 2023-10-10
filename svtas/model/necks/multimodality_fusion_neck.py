@@ -2,17 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-11-05 20:48:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-15 16:19:23
+LastEditTime : 2023-10-05 15:21:51
 Description  : MultiModality Fusion Neck Model
 FilePath     : /SVTAS/svtas/model/necks/multimodality_fusion_neck.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..builder import build_neck
-from ..builder import NECKS
+from svtas.utils import AbstractBuildFactory
 
-@NECKS.register()
+@AbstractBuildFactory.register('model')
 class MultiModalityFusionNeck(nn.Module):
     def __init__(self,
                  clip_seg_num=32,
@@ -24,7 +23,7 @@ class MultiModalityFusionNeck(nn.Module):
         self.clip_seg_num = clip_seg_num
         self.fusion_mode = fusion_mode
         if fusion_neck_module is not None:
-            self.fusion_neck_module = build_neck(fusion_neck_module)
+            self.fusion_neck_module = AbstractBuildFactory.create_factory('model').create(fusion_neck_module)
         else:
             self.fusion_neck_module = None
     

@@ -13,10 +13,10 @@ import torch
 import torch.nn as nn
 import numpy as np
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from mmengine.runner import load_state_dict
+from svtas.utils import AbstractBuildFactory
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class TransducerTextEncoder(nn.Module):
     """
     Converts the label to higher feature values
@@ -72,7 +72,7 @@ class TransducerTextEncoder(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(
             self,

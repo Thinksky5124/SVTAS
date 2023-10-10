@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-01-07 16:52:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-15 15:57:11
+LastEditTime : 2023-03-03 17:06:49
 Description  : file content
 FilePath     : /SVTAS/svtas/model/heads/utils/attention_helper/attention_layer.py
 '''
@@ -95,8 +95,6 @@ class MixedChunkAttentionLayer(nn.Module):
             self.rotary_pos_emb = None
             self.rel_pos_bias = None
         # norm
-
-        self.norm = nn.InstanceNorm1d(input_dim)
         self.dropout = nn.Dropout(dropout)
 
         # whether to reduce groups in non causal linear attention
@@ -145,9 +143,6 @@ class MixedChunkAttentionLayer(nn.Module):
         v: [N C T]
         """
         # [N C T] -> [N T C]
-        # prenorm
-        q = self.norm(q)
-        
         q = torch.transpose(q, 1, 2)
         v = torch.transpose(v, 1, 2)
         b, n, device, g = q.shape[0], q.shape[-2], q.device, self.group_size
@@ -367,7 +362,6 @@ class GAUAttentionLayer(nn.Module):
         
         for layer in self.att_layers:
             out, att_map = layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
-            q = out
         out = torch.transpose(out, 1, 2)
         if self.dropout is not None:
             out = self.dropout(out)
@@ -383,6 +377,7 @@ class GAUAChunkttentionLayer(GAUAttentionLayer):
                  position_encoding=True) -> None:
         super().__init__(embed_dim, num_heads, dropout, causal, position_encoding)
         self.chunck_size = chunck_size
+        self.conv_out = nn.Linear(in_features=embed_dim, out_features=embed_dim)
     
     def forward(self, q, k, v, masks):
         q = torch.transpose(q, 1, 2)
@@ -409,8 +404,7 @@ class GAUAChunkttentionLayer(GAUAttentionLayer):
 
         for layer in self.att_layers:
             out, att_map = layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
-            q = out
-        
+        out = self.conv_out(F.relu(out))
         # gather group
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
@@ -421,8 +415,10 @@ class GAUAChunkttentionLayer(GAUAttentionLayer):
 class MultiHeadAttention(nn.Module):
     def __init__(self,
                  embed_dim,
+                 dropout=0.5,
                  num_heads=1,
-                 position_encoding=True):
+                 position_encoding=True,
+                 additional_mask_cfg=None):
         "Take in model size and number of heads."
         super(MultiHeadAttention, self).__init__()
         assert embed_dim % num_heads == 0
@@ -430,6 +426,10 @@ class MultiHeadAttention(nn.Module):
         self.d_k = embed_dim // num_heads
         self.num_heads = num_heads
         self.embed_layers = nn.ModuleList([nn.Linear(embed_dim, embed_dim) for _ in range(3)])
+        if dropout > 0.0:
+            self.dropout = nn.Dropout(p=dropout)
+        else:
+            self.dropout = None
 
         # positional embeddings
         self.position_encoding = position_encoding
@@ -437,15 +437,57 @@ class MultiHeadAttention(nn.Module):
             self.pos_enc = RotaryEmbedding(dim = min(32, embed_dim))
         else:
             self.pos_enc = None
+        
+        self.additional_mask_cfg = additional_mask_cfg
     
     @staticmethod
-    def attention(query, key, value, mask=None):
+    def construct_window_mask(query_size, key_size, window_size):
+        '''
+            construct window mask of shape (1, channel_size, sequence_size), used for sliding window self attention
+        '''
+        window_mask = torch.ones((query_size, key_size), dtype=torch.bool)
+        tril_ = torch.tril(window_mask, diagonal=window_size-1)
+        triu_ = torch.triu(window_mask, diagonal=0)
+        window_mask = window_mask * tril_ * triu_
+        return ~window_mask
+    
+    @staticmethod
+    def construct_dilated_window_mask(query_size, key_size, window_size, dilation=1):
+        '''
+            construct window mask of shape (1, channel_size, sequence_size), used for sliding window self attention
+        '''
+        window_mask = torch.zeros((query_size, key_size), dtype=torch.bool)
+        for i in range(query_size):
+            if i % dilation == 0:
+                window_mask[i, ::dilation] = 1.0
+            else:
+                window_mask[i, i%dilation::dilation] = 1.0
+        tril_ = torch.tril(window_mask, diagonal=dilation*(window_size-1))
+        triu_ = torch.triu(window_mask, diagonal=0)
+        window_mask = window_mask * tril_ * triu_
+        return ~window_mask
+
+    def generate_addtional_mask(self, query_size, key_size):
+        if self.additional_mask_cfg['type'] == 'windows':
+            window_size = self.additional_mask_cfg['window_size']
+            return self.construct_window_mask(query_size=query_size, key_size=key_size, window_size=window_size)
+        elif self.additional_mask_cfg['type'] == 'dilated_windows':
+            window_size = self.additional_mask_cfg['window_size']
+            dilation = self.additional_mask_cfg['dilation']
+            return self.construct_dilated_window_mask(query_size=query_size, key_size=key_size, window_size=window_size, dilation=dilation)
+
+    @staticmethod
+    def attention(query, key, value, mask=None, dropout=None):
         "Compute 'Scaled Dot Product Attention'"
         d_k = query.size(-1)
         scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
+
         if mask is not None:
             scores = scores.masked_fill(mask, float("-inf"))
         p_attn = F.softmax(scores, dim = -1)
+        
+        if dropout is not None:
+            p_attn = dropout(p_attn)
         return torch.matmul(p_attn, value), p_attn
 
     def forward(self, query, key, value, key_padding_mask=None, attn_mask=None):
@@ -454,14 +496,20 @@ class MultiHeadAttention(nn.Module):
 
         # merge key padding and attention masks
         mask = None
+        post_mask = None
         if key_padding_mask is not None:
-            mask = key_padding_mask.view(batch_size, 1, 1, len_q).expand(-1, self.num_heads, -1, -1)
+            post_mask = key_padding_mask.view(batch_size, 1, len_q, 1).expand(-1, self.num_heads, -1, -1)
+            mask = torch.zeros_like(post_mask)
 
         # convert mask to float
         if attn_mask is not None:
             attn_mask = attn_mask.unsqueeze(0).unsqueeze(0)
             mask = mask | attn_mask
 
+                # additional mask
+        if self.additional_mask_cfg is not None:
+            additional_mask = self.generate_addtional_mask(query.shape[1], key.shape[1]).unsqueeze(0).unsqueeze(0).to(key.device)
+            mask = mask | additional_mask
 
         query, key, value = [l(x) for l, x in zip(self.embed_layers, (query, key, value))] # (batch_size, seq_length, d_model), use first 3 self.linears
         query, key, value = [x.view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
@@ -472,7 +520,9 @@ class MultiHeadAttention(nn.Module):
             key = self.pos_enc.rotate_queries_or_keys(key)
 
         # 2) Apply attention on all the projected vectors in batch.
-        x, attn = self.attention(query, key, value, mask=mask)
+        x, attn = self.attention(query, key, value, mask=mask, dropout=self.dropout)
+        if post_mask is not None:
+            x = x.masked_fill(post_mask, 0.0)
 
         # 3) "Concat" using a view and apply a final linear.
         x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.d_k)
@@ -484,17 +534,16 @@ class MultiHeadAttentionLayer(nn.Module):
                  num_heads,
                  dropout=0.0,
                  causal=False,
-                 position_encoding=True) -> None:
+                 position_encoding=True,
+                 additional_mask_cfg=None) -> None:
         super().__init__()
         self.att_layer = MultiHeadAttention(embed_dim=embed_dim,
                                             num_heads=num_heads,
-                                            position_encoding=position_encoding)
+                                            position_encoding=position_encoding,
+                                            dropout=dropout,
+                                            additional_mask_cfg=None)
         self.causal = causal
         self.num_heads = num_heads
-        if dropout > 0.0:
-            self.dropout = nn.Dropout(p=dropout)
-        else:
-            self.dropout = None
     
     def gen_causal_mask(self, input_size, device):
         """
@@ -525,8 +574,6 @@ class MultiHeadAttentionLayer(nn.Module):
         
         out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
         out = torch.transpose(out, 1, 2)
-        if self.dropout is not None:
-            out = self.dropout(out)
         return out * masks
 
 class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
@@ -536,10 +583,14 @@ class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
                  chunck_size=1,
                  dropout=0,
                  causal=False,
-                 position_encoding=True) -> None:
-        super().__init__(embed_dim, num_heads, dropout, causal, position_encoding)
+                 position_encoding=True,
+                 additional_mask_cfg=None) -> None:
+        super().__init__(embed_dim, num_heads, dropout, causal, position_encoding, additional_mask_cfg)
         self.chunck_size = chunck_size
-    
+        self.f1 = nn.Linear(in_features=embed_dim, out_features=embed_dim)
+        self.f2 = nn.Linear(in_features=embed_dim, out_features=embed_dim)
+        self.act = nn.SiLU()
+
     def forward(self, q, k, v, masks):
         q = torch.transpose(q, 1, 2)
         k = torch.transpose(k, 1, 2)
@@ -565,11 +616,12 @@ class MultiHeadChunkAttentionLayer(MultiHeadAttentionLayer):
 
         out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
         
+        out = self.f1(out)
+        out = self.act(out)
+        out = self.f2(out)
         # gather group
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
-        if self.dropout is not None:
-            out = self.dropout(out)
         return out * masks
 
 class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
@@ -607,6 +659,7 @@ class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
         self.dropout = nn.Dropout(dropout)
         
         self.register_buffer("scale", torch.sqrt(torch.FloatTensor([self.head_dim])))
+        self.conv_out = nn.Linear(in_features=embed_dim, out_features=embed_dim)
         
     def relative_mulihead_attention_op(self, query, key, value, key_padding_mask=None, attn_mask=None):
         #query = [batch size, query len, hid dim]
@@ -696,7 +749,7 @@ class MHRPRChunkAttentionLayer(MultiHeadChunkAttentionLayer):
             causal_mask = None
 
         out, att_map = self.relative_mulihead_attention_op(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
-        
+        out = self.conv_out(F.relu(out))
         # gather group
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]
@@ -722,7 +775,8 @@ def get_EF(input_size, dim, method="learnable", head_dim=None, bias=True):
 
 class LinearMultiHeadAttention(nn.Module):
     def __init__(self,
-                 chunk_size,
+                 e_len,
+                 f_len,
                  embed_dim,
                  num_heads=1,
                  position_encoding=True) -> None:
@@ -742,8 +796,8 @@ class LinearMultiHeadAttention(nn.Module):
 
         self.dropout = nn.Dropout()
         self.P_bar = None
-        self.E = get_EF(chunk_size, embed_dim, "learnable", embed_dim)
-        self.F = get_EF(chunk_size, embed_dim, "learnable", embed_dim)
+        self.E = get_EF(e_len, embed_dim, "learnable", embed_dim)
+        self.F = get_EF(f_len, embed_dim, "learnable", embed_dim)
         self.is_proj_tensor = isinstance(self.E, torch.Tensor)
     
     @staticmethod
@@ -791,8 +845,10 @@ class LinearMultiHeadAttention(nn.Module):
         if attn_mask is not None:
             attn_mask = attn_mask.unsqueeze(0).unsqueeze(0)
             mask = mask | attn_mask
-
-
+        
+        if mask is not None:
+            mask = mask.transpose(-1, -2)
+            
         query, key, value = [l(x) for l, x in zip(self.embed_layers, (query, key, value))] # (batch_size, seq_length, d_model), use first 3 self.linears
         query, key, value = [x.view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
                              for x in (query, key, value)] # (batch_size, h, seq_length, d_k)
@@ -802,7 +858,7 @@ class LinearMultiHeadAttention(nn.Module):
             key = self.pos_enc.rotate_queries_or_keys(key)
 
         # 2) Apply attention on all the projected vectors in batch.
-        x, attn = self.attention(query, key, value, self.E, self.F, mask=mask.transpose(-1, -2), is_proj_tensor=self.is_proj_tensor)
+        x, attn = self.attention(query, key, value, self.E, self.F, mask=mask, is_proj_tensor=self.is_proj_tensor)
 
         # 3) "Concat" using a view and apply a final linear.
         x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.num_heads * self.d_k)
@@ -817,10 +873,11 @@ class LinearAttentionLayer(nn.Module):
                  causal=False,
                  position_encoding=True) -> None:
         super().__init__()
-        self.att_layer = LinearMultiHeadAttention(chunk_size=chunk_size,
-                                         embed_dim=embed_dim,
-                                         num_heads=num_heads,
-                                         position_encoding=position_encoding)
+        self.att_layer = LinearMultiHeadAttention(f_len=chunk_size,
+                                                  e_len=chunk_size,
+                                                  embed_dim=embed_dim,
+                                                  num_heads=num_heads,
+                                                  position_encoding=position_encoding)
         self.causal = causal
         if dropout > 0.0:
             self.dropout = nn.Dropout(p=dropout)
@@ -870,6 +927,7 @@ class LinearChunkAttentionLayer(LinearAttentionLayer):
                  position_encoding=True) -> None:
         super().__init__(embed_dim, chunck_size, num_heads, dropout, causal, position_encoding)
         self.chunck_size = chunck_size
+        self.conv_out = nn.Linear(in_features=embed_dim, out_features=embed_dim)
     
     def forward(self, q, k, v, masks):
         q = torch.transpose(q, 1, 2)
@@ -895,7 +953,7 @@ class LinearChunkAttentionLayer(LinearAttentionLayer):
             causal_mask = None
 
         out, att_map = self.att_layer(q, k, v, key_padding_mask=key_padding_mask, attn_mask=causal_mask)
-        
+        out = self.conv_out(F.relu(out))
         # gather group
         out = rearrange(out, '(b g) n d -> b (g n) d', g = g_size)
         out = torch.transpose(out, 1, 2)[:, :, :temporal_size]

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-01 12:25:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-27 10:59:23
+LastEditTime : 2023-09-25 11:12:05
 Description  : video container
 FilePath     : /SVTAS/svtas/loader/decode/container.py
 '''
@@ -13,9 +13,9 @@ import decord as de
 import numpy as np
 import copy
 # from mvextractor.videocap import VideoCap as MVVideoCap
-from ..builder import CONTAINER
+from svtas.utils import AbstractBuildFactory
 
-@CONTAINER.register()
+@AbstractBuildFactory.register('sample_container')
 class NPYContainer(object):
     def __init__(self, file_path, temporal_dim=-1, is_transpose=False, revesive_name=[(r'(mp4|avi)', 'npy')]):
         self.temporal_dim = temporal_dim
@@ -41,7 +41,7 @@ class NPYContainer(object):
     def __len__(self):
         return self.data.shape[self.temporal_dim]
 
-@CONTAINER.register()
+@AbstractBuildFactory.register('sample_container')
 class DecordContainer(object):
     def __init__(self, file_path, to_ndarray=False, sample_dim=2):
         self.data = de.VideoReader(file_path)
@@ -60,7 +60,7 @@ class DecordContainer(object):
     def __len__(self):
         return len(self.data)
 
-@CONTAINER.register()
+@AbstractBuildFactory.register('sample_container')
 class PyAVContainer(object):
     """
     ref:https://github.com/facebookresearch/SlowFast/blob/main/slowfast/datasets/decoder.py
@@ -136,7 +136,7 @@ class PyAVContainer(object):
     def __len__(self):
         return self.data.streams.video[0].frames
 
-@CONTAINER.register()
+@AbstractBuildFactory.register('sample_container')
 class OpenCVContainer(object):
     def __init__(self, file_path):
         self.data = cv2.VideoCapture(file_path)
@@ -166,7 +166,7 @@ class OpenCVContainer(object):
     def __len__(self):
         return int(self.data.get(cv2.CAP_PROP_FRAME_COUNT))
 
-# @CONTAINER.register()
+# @AbstractBuildFactory.register('sample_container')
 # class MVExtractor(object):
 #     def __init__(self,
 #                  file_path,
@@ -281,7 +281,7 @@ class OpenCVContainer(object):
 #     def __len__(self):
 #         return self.len
 
-@CONTAINER.register()
+@AbstractBuildFactory.register('sample_container')
 class PyAVMVExtractor(object):
     def __init__(self,
                  file_path,

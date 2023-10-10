@@ -2,13 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:26:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-11 21:15:35
+LastEditTime : 2023-09-25 11:11:42
 Description  : feature decode
 FilePath     : /SVTAS/svtas/loader/decode/decode.py
 '''
-from ..builder import DECODE, build_container
+from svtas.utils import AbstractBuildFactory
 
-@DECODE.register()
+def build_container(cfg):
+    factory = AbstractBuildFactory.create_factory('sample_container')
+    return factory.create(cfg)
+
+@AbstractBuildFactory.register('sample_decode')
 class FeatureDecoder():
     """
     Decode mp4 file to frames.
@@ -63,7 +67,7 @@ class FeatureDecoder():
         
         return results
 
-@DECODE.register()
+@AbstractBuildFactory.register('sample_decode')
 class VideoDecoder():
     """
     Decode mp4 file to frames.
@@ -98,7 +102,7 @@ class VideoDecoder():
         
         return results
 
-@DECODE.register()
+@AbstractBuildFactory.register('sample_decode')
 class TwoPathwayVideoDecoder():
     """
     Decode mp4 file to frames.
@@ -149,7 +153,7 @@ class TwoPathwayVideoDecoder():
         
         return results
 
-@DECODE.register()
+@AbstractBuildFactory.register('sample_decode')
 class ThreePathwayVideoDecoder():
     """
     Decode mp4 file to frames.

@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-09 18:57:08
+LastEditTime : 2023-10-08 20:05:04
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
 import torch
 from ..utils.logger import get_logger
-from ..runner.infer_runner import InferONNXRunner 
+from ..engine.infer_engine import InferONNXEngine 
 from ..utils.logger import AverageMeter
 from .debug_infer_forward_func import infer_forward, debugger
 import time
@@ -19,17 +19,17 @@ import os
 from types import MethodType
 
 from ..utils.save_load import mkdir
-from ..model.builder import build_model
-from ..loader.builder import build_dataset
-from ..loader.builder import build_pipline
-from ..metric.builder import build_metric
-from ..model.builder import build_post_precessing
+# from ..model.builder import build_model
+# from ..loader.builder import build_dataset
+# from ..loader.builder import build_pipline
+# from ..metric.builder import build_metric
+# from ..model.builder import build_post_precessing
 from ..utils.collect_env import collect_env
 
-def infer(cfg,
-          args,
-          local_rank,
+def infer(local_rank,
           nprocs,
+          cfg,
+          args,
           weights=None,
           validate=True,):
     """
@@ -69,7 +69,7 @@ def infer(cfg,
     video_batch_size = cfg.DATASET.get('video_batch_size', 8)
     assert video_batch_size == 1, "Only Support video_batch_size equal to 1!"
     sliding_concate_fn = build_pipline(cfg.COLLATE.infer)
-    infer_Pipeline = build_pipline(cfg.PIPELINE.infer)
+    infer_Pipeline = build_pipline(cfg.DATASETPIPLINE.infer)
     infer_dataset_config = cfg.DATASET.infer
     infer_dataset_config['pipeline'] = infer_Pipeline
     infer_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
@@ -101,7 +101,7 @@ def infer(cfg,
         
     # model param flops caculate
     if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
-        for transform_op in list(cfg.PIPELINE.test.transform.transform_dict.values())[0]:
+        for transform_op in list(cfg.DATASETPIPLINE.test.transform.transform_dict.values())[0]:
             if list(transform_op.keys())[0] in ['CenterCrop']:
                 image_size = transform_op['CenterCrop']['size']
         x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]

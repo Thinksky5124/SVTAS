@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-11-03 16:43:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-03 16:54:29
+LastEditTime : 2023-10-05 21:03:22
 Description  : ref:https://github.com/amazon-science/long-short-term-transformer
 FilePath     : /SVTAS/svtas/optimizer/lr_scheduler/multistep_warmup_lr.py
 '''
 
 from bisect import bisect_left
 
-from ..builder import LRSCHEDULER
-from torch.optim.lr_scheduler import _LRScheduler
+from svtas.utils import AbstractBuildFactory
+from .base_lr_scheduler import TorchLRScheduler
 
 def _get_warmup_factor_at_iter(warmup_method,
                                this_iter,
@@ -27,8 +27,8 @@ def _get_warmup_factor_at_iter(warmup_method,
     else:
         raise ValueError('Unknown warmup method: {}'.format(warmup_method))
 
-@LRSCHEDULER.register()
-class WarmupMultiStepLR(_LRScheduler):
+@AbstractBuildFactory.register('lr_scheduler')
+class WarmupMultiStepLR(TorchLRScheduler):
 
     def __init__(self,
                  optimizer,

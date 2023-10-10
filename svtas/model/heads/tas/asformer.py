@@ -2,18 +2,22 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-01-13 23:22:33
+LastEditTime : 2023-04-13 14:16:58
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/heads/tas/asformer.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from ....utils.logger import get_logger
+from mmengine.runner import load_state_dict
+from collections import OrderedDict
+import re
 
 import copy
 import numpy as np
 import math
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 def exponential_descrease(idx_decoder, p=3):
     return math.exp(-p*idx_decoder)
@@ -291,7 +295,7 @@ class Decoder(nn.Module):
 
         return out, feature
         
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class ASFormer(nn.Module):
     def __init__(self,
                  num_decoders=3,
@@ -303,15 +307,32 @@ class ASFormer(nn.Module):
                  num_classes=11,
                  channel_masking_rate=0.5,
                  sample_rate=1,
-                 out_feature=False):
+                 out_feature=False,
+                 pretrained=None):
         super(ASFormer, self).__init__()
+        self.pretrained = pretrained
         self.sample_rate = sample_rate
         self.out_feature = out_feature
         self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='sliding_att', alpha=1)
         self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='sliding_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
         
     def init_weights(self):
-        pass
+        if self.pretrained is not None:
+            def revise_keys_fn(state_dict, revise_keys=[(r'head.', r'')]):
+                # strip prefix of state_dict
+                metadata = getattr(state_dict, '_metadata', OrderedDict())
+                for p, r in revise_keys:
+                    state_dict = OrderedDict(
+                        {re.sub(p, r, k): v
+                        for k, v in state_dict.items()})
+                # Keep metadata in state_dict
+                state_dict._metadata = metadata
+                return state_dict
+
+            logger  = get_logger("SVTAS")
+            checkpoint = torch.load(self.pretrained)
+            revise_state_dict = revise_keys_fn(checkpoint['model_state_dict'])
+            load_state_dict(self, revise_state_dict, strict=False, logger=logger)
 
     def _clear_memory_buffer(self):
         pass

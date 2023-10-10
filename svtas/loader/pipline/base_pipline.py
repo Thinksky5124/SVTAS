@@ -2,22 +2,21 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:42:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 18:19:31
+LastEditTime : 2023-10-05 16:35:20
 Description  : Base Pipline class
-FilePath     : /SVTAS/loader/pipline/base_pipline.py
+FilePath     : /SVTAS/svtas/loader/pipline/base_pipline.py
 '''
-from ..builder import PIPLINE, build_decode, build_sampler, build_transform
+from svtas.utils import AbstractBuildFactory
 
-
-@PIPLINE.register()
-class BasePipline():
+@AbstractBuildFactory.register('dataset_pipline')
+class BaseDatasetPipline():
     def __init__(self,
                  decode=None,
                  sample=None,
                  transform=None):
-        self.decode = build_decode(decode)
-        self.sample = build_sampler(sample)
-        self.transform = build_transform(transform)
+        self.decode = AbstractBuildFactory.create_factory('sample_decode').create(decode)
+        self.sample = AbstractBuildFactory.create_factory('dataset_sampler').create(sample)
+        self.transform = AbstractBuildFactory.create_factory('dataset_transform').create(transform)
 
     def __call__(self, results):
         # decode

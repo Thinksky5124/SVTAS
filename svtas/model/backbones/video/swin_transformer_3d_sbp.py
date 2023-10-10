@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-02-13 15:43:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-14 11:01:02
+LastEditTime : 2023-04-25 18:36:24
 Description  : Swin Transformer With Stochastic Backpropagation ref:https://github.com/amazon-science/stochastic-backpropagation.git
 FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer_3d_sbp.py
 '''
@@ -13,9 +13,9 @@ import torch.utils.checkpoint as checkpoint
 import numpy as np
 from timm.models.layers import DropPath, trunc_normal_
 
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 from .swin_transformer_3d import get_window_size, window_partition, window_reverse, compute_mask, PatchEmbed3D, PatchMerging
 
 from functools import reduce, lru_cache
@@ -776,7 +776,7 @@ class BasicLayer(nn.Module):
         x = rearrange(x, "b d h w c -> b c d h w")
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class SwinTransformer3DWithSBP(nn.Module):
     """ Swin Transformer backbone.
         A PyTorch impl of : `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows`  -

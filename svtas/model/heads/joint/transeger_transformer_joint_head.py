@@ -12,9 +12,9 @@ import torch.nn.functional as F
 from ..oad.oadtr import (Decoder, DecoderLayer, FullAttention, ProbAttention, AttentionLayer,
                     TransformerModel, FixedPositionalEncoding, LearnedPositionalEncoding)
 
-from ...builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class TransegerTransformerJointNet(nn.Module):
     def __init__(self,
                  num_classes,

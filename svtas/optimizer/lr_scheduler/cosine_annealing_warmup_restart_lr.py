@@ -2,17 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2022-10-31 14:43:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-31 14:53:50
+LastEditTime : 2023-10-05 19:17:17
 Description  : CosineAnnealingWarmupRestarts ref:https://github.com/katsura-jp/pytorch-cosine-annealing-with-warmup
-FilePath     : /SVTAS/svtas/optimizer/lr_scheduler/cosine_annealing_warmup_lr.py
+FilePath     : /SVTAS/svtas/optimizer/lr_scheduler/cosine_annealing_warmup_restart_lr.py
 '''
 import math
 import torch
-from torch.optim.lr_scheduler import _LRScheduler
-from ..builder import LRSCHEDULER
+from .base_lr_scheduler import TorchLRScheduler
+from svtas.utils import AbstractBuildFactory
 
-@LRSCHEDULER.register()
-class CosineAnnealingWarmupRestarts(_LRScheduler):
+@AbstractBuildFactory.register('lr_scheduler')
+class CosineAnnealingWarmupRestarts(TorchLRScheduler):
     """
         optimizer (Optimizer): Wrapped optimizer.
         first_cycle_steps (int): First cycle step size.

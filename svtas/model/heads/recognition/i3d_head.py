@@ -10,12 +10,11 @@ FilePath     : /SVTAS/model/heads/recognition/i3d_head.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import normal_init
+from mmengine.model import normal_init
+from svtas.utils import AbstractBuildFactory
 
-from ...builder import HEADS
 
-
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class I3DHead(nn.Module):
     """Classification head for I3D.
 

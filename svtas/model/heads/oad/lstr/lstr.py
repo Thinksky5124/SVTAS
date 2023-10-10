@@ -19,7 +19,7 @@ from .transformer import TransformerEncoder, TransformerEncoderLayer
 from .transformer import TransformerDecoder, TransformerDecoderLayer
 from .multihead_attention import layer_norm, generate_square_subsequent_mask
 
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 
 class BaseFeatureHead(nn.Module):
@@ -69,7 +69,7 @@ class BaseFeatureHead(nn.Module):
         return fusion_input
 
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class LSTR(nn.Module):
 
     def __init__(self,

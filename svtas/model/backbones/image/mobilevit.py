@@ -9,8 +9,8 @@ FilePath     : /SVTAS/svtas/model/backbones/image/mobilevit.py
 import torch
 import torch.nn as nn
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
-from ...builder import BACKBONES
+from mmengine.runner import load_state_dict
+from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange
 from einops.layers.torch import Reduce
@@ -193,7 +193,7 @@ class MobileViTBlock(nn.Module):
         x = self.conv4(x)
         return x
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class MobileViT(nn.Module):
     """MobileViT.
     Paper: https://arxiv.org/abs/2110.02178
@@ -261,7 +261,7 @@ class MobileViT(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):
         x = self.conv1(x)

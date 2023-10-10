@@ -13,10 +13,10 @@ from typing import Callable, List, NamedTuple, Optional
 import torch
 import torch.nn as nn
 from ..utils import MLP, Conv2dNormActivation, _log_api_usage_once
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 from ....utils.logger import get_logger
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 
 class ConvStemConfig(NamedTuple):
     out_channels: int
@@ -144,7 +144,7 @@ class Encoder(nn.Module):
         input = input + self.pos_embedding
         return self.ln(self.layers(self.dropout(input)))
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class VisionTransformer(nn.Module):
     """Vision Transformer as per https://arxiv.org/abs/2010.11929.
     arch_settings = {
@@ -289,7 +289,7 @@ class VisionTransformer(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
                 
     def forward(self, x: torch.Tensor, masks: torch.Tensor):
         # Reshape and permute the input tensor

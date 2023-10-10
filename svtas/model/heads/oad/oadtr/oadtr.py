@@ -14,10 +14,10 @@ from .attn import FullAttention, ProbAttention, AttentionLayer
 from .transformer import TransformerModel
 from .position_encoding import FixedPositionalEncoding, LearnedPositionalEncoding
 from .decoder import Decoder, DecoderLayer
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class OadTRHead(nn.Module):
     def __init__(self,
                  clip_seg_num,

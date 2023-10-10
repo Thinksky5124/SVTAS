@@ -12,9 +12,9 @@ import torch.nn.functional as F
 from .encoder import ConformerEncoder, ConformerDecoder
 from .modules import ConFormerLinear
 
-from ....builder import HEADS
+from svtas.utils import AbstractBuildFactory
 
-@HEADS.register()
+@AbstractBuildFactory.register('model')
 class Conformer(nn.Module):
     """
     Conformer: Convolution-augmented Transformer for Speech Recognition

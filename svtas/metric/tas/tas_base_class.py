@@ -10,12 +10,12 @@ import os
 import numpy as np
 from ..base_metric import BaseMetric
 from ...utils.config import get_logger
-from ..builder import METRIC
+from svtas.utils import AbstractBuildFactory
 
 from .tas_metric_utils import get_labels_scores_start_end_time
 from .tas_metric_utils import levenstein, edit_score, f_score
 
-@METRIC.register()
+@AbstractBuildFactory.register('metric')
 class BaseTASegmentationMetric(BaseMetric):
     """
     Test for Video Segmentation based model.

@@ -9,10 +9,10 @@ FilePath     : /SVTAS/svtas/model/backbones/video/i3d.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
 def get_padding_shape(filter_shape, stride):
@@ -166,7 +166,7 @@ class Mixed(nn.Module):
         out = torch.cat((out_0, out_1, out_2, out_3), 1)
         return out
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class I3D(nn.Module):
     def __init__(self,
                  in_channels=3,
@@ -230,7 +230,7 @@ class I3D(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
 
     # (v-iashin) adding features arg to have an ability to output features
     def forward(self, x, masks):

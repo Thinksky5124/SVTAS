@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 15:33:33
+LastEditTime : 2023-10-09 16:16:39
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -16,12 +16,15 @@ import random
 import numpy as np
 import torch
 
+from svtas.tasks.visualize_loss import visulize_loss
+from svtas.tasks.visualize import visualize
+from svtas.tasks.extract import extract
 from svtas.tasks.infer import infer
 from svtas.tasks.test import test
 from svtas.tasks.train import train
+from svtas.tasks.profile import profile
 from svtas.utils.config import get_config
 from svtas.utils.logger import get_logger
-from svtas.tasks.profile import profile
 
 
 def parse_args():
@@ -32,64 +35,60 @@ def parse_args():
                         default='configs/example.yaml',
                         help='config file path')
     parser.add_argument('--mode',
-                        '--m',
-                        choices=["train", "test", "infer", "profile"],
+                        '-m',
+                        choices=["train", "test", "infer", "profile", 'visualize', 'extract', 'visualize_loss'],
                         help='run mode')
     parser.add_argument('-o',
                         '--override',
                         action='append',
                         default=[],
                         help='config options to be overridden')
-    parser.add_argument('-w',
-                        '--weights',
-                        type=str,
-                        help='weights for finetuning or testing')
     parser.add_argument('--local_rank',
         default=-1,
         type=int,
         help='node rank for distributed training')
-    parser.add_argument(
-        '--validate',
-        action='store_true',
-        help='whether to evaluate the checkpoint during training')
-    parser.add_argument(
-        '--use_amp',
-        action='store_true',
-        help='whether to use amp to accelerate')
-    parser.add_argument(
-        '--use_tensorboard',
-        action='store_true',
-        help='whether to use tensorboard to visualize train')
+    parser.add_argument('--world_size',
+        default=1,
+        type=int,
+        help='num of world size')
+    parser.add_argument('--master_addr',
+        default="127.0.0.1",
+        type=str,
+        help='master address')
+    parser.add_argument('--master_port',
+        default="29500",
+        type=str,
+        help='master port')
     parser.add_argument(
         '--seed',
         type=int,
-        default=0,
+        default=None,
         help='fixed all random seeds when the program is running')
     parser.add_argument(
-        '--max_iters',
-        type=int,
-        default=None,
-        help='max iterations when training(this argonly used in test_tipc)')
+        '--benchmark',
+        action='store_true',
+        help='whether to use benchmark to reproduct')
     parser.add_argument(
         '--launcher',
-        choices=['none', 'pytorch'],
-        default='none',
+        choices=['pytorch', 'torchrun'],
+        default='pytorch',
         help='job launcher')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
+        os.environ['WORLD_SIZE'] = str(args.world_size)
+    else:
+        os.environ["MASTER_ADDR"] = args.master_addr
+        os.environ["MASTER_PORT"] = args.master_port
     return args
 
 
 def main():
     args = parse_args()
-    cfg = get_config(args.config, overrides=args.override, tensorboard=args.use_tensorboard)
+    cfg = get_config(args.config, overrides=args.override)
 
     # init distributed env first, since logger depends on the dist info.
-    if args.launcher == 'none':
-        nprocs = 1
-    else:
-        nprocs = torch.cuda.device_count()
+    nprocs = args.world_size
     # set seed if specified
     seed = args.seed
     if seed is not None:
@@ -103,41 +102,30 @@ def main():
         torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
         torch.backends.cudnn.deterministic = True
         # weather accelerate conv op
-        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.benchmark = args.benchmark
         logger = get_logger("SVTAS")
         logger.info("Current Seed is: " + str(seed))
 
-    if args.mode in ["test"]:
-        test(cfg,
-             args=args,
-             local_rank=args.local_rank,
-             nprocs=nprocs,
-             use_amp=args.use_amp,
-             weights=args.weights)
-    elif args.mode in ["train"]:
-        train(cfg,
-            args=args,
-            local_rank=args.local_rank,
-            nprocs=nprocs,
-            use_amp=args.use_amp,
-            weights=args.weights,
-            validate=args.validate)
-    elif args.mode in ["infer"]:
-        infer(cfg,
-            args=args,
-            local_rank=args.local_rank,
-            nprocs=nprocs,
-            weights=args.weights,
-            validate=args.validate)
-    elif args.mode in ["profile"]:
-        profile(cfg,
-            args=args,
-            local_rank=args.local_rank,
-            nprocs=nprocs,
-            weights=args.weights)
+    task_func_dict = {
+        "train": train,
+        "test": test,
+        "infer": infer,
+        "profile": profile,
+        "extract": extract,
+        "visualize": visualize,
+        "visulize_loss": visulize_loss
+    }
+    
+    if nprocs <= 1:
+        # single process run task
+        task_func_dict[args.mode](local_rank=args.local_rank, nprocs=nprocs, cfg=cfg, args=args)
     else:
-        raise NotImplementedError(args.mode + " mode not support!")
-
-
+        # multi process run task
+        if args.launcher == "pytorch":
+            import torch.multiprocessing as mp
+            mp.spawn(task_func_dict[args.mode], nprocs=nprocs, args=(nprocs, cfg, args))
+        elif args.launcher == "torchrun":
+            # Todo: torchrun pass args
+            pass
 if __name__ == '__main__':
     main()

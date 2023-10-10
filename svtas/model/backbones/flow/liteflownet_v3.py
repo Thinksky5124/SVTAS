@@ -10,14 +10,14 @@ import torch
 import math
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from ..utils.liteflownet_v3 import Features, Matching, Regularization, Subpixel, BackWarp
 
 from ....utils.logger import get_logger
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class LiteFlowNetV3(nn.Module):
     def __init__(self,
                  pretrained=None,
@@ -46,7 +46,7 @@ class LiteFlowNetV3(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()
                     for param in self.parameters():
@@ -88,7 +88,7 @@ class LiteFlowNetV3(nn.Module):
         
         return img1, img2, input_size, orig_size, temporal_len
     
-    def post_precessing(self, flow, input_size, orig_size, temporal_len):
+    def post_processing(self, flow, input_size, orig_size, temporal_len):
         flow = F.interpolate(flow, size=orig_size, mode='bilinear', align_corners=False) * self.scale_factor_flow
         flow[:, 0, :, :] *= float(orig_size[1]) / float(input_size[1])
         flow[:, 1, :, :] *= float(orig_size[0]) / float(input_size[0])

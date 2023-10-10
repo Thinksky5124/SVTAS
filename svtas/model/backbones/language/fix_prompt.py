@@ -9,13 +9,13 @@ FilePath     : /SVTAS/svtas/model/backbones/language/fix_prompt.py
 import torch
 import torch.nn as nn
 import random
-from mmcv.runner import load_checkpoint
+from mmengine.runner import load_state_dict
 from torch.nn import functional as F
 from ....utils.logger import get_logger
 from torch.nn.utils.rnn import pad_sequence
 from num2words import num2words
 
-from ...builder import BACKBONES
+from svtas.utils import AbstractBuildFactory
 # from clip import clip
 from ..utils.clip import LayerNorm
 from ..utils.clip import SimpleTokenizer as _Tokenizer
@@ -23,7 +23,7 @@ from ..utils.clip import Transformer
 from ..utils.transducer import get_attn_pad_mask
 
 
-@BACKBONES.register()
+@AbstractBuildFactory.register('model')
 class FixPromptTextEncoder(nn.Module):
     def __init__(self,
                  actions_map_file_path,
@@ -68,7 +68,7 @@ class FixPromptTextEncoder(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
             else:
                 nn.init.normal_(self.positional_embedding, std=0.01)
                 nn.init.normal_(self.prompt.token_embedding.weight, std=0.02)

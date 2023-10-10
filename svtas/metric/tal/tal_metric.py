@@ -9,13 +9,13 @@ FilePath     : /SVTAS/svtas/metric/tal/tal_metric.py
 import os
 import pandas as pd
 import numpy as np
-from ...utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from ..base_metric import BaseMetric
-from ..builder import METRIC
+from svtas.utils import AbstractBuildFactory
 from ..tas.tas_metric_utils import get_labels_scores_start_end_time
 from .utils import wrapper_compute_average_precision
 
-@METRIC.register()
+@AbstractBuildFactory.register('metric')
 class TALocalizationMetric(BaseMetric):
     def __init__(self,
                  actions_map_file_path,
