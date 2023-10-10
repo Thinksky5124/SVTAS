@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 14:52:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 21:06:23
+LastEditTime : 2023-10-10 10:04:20
 Description  : file content
-FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_dynamic_stream_segmentation_dataset.py
+FilePath     : \ETESVS\svtas\loader\dataset\stream_base_dataset\raw_frame_dynamic_stream_segmentation_dataset.py
 '''
 import abc
 import copy
@@ -136,7 +136,6 @@ class RawFrameDynamicStreamSegmentationDataset(DynamicStreamDataset):
         
         for single_info in info:
             sample_segment = single_info.copy()
-            sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
             # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
             imgs_list.append(copy.deepcopy(sample_segment['imgs'].unsqueeze(0)))

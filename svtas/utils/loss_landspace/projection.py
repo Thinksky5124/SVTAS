@@ -22,7 +22,7 @@ from sklearn.decomposition import PCA
 from .directions import (get_weights, get_diff_weights, get_diff_states,
                          ignore_biasbn, load_directions)
 from fnmatch import fnmatch
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from .h5_utils import write_list
 
 def tensorlist_to_tensor(weights):

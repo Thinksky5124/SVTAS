@@ -1,17 +1,11 @@
 '''
-Author: Thyssen Wen
-Date: 2022-03-16 20:52:46
-LastEditors: Thyssen Wen
-LastEditTime: 2022-03-26 14:37:17
-Description: mkidr function
-FilePath: /ETESVS/utils/save_load.py
+Author       : Thyssen Wen
+Date         : 2022-11-02 11:31:11
+LastEditors  : Thyssen Wen
+LastEditTime : 2023-10-10 22:53:26
+Description  : file content
+FilePath     : \ETESVS\svtas\utils\save_load.py
 '''
 import os
 
-def mkdir(dir):
-    if not os.path.exists(dir):
-        # avoid error when train with multiple gpus
-        try:
-            os.makedirs(dir)
-        except:
-            pass
+

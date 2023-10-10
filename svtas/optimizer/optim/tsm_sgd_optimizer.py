@@ -2,14 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 15:19:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 19:12:25
+LastEditTime : 2023-10-10 21:32:49
 Description  : TSM SGD optimizer
-FilePath     : /SVTAS/svtas/optimizer/optim/tsm_sgd_optimizer.py
+FilePath     : \ETESVS\svtas\optimizer\optim\tsm_sgd_optimizer.py
 '''
 from svtas.utils import AbstractBuildFactory
 import torch
 from .base_optim import TorchOptimizer
-from mmengine.utils.dl_utils.parrots_wrapper import SyncBatchNorm, _BatchNorm
 
 @AbstractBuildFactory.register('optimizer')
 class TSMSGDOptimizer(TorchOptimizer, torch.optim.SGD):
@@ -74,7 +73,7 @@ class TSMSGDOptimizer(TorchOptimizer, torch.optim.SGD):
                         normal_bias.append(m_params[1])
                     else:
                         freeze_ops.append(m_params[1])
-            elif isinstance(m, (_BatchNorm, SyncBatchNorm, torch.nn.GroupNorm, torch.nn.BatchNorm1d,
+            elif isinstance(m, (torch.nn.GroupNorm, torch.nn.BatchNorm1d,
                                 torch.nn.BatchNorm2d, torch.nn.BatchNorm3d)):
                 for param in list(m.parameters()):
                     if param.requires_grad:

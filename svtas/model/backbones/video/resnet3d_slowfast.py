@@ -12,8 +12,8 @@ import warnings
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule
-from mmengine.model import kaiming_init
-from mmengine.runner.checkpoint import _load_checkpoint, load_checkpoint
+from svtas.model_pipline.torch_utils import kaiming_init
+from svtas.model_pipline.torch_utils import _load_checkpoint, load_checkpoint
 
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory

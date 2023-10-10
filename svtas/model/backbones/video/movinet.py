@@ -11,7 +11,7 @@ from collections import OrderedDict
 import torch
 from torch.nn.modules.utils import _triple, _pair
 import torch.nn.functional as F
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from typing import Any, Callable, Optional, Tuple, Union
 from einops import rearrange
 from torch import nn, Tensor

@@ -19,7 +19,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import numpy as np
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 

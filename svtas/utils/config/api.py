@@ -1,15 +1,18 @@
 '''
-Author: Thyssen Wen
-Date: 2022-03-16 20:52:46
-LastEditors: Thyssen Wen
-LastEditTime: 2022-04-09 16:05:07
-Description: config load function
-FilePath: /ETESVS/utils/config.py
+Author       : Thyssen Wen
+Date         : 2023-10-10 23:16:16
+LastEditors  : Thyssen Wen
+LastEditTime : 2023-10-10 23:17:50
+Description  : file content
+FilePath     : \ETESVS\svtas\utils\config\api.py
 '''
+
+
 import os
-from .logger import get_logger, setup_logger
-from mmengine import Config
 import datetime
+
+from svtas.utils.logger import get_logger, setup_logger
+from .config import Config
 
 def get_config(fname, overrides=None, show=True):
     """

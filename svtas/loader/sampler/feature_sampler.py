@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:30:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 21:16:07
+LastEditTime : 2023-10-10 10:03:29
 Description  : feature sampler
-FilePath     : /SVTAS/svtas/loader/sampler/feature_sampler.py
+FilePath     : \ETESVS\svtas\loader\sampler\feature_sampler.py
 '''
 import copy
 import random
@@ -222,7 +222,7 @@ class FeatureDynamicStreamSampler(FeatureStreamSampler):
                  ignore_index=-100,
                  sample_mode='uniform',
                  format="NTC",
-                 frame_idx_key='sample_sliding_idx'):
+                 frame_idx_key='currenct_frame_idx'):
         super().__init__(feature_dim_dict, is_train, sample_rate_name_dict, clip_seg_num_name_dict,
                          None, sample_add_key_pair, ignore_index, sample_mode, format, frame_idx_key)
     

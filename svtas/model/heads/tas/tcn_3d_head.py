@@ -11,7 +11,7 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from mmengine.model import constant_init, kaiming_init, xavier_init
+from svtas.model_pipline.torch_utils import constant_init, kaiming_init, xavier_init
 
 from svtas.utils import AbstractBuildFactory
 

@@ -18,7 +18,7 @@ from mmcv.cnn.bricks import ConvModule, DropPath
 from mmengine.model import Sequential
 
 from ....utils.logger import get_logger
-from mmengine.runner import load_state_dict, load_checkpoint
+from svtas.model_pipline.torch_utils import load_state_dict, load_checkpoint
 
 from .mobilenet_v2 import make_divisible
 from svtas.utils import AbstractBuildFactory

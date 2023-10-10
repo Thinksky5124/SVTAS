@@ -9,7 +9,7 @@ FilePath     : /SVTAS/svtas/model/backbones/image/sample_vit.py
 import torch
 from torch import nn
 from ....utils.logger import get_logger
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 10:48:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:31:51
+LastEditTime : 2023-10-10 23:12:57
 Description  : file content
-FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
+FilePath     : \ETESVS\svtas\utils\logger\base_logger.py
 '''
 import os
 import abc
@@ -37,9 +37,8 @@ class LoggerLevel(Enum):
     ERROR = auto()
     CRITICAL = auto()
 
-LOGGER_DICT = dict()
-
 class BaseLogger:
+    LOGGER_DICT = dict()
     def __init__(self,
                  name: str,
                  root_path: str = None,
@@ -54,12 +53,16 @@ class BaseLogger:
         self.world_size = int(os.environ['WORLD_SIZE'])
 
     def __new__(cls, name: str, root_path: str = None, level=LoggerLevel.INFO):
-        if name in LOGGER_DICT.keys():
+        if name in BaseLogger.LOGGER_DICT.keys():
             raise NameError(f"You can't build two logger with the same name: {name}!")
         else:
             logger_instance = super().__new__(cls)
-            LOGGER_DICT[name] = logger_instance
+            BaseLogger.LOGGER_DICT[name] = logger_instance
             return logger_instance
+    
+    @staticmethod
+    def get_root_logger_instance(default_name='SVTAS'):
+        return BaseLogger.LOGGER_DICT[default_name]
 
     @abc.abstractmethod
     def log(self, msg, *args, **kwargs):
@@ -117,10 +120,44 @@ class BaseLogger:
         pass
 
 def get_logger(name: str) -> BaseLogger:
-    assert name in LOGGER_DICT.keys(), f"The log with the name of {name} was not initialized!"
-    return LOGGER_DICT[name]
+    assert name in BaseLogger.LOGGER_DICT.keys(), f"The log with the name of {name} was not initialized!"
+    return BaseLogger.LOGGER_DICT[name]
 
 def setup_logger(cfg):
     for logger_class, logger_cfg in cfg.items():
         logger_cfg['logger_class'] = logger_class
         AbstractBuildFactory.create_factory('logger').create(logger_cfg, key="logger_class")
+
+def print_log(msg,
+              logger: BaseLogger = None,
+              level=None) -> None:
+    """Print a log message.
+
+    Args:
+        msg (str): The message to be logged.
+        logger (Logger or str, optional): If the type of logger is
+        ``logging.Logger``, we directly use logger to log messages.
+            Some special loggers are:
+
+            - "silent": No message will be printed.
+            - "current": Use latest created logger to log message.
+            - other str: Instance name of logger. The corresponding logger
+              will log message if it has been created, otherwise ``print_log``
+              will raise a `ValueError`.
+            - None: The `print()` method will be used to print log messages.
+        level (int): Logging level. Only available when `logger` is a Logger
+            object, "current", or a created logger instance name.
+    """
+    if logger is None:
+        print(msg)
+    elif isinstance(logger, BaseLogger):
+        logger.log(msg, level=level)
+    elif logger == 'silent':
+        pass
+    elif logger == 'current':
+        logger_instance = BaseLogger.get_root_logger_instance()
+        logger_instance.log(level, msg)
+    else:
+        raise TypeError(
+            '`logger` should be either a logging.Logger object, str, '
+            f'"silent", "current" or None, but got {type(logger)}')

@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from ....utils.logger import get_logger
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('model')

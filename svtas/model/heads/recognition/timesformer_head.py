@@ -10,7 +10,7 @@ FilePath     : /SVTAS/svtas/model/heads/recognition/timesformer_head.py
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from mmengine.model import trunc_normal_init
+from svtas.model_pipline.torch_utils import trunc_normal_init
 
 from svtas.utils import AbstractBuildFactory
 

@@ -2,13 +2,13 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 21:41:31
+LastEditTime : 2023-10-10 23:10:49
 Description: test script api
-FilePath     : /SVTAS/svtas/tasks/test.py
+FilePath     : \ETESVS\svtas\tasks\test.py
 '''
 import torch
 from svtas.utils.logger import get_logger
-from svtas.utils.save_load import mkdir
+from svtas.utils import mkdir
 from svtas.utils import AbstractBuildFactory
 from svtas.engine import BaseEngine
 from ..utils.collect_env import collect_env

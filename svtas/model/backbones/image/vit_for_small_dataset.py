@@ -11,7 +11,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from ....utils.logger import get_logger
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange, repeat

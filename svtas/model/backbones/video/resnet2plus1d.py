@@ -11,10 +11,10 @@ from svtas.utils import AbstractBuildFactory
 from .resnet_3d import ResNet3d, BasicBlock3d, Bottleneck3d
 import torch.nn as nn
 
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from ....utils.logger import get_logger
 from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
-from mmengine.model import constant_init, kaiming_init
+from svtas.model_pipline.torch_utils import constant_init, kaiming_init
 
 
 @AbstractBuildFactory.register('model')

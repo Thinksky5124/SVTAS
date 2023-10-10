@@ -9,7 +9,7 @@ FilePath     : /SVTAS/svtas/engine/checkpoint/base_checkpoint.py
 import os
 import abc
 from typing import Any, Dict
-from svtas.utils.save_load import mkdir
+from svtas.utils import mkdir
 
 class BaseCheckpointor(metaclass=abc.ABCMeta):
     save_path: str

@@ -10,7 +10,7 @@ import os
 import sys
 path = os.path.join(os.getcwd())
 sys.path.append(path)
-from svtas.utils.save_load import mkdir
+from svtas.utils import mkdir
 from svtas.utils.logger import get_logger, setup_logger, coloring
 from svtas.utils import AbstractBuildFactory
 

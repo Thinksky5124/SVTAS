@@ -115,20 +115,23 @@ class PythonLoggingLogger(BaseLogger):
     def log(self,
             msg: object,
             *args: object,
+            level = None,
             log_dist: bool = False,
             exc_info = None,
             stack_info: bool = False,
             stacklevel: int = 1,
             extra = None):
-        if self._level == LoggerLevel.INFO:
+        if level is None:
+            level = self._level
+        if level == LoggerLevel.INFO:
             self.info(msg, *args, log_dist=log_dist, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-        elif self._level == LoggerLevel.DEBUG:
+        elif level == LoggerLevel.DEBUG:
             self.debug(msg, *args, log_dist=log_dist, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-        elif self._level == LoggerLevel.WARNING:
+        elif level == LoggerLevel.WARNING:
             self.warn(msg, *args, log_dist=log_dist, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-        elif self._level == LoggerLevel.ERROR:
+        elif level == LoggerLevel.ERROR:
             self.error(msg, *args, log_dist=log_dist, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
-        elif self._level == LoggerLevel.CRITICAL:
+        elif level == LoggerLevel.CRITICAL:
             self.critical(msg, *args, log_dist=log_dist, exc_info=exc_info, stack_info=stack_info, stacklevel=stacklevel, extra=extra)
         else:
             raise NotImplementedError(f"Unsupport logging Level: {self._level}!")

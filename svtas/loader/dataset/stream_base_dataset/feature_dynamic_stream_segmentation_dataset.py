@@ -112,7 +112,6 @@ class FeatureDynamicStreamSegmentationDataset(DynamicStreamDataset):
 
         for single_info in info:
             sample_segment = single_info.copy()
-            sample_segment['sample_sliding_idx'] = idx
             sample_segment = self.pipeline(sample_segment)
             # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
             feature_list.append(copy.deepcopy(sample_segment['feature'].unsqueeze(0)))

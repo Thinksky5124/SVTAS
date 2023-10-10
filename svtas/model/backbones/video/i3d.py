@@ -9,7 +9,7 @@ FilePath     : /SVTAS/svtas/model/backbones/video/i3d.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory

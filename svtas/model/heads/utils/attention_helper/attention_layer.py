@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-01-07 16:52:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-03-03 17:06:49
+LastEditTime : 2023-10-10 15:57:48
 Description  : file content
-FilePath     : /SVTAS/svtas/model/heads/utils/attention_helper/attention_layer.py
+FilePath     : \ETESVS\svtas\model\heads\utils\attention_helper\attention_layer.py
 '''
 import math
 import torch

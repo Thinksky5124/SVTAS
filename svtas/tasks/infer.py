@@ -18,7 +18,7 @@ import onnxruntime
 import os
 from types import MethodType
 
-from ..utils.save_load import mkdir
+from ..utils import mkdir
 # from ..model.builder import build_model
 # from ..loader.builder import build_dataset
 # from ..loader.builder import build_pipline

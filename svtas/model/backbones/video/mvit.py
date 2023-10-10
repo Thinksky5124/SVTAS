@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from torch.nn.init import trunc_normal_
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from collections import OrderedDict
 import re
 from torch.distributed.algorithms._checkpoint import checkpoint_wrapper

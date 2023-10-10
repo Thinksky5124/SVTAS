@@ -20,7 +20,7 @@ from ..utils.raft.extractor import BasicEncoder, SmallEncoder
 from ..utils.raft.corr import CorrBlock, AlternateCorrBlock
 from ..utils.raft.utils import bilinear_sampler, coords_grid, upflow8
 
-from mmengine.runner import load_state_dict, load_checkpoint
+from svtas.model_pipline.torch_utils import load_state_dict, load_checkpoint
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 

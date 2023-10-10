@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:57:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 11:28:48
+LastEditTime : 2023-10-10 21:00:15
 Description  : CLIP achitectures
-FilePath     : /SVTAS/svtas/model/architectures/recognition/action_clip.py
+FilePath     : \ETESVS\svtas\model\architectures\recognition\action_clip.py
 '''
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from collections import OrderedDict
 import re
 

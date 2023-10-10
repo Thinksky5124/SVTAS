@@ -8,8 +8,8 @@ FilePath     : /SVTAS/svtas/model/backbones/video/mobilenet_v2_tmm.py
 '''
 import torch
 import torch.nn as nn
-from mmengine.model import constant_init, kaiming_init
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import constant_init, kaiming_init
+from svtas.model_pipline.torch_utils import load_state_dict
 from torch.nn.modules.batchnorm import _BatchNorm
 from ....utils.logger import get_logger
 from mmcv.cnn import ConvModule

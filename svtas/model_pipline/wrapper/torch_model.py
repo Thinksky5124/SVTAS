@@ -10,7 +10,7 @@ import abc
 from typing import Any, Dict
 from .base import BaseModel
 import torch
-from mmengine.runner import load_state_dict, load_checkpoint
+from svtas.model_pipline.torch_utils import load_state_dict, load_checkpoint
 
 class TorchModel(torch.nn.Module, BaseModel):
     def __init__(self) -> None:

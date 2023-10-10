@@ -11,7 +11,7 @@ import itertools
 from typing import Optional, Sequence
 
 from ....utils.logger import get_logger
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 
 import torch
 import torch.nn as nn

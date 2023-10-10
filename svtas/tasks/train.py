@@ -7,7 +7,7 @@ Description: train script api
 FilePath     : /SVTAS/svtas/tasks/train.py
 '''
 
-from svtas.utils.save_load import mkdir
+from svtas.utils import mkdir
 from svtas.utils import AbstractBuildFactory
 from svtas.engine import BaseEngine
 

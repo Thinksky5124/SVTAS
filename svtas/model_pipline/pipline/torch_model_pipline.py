@@ -16,7 +16,7 @@ from svtas.optimizer.grad_clip import GradAccumulate, GradClip
 import torch
 from torch.cuda.amp import autocast as autocast
 from torch.cuda.amp.grad_scaler import GradScaler
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 
 @AbstractBuildFactory.register('model_pipline')
 class TorchModelPipline(BaseModelPipline):

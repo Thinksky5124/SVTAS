@@ -9,7 +9,7 @@ FilePath     : /ETESVS/model/backbones/utils/conv2plus1d/conv2plus1d.py
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import build_norm_layer
-from mmengine.model import constant_init, kaiming_init
+from svtas.model_pipline.torch_utils import constant_init, kaiming_init
 from torch.nn.modules.utils import _triple
 from mmengine.registry import MODELS
 

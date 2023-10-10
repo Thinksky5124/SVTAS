@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-25 21:27:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 16:54:41
+LastEditTime : 2023-10-10 21:05:57
 Description: ResNet ref: https://github.com/open-mmlab/mmaction2
-FilePath     : /SVTAS/svtas/model/backbones/image/resnet.py
+FilePath     : \ETESVS\svtas\model\backbones\image\resnet.py
 '''
 
 # form neckwork
@@ -18,9 +18,8 @@ FilePath     : /SVTAS/svtas/model/backbones/image/resnet.py
 
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
-from mmengine.model import constant_init, kaiming_init
-from mmengine.runner.checkpoint import _load_checkpoint, load_checkpoint
-from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
+from svtas.model_pipline.torch_utils import constant_init, kaiming_init
+from svtas.model_pipline.torch_utils import _load_checkpoint, load_checkpoint
 from torch.utils import checkpoint as cp
 from ....utils.logger import get_logger
 
@@ -611,7 +610,7 @@ class ResNet(nn.Module):
         self._freeze_stages()
         if mode and self.norm_eval:
             for m in self.modules():
-                if isinstance(m, _BatchNorm):
+                if isinstance(m, torch.nn.BatchNorm):
                     m.eval()
         if mode and self.partial_bn:
             self._partial_bn()

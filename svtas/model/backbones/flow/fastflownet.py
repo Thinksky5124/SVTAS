@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 import warnings
 try:
     from spatial_correlation_sampler import SpatialCorrelationSampler

@@ -18,7 +18,7 @@ import numpy as np
 import onnx
 import onnxruntime
 
-from svtas.utils.save_load import mkdir
+from svtas.utils import mkdir
 from svtas.utils.config import get_config
 
 @torch.no_grad()

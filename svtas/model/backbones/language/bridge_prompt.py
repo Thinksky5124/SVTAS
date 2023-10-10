@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import numpy as np
-from mmengine.runner import load_state_dict
+from svtas.model_pipline.torch_utils import load_state_dict
 from ....utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 # from clip import clip
