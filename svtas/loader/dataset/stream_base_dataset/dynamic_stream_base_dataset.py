@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 17:09:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 17:57:43
+LastEditTime : 2023-10-11 22:45:15
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/dynamic_stream_base_dataset.py
 '''
@@ -241,7 +241,7 @@ class MultiEpochStageDynamicStreamGenerator(BaseDynamicStreamGenerator):
     
     def update_epoch(self, val = 1):
         self.epoch += val
-        if self.current_strategy_idx < len(self.multi_epoch_list) and self.multi_epoch_list[self.current_strategy_idx] < self.epoch:
+        while self.current_strategy_idx < len(self.multi_epoch_list) and self.multi_epoch_list[self.current_strategy_idx] < self.epoch:
             self.current_strategy_idx += 1
                 
     def __next__(self) -> Dict:
