@@ -6,14 +6,15 @@ LastEditTime : 2023-10-11 15:15:28
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/loss_landspace/visualize.py
 '''
-from svtas.utils import is_h5py_available, is_matplotlib_available
+from svtas.utils import is_h5py_available, is_matplotlib_available, is_seaborn_available
 if is_matplotlib_available():
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import pyplot as plt
 if is_h5py_available():
     import h5py
 import numpy as np
-import seaborn as sns
+if is_seaborn_available():
+    import seaborn as sns
 import os
 
 # matplotlib reference:

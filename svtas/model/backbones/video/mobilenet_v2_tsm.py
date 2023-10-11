@@ -10,7 +10,7 @@ FilePath     : /SVTAS/svtas/model/backbones/video/mobilenet_v2_tsm.py
 import torch.nn as nn
 from svtas.model_pipline.torch_utils import constant_init, kaiming_init
 from ..image.mobilenet_v2 import InvertedResidual, MobileNetV2
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 from torch.nn.modules.batchnorm import _BatchNorm
 from ....utils.logger import get_logger
 from .resnet_tsm import TemporalShift

@@ -2,18 +2,21 @@
 Author       : Thyssen Wen
 Date         : 2022-11-01 12:25:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 11:12:05
+LastEditTime : 2023-10-11 20:58:28
 Description  : video container
 FilePath     : /SVTAS/svtas/loader/decode/container.py
 '''
 import re
-import av
 import cv2
 import decord as de
 import numpy as np
 import copy
 # from mvextractor.videocap import VideoCap as MVVideoCap
 from svtas.utils import AbstractBuildFactory
+from svtas.utils import is_av_available
+
+if is_av_available():
+    import av
 
 @AbstractBuildFactory.register('sample_container')
 class NPYContainer(object):

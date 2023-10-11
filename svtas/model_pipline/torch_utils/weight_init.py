@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 20:51:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 21:53:10
+LastEditTime : 2023-10-11 21:11:51
 Description  : ref: https://github.com/open-mmlab/mmengine/blob/6c5eebb823e3c9381d63fd0cd1873ed1bd9ee9de/mmengine/model/weight_init.py
-FilePath     : \ETESVS\svtas\model_pipline\torch_utils\weight_init.py
+FilePath     : /SVTAS/svtas/model_pipline/torch_utils/weight_init.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
@@ -571,3 +571,30 @@ def trunc_normal_(tensor: Tensor,
         b (float): the maximum cutoff value.
     """
     return _no_grad_trunc_normal_(tensor, mean, std, a, b)
+
+def c2_xavier_fill(module: nn.Module) -> None:
+    """
+    Initialize `module.weight` using the "XavierFill" implemented in Caffe2.
+    Also initializes `module.bias` to 0.
+
+    Args:
+        module (torch.nn.Module): module to initialize.
+    """
+    # Caffe2 implementation of XavierFill in fact
+    # corresponds to kaiming_uniform_ in PyTorch
+    nn.init.kaiming_uniform_(module.weight, a=1)
+    if module.bias is not None:
+        nn.init.constant_(module.bias, 0)
+
+
+def c2_msra_fill(module: nn.Module) -> None:
+    """
+    Initialize `module.weight` using the "MSRAFill" implemented in Caffe2.
+    Also initializes `module.bias` to 0.
+
+    Args:
+        module (torch.nn.Module): module to initialize.
+    """
+    nn.init.kaiming_normal_(module.weight, mode="fan_out", nonlinearity="relu")
+    if module.bias is not None:
+        nn.init.constant_(module.bias, 0)

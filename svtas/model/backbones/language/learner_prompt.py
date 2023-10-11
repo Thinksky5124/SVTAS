@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-03 10:42:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:07:08
+LastEditTime : 2023-10-11 21:07:16
 Description  : Prompt Module ref:https://github.com/KaiyangZhou/CoOp/blob/main/trainers/coop.py
 FilePath     : /SVTAS/svtas/model/backbones/language/learner_prompt.py
 '''
@@ -10,7 +10,7 @@ FilePath     : /SVTAS/svtas/model/backbones/language/learner_prompt.py
 import numpy as np
 import torch
 import torch.nn as nn
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 from torch.nn import functional as F
 from ....utils.logger import get_logger
 from torch.nn.utils.rnn import pad_sequence

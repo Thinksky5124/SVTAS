@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-19 18:56:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-28 12:15:43
+LastEditTime : 2023-10-11 21:04:14
 Description  : flow net
 FilePath     : /SVTAS/svtas/model/backbones/flow/fastflownet.py
 '''
@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 import warnings
 try:
     from spatial_correlation_sampler import SpatialCorrelationSampler

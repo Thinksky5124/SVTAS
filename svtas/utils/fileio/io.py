@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:24:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:25:53
+LastEditTime : 2023-10-11 20:53:00
 Description  : ref: https://github.com/open-mmlab/mmengine/blob/6c5eebb823e3c9381d63fd0cd1873ed1bd9ee9de/mmengine/fileio/io.py
 FilePath     : /SVTAS/svtas/utils/fileio/io.py
 '''
@@ -45,7 +45,7 @@ from io import BytesIO, StringIO
 from pathlib import Path
 from typing import Generator, Iterator, Optional, Tuple, Union
 
-from mmengine.utils import is_filepath, is_str
+from ..path import is_filepath, is_str
 from .backends import backends, prefix_to_backends
 from .file_client import FileClient
 # file_handlers and register_handler had been moved to

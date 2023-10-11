@@ -18,7 +18,9 @@ from .import_utils import (
     is_tqdm_available,
     is_mmcv_available,
     is_fvcore_available,
-    is_matplotlib_available
+    is_matplotlib_available,
+    is_av_available,
+    is_seaborn_available
 )
 from .package_env import is_installed, get_installed_path
 from .version import digit_version, get_git_hash

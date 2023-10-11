@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-05-16 14:00:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-07-16 09:59:00
+LastEditTime : 2023-10-11 21:08:57
 Description  : PredRNN v2 model ref:https://github.com/thuml/predrnn-pytorch/blob/master/core/models/predrnn_v2.py
-FilePath     : /ETESVS/model/backbones/video/predrnn_v2.py
+FilePath     : /SVTAS/svtas/model/backbones/video/predrnn_v2.py
 '''
 import torch
 import torch.nn as nn
 from ..utils.stlstm import SpatioTemporalLSTMCell
 import torch.nn.functional as F
 from ....utils.logger import get_logger
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('model')

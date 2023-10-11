@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 23:24:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 15:13:05
+LastEditTime : 2023-10-11 21:00:21
 Description  : ref: https://github.com/huggingface/diffusers/blob/main/src/diffusers/utils/import_utils.py
 FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
 '''
@@ -20,6 +20,13 @@ FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
     sklearn
     Pillow
     ffmpy
+    addict
+    numpy
+    pyyaml
+    regex;sys_platform=='win32'
+    rich
+    termcolor
+    yapf
 - dist need:
     deepspeed
 - visulize need:
@@ -167,10 +174,6 @@ except importlib_metadata.PackageNotFoundError:
     _deepspeed_available = False
 
 _pytorch_grad_cam_available = importlib.util.find_spec("pytorch_grad_cam") is not None
-try:
-    _pytorch_grad_cam_available = True
-except importlib_metadata.PackageNotFoundError:
-    _pytorch_grad_cam_available = False
 
 _h5py_available = importlib.util.find_spec("h5py") is not None
 try:
@@ -196,6 +199,24 @@ try:
 except importlib_metadata.PackageNotFoundError:
     _matplotlib_available = False
 
+_av_available = importlib.util.find_spec("av") is not None
+try:
+    _av_version = importlib_metadata.version("av")
+except importlib_metadata.PackageNotFoundError:
+    _av_available = False
+
+_seaborn_available = importlib.util.find_spec("seaborn") is not None
+try:
+    _seaborn_version = importlib_metadata.version("seaborn")
+except importlib_metadata.PackageNotFoundError:
+    _seaborn_available = False
+
+def is_seaborn_available():
+    return _seaborn_available
+    
+def is_av_available():
+    return _av_available
+    
 def is_matplotlib_available():
     return _matplotlib_available
 

@@ -98,6 +98,8 @@ class ListRandomChoiceDynamicStreamGenerator(BaseDynamicStreamGenerator):
             else:
                 left_len = self.max_len - self.cur_len
                 clip_seg_num = math.ceil(left_len / sample_rate)
+                if clip_seg_num <= 1:
+                    clip_seg_num += 1
                 self.cur_len += sample_rate * clip_seg_num
                 self.update_precise_sliding_num(self.cur_len)
                 return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
@@ -144,6 +146,8 @@ class ListLoopChoiceDynamicStreamGenerator(BaseDynamicStreamGenerator):
             else:
                 left_len = self.max_len - self.cur_len
                 clip_seg_num = math.ceil(left_len / sample_rate)
+                if clip_seg_num <= 1:
+                    clip_seg_num += 1
                 self.cur_len += sample_rate * clip_seg_num
                 self.update_precise_sliding_num(self.cur_len)
                 return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
@@ -179,6 +183,8 @@ class RandomDynamicStreamGenerator(BaseDynamicStreamGenerator):
             else:
                 left_len = self.max_len - self.cur_len
                 clip_seg_num = math.ceil(left_len / sample_rate)
+                if clip_seg_num <= 1:
+                    clip_seg_num += 1
                 self.cur_len += sample_rate * clip_seg_num
                 self.update_precise_sliding_num(self.cur_len)
                 return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)

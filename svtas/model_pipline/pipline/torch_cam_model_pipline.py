@@ -11,17 +11,19 @@ import torch
 from typing import Dict
 from .torch_model_pipline import TorchModelPipline
 from svtas.utils.cam import get_model_target_class
-from pytorch_grad_cam.ablation_layer import AblationLayerVit
+from svtas.utils import is_pytorch_grad_cam_available
 from svtas.utils.cam import ModelForwardWrapper, get_match_fn_class
-from pytorch_grad_cam import GradCAM, \
-    ScoreCAM, \
-    GradCAMPlusPlus, \
-    AblationCAM, \
-    XGradCAM, \
-    EigenCAM, \
-    EigenGradCAM, \
-    LayerCAM, \
-    FullGrad
+if is_pytorch_grad_cam_available():
+    from pytorch_grad_cam.ablation_layer import AblationLayerVit
+    from pytorch_grad_cam import GradCAM, \
+        ScoreCAM, \
+        GradCAMPlusPlus, \
+        AblationCAM, \
+        XGradCAM, \
+        EigenCAM, \
+        EigenGradCAM, \
+        LayerCAM, \
+        FullGrad
 
 def reshape_transform(transform_form):
 # # class activation transform [N C T]

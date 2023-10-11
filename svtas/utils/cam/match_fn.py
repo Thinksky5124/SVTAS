@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 21:44:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:44:34
+LastEditTime : 2023-10-11 20:55:33
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/cam/match_fn.py
 '''
@@ -13,8 +13,6 @@ from ..package_utils import is_pytorch_grad_cam_available
 if is_pytorch_grad_cam_available():
     from pytorch_grad_cam.utils.image import show_cam_on_image, \
         preprocess_image
-else:
-    raise ImportError()
 
 def rgb_stream_match_fn(data_dict, grayscale_cam):
     cam_image_list = []

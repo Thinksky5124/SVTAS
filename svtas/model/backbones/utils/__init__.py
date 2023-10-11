@@ -6,8 +6,6 @@ LastEditTime : 2022-11-21 20:11:49
 Description  : Network utils
 FilePath     : /SVTAS/svtas/model/backbones/utils/__init__.py
 '''
-from .timesformer import (DividedSpatialAttentionWithNorm,
-                          DividedTemporalAttentionWithNorm, FFNWithNorm)
 from .conv2plus1d import Conv2plus1d
 from .stlstm import SpatioTemporalLSTMCell
 from .transducer import EncoderLayer, PositionalEncoding, get_attn_pad_mask
@@ -20,8 +18,7 @@ from .torchvision import (_log_api_usage_once, _make_ntuple, MLP, Conv2dNormActi
 from .efficientnet import (make_divisible, SqueezeExcitation, InvertedResidual, EdgeResidual)
 
 __all__ = [
-    'DividedSpatialAttentionWithNorm', 'DividedTemporalAttentionWithNorm',
-    'FFNWithNorm', 'Conv2plus1d', 'SpatioTemporalLSTMCell',
+    'Conv2plus1d', 'SpatioTemporalLSTMCell',
     'EncoderLayer', 'PositionalEncoding', 'get_attn_pad_mask',
     'SimpleTokenizer', 'Transformer', "TemporalShift_VIT",
     "MultiScaleAttention", "attention_pool", "Mlp", "TwoStreamFusion", 

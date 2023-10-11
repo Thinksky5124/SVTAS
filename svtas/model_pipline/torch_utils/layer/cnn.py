@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 15:30:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 18:00:55
+LastEditTime : 2023-10-11 20:53:21
 Description  : ref: https://github.com/open-mmlab/mmcv/blob/cac0c44a7546fac99d84ec0c59bb613db8c7f9a1/mmcv/cnn/bricks/conv_module.py
 FilePath     : /SVTAS/svtas/model_pipline/torch_utils/layer/cnn.py
 '''
@@ -16,10 +16,8 @@ import torch.nn as nn
 from ..weight_init import constant_init, kaiming_init
 from svtas.utils import AbstractBuildFactory
 
-from .activation import build_activation_layer
-from .conv import build_conv_layer
-from .norm import build_norm_layer
-from .padding import build_padding_layer
+from .build_utils import build_norm_layer, build_conv_layer, build_padding_layer, build_activation_layer
+
 
 @AbstractBuildFactory.register('model')
 def efficient_conv_bn_eval_forward(bn: nn.BatchNorm2d,

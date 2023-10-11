@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 14:52:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 21:06:30
+LastEditTime : 2023-10-11 21:07:46
 Description  : Sample ViT ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/simple_vit.py
 FilePath     : /SVTAS/svtas/model/backbones/image/sample_vit.py
 '''
 import torch
 from torch import nn
 from ....utils.logger import get_logger
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange

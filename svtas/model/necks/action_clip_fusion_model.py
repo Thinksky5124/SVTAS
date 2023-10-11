@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 10:31:45
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 15:33:56
+LastEditTime : 2023-10-11 21:09:34
 Description  : ImageCLIP ref:https://github.com/sallymmx/ActionCLIP/blob/master/modules/Visual_Prompt.py
 FilePath     : /SVTAS/svtas/model/necks/action_clip_fusion_model.py
 '''
@@ -15,7 +15,7 @@ from torch import nn
 from collections import OrderedDict
 
 from svtas.utils.logger import get_logger
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 from svtas.utils import AbstractBuildFactory
 
 

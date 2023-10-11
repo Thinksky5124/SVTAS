@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 14:56:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-24 16:02:23
+LastEditTime : 2023-10-11 21:09:15
 Description  : ViT3D ref:https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit_3d.py
-FilePath     : /SVTAS/model/backbones/video/vit_3d.py
+FilePath     : /SVTAS/svtas/model/backbones/video/vit_3d.py
 '''
 import torch
 from torch import nn
 from ....utils.logger import get_logger
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 from svtas.utils import AbstractBuildFactory
 
 from einops import rearrange, repeat

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 13:55:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 10:35:04
+LastEditTime : 2023-10-11 19:57:46
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientformer.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientformer.py
 '''
@@ -15,7 +15,7 @@ from svtas.model_pipline.torch_utils import load_checkpoint
 
 import torch
 import torch.nn as nn
-from mmcv.cnn.bricks import (build_activation_layer, build_norm_layer)
+from svtas.model_pipline.torch_utils import build_norm_layer, build_activation_layer
 from svtas.model_pipline.torch_utils import ConvModule, DropPath
 from abc import ABCMeta, abstractmethod
 

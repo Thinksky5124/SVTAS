@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 21:30:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-22 21:26:30
+LastEditTime : 2023-10-11 19:33:49
 Description  : Video Filed model zoom
 FilePath     : /SVTAS/svtas/model/backbones/video/__init__.py
 '''
@@ -12,7 +12,6 @@ from .movinet import MoViNet
 from .resnet2plus1d import ResNet2Plus1d
 from .predrnn_v2 import PredRNNV2
 from .resnet_3d import ResNet3d
-from .timesfromer import TimeSformer
 from .resnet_tsm import ResNetTSM
 from .swin_transformer_3d import SwinTransformer3D
 from .vit_3d import ViT3D

@@ -12,7 +12,8 @@ import warnings
 
 import torch.nn as nn
 import torch.utils.checkpoint as cp
-from mmcv.cnn import (ConvModule, NonLocal3d, build_activation_layer)
+from svtas.model_pipline.torch_utils import (ConvModule, build_activation_layer)
+from .resnet_tsm import NonLocal3d
 from svtas.model_pipline.torch_utils import kaiming_init, constant_init
 from svtas.model_pipline.torch_utils import _load_checkpoint, load_checkpoint
 from torch.nn.modules.utils import _ntuple, _triple

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 17:42:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:44:56
+LastEditTime : 2023-10-11 20:55:26
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/cam/builder.py
 '''
@@ -11,8 +11,6 @@ from ..package_utils import is_pytorch_grad_cam_available
 
 if is_pytorch_grad_cam_available():
     from pytorch_grad_cam.utils import model_targets
-else:
-    raise ImportError()
 
 from . import match_fn
 

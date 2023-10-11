@@ -31,12 +31,10 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 
 # Envirnment Prepare
 
-- Linux Ubuntu 20.04+
-#! update to python 3.10
-- Python 3.8+
-- PyTorch 1.13+
-- CUDA 11.7+ 
-- Cudnn 8.6+ (optional): Only need if you want to use apex accelerate
+- Linux Ubuntu 22.04+
+- Python 3.10+
+- PyTorch 2.1.0+
+- CUDA 12.2+ 
 - Pillow-SIMD (optional): Install it by the following scripts.
 - FFmpeg 4.3.1+ (optional): For extract flow and visualize video cam
 
@@ -51,12 +49,9 @@ conda install -y jpeg libtiff
 - use pip to install environment
 
 ```bash
-conda create -n torch python=3.8
+conda create -n torch python=3.10
 python -m pip install --upgrade pip
 pip install -r requirements/requirements_base.txt
-
-# export
-pip freeze > requirements.txt
 ```
 - If report `correlation_cuda package no found`, you should read [Install](svtas/model/backbones/utils/liteflownet_v3/README.md)
 - If you want to extract montion vector and residual image to video, you should install ffmpeg, for example, in ubuntu `sudo apt install ffmpeg`

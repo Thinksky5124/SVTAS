@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:21:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 15:14:03
+LastEditTime : 2023-10-11 21:01:01
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/__init__.py
 '''
@@ -28,7 +28,9 @@ from .package_utils import (
     is_tqdm_available,
     is_mmcv_available,
     is_fvcore_available,
-    is_matplotlib_available
+    is_matplotlib_available,
+    is_av_available,
+    is_seaborn_available
 )
 from .path import mkdir
 from .fileio import load, dump

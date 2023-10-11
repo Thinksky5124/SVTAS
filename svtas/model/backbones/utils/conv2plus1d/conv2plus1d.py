@@ -2,14 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-05-15 15:00:23
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-15 15:03:31
+LastEditTime : 2023-10-11 20:19:48
 Description  : Conv2plis1D layer ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/common/conv2plus1d.py
-FilePath     : /ETESVS/model/backbones/utils/conv2plus1d/conv2plus1d.py
+FilePath     : /SVTAS/svtas/model/backbones/utils/conv2plus1d/conv2plus1d.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
-from mmcv.cnn import build_norm_layer
-from svtas.model_pipline.torch_utils import constant_init, kaiming_init
+from svtas.model_pipline.torch_utils import constant_init, kaiming_init, build_activation_layer
 from torch.nn.modules.utils import _triple
 from svtas.utils import AbstractBuildFactory
 

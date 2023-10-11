@@ -8,7 +8,7 @@ FilePath: /ETESVS/utils/build.py
 '''
 import abc
 from threading import RLock
-from typing import List, AnyStr, Dict
+from typing import Any, List, AnyStr, Dict
 # Refence:https://github.com/Thinksky5124/PaddleVideo/blob/develop/paddlevideo/utils/registry.py
 
 
@@ -261,3 +261,12 @@ class AbstractBuildFactory(metaclass=abc.ABCMeta):
             return Registry_Class.register(obj, name)
         
         return actually_register
+    
+    @staticmethod
+    def register_obj(obj: Any, registory_name: str, obj_name: str = None):
+        assert isinstance(registory_name, str), "registory_name must be a string!"
+        if registory_name not in AbstractBuildFactory.REGISTRY_MAP.keys():
+            AbstractBuildFactory.REGISTRY_MAP[registory_name] = Registry(registory_name)
+        
+        Registry_Class: Registry = AbstractBuildFactory.REGISTRY_MAP[registory_name]
+        return Registry_Class.register(obj, obj_name)
