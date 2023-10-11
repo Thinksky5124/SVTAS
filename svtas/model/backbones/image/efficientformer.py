@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 13:55:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 16:53:56
+LastEditTime : 2023-10-11 09:24:12
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientformer.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientformer.py
 '''
@@ -11,7 +11,7 @@ import itertools
 from typing import Optional, Sequence
 
 from ....utils.logger import get_logger
-from svtas.model_pipline.torch_utils import load_state_dict
+from svtas.model_pipline.torch_utils import load_checkpoint
 
 import torch
 import torch.nn as nn
@@ -116,7 +116,7 @@ class AttentionWithBias(BaseModule):
                  attn_ratio=4.,
                  resolution=7,
                  init_cfg=None):
-        super().__init__(weight_init_cfg=weight_init_cfg)
+        super().__init__(init_cfg=init_cfg)
         self.num_heads = num_heads
         self.scale = key_dim**-0.5
         self.attn_ratio = attn_ratio
@@ -205,7 +205,7 @@ class LinearMlp(BaseModule):
                  act_cfg=dict(type='GELU'),
                  drop=0.,
                  init_cfg=None):
-        super().__init__(weight_init_cfg=weight_init_cfg)
+        super().__init__(init_cfg=init_cfg)
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
 
@@ -250,7 +250,7 @@ class ConvMlp(BaseModule):
                  act_cfg=dict(type='GELU'),
                  drop=0.,
                  init_cfg=None):
-        super().__init__(weight_init_cfg=weight_init_cfg)
+        super().__init__(init_cfg=init_cfg)
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1 = nn.Conv2d(in_features, hidden_features, 1)
@@ -289,7 +289,7 @@ class Meta3D(BaseModule):
                  drop_path=0.,
                  use_layer_scale=True,
                  init_cfg=None):
-        super().__init__(weight_init_cfg=weight_init_cfg)
+        super().__init__(init_cfg=init_cfg)
         self.norm1 = build_norm_layer(norm_cfg, dim)[1]
         self.token_mixer = AttentionWithBias(dim)
         self.norm2 = build_norm_layer(norm_cfg, dim)[1]
@@ -327,7 +327,7 @@ class Meta4D(BaseModule):
                  drop_path=0.,
                  use_layer_scale=True,
                  init_cfg=None):
-        super().__init__(weight_init_cfg=weight_init_cfg)
+        super().__init__(init_cfg=init_cfg)
 
         self.token_mixer = Pooling(pool_size=pool_size)
         mlp_hidden_dim = int(dim * mlp_ratio)
@@ -508,7 +508,7 @@ class EfficientFormer(BaseBackbone):
                  init_cfg=None,
                  pretrained=None):
 
-        super().__init__(weight_init_cfg=weight_init_cfg)
+        super().__init__(init_cfg=init_cfg)
         self.pretrained = pretrained
         self.num_extra_tokens = 0  # no cls_token, no dist_token
 
@@ -606,7 +606,7 @@ class EfficientFormer(BaseBackbone):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def _make_stem(self, in_channels: int, stem_channels: int):
         """make 2-ConvBNReLu stem layer."""

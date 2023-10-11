@@ -289,7 +289,7 @@ class VisionTransformer(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
                 
     def forward(self, x: torch.Tensor, masks: torch.Tensor):
         # Reshape and permute the input tensor

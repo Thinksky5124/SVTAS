@@ -30,7 +30,7 @@ from rich.console import Console
 from rich.text import Text
 from yapf.yapflib.yapf_api import FormatCode
 
-from mmengine.fileio import dump, load
+from svtas.utils.fileio import dump, load
 from svtas.utils.path import check_file_exist
 from svtas.utils.misc import import_modules_from_strings
 from svtas.utils.package_utils import (digit_version, get_installed_path, is_installed)

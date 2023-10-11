@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 15:53:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:10:08
+LastEditTime : 2023-10-11 09:30:42
 Description  : Path function tools ref:https://github.com/open-mmlab/mmcv/blob/master/mmcv/utils/path.py
-FilePath     : \ETESVS\svtas\utils\path.py
+FilePath     : /SVTAS/svtas/utils/path.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import os

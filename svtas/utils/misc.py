@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 15:53:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-06 23:01:54
+LastEditTime : 2023-10-11 10:11:45
 Description  : misc ref:https://github.com/open-mmlab/mmcv/blob/master/mmcv/utils/misc.py
 FilePath     : /SVTAS/svtas/utils/misc.py
 '''
@@ -16,11 +16,16 @@ from collections import abc
 from importlib import import_module
 from inspect import getfullargspec
 from itertools import repeat
+import textwrap
+import re
 import cv2
 import copy
 import numpy as np
 from PIL import Image
+from typing import Any, Callable, Optional, Type, Union
+
 from .build import AbstractBuildFactory
+from svtas.utils.logger import LoggerLevel
 
 # From PyTorch internals
 def _ntuple(n):
@@ -442,3 +447,111 @@ def set_property(cls, name, value, build_name):
         setattr(cls, name, AbstractBuildFactory.create_factory(build_name).create(value))
     else:
         setattr(cls, name, value)
+
+def apply_to(data: Any, expr: Callable, apply_func: Callable):
+    """Apply function to each element in dict, list or tuple that matches with
+    the expression.
+
+    For examples, if you want to convert each element in a list of dict from
+    `np.ndarray` to `Tensor`. You can use the following code:
+
+    Examples:
+        >>> from svtas.utils.msic import apply_to
+        >>> import numpy as np
+        >>> import torch
+        >>> data = dict(array=[np.array(1)]) # {'array': [array(1)]}
+        >>> result = apply_to(data, lambda x: isinstance(x, np.ndarray), lambda x: torch.from_numpy(x))
+        >>> print(result) # {'array': [tensor(1)]}
+
+    Args:
+        data (Any): Data to be applied.
+        expr (Callable): Expression to tell which data should be applied with
+            the function. It should return a boolean.
+        apply_func (Callable): Function applied to data.
+
+    Returns:
+        Any: The data after applying.
+    """  # noqa: E501
+    if isinstance(data, dict):
+        # Keep the original dict type
+        res = type(data)()
+        for key, value in data.items():
+            res[key] = apply_to(value, expr, apply_func)
+        return res
+    elif isinstance(data, tuple) and hasattr(data, '_fields'):
+        # namedtuple
+        return type(data)(*(apply_to(sample, expr, apply_func) for sample in data))  # type: ignore  # noqa: E501  # yapf:disable
+    elif isinstance(data, (tuple, list)):
+        return type(data)(apply_to(sample, expr, apply_func) for sample in data)  # type: ignore  # noqa: E501  # yapf:disable
+    elif expr(data):
+        return apply_func(data)
+    else:
+        return data
+
+def deprecated_function(since: str, removed_in: str,
+                        instructions: str) -> Callable:
+    """Marks functions as deprecated.
+
+    Throw a warning when a deprecated function is called, and add a note in the
+    docstring. Modified from https://github.com/pytorch/pytorch/blob/master/torch/onnx/_deprecation.py
+
+    Args:
+        since (str): The version when the function was first deprecated.
+        removed_in (str): The version when the function will be removed.
+        instructions (str): The action users should take.
+
+    Returns:
+        Callable: A new function, which will be deprecated soon.
+    """  # noqa: E501
+    from svtas.utils.logger import print_log
+
+    def decorator(function):
+
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            print_log(
+                f"'{function.__module__}.{function.__name__}' "
+                f'is deprecated in version {since} and will be '
+                f'removed in version {removed_in}. Please {instructions}.',
+                logger='current',
+                level=LoggerLevel.WARNING,
+            )
+            return function(*args, **kwargs)
+
+        indent = '    '
+        # Add a deprecation note to the docstring.
+        docstring = function.__doc__ or ''
+        # Add a note to the docstring.
+        deprecation_note = textwrap.dedent(f"""\
+            .. deprecated:: {since}
+                Deprecated and will be removed in version {removed_in}.
+                Please {instructions}.
+            """)
+        # Split docstring at first occurrence of newline
+        pattern = '\n\n'
+        summary_and_body = re.split(pattern, docstring, 1)
+
+        if len(summary_and_body) > 1:
+            summary, body = summary_and_body
+            body = textwrap.indent(textwrap.dedent(body), indent)
+            summary = '\n'.join(
+                [textwrap.dedent(string) for string in summary.split('\n')])
+            summary = textwrap.indent(summary, prefix=indent)
+            # Dedent the body. We cannot do this with the presence of the
+            # summary because the body contains leading whitespaces when the
+            # summary does not.
+            new_docstring_parts = [
+                deprecation_note, '\n\n', summary, '\n\n', body
+            ]
+        else:
+            summary = summary_and_body[0]
+            summary = '\n'.join(
+                [textwrap.dedent(string) for string in summary.split('\n')])
+            summary = textwrap.indent(summary, prefix=indent)
+            new_docstring_parts = [deprecation_note, '\n\n', summary]
+
+        wrapper.__doc__ = ''.join(new_docstring_parts)
+
+        return wrapper
+
+    return decorator

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:28:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 16:33:31
+LastEditTime : 2023-10-10 23:49:12
 Description  : Optical Flow Post Processing
 FilePath     : /SVTAS/svtas/model/post_processings/optical_flow_post_processing.py
 '''
@@ -11,7 +11,7 @@ import torch
 from ...utils.flow_vis import make_colorwheel
 from svtas.utils import AbstractBuildFactory
 from ...loader.transform.transform import VideoTransform
-from ...utils.stream_writer import VideoStreamWriter
+from svtas.utils.fileio import VideoStreamWriter
 from .base_post_processing import BasePostProcessing
 
 @AbstractBuildFactory.register('post_processing')

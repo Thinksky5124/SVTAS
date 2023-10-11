@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-15 14:48:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 12:02:43
+LastEditTime : 2023-10-10 23:57:46
 Description  : ResNet 2 plus 1d
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet2plus1d.py
 '''
@@ -11,9 +11,8 @@ from svtas.utils import AbstractBuildFactory
 from .resnet_3d import ResNet3d, BasicBlock3d, Bottleneck3d
 import torch.nn as nn
 
-from svtas.model_pipline.torch_utils import load_state_dict
-from ....utils.logger import get_logger
-from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
+from svtas.model_pipline.torch_utils import load_checkpoint
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import constant_init, kaiming_init
 
 
@@ -66,7 +65,7 @@ class ResNet2Plus1d(ResNet3d):
                 for m in self.modules():
                     if isinstance(m, nn.Conv3d):
                         kaiming_init(m)
-                    elif isinstance(m, _BatchNorm):
+                    elif isinstance(m, nn.BatchNorm3d):
                         constant_init(m, 1)
 
                 if self.zero_init_residual:
@@ -81,7 +80,7 @@ class ResNet2Plus1d(ResNet3d):
             for m in self.modules():
                     if isinstance(m, nn.Conv3d):
                         kaiming_init(m)
-                    elif isinstance(m, _BatchNorm):
+                    elif isinstance(m, nn.BatchNorm3d):
                         constant_init(m, 1)
 
             if self.zero_init_residual:

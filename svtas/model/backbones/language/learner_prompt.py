@@ -71,7 +71,7 @@ class LearnerPromptTextEncoder(nn.Module):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             else:
                 nn.init.normal_(self.positional_embedding, std=0.01)
                 nn.init.normal_(self.prompt_learner.token_embedding.weight, std=0.02)

@@ -3,7 +3,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:27:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 12:02:30
+LastEditTime : 2023-10-10 23:58:00
 Description: I3D model ref:https://raw.githubusercontent.com/open-mmlab/mmaction2/master/mmaction/models/backbones/resnet3d.py
 FilePath     : /SVTAS/svtas/model/backbones/video/resnet_3d.py
 '''
@@ -13,12 +13,11 @@ import warnings
 import torch.nn as nn
 import torch.utils.checkpoint as cp
 from mmcv.cnn import (ConvModule, NonLocal3d, build_activation_layer)
-from mmengine.model import kaiming_init, constant_init
+from svtas.model_pipline.torch_utils import kaiming_init, constant_init
 from svtas.model_pipline.torch_utils import _load_checkpoint, load_checkpoint
-from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
 from torch.nn.modules.utils import _ntuple, _triple
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 
 
@@ -822,7 +821,7 @@ class ResNet3d(nn.Module):
             for m in self.modules():
                 if isinstance(m, nn.Conv3d):
                     kaiming_init(m)
-                elif isinstance(m, _BatchNorm):
+                elif isinstance(m, nn.BatchNorm3d):
                     constant_init(m, 1)
 
             if self.zero_init_residual:
@@ -841,7 +840,7 @@ class ResNet3d(nn.Module):
             for m in self.modules():
                 if isinstance(m, nn.Conv3d):
                     kaiming_init(m)
-                elif isinstance(m, _BatchNorm):
+                elif isinstance(m, nn.BatchNorm3d):
                     constant_init(m, 1)
 
             if self.zero_init_residual:
@@ -886,7 +885,7 @@ class ResNet3d(nn.Module):
         self._freeze_stages()
         if mode and self.norm_eval:
             for m in self.modules():
-                if isinstance(m, _BatchNorm):
+                if isinstance(m, nn.BatchNorm3d):
                     m.eval()
 
 
@@ -1026,7 +1025,7 @@ class ResNet3dLayer(nn.Module):
                 for m in self.modules():
                     if isinstance(m, nn.Conv3d):
                         kaiming_init(m)
-                    elif isinstance(m, _BatchNorm):
+                    elif isinstance(m, nn.BatchNorm3d):
                         constant_init(m, 1)
 
                 if self.zero_init_residual:
@@ -1041,7 +1040,7 @@ class ResNet3dLayer(nn.Module):
             for m in self.modules():
                 if isinstance(m, nn.Conv3d):
                     kaiming_init(m)
-                elif isinstance(m, _BatchNorm):
+                elif isinstance(m, nn.BatchNorm3d):
                     constant_init(m, 1)
 
             if self.zero_init_residual:
@@ -1071,5 +1070,5 @@ class ResNet3dLayer(nn.Module):
         self._freeze_stages()
         if mode and self.norm_eval:
             for m in self.modules():
-                if isinstance(m, _BatchNorm):
+                if isinstance(m, nn.BatchNorm3d):
                     m.eval()

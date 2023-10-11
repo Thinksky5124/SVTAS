@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-12 20:45:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 20:12:16
+LastEditTime : 2023-10-11 10:09:35
 Description  : Swin Transformer ref:https://github.com/SwinTransformer/Video-Swin-Transformer/blob/master/mmaction/models/backbones/swin_transformer.py
 FilePath     : /SVTAS/svtas/model/backbones/video/swin_transformer_3d.py
 '''
@@ -651,7 +651,7 @@ class SwinTransformer3D(nn.Module):
                     self.inflate_weights(logger)
                 else:
                     # Directly load 3D model.
-                    load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
+                    load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 self.apply(_init_weights)
             else:

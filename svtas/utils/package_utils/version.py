@@ -2,20 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:04:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:05:41
+LastEditTime : 2023-10-11 09:40:28
 Description  : file content
-FilePath     : \ETESVS\svtas\utils\package_utils\version.py
+FilePath     : /SVTAS/svtas/utils/package_utils/version.py
 '''
 import os
-import sys
-import torch
 import subprocess
-import numpy as np
-import os.path as osp
 import warnings
 
 from packaging.version import parse
-
 
 def digit_version(version_str: str, length: int = 4):
     """Convert a version string into a tuple of integers.

@@ -11,10 +11,10 @@ import torch.nn as nn
 from mmcv.cnn import build_norm_layer
 from svtas.model_pipline.torch_utils import constant_init, kaiming_init
 from torch.nn.modules.utils import _triple
-from mmengine.registry import MODELS
+from svtas.utils import AbstractBuildFactory
 
 
-@MODELS.register_module()
+@AbstractBuildFactory.register('model')
 class Conv2plus1d(nn.Module):
     """(2+1)d Conv module for R(2+1)d backbone.
     https://arxiv.org/pdf/1711.11248.pdf.

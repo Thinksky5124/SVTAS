@@ -2,14 +2,19 @@
 Author       : Thyssen Wen
 Date         : 2022-12-23 21:44:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-24 21:18:11
+LastEditTime : 2023-10-10 23:44:34
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/cam/match_fn.py
 '''
 import cv2
 import numpy as np
-from pytorch_grad_cam.utils.image import show_cam_on_image, \
-    preprocess_image
+from ..package_utils import is_pytorch_grad_cam_available
+
+if is_pytorch_grad_cam_available():
+    from pytorch_grad_cam.utils.image import show_cam_on_image, \
+        preprocess_image
+else:
+    raise ImportError()
 
 def rgb_stream_match_fn(data_dict, grayscale_cam):
     cam_image_list = []

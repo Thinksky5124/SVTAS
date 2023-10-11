@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:04:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:06:19
+LastEditTime : 2023-10-10 23:47:12
 Description  : ref: https://github.com/open-mmlab/mmengine/blob/6c5eebb823e3c9381d63fd0cd1873ed1bd9ee9de/mmengine/utils/package_utils.py
-FilePath     : \ETESVS\svtas\utils\package_utils\package_env.py
+FilePath     : /SVTAS/svtas/utils/package_utils/package_env.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
@@ -80,3 +80,17 @@ def get_installed_path(package: str) -> str:
         return possible_path
     else:
         return osp.join(pkg.location, package2module(package))
+
+def package2module(package: str):
+    """Infer module name from package.
+
+    Args:
+        package (str): Package to infer module name.
+    """
+    from pkg_resources import get_distribution
+    pkg = get_distribution(package)
+    if pkg.has_metadata('top_level.txt'):
+        module_name = pkg.get_metadata('top_level.txt').split('\n')[0]
+        return module_name
+    else:
+        raise ValueError(f'can not infer the module name of {package}')

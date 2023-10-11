@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 22:55:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 22:56:07
+LastEditTime : 2023-10-11 09:47:02
 Description  : ref: https://github.com/open-mmlab/mmengine/blob/6c5eebb823e3c9381d63fd0cd1873ed1bd9ee9de/mmengine/config/lazy.py
-FilePath     : \ETESVS\svtas\utils\config\lazy.py
+FilePath     : /SVTAS/svtas/utils/config/lazy.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import importlib

@@ -2,14 +2,14 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 18:49:52
+LastEditTime : 2023-10-10 23:49:19
 Description: model postprecessing
 FilePath     : /SVTAS/svtas/model/post_processings/stream_feature_post_processing.py
 '''
 import numpy as np
 import torch
 from svtas.utils import AbstractBuildFactory
-from ...utils.stream_writer import NPYStreamWriter
+from svtas.utils.fileio import NPYStreamWriter
 from .base_post_processing import BasePostProcessing
 
 @AbstractBuildFactory.register('post_processing')

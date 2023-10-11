@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:11:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-12 22:46:28
+LastEditTime : 2023-10-11 09:49:27
 Description  : Temporal action segmentation base class
-FilePath     : /SVTAS/svtas/metric/temporal_action_segmentation/temporal_action_segmentation_base_class.py
+FilePath     : /SVTAS/svtas/metric/tas/tas_base_class.py
 '''
 import os
 import numpy as np
 from ..base_metric import BaseMetric
-from ...utils.config import get_logger
+from ...utils import get_logger
 from svtas.utils import AbstractBuildFactory
 
 from .tas_metric_utils import get_labels_scores_start_end_time

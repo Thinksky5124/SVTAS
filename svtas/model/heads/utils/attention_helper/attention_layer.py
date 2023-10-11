@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-01-07 16:52:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 15:57:48
+LastEditTime : 2023-10-11 09:50:02
 Description  : file content
-FilePath     : \ETESVS\svtas\model\heads\utils\attention_helper\attention_layer.py
+FilePath     : /SVTAS/svtas/model/heads/utils/attention_helper/attention_layer.py
 '''
 import math
 import torch
@@ -14,7 +14,6 @@ from torch import einsum
 from einops import rearrange
 from .position_encoding import T5RelativePositionBias, RelativePosition
 from ...utils import RotaryEmbedding
-from timm.models.layers import DropPath, trunc_normal_
 
 # helper functions
 

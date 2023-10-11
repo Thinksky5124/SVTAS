@@ -8,7 +8,12 @@ FilePath     : /SVTAS/svtas/utils/cam/target_utils.py
 '''
 import torch
 import numpy as np
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+from ..package_utils import is_pytorch_grad_cam_available
+
+if is_pytorch_grad_cam_available():
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+else:
+    raise ImportError()
 
 __all__ = [
     "TemporalSegmentationTarget", "CategorySegmentationTarget"

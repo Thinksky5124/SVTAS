@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:16:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:17:50
+LastEditTime : 2023-10-11 09:49:13
 Description  : file content
-FilePath     : \ETESVS\svtas\utils\config\api.py
+FilePath     : /SVTAS/svtas/utils/config/api.py
 '''
 
 

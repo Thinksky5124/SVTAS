@@ -65,7 +65,7 @@ class MobileNetV2TSM(MobileNetV2):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 for m in self.modules():
                     if isinstance(m, nn.Conv2d):

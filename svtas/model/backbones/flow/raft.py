@@ -145,7 +145,7 @@ class RAFT(nn.Module):
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")
                 revise_keys = revise_keys + [(r'module.', r'')]
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
                 if self.freeze is True:
                     self.eval()
                     for param in self.parameters():

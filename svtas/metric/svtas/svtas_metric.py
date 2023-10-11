@@ -9,7 +9,7 @@ FilePath     : /SVTAS/svtas/metric/svtas/svtas_metric.py
 import os
 import numpy as np
 from ..base_metric import BaseMetric
-from ...utils.config import get_logger
+from ...utils import get_logger
 from svtas.utils import AbstractBuildFactory
 
 from ..tas.tas_metric_utils import get_labels_scores_start_end_time

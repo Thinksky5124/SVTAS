@@ -2,11 +2,10 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 16:12:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 15:38:04
+LastEditTime : 2023-10-11 00:03:22
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientnet.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientnet.py
 '''
-import mmcv
 import copy
 import math
 from functools import partial
@@ -303,7 +302,7 @@ class EfficientNet(BaseBackbone):
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")
-                load_checkpoint(self, self.pretrained, strict=False, logger=logger.logger, revise_keys=revise_keys)
+                load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
 
     def forward(self, x, masks):
         outs = []

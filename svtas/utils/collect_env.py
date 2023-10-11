@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-09 14:54:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:08:02
+LastEditTime : 2023-10-11 09:50:47
 Description  : collect env info ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/utils/collect_env.py
-FilePath     : \ETESVS\svtas\utils\collect_env.py
+FilePath     : /SVTAS/svtas/utils/collect_env.py
 '''
 import sys
 import torch

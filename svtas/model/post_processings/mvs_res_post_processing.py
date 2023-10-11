@@ -2,16 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 09:48:15
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-03 21:32:22
+LastEditTime : 2023-10-10 23:23:22
 Description  : file content
-FilePath     : /SVTAS/svtas/model/post_precessings/mvs_res_post_processing.py
+FilePath     : /SVTAS/svtas/model/post_processings/mvs_res_post_processing.py
 '''
 import numpy as np
 import torch
 from ...utils.flow_vis import make_colorwheel
 from svtas.utils import AbstractBuildFactory
 from ...loader.transform.transform import VideoTransform
-from ...utils.stream_writer import VideoStreamWriter
+from svtas.utils.fileio import VideoStreamWriter
 from .base_post_processing import BasePostProcessing
 
 @AbstractBuildFactory.register('post_processing')

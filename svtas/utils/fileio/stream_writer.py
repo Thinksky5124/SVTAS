@@ -11,7 +11,7 @@ import os
 import cv2
 import ffmpy
 import queue
-from .misc import label_arr2img, draw_action_label
+from ..misc import label_arr2img, draw_action_label
 import numpy as np
 import copy
 

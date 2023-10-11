@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 14:58:58
+LastEditTime : 2023-10-10 23:49:02
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_processings/cam_post_processing.py
 '''
 import numpy as np
 import torch
 from svtas.utils import AbstractBuildFactory
-from ...utils.stream_writer import CAMVideoStreamWriter, CAMImageStreamWriter
+from svtas.utils.fileio import CAMVideoStreamWriter, CAMImageStreamWriter
 from .base_post_processing import BasePostProcessing
 
 @AbstractBuildFactory.register('post_processing')

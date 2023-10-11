@@ -8,7 +8,7 @@ from collections import defaultdict
 from importlib.util import find_spec
 from typing import List, Optional, Tuple, Union
 
-from mmengine.fileio import load
+from svtas.utils.fileio import load
 from svtas.utils.path import check_file_exist
 
 PYTHON_ROOT_DIR = osp.dirname(osp.dirname(sys.executable))
