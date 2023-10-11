@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 13:48:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 19:23:32
+LastEditTime : 2023-10-11 16:19:56
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition.py
 '''
@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from ..general import SeriousModel
 from svtas.utils import AbstractBuildFactory
 
-@AbstractBuildFactory.register('architecture')
+@AbstractBuildFactory.register('model')
 class Recognition(SeriousModel):
     backbone: nn.Module
     neck: nn.Module
@@ -30,7 +30,7 @@ class Recognition(SeriousModel):
                  **kwargs) -> None:
         super().__init__(weight_init_cfg=weight_init_cfg, backbone=backbone, neck=neck, head=head, **kwargs)
 
-@AbstractBuildFactory.register('architecture')
+@AbstractBuildFactory.register('model')
 class VideoRocognition(Recognition):
     def __init__(self,
                  architecture_type='2d',

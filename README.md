@@ -32,6 +32,7 @@ Temporal action segmentation (TAS) is a critical step toward long-term video und
 # Envirnment Prepare
 
 - Linux Ubuntu 20.04+
+#! update to python 3.10
 - Python 3.8+
 - PyTorch 1.13+
 - CUDA 11.7+ 

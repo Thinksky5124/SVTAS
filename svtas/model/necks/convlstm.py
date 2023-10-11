@@ -8,7 +8,7 @@ FilePath     : /ETESVS/model/necks/convlstm.py
 '''
 import torch.nn as nn
 import torch
-from mmcv.cnn import ConvModule
+from svtas.model_pipline.torch_utils import ConvModule
 
 class ConvLSTMCell(nn.Module):
 

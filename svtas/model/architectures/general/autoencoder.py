@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-27 15:46:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 14:26:29
+LastEditTime : 2023-10-11 16:19:37
 Description  : Text Translation framework
 FilePath     : /SVTAS/svtas/model/architectures/general/autoencoder.py
 '''
@@ -10,10 +10,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from svtas.utils import AbstractBuildFactory
-from svtas.model_pipline import TorchModel
+from svtas.model_pipline import TorchBaseModel
 
-@AbstractBuildFactory.register('architecture')
-class AutoEncoder(TorchModel):
+@AbstractBuildFactory.register('model')
+class AutoEncoder(TorchBaseModel):
     def __init__(self,
                  encoder,
                  decoder,

@@ -8,7 +8,7 @@ FilePath     : /ETESVS/model/backbones/utils/stlstm/stlstm.py
 '''
 import torch
 import torch.nn as nn
-from mmcv.cnn import ConvModule
+from svtas.model_pipline.torch_utils import ConvModule
 
 class SpatioTemporalLSTMCell(nn.Module):
     def __init__(self, in_channel, num_hidden, width, filter_size, stride, layer_norm, is_deep_wise_conv=True):

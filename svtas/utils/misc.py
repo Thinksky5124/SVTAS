@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-25 15:53:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 10:11:45
+LastEditTime : 2023-10-11 14:26:54
 Description  : misc ref:https://github.com/open-mmlab/mmcv/blob/master/mmcv/utils/misc.py
 FilePath     : /SVTAS/svtas/utils/misc.py
 '''
@@ -22,7 +22,7 @@ import cv2
 import copy
 import numpy as np
 from PIL import Image
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Iterable, Optional, Type, Union
 
 from .build import AbstractBuildFactory
 from svtas.utils.logger import LoggerLevel
@@ -555,3 +555,24 @@ def deprecated_function(since: str, removed_in: str,
         return wrapper
 
     return decorator
+
+def clever_format(nums, format="%.2f"):
+    if not isinstance(nums, Iterable):
+        nums = [nums]
+    clever_nums = []
+
+    for num in nums:
+        if num > 1e12:
+            clever_nums.append(format % (num / 1e12) + "T")
+        elif num > 1e9:
+            clever_nums.append(format % (num / 1e9) + "G")
+        elif num > 1e6:
+            clever_nums.append(format % (num / 1e6) + "M")
+        elif num > 1e3:
+            clever_nums.append(format % (num / 1e3) + "K")
+        else:
+            clever_nums.append(format % num + "B")
+
+    clever_nums = clever_nums[0] if len(clever_nums) == 1 else (*clever_nums,)
+
+    return clever_nums

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 21:38:45
+LastEditTime : 2023-10-11 17:53:50
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/diffact_gtea.py
 '''
@@ -15,7 +15,7 @@ _base_ = [
 split = 1
 num_classes = 11
 ignore_index = -100
-epochs = 50
+epochs = 80
 batch_size = 1
 in_channels = 2048
 clip_seg_num_list = [64, 128, 256]
@@ -49,7 +49,7 @@ MODEL_PIPLINE = dict(
         accumulate_type = "conf"
     ),
     model = dict(
-        architecture = "FeatureSegmentation",
+        name = "FeatureSegmentation",
         architecture_type ='1d',
         backbone = None,
         neck = None,
@@ -109,9 +109,19 @@ DATASET = dict(
         dataset_type = "gtea",
         train_mode = True,
         dynamic_stream_generator=dict(
-            name = "ListRandomChoiceDynamicStreamGenerator",
-            clip_seg_num_list = clip_seg_num_list,
-            sample_rate_list = sample_rate_list
+            name = "MultiEpochStageDynamicStreamGenerator",
+            multi_epoch_list = [2, 5],
+            strategy_list = [
+                dict(name = "ListRandomChoiceDynamicStreamGenerator",
+                     clip_seg_num_list = clip_seg_num_list,
+                     sample_rate_list = sample_rate_list),
+                dict(name = "RandomDynamicStreamGenerator",
+                     clip_seg_num_range_list = [64, 128],
+                     sample_rate_range_list = [2, 2]),
+                dict(name = "ListRandomChoiceDynamicStreamGenerator",
+                     clip_seg_num_list = clip_seg_num_list,
+                     sample_rate_list = sample_rate_list),
+            ]
         )
     ),
     test = dict(

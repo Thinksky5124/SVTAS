@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from ..recognition import VideoRocognition
 from svtas.utils import AbstractBuildFactory
 
-@AbstractBuildFactory.register('architecture')
+@AbstractBuildFactory.register('model')
 class VideoSegmentation(VideoRocognition):
     def __init__(self,
                  architecture_type='2d',

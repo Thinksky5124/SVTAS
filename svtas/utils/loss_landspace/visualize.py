@@ -1,6 +1,17 @@
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot as plt
-import h5py
+'''
+Author       : Thyssen Wen
+Date         : 2023-09-14 19:46:29
+LastEditors  : Thyssen Wen
+LastEditTime : 2023-10-11 15:15:28
+Description  : file content
+FilePath     : /SVTAS/svtas/utils/loss_landspace/visualize.py
+'''
+from svtas.utils import is_h5py_available, is_matplotlib_available
+if is_matplotlib_available():
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib import pyplot as plt
+if is_h5py_available():
+    import h5py
 import numpy as np
 import seaborn as sns
 import os

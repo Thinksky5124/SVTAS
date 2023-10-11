@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:41:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 14:55:33
+LastEditTime : 2023-10-11 15:37:16
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/stream_epoch.py
 '''
@@ -53,6 +53,7 @@ class StreamEpochMethod(EpochMethod):
         # exec hook
         self.exec_hook('every_batch_end', output_dict, self.current_step_vid_list)
         
+        # metric update
         if self.metric:
             for k, v in self.metric.items():
                 acc = v.update(output_dict['vid'], output_dict['ground_truth'], output_dict['outputs'])

@@ -2,18 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 19:47:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 20:10:20
+LastEditTime : 2023-10-11 14:59:41
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientnet.py
 FilePath     : /SVTAS/svtas/model/backbones/utils/efficientnet/layers.py
 '''
-import mmcv
+from svtas.utils.misc import is_tuple_of
 from .functions import make_divisible
 import torch.utils.checkpoint as cp
 import torch.nn as nn
-from mmengine.model import BaseModule
-from mmcv.cnn.bricks import ConvModule, DropPath
+from svtas.model_pipline.wrapper import TorchBaseModel
+from svtas.model_pipline.torch_utils import ConvModule, DropPath
         
-class InvertedResidual(BaseModule):
+class InvertedResidual(TorchBaseModel):
     """Inverted Residual Block.
     Args:
         in_channels (int): The input channels of this module.
@@ -126,7 +126,7 @@ class InvertedResidual(BaseModule):
 
         return out
 
-class SqueezeExcitation(BaseModule):
+class SqueezeExcitation(TorchBaseModel):
     """Squeeze-and-Excitation Module.
     Args:
         channels (int): The input (and output) channels of the SE layer.
@@ -163,7 +163,7 @@ class SqueezeExcitation(BaseModule):
         if isinstance(act_cfg, dict):
             act_cfg = (act_cfg, act_cfg)
         assert len(act_cfg) == 2
-        assert mmcv.is_tuple_of(act_cfg, dict)
+        assert is_tuple_of(act_cfg, dict)
         self.global_avgpool = nn.AdaptiveAvgPool2d(1)
         if squeeze_channels is None:
             squeeze_channels = make_divisible(channels // ratio, divisor)
@@ -197,7 +197,7 @@ class SqueezeExcitation(BaseModule):
         else:
             return x * out
             
-class EdgeResidual(BaseModule):
+class EdgeResidual(TorchBaseModel):
     """Edge Residual Block.
     Args:
         in_channels (int): The input channels of this module.

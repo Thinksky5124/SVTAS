@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-16 16:40:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-27 19:02:59
+LastEditTime : 2023-10-11 14:26:43
 Description: caculate model flops param infer-time fps and throughput
 FilePath     : /SVTAS/tools/data_anlysis/caculate_model_complex_info.py
 '''
@@ -12,9 +12,14 @@ import sys
 import numpy as np
 path = os.path.join(os.getcwd())
 sys.path.append(path)
-from mmcv.cnn.utils.flops_counter import get_model_complexity_info
-from fvcore.nn import FlopCountAnalysis, flop_count_table
-from thop import clever_format
+from svtas.utils import is_mmcv_available, is_fvcore_available
+if is_mmcv_available():
+    from mmcv.cnn.utils.flops_counter import get_model_complexity_info
+
+if is_fvcore_available():
+    from fvcore.nn import FlopCountAnalysis, flop_count_table
+
+from svtas.utils.misc import clever_format
 from svtas.model.backbones.video import InceptionI3d
 
 # I3D model param flops caculate
@@ -31,29 +36,38 @@ def input_constructor(input_shape):
     return dict(imgs=x, masks=mask, idx=idx)
 dummy_input = input_constructor(input_shape)
 model = InceptionI3d(num_classes=11, in_channels=2)
-# mmcv caculate param and flops
-print("="*20)
-print('Use mmcv get_model_complexity_info function')
-flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)
-flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
-flops, params = clever_format([flops_number, params_number], "%.6f")
-flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.6f")
-print("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
-print("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops + ", Total params:" + params)
-print("="*20)
 
-# fvcore caculate param and flops
-print('Use fvcore FlopCountAnalysis function')
-inputs = (dummy_input['input_data'])
-flops = FlopCountAnalysis(model, inputs)
-print(flop_count_table(flops))
-flops_number = flops.total()
-flops_per_image_number = flops_number / cfg.DATASET.test.clip_seg_num
-flops = clever_format([flops_number], "%.6f")
-flops_per_image = clever_format([flops_per_image_number], "%.6f")
-print("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=cfg.DATASET.test.clip_seg_num))
-print("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops)
-print("="*20)
+profile_flops_flag = False
+if is_mmcv_available():
+    # mmcv caculate param and flops
+    print("="*20)
+    print('Use mmcv get_model_complexity_info function')
+    flops_number, params_number = get_model_complexity_info(model, input_shape=input_shape, input_constructor=input_constructor, print_per_layer_stat=False, as_strings=False)
+    flops_per_image_number = flops_number / clip_seg_num
+    flops, params = clever_format([flops_number, params_number], "%.6f")
+    flops_per_image, params = clever_format([flops_per_image_number, params_number], "%.6f")
+    print("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=clip_seg_num))
+    print("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops + ", Total params:" + params)
+    print("="*20)
+    profile_flops_flag = True
+
+if is_fvcore_available():
+    # fvcore caculate param and flops
+    print('Use fvcore FlopCountAnalysis function')
+    inputs = (dummy_input['input_data'])
+    flops = FlopCountAnalysis(model, inputs)
+    print(flop_count_table(flops))
+    flops_number = flops.total()
+    flops_per_image_number = flops_number / clip_seg_num
+    flops = clever_format([flops_number], "%.6f")
+    flops_per_image = clever_format([flops_per_image_number], "%.6f")
+    print("Hitp: This FLOPs is caculation by {clip_seg_num:d} imgs".format(clip_seg_num=clip_seg_num))
+    print("Per Image FLOPs:"+ flops_per_image + ", Total FLOPs:" + flops)
+    print("="*20)
+    profile_flops_flag = True
+
+if not profile_flops_flag:
+    print('You should install mmcv or fvcore for profile FLOPs!')
 
 # model fps caculate
 dummy_input = dummy_input['input_data']

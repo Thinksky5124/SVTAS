@@ -6,7 +6,7 @@ LastEditTime : 2022-11-21 19:20:40
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/mobilenet_v3.py
 FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v3.py
 '''
-from mmcv.cnn import ConvModule
+from svtas.model_pipline.torch_utils import ConvModule
 from torch.nn.modules.batchnorm import _BatchNorm
 from ....utils.logger import get_logger
 from svtas.model_pipline.torch_utils import load_state_dict

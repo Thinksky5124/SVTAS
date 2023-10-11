@@ -17,10 +17,10 @@ import re
 from svtas.utils.logger import get_logger
 
 from svtas.utils import AbstractBuildFactory
-from svtas.model_pipline import TorchModel
+from svtas.model_pipline import TorchBaseModel
 
-@AbstractBuildFactory.register('architecture')
-class ActionCLIP(TorchModel):
+@AbstractBuildFactory.register('model')
+class ActionCLIP(TorchBaseModel):
     def __init__(self,
                  pretrained=None,
                  image_prompt=None,

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:37:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 15:07:03
+LastEditTime : 2023-10-11 17:47:25
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/base_iter_method.py
 '''
@@ -128,8 +128,11 @@ class BaseIterMethod(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def save(self) -> Dict:
         save_dict = dict()
+        if self.dataloader is not None:
+            save_dict.update(self.dataloader.dataset.save())
         return save_dict
     
     @abc.abstractmethod
     def load(self, load_dict: Dict) -> None:
-        pass
+        if self.dataloader is not None:
+            self.dataloader.dataset.load(load_dict)

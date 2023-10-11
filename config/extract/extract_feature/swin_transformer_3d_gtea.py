@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 16:37:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 13:53:02
+LastEditTime : 2023-10-11 16:19:05
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_gtea.py
 '''
@@ -42,7 +42,7 @@ MODEL_PIPLINE = dict(
     name = "TorchModelPipline",
     # pretrained = "",
     model = dict(
-        architecture = "StreamVideoSegmentation",
+        name = "StreamVideoSegmentation",
         architecture_type ='3d',
         backbone = dict(
             name = "SwinTransformer3D",

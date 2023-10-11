@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 15:15:40
+LastEditTime : 2023-10-11 16:20:12
 Description  : Transeger framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/transeger.py
 '''
@@ -11,7 +11,7 @@ import torch.nn as nn
 
 from ....utils import AbstractBuildFactory
 
-@AbstractBuildFactory.register('architecture')
+@AbstractBuildFactory.register('model')
 class Transeger(nn.Module):
     def __init__(self,
                  image_backbone=None,
@@ -19,8 +19,8 @@ class Transeger(nn.Module):
                  joint=None,
                  weight_init_cfg=None):
         super().__init__()
-        self.image_backbone = AbstractBuildFactory.create_factory('architecture').create(image_backbone)
-        self.text_backbone = AbstractBuildFactory.create_factory('architecture').create(text_backbone)
+        self.image_backbone = AbstractBuildFactory.create_factory('model').create(image_backbone)
+        self.text_backbone = AbstractBuildFactory.create_factory('model').create(text_backbone)
         self.joint = AbstractBuildFactory.create_factory('model').create(joint)
 
         self.init_weights()

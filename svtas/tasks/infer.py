@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:05:04
+LastEditTime : 2023-10-11 16:15:59
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
@@ -13,8 +13,10 @@ from ..utils.logger import AverageMeter
 from .debug_infer_forward_func import infer_forward, debugger
 import time
 import numpy as np
-import onnx
-import onnxruntime
+from svtas.utils import is_onnx_available
+if is_onnx_available():
+    import onnx
+    import onnxruntime
 import os
 from types import MethodType
 
@@ -100,7 +102,7 @@ def infer(local_rank,
         mkdir(os.path.join("output", cfg.model_name))
         
     # model param flops caculate
-    if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
+    if cfg.MODELPIPLINE.model.name not in ["FeatureSegmentation"]:
         for transform_op in list(cfg.DATASETPIPLINE.test.transform.transform_dict.values())[0]:
             if list(transform_op.keys())[0] in ['CenterCrop']:
                 image_size = transform_op['CenterCrop']['size']

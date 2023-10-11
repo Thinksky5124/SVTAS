@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-07 19:11:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 09:46:14
+LastEditTime : 2023-10-11 16:19:18
 Description  : file content
-FilePath     : /SVTAS/config/models/svtas-rl/svtas_rl_egtea.py
+FilePath     : /SVTAS/config/svtas/svtas-rl/svtas_rl_egtea.py
 '''
 _base_ = [
     '../../_base_/dataloader/collater/stream_compose.py',
@@ -49,7 +49,7 @@ MODEL_PIPLINE = dict(
         accumulate_type = "conf"
     ),
     model = dict(
-        architecture = "StreamVideoSegmentation",
+        name = "StreamVideoSegmentation",
         architecture_type ='3d',
         addition_loss_pos = 'with_backbone_loss',
         backbone = dict(

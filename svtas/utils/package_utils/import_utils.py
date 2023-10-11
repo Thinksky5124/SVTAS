@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 23:24:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 09:27:00
+LastEditTime : 2023-10-11 15:13:05
 Description  : ref: https://github.com/huggingface/diffusers/blob/main/src/diffusers/utils/import_utils.py
 FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
 '''
@@ -26,6 +26,7 @@ FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
     grad-cam
     h5py
     tensorboard
+    matplotlib
 - infer need:
     onnx
     onnxruntime
@@ -176,6 +177,33 @@ try:
     _h5py_version = importlib_metadata.version("h5py")
 except importlib_metadata.PackageNotFoundError:
     _h5py_available = False
+
+_mmcv_available = importlib.util.find_spec("mmcv") is not None
+try:
+    _mmcv_version = importlib_metadata.version("mmcv")
+except importlib_metadata.PackageNotFoundError:
+    _mmcv_available = False
+
+_fvcore_available = importlib.util.find_spec("fvcore") is not None
+try:
+    _fvcore_version = importlib_metadata.version("fvcore")
+except importlib_metadata.PackageNotFoundError:
+    _fvcore_available = False
+
+_matplotlib_available = importlib.util.find_spec("matplotlib") is not None
+try:
+    _matplotlib_version = importlib_metadata.version("matplotlib")
+except importlib_metadata.PackageNotFoundError:
+    _matplotlib_available = False
+
+def is_matplotlib_available():
+    return _matplotlib_available
+
+def is_fvcore_available():
+    return _fvcore_available
+
+def is_mmcv_available():
+    return _mmcv_available
 
 def is_pytorch_grad_cam_available():
     return _pytorch_grad_cam_available

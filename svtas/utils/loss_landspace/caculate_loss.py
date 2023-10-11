@@ -2,13 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2023-04-07 15:21:39
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 16:43:16
+LastEditTime : 2023-10-11 15:12:27
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/loss_landspace/caculate_loss.py
 '''
 import torch
 import numpy as np
-import h5py
+from svtas.utils import is_h5py_available
+if is_h5py_available():
+    import h5py
 import os
 
 

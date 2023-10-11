@@ -39,7 +39,7 @@ def export_model_to_onnx(cfg,
         mkdir(os.path.join(args.export_path, cfg.model_name))
 
     # model param flops caculate
-    if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
+    if cfg.MODELPIPLINE.model.name not in ["FeatureSegmentation"]:
         image_size = cfg.DATASETPIPLINE.infer.transform.transform_list[1]['CenterCrop']['size']
         x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]
         mask_shape = [cfg.DATASET.infer.clip_seg_num * cfg.DATASET.infer.sample_rate]
@@ -83,7 +83,7 @@ def export_model_to_onnx(cfg,
     # precision alignment
     # onnx
     ort_session = onnxruntime.InferenceSession(export_path)
-    if cfg.MODEL.architecture not in ["FeatureSegmentation"]:
+    if cfg.MODELPIPLINE.model.name not in ["FeatureSegmentation"]:
         ort_inputs = {'input_data': dummy_input['input_data']['imgs'].cpu().numpy(), 'masks': dummy_input['input_data']['masks'].cpu().numpy()}
     else:
         ort_inputs = {'input_data': dummy_input['input_data']['feature'].cpu().numpy(), 'masks': dummy_input['input_data']['masks'].cpu().numpy()}

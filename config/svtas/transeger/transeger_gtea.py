@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 11:00:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 09:45:37
+LastEditTime : 2023-10-11 16:19:29
 Description  : Transeger
-FilePath     : /SVTAS/config/models/transeger/transeger_gtea.py
+FilePath     : /SVTAS/config/svtas/transeger/transeger_gtea.py
 '''
 _base_ = [
     '../../_base_/dataloader/collater/stream_compose.py',
@@ -48,9 +48,9 @@ MODEL_PIPLINE = dict(
         accumulate_type = "conf"
     ),
     model = dict(
-        architecture = "Transeger",
+        name = "Transeger",
         image_backbone = dict(
-            architecture = "Recognition2D",
+            name = "Recognition2D",
             backbone = dict(
                 name = "MobileNetV2TSM",
                 pretrained = "./data/tsm_mobilenetv2_dense_320p_1x1x8_100e_kinetics400_rgb_20210202-61135809.pth",
@@ -74,7 +74,7 @@ MODEL_PIPLINE = dict(
             )
         ),
         text_backbone = dict(
-            architecture = "Encoder2Decoder",
+            name = "Encoder2Decoder",
             encoder = dict(
                 name = "LearnerPromptTextEncoder",
                 actions_map_file_path = "./data/gtea/mapping.txt",

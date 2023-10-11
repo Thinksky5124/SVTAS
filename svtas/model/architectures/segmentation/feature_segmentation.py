@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-06 23:30:09
+LastEditTime : 2023-10-11 16:20:04
 Description: feaeture segmentation model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature_segmentation.py
 '''
@@ -14,7 +14,7 @@ from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 from ..general import SeriousModel
 
-@AbstractBuildFactory.register('architecture')
+@AbstractBuildFactory.register('model')
 class FeatureSegmentation(SeriousModel):
     backbone: nn.Module
     neck: nn.Module

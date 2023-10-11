@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 13:55:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 09:24:12
+LastEditTime : 2023-10-11 10:35:04
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientformer.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientformer.py
 '''
@@ -10,17 +10,17 @@ FilePath     : /SVTAS/svtas/model/backbones/image/efficientformer.py
 import itertools
 from typing import Optional, Sequence
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import load_checkpoint
 
 import torch
 import torch.nn as nn
-from mmcv.cnn.bricks import (ConvModule, DropPath, build_activation_layer,
-                             build_norm_layer)
-from mmengine.model import BaseModule, ModuleList, Sequential
+from mmcv.cnn.bricks import (build_activation_layer, build_norm_layer)
+from svtas.model_pipline.torch_utils import ConvModule, DropPath
 from abc import ABCMeta, abstractmethod
 
 from svtas.utils import AbstractBuildFactory
+from svtas.model_pipline import TorchBaseModel, TorchModuleList, TorchSequential
 
 class LayerScale(nn.Module):
     """LayerScale layer.
@@ -69,7 +69,7 @@ class Pooling(nn.Module):
     def forward(self, x):
         return self.pool(x) - x
 
-class BaseBackbone(BaseModule, metaclass=ABCMeta):
+class BaseBackbone(TorchBaseModel, metaclass=ABCMeta):
     """Base backbone.
     This class defines the basic functions of a backbone. Any backbone that
     inherits this class should at least define its own `forward` function.
@@ -95,7 +95,7 @@ class BaseBackbone(BaseModule, metaclass=ABCMeta):
         super(BaseBackbone, self).train(mode)
 
 
-class AttentionWithBias(BaseModule):
+class AttentionWithBias(TorchBaseModel):
     """Multi-head Attention Module with attention_bias.
     Args:
         embed_dims (int): The embedding dimension.
@@ -182,7 +182,7 @@ class Flat(nn.Module):
         return x
 
 
-class LinearMlp(BaseModule):
+class LinearMlp(TorchBaseModel):
     """Mlp implemented with linear.
     The shape of input and output tensor are (B, N, C).
     Args:
@@ -227,7 +227,7 @@ class LinearMlp(BaseModule):
         return x
 
 
-class ConvMlp(BaseModule):
+class ConvMlp(TorchBaseModel):
     """Mlp implemented with 1*1 convolutions.
     Args:
         in_features (int): Dimension of input features.
@@ -276,7 +276,7 @@ class ConvMlp(BaseModule):
         return x
 
 
-class Meta3D(BaseModule):
+class Meta3D(TorchBaseModel):
     """Meta Former block using 3 dimensions inputs, ``torch.Tensor`` with shape
     (B, N, C)."""
 
@@ -314,7 +314,7 @@ class Meta3D(BaseModule):
         return x
 
 
-class Meta4D(BaseModule):
+class Meta4D(TorchBaseModel):
     """Meta Former block using 4 dimensions inputs, ``torch.Tensor`` with shape
     (B, C, H, W)."""
 
@@ -402,7 +402,7 @@ def basic_blocks(in_channels,
                     use_layer_scale=use_layer_scale))
             if index == 3 and layers[index] - block_idx - 1 == vit_num:
                 blocks.append(Flat())
-    blocks = nn.Sequential(*blocks)
+    blocks = nn.TorchSequential(*blocks)
     return blocks
 
 
@@ -564,7 +564,7 @@ class EfficientFormer(BaseBackbone):
                 has_downsamper=self.downsamples[i])
             network.append(stage)
 
-        self.network = ModuleList(network)
+        self.network = TorchModuleList(network)
 
         if isinstance(out_indices, int):
             out_indices = [out_indices]
@@ -610,7 +610,7 @@ class EfficientFormer(BaseBackbone):
 
     def _make_stem(self, in_channels: int, stem_channels: int):
         """make 2-ConvBNReLu stem layer."""
-        self.patch_embed = Sequential(
+        self.patch_embed = TorchSequential(
             ConvModule(
                 in_channels,
                 stem_channels // 2,

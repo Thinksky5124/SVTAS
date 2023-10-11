@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 16:33:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 10:24:21
+LastEditTime : 2023-10-11 10:27:28
 Description  : TimeSformer module
 FilePath     : /SVTAS/svtas/model/backbones/utils/timesformer/transformer.py
 '''
@@ -15,11 +15,11 @@ from svtas.model_pipline.torch_utils import constant_init
 from svtas.utils.package_utils import digit_version
 from svtas.utils import AbstractBuildFactory
 from mmcv.cnn.bricks.transformer import FFN, build_dropout
-from mmengine.model import BaseModule
+from svtas.model_pipline.wrapper import TorchBaseModel
 from mmcv.cnn import build_norm_layer
 
 @AbstractBuildFactory.register('model')
-class DividedTemporalAttentionWithNorm(BaseModule):
+class DividedTemporalAttentionWithNorm(TorchBaseModel):
     """Temporal Attention in Divided Space Time Attention.
     Args:
         embed_dims (int): Dimensions of embedding.
@@ -96,7 +96,7 @@ class DividedTemporalAttentionWithNorm(BaseModule):
 
 
 @AbstractBuildFactory.register('model')
-class DividedSpatialAttentionWithNorm(BaseModule):
+class DividedSpatialAttentionWithNorm(TorchBaseModel):
     """Spatial Attention in Divided Space Time Attention.
     Args:
         embed_dims (int): Dimensions of embedding.

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-04 14:57:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 14:53:48
+LastEditTime : 2023-10-11 16:19:52
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/optical_flow/optical_flow_estimator.py
 '''
@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from ..general import SeriousModel
 from svtas.utils import AbstractBuildFactory
 
-@AbstractBuildFactory.register('architecture')
+@AbstractBuildFactory.register('model')
 class OpticalFlowEstimation(SeriousModel):
     def __init__(self,
                  model=None,

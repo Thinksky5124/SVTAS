@@ -15,11 +15,11 @@ from collections import OrderedDict
 import re
 
 from svtas.utils.logger import get_logger
-from svtas.model_pipline import TorchModel
+from svtas.model_pipline import TorchBaseModel
 from svtas.utils import AbstractBuildFactory
 
-@AbstractBuildFactory.register('architecture')
-class ActionCLIPSegmentation(TorchModel):
+@AbstractBuildFactory.register('model')
+class ActionCLIPSegmentation(TorchBaseModel):
     def __init__(self,
                  pretrained=None,
                  image_prompt=None,

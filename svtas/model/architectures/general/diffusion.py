@@ -10,10 +10,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from svtas.utils import AbstractBuildFactory
-from svtas.model_pipline import TorchModel
+from svtas.model_pipline import TorchBaseModel
 
-@AbstractBuildFactory.register('architecture')
-class Diffusion(TorchModel):
+@AbstractBuildFactory.register('model')
+class Diffusion(TorchBaseModel):
     def __init__(self,
                  encoder,
                  decoder,

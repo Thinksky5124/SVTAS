@@ -12,7 +12,7 @@ import torch.nn as nn
 from svtas.utils import AbstractBuildFactory
 from ..recognition import VideoRocognition
 
-@AbstractBuildFactory.register('architecture')
+@AbstractBuildFactory.register('model')
 class StreamVideoSegmentation(VideoRocognition):
     def __init__(self,
                  architecture_type='2d',

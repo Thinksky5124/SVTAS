@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 11:09:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 14:32:39
+LastEditTime : 2023-10-11 16:19:09
 Description  : RAFT extract flow Config
 FilePath     : /SVTAS/config/extract/extract_flow/raft_gtea.py
 '''
@@ -40,7 +40,7 @@ MODEL_PIPLINE = dict(
     name = "TorchModelPipline",
     # pretrained = "",
     model = dict(
-        architecture = "OpticalFlowEstimation",
+        name = "OpticalFlowEstimation",
         model = dict(
             name = "RAFT",
             pretrained = "./data/checkpoint/raft-sintel.pth",

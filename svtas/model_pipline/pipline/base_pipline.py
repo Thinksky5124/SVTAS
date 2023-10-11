@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:51:38
+LastEditTime : 2023-10-11 16:18:56
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
@@ -30,7 +30,7 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
                  optimizer=None,
                  lr_scheduler=None,
                  pretrained: str = None) -> None:
-        self.model = AbstractBuildFactory.create_factory('architecture').create(model, key='architecture')
+        self.model = AbstractBuildFactory.create_factory('model').create(model)
         self.criterion = AbstractBuildFactory.create_factory('loss').create(criterion)
         self.post_processing = AbstractBuildFactory.create_factory('post_processing').create(post_processing)
         self._device = device

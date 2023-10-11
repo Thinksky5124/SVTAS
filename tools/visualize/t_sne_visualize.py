@@ -2,15 +2,16 @@
 Author       : Thyssen Wen
 Date         : 2022-11-15 16:10:58
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-13 14:38:54
+LastEditTime : 2023-10-11 15:16:22
 Description  : file content
 FilePath     : /SVTAS/tools/visualize/t_sne_visualize.py
 '''
 import argparse
-import matplotlib.pyplot as plt
+from svtas.utils import is_matplotlib_available
+if is_matplotlib_available():
+    import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.manifold import TSNE
 import os

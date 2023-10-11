@@ -18,7 +18,7 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import ConvModule
+from svtas.model_pipline.torch_utils import ConvModule
 from .convlstm import ConvLSTM
 from svtas.utils.logger import get_logger
 

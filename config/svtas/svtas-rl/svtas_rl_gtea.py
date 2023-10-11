@@ -48,7 +48,7 @@ MODEL_PIPLINE = dict(
     #     accumulate_type = "conf"
     # ),
     model = dict(
-        architecture = "StreamVideoSegmentation",
+        name = "StreamVideoSegmentation",
         architecture_type ='3d',
         addition_loss_pos = 'with_backbone_loss',
         backbone = dict(

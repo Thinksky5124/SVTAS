@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 16:12:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 00:03:22
+LastEditTime : 2023-10-11 18:03:49
 Description  : ref:https://github.com/open-mmlab/mmclassification/blob/master/mmcls/models/backbones/efficientnet.py
 FilePath     : /SVTAS/svtas/model/backbones/image/efficientnet.py
 '''
@@ -13,10 +13,10 @@ from functools import partial
 import torch
 import torch.nn as nn
 
-from mmcv.cnn.bricks import ConvModule, DropPath
-from mmengine.model import Sequential
+from svtas.model_pipline.torch_utils import ConvModule, DropPath
+from svtas.model_pipline.wrapper import TorchSequential
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import load_state_dict, load_checkpoint
 
 from .mobilenet_v2 import make_divisible
@@ -293,7 +293,7 @@ class EfficientNet(BaseBackbone):
                         with_cp=self.with_cp))
                 self.in_channels = out_channels
                 block_idx += 1
-            self.layers.append(Sequential(*layer))
+            self.layers.append(TorchSequential(*layer))
     
     def _clear_memory_buffer(self):
         pass

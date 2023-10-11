@@ -7,9 +7,9 @@ Description  : file content
 FilePath     : /SVTAS/svtas/model/losses/base_loss.py
 '''
 from typing import Dict
-from svtas.model_pipline.wrapper import TorchModel
+from svtas.model_pipline.wrapper import TorchBaseModel
 
-class BaseLoss(TorchModel):
+class BaseLoss(TorchBaseModel):
     def __init__(self) -> None:
         super().__init__()
         

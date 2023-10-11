@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-27 12:03:04
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 15:14:33
+LastEditTime : 2023-10-11 16:20:08
 Description  : file content
-FilePath     : /SVTAS/svtas/model/architectures/segmentation/action_clip_segmentation_with_backboneloss.py
+FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_action_clip_segmentation.py
 '''
 import math
 import torch
@@ -15,11 +15,11 @@ from collections import OrderedDict
 import re
 
 from svtas.utils.logger import get_logger
-from svtas.model_pipline import TorchModel
+from svtas.model_pipline import TorchBaseModel
 from svtas.utils import AbstractBuildFactory
 
-@AbstractBuildFactory.register('architecture')
-class StreamSegmentationActionCLIPWithBackbone(TorchModel):
+@AbstractBuildFactory.register('model')
+class StreamSegmentationActionCLIPWithBackbone(TorchBaseModel):
     def __init__(self,
                  pretrained=None,
                  image_prompt=None,

@@ -7,8 +7,12 @@ Description  : file content
 FilePath     : /SVTAS/svtas/engine/checkpoint/deepspeed_checkpoint.py
 '''
 import os
-from deepspeed import DeepSpeedEngine
 from typing import Dict
+
+from svtas.utils import is_deepspeed_available
+if is_deepspeed_available():
+    from deepspeed import DeepSpeedEngine
+
 from .base_checkpoint import BaseCheckpointor
 
 class DeepSpeedCheckpointor(BaseCheckpointor):

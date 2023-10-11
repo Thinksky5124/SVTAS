@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-10 10:15:26
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-07 09:38:28
+LastEditTime : 2023-10-11 15:16:00
 Description  : statistic labels number for dataset
 FilePath     : /SVTAS/tools/data_anlysis/statistic_labels_num.py
 '''
@@ -12,7 +12,9 @@ from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from svtas.utils import is_matplotlib_available
+if is_matplotlib_available():
+    import matplotlib.pyplot as plt
 
 def get_arguments() -> argparse.Namespace:
     """

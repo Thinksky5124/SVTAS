@@ -12,8 +12,10 @@ from tqdm import tqdm
 
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import MultipleLocator
+from svtas.utils import is_matplotlib_available
+if is_matplotlib_available():
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import MultipleLocator
 
 
 def get_arguments() -> argparse.Namespace:

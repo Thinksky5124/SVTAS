@@ -8,6 +8,7 @@ FilePath     : /SVTAS/svtas/loader/dataset/base_dataset.py
 '''
 import abc
 import os.path as osp
+from typing import Dict
 
 class BaseDataset(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
@@ -67,4 +68,10 @@ class BaseTorchDataset(BaseDataset):
     
     @abc.abstractmethod
     def __len__(self):
+        pass
+
+    def save(self) -> Dict:
+        return {}
+
+    def load(self, load_dict) -> None:
         pass

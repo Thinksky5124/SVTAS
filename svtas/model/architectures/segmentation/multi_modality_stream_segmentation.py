@@ -10,10 +10,10 @@ import torch
 import torch.nn as nn
 
 from svtas.utils import AbstractBuildFactory
-from svtas.model_pipline import TorchModel
+from svtas.model_pipline import TorchBaseModel
 
-@AbstractBuildFactory.register('architecture')
-class MultiModalityStreamSegmentation(TorchModel):
+@AbstractBuildFactory.register('model')
+class MultiModalityStreamSegmentation(TorchBaseModel):
     def __init__(self,
                  rgb_backbone=None,
                  flow_backbone=None,

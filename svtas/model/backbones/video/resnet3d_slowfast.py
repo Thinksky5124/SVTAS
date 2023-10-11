@@ -11,7 +11,7 @@ import warnings
 
 import torch
 import torch.nn as nn
-from mmcv.cnn import ConvModule
+from svtas.model_pipline.torch_utils import ConvModule
 from svtas.model_pipline.torch_utils import kaiming_init
 from svtas.model_pipline.torch_utils import _load_checkpoint, load_checkpoint
 

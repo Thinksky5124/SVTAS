@@ -2,12 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-04-07 15:11:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-08 14:00:54
+LastEditTime : 2023-10-11 15:12:39
 Description  : file content
-FilePath     : /SVTAS/tools/visualize/loss_landspace/directions.py
+FilePath     : /SVTAS/svtas/utils/loss_landspace/directions.py
 '''
 import torch
-import h5py
+from svtas.utils import is_h5py_available
+if is_h5py_available():
+    import h5py
 from . import h5_utils
 
 

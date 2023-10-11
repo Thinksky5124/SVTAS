@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-04-08 10:48:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 16:32:21
+LastEditTime : 2023-10-11 15:12:45
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/loss_landspace/projection.py
 '''
@@ -17,7 +17,9 @@ import numpy as np
 import torch
 import os
 import copy
-import h5py
+from svtas.utils import is_h5py_available
+if is_h5py_available():
+    import h5py
 from sklearn.decomposition import PCA
 from .directions import (get_weights, get_diff_weights, get_diff_states,
                          ignore_biasbn, load_directions)

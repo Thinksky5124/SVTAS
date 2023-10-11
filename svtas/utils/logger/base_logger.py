@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:21:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 09:26:45
+LastEditTime : 2023-10-11 14:45:48
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
 '''
@@ -59,10 +59,6 @@ class BaseLogger:
             logger_instance = super().__new__(cls)
             BaseLogger.LOGGER_DICT[name] = logger_instance
             return logger_instance
-    
-    @staticmethod
-    def get_root_logger_instance(default_name='SVTAS'):
-        return BaseLogger.LOGGER_DICT[default_name]
 
     @abc.abstractmethod
     def log(self, msg, *args, **kwargs):
@@ -128,6 +124,9 @@ def setup_logger(cfg):
         logger_cfg['logger_class'] = logger_class
         AbstractBuildFactory.create_factory('logger').create(logger_cfg, key="logger_class")
 
+def get_root_logger_instance(default_name='SVTAS'):
+    return BaseLogger.LOGGER_DICT[default_name]
+
 def print_log(msg,
               logger: BaseLogger = None,
               level=None) -> None:
@@ -155,7 +154,7 @@ def print_log(msg,
     elif logger == 'silent':
         pass
     elif logger == 'current':
-        logger_instance = BaseLogger.get_root_logger_instance()
+        logger_instance = get_root_logger_instance()
         logger_instance.log(level, msg)
     else:
         raise TypeError(

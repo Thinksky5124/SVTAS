@@ -15,7 +15,10 @@ from .import_utils import (
     is_scipy_available,
     is_tensorboard_available,
     is_ftfy_available,
-    is_tqdm_available
+    is_tqdm_available,
+    is_mmcv_available,
+    is_fvcore_available,
+    is_matplotlib_available
 )
 from .package_env import is_installed, get_installed_path
 from .version import digit_version, get_git_hash
