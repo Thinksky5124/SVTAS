@@ -2,15 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:30:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-10 10:16:43
+LastEditTime : 2023-10-12 10:48:25
 Description  : file content
-FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_stream_video.py
+FilePath     : /SVTAS/config/_base_/dataloader/dataset/gtea/gtea_stream_video.py
 '''
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
-    video_batch_size = 1,
-    num_workers = 2,
     train = dict(
         name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",

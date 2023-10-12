@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 15:25:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-21 15:41:35
+LastEditTime : 2023-10-12 15:13:43
 Description  : DiffAct ref:https://github.com/Finspire13/DiffAct/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/heads/tas/diffact.py
 '''

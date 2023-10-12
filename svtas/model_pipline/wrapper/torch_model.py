@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 20:35:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 11:31:53
+LastEditTime : 2023-10-12 11:22:47
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/torch_model.py
 '''
@@ -23,6 +23,15 @@ class TorchBaseModel(torch.nn.Module, BaseModel):
     
     def _clear_memory_buffer(self):
         pass
+
+    @property
+    def training(self):
+        return self._training
+    
+    @training.setter
+    def training(self, val: bool = True):
+        self._training = val
+        self.train(val)
     
     def init_weights(self, init_cfg: Dict = {}):
         if self.pretrained is not None:

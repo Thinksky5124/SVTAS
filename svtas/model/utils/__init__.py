@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-12 16:35:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-21 20:11:49
+LastEditTime : 2023-10-12 15:21:44
 Description  : Network utils
-FilePath     : /SVTAS/svtas/model/backbones/utils/__init__.py
+FilePath     : /SVTAS/svtas/model/utils/__init__.py
 '''
 from .conv2plus1d import Conv2plus1d
 from .stlstm import SpatioTemporalLSTMCell
@@ -16,6 +16,7 @@ from .mvit import (MultiScaleAttention, attention_pool, Mlp, TwoStreamFusion, dr
 from .x3d import (get_norm, ResStage, VideoModelStem)
 from .torchvision import (_log_api_usage_once, _make_ntuple, MLP, Conv2dNormActivation)
 from .efficientnet import (make_divisible, SqueezeExcitation, InvertedResidual, EdgeResidual)
+from .rotary_embedding import RotaryEmbedding
 
 __all__ = [
     'Conv2plus1d', 'SpatioTemporalLSTMCell',
@@ -26,5 +27,5 @@ __all__ = [
     "PatchEmbed", "MultiScaleBlock", "get_norm", "VideoModelStem", "ResStage",
     "_log_api_usage_once", "_make_ntuple", "MLP", "Conv2dNormActivation",
     "make_divisible", "SqueezeExcitation", "InvertedResidual",
-    "EdgeResidual"
+    "EdgeResidual", 'RotaryEmbedding'
 ]

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 14:52:08
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 10:04:20
+LastEditTime : 2023-10-12 10:49:50
 Description  : file content
-FilePath     : \ETESVS\svtas\loader\dataset\stream_base_dataset\raw_frame_dynamic_stream_segmentation_dataset.py
+FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_dynamic_stream_segmentation_dataset.py
 '''
 import abc
 import copy
@@ -24,7 +24,7 @@ class RawFrameDynamicStreamSegmentationDataset(DynamicStreamDataset):
                  videos_path,
                  dynamic_stream_generator,
                  **kwargs):
-        super().__init__(videos_path, dynamic_stream_generator=dynamic_stream_generator, **kwargs)
+        super().__init__(dynamic_stream_generator=dynamic_stream_generator, **kwargs)
         self.videos_path = videos_path
 
     def parse_file_paths(self, input_path):
