@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from svtas.model_pipline.torch_utils import load_checkpoint
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 
 

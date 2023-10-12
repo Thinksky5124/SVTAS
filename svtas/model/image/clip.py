@@ -7,7 +7,7 @@ Description  : ImageCLIP ref:https://github.com/openai/CLIP/blob/main/clip/model
 FilePath     : /SVTAS/svtas/model/backbones/image/clip.py
 '''
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import load_state_dict
 from svtas.utils import AbstractBuildFactory
 from einops import rearrange

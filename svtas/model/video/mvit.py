@@ -13,7 +13,7 @@ import math
 from functools import partial
 import torch.nn.functional as F
 from torch.nn.init import trunc_normal_
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 from svtas.model_pipline.torch_utils import load_state_dict
 from collections import OrderedDict

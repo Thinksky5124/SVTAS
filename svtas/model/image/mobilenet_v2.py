@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-14 16:04:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 21:05:22
+LastEditTime : 2023-10-12 15:27:22
 Description: Mobilenet V2 model ref:https://github.com/open-mmlab/mmaction2/blob/master/mmaction/models/backbones/mobilenet_v2.py
-FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v2.py
+FilePath     : /SVTAS/svtas/model/image/mobilenet_v2.py
 '''
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
@@ -14,7 +14,7 @@ from svtas.model_pipline.torch_utils import load_checkpoint
 from torch.nn.modules.batchnorm import _BatchNorm
 from ..utils import make_divisible
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 
 from svtas.utils import AbstractBuildFactory
 

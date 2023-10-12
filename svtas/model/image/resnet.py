@@ -21,7 +21,7 @@ import torch.nn as nn
 from svtas.model_pipline.torch_utils import constant_init, kaiming_init
 from svtas.model_pipline.torch_utils import _load_checkpoint, load_checkpoint
 from torch.utils import checkpoint as cp
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 
 from svtas.utils import AbstractBuildFactory
 

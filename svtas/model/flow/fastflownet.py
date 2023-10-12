@@ -16,7 +16,7 @@ try:
     from spatial_correlation_sampler import SpatialCorrelationSampler
 except:
     warnings.warn("Can't not use FastFlowNet")
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 
 class Correlation(nn.Module):

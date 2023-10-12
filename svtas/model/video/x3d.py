@@ -10,7 +10,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import math
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 from svtas.model_pipline.torch_utils import load_state_dict, c2_msra_fill, c2_xavier_fill
 from ..utils import get_norm, VideoModelStem, ResStage

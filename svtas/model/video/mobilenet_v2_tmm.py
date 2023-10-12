@@ -11,7 +11,7 @@ import torch.nn as nn
 from svtas.model_pipline.torch_utils import constant_init, kaiming_init
 from svtas.model_pipline.torch_utils import load_checkpoint
 from torch.nn.modules.batchnorm import _BatchNorm
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import ConvModule
 from .mobilenet_v2_tsm import MobileNetV2TSM
 from svtas.utils import AbstractBuildFactory

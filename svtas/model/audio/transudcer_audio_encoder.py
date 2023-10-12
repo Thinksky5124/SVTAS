@@ -12,7 +12,7 @@ from ..utils.transducer import get_attn_pad_mask, PositionalEncoding, EncoderLay
 import torch
 import torch.nn as nn
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import load_checkpoint
 from svtas.utils import AbstractBuildFactory
 

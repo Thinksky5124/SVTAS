@@ -8,7 +8,7 @@ FilePath     : /SVTAS/svtas/model/backbones/image/sample_vit.py
 '''
 import torch
 from torch import nn
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import load_checkpoint
 from svtas.utils import AbstractBuildFactory
 

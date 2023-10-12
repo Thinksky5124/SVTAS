@@ -2,15 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2022-05-11 20:32:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-05-19 16:00:14
+LastEditTime : 2023-10-12 15:28:28
 Description  : MoViNet Head
-FilePath     : /ETESVS/model/heads/movinet_head.py
+FilePath     : /SVTAS/svtas/model/recognition/movinet_head.py
 '''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from svtas.model_pipline.torch_utils import constant_init, kaiming_init
-from ...backbones.video.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
+from ..video.movinet import ConvBlock3D, Swish, TemporalCGAvgPool3D, CausalModule
 
 from svtas.utils import AbstractBuildFactory
 

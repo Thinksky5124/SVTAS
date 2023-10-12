@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from svtas.model_pipline.torch_utils import load_state_dict
 from ..utils.liteflownet_v3 import Features, Matching, Regularization, Subpixel, BackWarp
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 
 

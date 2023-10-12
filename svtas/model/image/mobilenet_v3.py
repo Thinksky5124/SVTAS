@@ -8,7 +8,7 @@ FilePath     : /SVTAS/svtas/model/backbones/image/mobilenet_v3.py
 '''
 from svtas.model_pipline.torch_utils import ConvModule
 from torch.nn.modules.batchnorm import _BatchNorm
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.model_pipline.torch_utils import load_state_dict
 from svtas.utils import AbstractBuildFactory
 from .efficientnet import BaseBackbone, InvertedResidual

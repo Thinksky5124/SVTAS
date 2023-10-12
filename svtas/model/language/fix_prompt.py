@@ -11,7 +11,7 @@ import torch.nn as nn
 import random
 from svtas.model_pipline.torch_utils import load_checkpoint
 from torch.nn import functional as F
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from torch.nn.utils.rnn import pad_sequence
 from num2words import num2words
 

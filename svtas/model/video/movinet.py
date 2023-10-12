@@ -15,7 +15,7 @@ from svtas.model_pipline.torch_utils import load_checkpoint
 from typing import Any, Callable, Optional, Tuple, Union
 from einops import rearrange
 from torch import nn, Tensor
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 
 class ObjectDict(dict):

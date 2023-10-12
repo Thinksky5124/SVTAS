@@ -15,7 +15,7 @@ from svtas.model_pipline.torch_utils import ConvModule
 from svtas.model_pipline.torch_utils import kaiming_init
 from svtas.model_pipline.torch_utils import _load_checkpoint, load_checkpoint
 
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 from .resnet_3d import ResNet3d
 

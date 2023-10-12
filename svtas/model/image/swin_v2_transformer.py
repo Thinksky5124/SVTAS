@@ -20,7 +20,7 @@ import torch.utils.checkpoint as checkpoint
 import numpy as np
 from svtas.model_pipline.torch_utils import load_state_dict, DropPath, trunc_normal_
 from svtas.utils.misc import to_2tuple
-from ....utils.logger import get_logger
+from svtas.utils.logger import get_logger
 from svtas.utils import AbstractBuildFactory
 
 
