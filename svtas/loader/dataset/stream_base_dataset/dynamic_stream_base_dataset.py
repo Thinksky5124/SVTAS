@@ -55,6 +55,21 @@ class BaseDynamicStreamGenerator(metaclass=abc.ABCMeta):
             t = self.len_batch >= cur_len
             self._precise_sliding_num += t
     
+    def update_cur_len(self, sample_rate, clip_seg_num) -> Dict:
+        before_len = self.cur_len
+        if self.cur_len + sample_rate * clip_seg_num < self.max_len:
+            self.cur_len += sample_rate * clip_seg_num
+            self.update_precise_sliding_num(self.cur_len)
+            return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
+        else:
+            left_len = self.max_len - self.cur_len
+            clip_seg_num = math.ceil(left_len / sample_rate)
+            if clip_seg_num <= 1:
+                clip_seg_num += 1
+            self.cur_len += sample_rate * clip_seg_num
+            self.update_precise_sliding_num(self.cur_len)
+            return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
+    
     def __iter__(self) -> Iterator:
         return self
 
@@ -90,19 +105,7 @@ class ListRandomChoiceDynamicStreamGenerator(BaseDynamicStreamGenerator):
                 p = np.array(self.sample_rate_probability_list)
                 sample_rate = np.random.choice(self.sample_rate_list, p=p.ravel())
 
-            before_len = self.cur_len
-            if self.cur_len + sample_rate * clip_seg_num < self.max_len:
-                self.cur_len += sample_rate * clip_seg_num
-                self.update_precise_sliding_num(self.cur_len)
-                return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
-            else:
-                left_len = self.max_len - self.cur_len
-                clip_seg_num = math.ceil(left_len / sample_rate)
-                if clip_seg_num <= 1:
-                    clip_seg_num += 1
-                self.cur_len += sample_rate * clip_seg_num
-                self.update_precise_sliding_num(self.cur_len)
-                return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
+            return self.update_cur_len(sample_rate=sample_rate, clip_seg_num=clip_seg_num)
         raise StopIteration
 
 @AbstractBuildFactory.register('dynamic_stream_generator')
@@ -138,19 +141,7 @@ class ListLoopChoiceDynamicStreamGenerator(BaseDynamicStreamGenerator):
             if self.sample_rate_idx >= len(self.sample_rate_list):
                 self.sample_rate_idx = 0
 
-            before_len = self.cur_len
-            if self.cur_len + sample_rate * clip_seg_num < self.max_len:
-                self.cur_len += sample_rate * clip_seg_num
-                self.update_precise_sliding_num(self.cur_len)
-                return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
-            else:
-                left_len = self.max_len - self.cur_len
-                clip_seg_num = math.ceil(left_len / sample_rate)
-                if clip_seg_num <= 1:
-                    clip_seg_num += 1
-                self.cur_len += sample_rate * clip_seg_num
-                self.update_precise_sliding_num(self.cur_len)
-                return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
+            return self.update_cur_len(sample_rate=sample_rate, clip_seg_num=clip_seg_num)
         raise StopIteration
 
 @AbstractBuildFactory.register('dynamic_stream_generator')
@@ -175,19 +166,7 @@ class RandomDynamicStreamGenerator(BaseDynamicStreamGenerator):
             clip_seg_num = random.randint(self.clip_seg_num_min, self.clip_seg_num_max)
             sample_rate = random.randint(self.sample_rate_min, self.sample_rate_max)
 
-            before_len = self.cur_len
-            if self.cur_len + sample_rate * clip_seg_num < self.max_len:
-                self.cur_len += sample_rate * clip_seg_num
-                self.update_precise_sliding_num(self.cur_len)
-                return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
-            else:
-                left_len = self.max_len - self.cur_len
-                clip_seg_num = math.ceil(left_len / sample_rate)
-                if clip_seg_num <= 1:
-                    clip_seg_num += 1
-                self.cur_len += sample_rate * clip_seg_num
-                self.update_precise_sliding_num(self.cur_len)
-                return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
+            return self.update_cur_len(sample_rate=sample_rate, clip_seg_num=clip_seg_num)
         raise StopIteration
 
 @AbstractBuildFactory.register('dynamic_stream_generator')

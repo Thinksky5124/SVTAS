@@ -2,23 +2,30 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 15:56:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 14:26:42
+LastEditTime : 2023-10-12 10:17:59
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/general/diffusion.py
 '''
+from typing import List, Dict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from .vae import VariationalAutoEncoders
+from ...scheduler import BaseDiffusionScheduler
 from svtas.utils import AbstractBuildFactory
 from svtas.model_pipline import TorchBaseModel
 
 @AbstractBuildFactory.register('model')
-class Diffusion(TorchBaseModel):
+class DiffusionModel(TorchBaseModel):
+    vae: VariationalAutoEncoders
+    scheduler: BaseDiffusionScheduler
+
     def __init__(self,
-                 encoder,
-                 decoder,
-                 ) -> None:
-        super().__init__()
+                 vae: Dict,
+                 unet: Dict,
+                 scheduler: Dict,
+                 weight_init_cfg: dict | List[dict] | None = None) -> None:
+        super().__init__(weight_init_cfg)
     
     def init_weights(self):
         if self.encoder is not None:

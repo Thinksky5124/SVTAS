@@ -6,10 +6,10 @@ LastEditTime : 2023-09-25 13:48:51
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/general/__init__.py
 '''
-from .autoencoder import AutoEncoder
-from .diffusion import Diffusion
+from .vae import VariationalAutoEncoders
+from .diffusion import DiffusionModel
 from .serious import SeriousModel
 
 __all__ = [
-    'AutoEncoder', 'Diffusion', 'SeriousModel'
+    'VariationalAutoEncoders', 'DiffusionModel', 'SeriousModel'
 ]

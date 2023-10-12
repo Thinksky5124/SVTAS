@@ -26,7 +26,7 @@ def get_timestep_embedding(timesteps, embedding_dim): # for diffusion model
     # timesteps: batch,
     # out:       batch, embedding_dim
     """
-    This matches the implementation in Denoising Diffusion Probabilistic Models:
+    This matches the implementation in Denoising DiffusionModel Probabilistic Models:
     From Fairseq.
     Build sinusoidal embeddings.
     This matches the implementation in tensor2tensor, but differs slightly
@@ -78,7 +78,7 @@ def denormalize(x, scale): #  [-scale, scale] > [0,1]
 @AbstractBuildFactory.register('model')
 class DiffsusionActionSegmentation(nn.Module):
     """
-    Diffusion Action Segmentation ref:https://arxiv.org/pdf/2303.17959.pdf
+    DiffusionModel Action Segmentation ref:https://arxiv.org/pdf/2303.17959.pdf
     """
     def __init__(self,
                  encoder_params,
