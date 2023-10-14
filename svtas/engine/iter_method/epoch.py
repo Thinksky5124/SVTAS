@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 22:41:53
+LastEditTime : 2023-10-14 20:46:22
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -191,14 +191,14 @@ class EpochMethod(BaseIterMethod):
         
         # output post processing
         if self.mode in ['train', 'test', 'validation']:
-            output_dict = self.model_pipline.output_post_processing(self.current_step_vid_list)
+            output_dict = self.model_pipline.output_post_processing(input_data['vid_list'])
         elif self.mode in ['extract', 'visulaize']:
-            output_dict = self.model_pipline.direct_output_post_processing(self.current_step_vid_list)
+            output_dict = self.model_pipline.direct_output_post_processing(input_data['vid_list'])
         else:
             output_dict = {}
        
         # exec hook
-        self.exec_hook('every_batch_end', output_dict, self.current_step_vid_list)
+        self.exec_hook('every_batch_end', output_dict, input_data['vid_list'])
         
         # update metric
         if self.metric:

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 13:34:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 20:09:57
+LastEditTime : 2023-10-14 15:59:42
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/general/serious.py
 '''
@@ -27,10 +27,10 @@ class SeriousModel(TorchBaseModel):
                 setattr(self, name, None)
         self.init_weights(weight_init_cfg)
     
-    def init_weights(self, init_cfg: dict = None):
+    def init_weights(self, init_cfg: dict = {}):
         for component_name in self.component_list:
             if component_name in init_cfg.keys():
-                getattr(self, component_name).init_weights(**init_cfg[component_name])
+                getattr(self, component_name).init_weights(init_cfg[component_name])
             else:
                 getattr(self, component_name).init_weights()
     

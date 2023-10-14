@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 23:08:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 23:25:51
+LastEditTime : 2023-10-14 11:44:41
 Description  : file content
 FilePath     : /SVTAS/svtas/model/scheduler/base_scheduler.py
 '''
@@ -10,12 +10,19 @@ import abc
 import torch
 from typing import Optional, Dict
 
-class BaseDiffusionScheduler(metaclass=abc.ABCMeta):
+class BaseDiffusionScheduler(torch.nn.Module, metaclass=abc.ABCMeta):
+    timesteps: torch.LongTensor
     """
     Base Class for Scheduler of DiffusionModel Model
     """
-    def __init__(self) -> None:
-        pass
+    def __init__(self,
+                 num_train_timesteps: int,
+                 num_inference_steps: int,
+                 infer_region_seed: int) -> None:
+        super().__init__()
+        self.num_train_timesteps = num_train_timesteps
+        self.num_inference_steps = num_inference_steps
+        self.infer_region_seed = infer_region_seed
 
     def scale_model_input(self, sample: Dict[str, torch.FloatTensor], timestep: Optional[int] = None) -> Dict[str, torch.FloatTensor]:
         """
@@ -31,8 +38,7 @@ class BaseDiffusionScheduler(metaclass=abc.ABCMeta):
         """
         return sample
     
-    @abc.abstractmethod
-    def set_timesteps(self, num_inference_steps: int):
+    def set_num_inference_steps(self, num_inference_steps: int = None):
         """
         Sets the discrete timesteps used for the diffusion chain. Supporting function to be run before inference.
 
@@ -44,7 +50,8 @@ class BaseDiffusionScheduler(metaclass=abc.ABCMeta):
             num_inference_steps (`int`):
                 the number of diffusion steps used when generating samples with a pre-trained model.
         """
-        pass
+        if not num_inference_steps:
+            self.num_inference_steps = num_inference_steps
 
     @abc.abstractmethod
     def step(

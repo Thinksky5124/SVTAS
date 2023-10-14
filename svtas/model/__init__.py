@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:28:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-12 15:25:35
+LastEditTime : 2023-10-14 15:32:17
 Description: file content
 FilePath     : /SVTAS/svtas/model/__init__.py
 '''
@@ -22,4 +22,6 @@ from .joint import *
 from .text_pred import *
 from .asr import *
 from .align_heads import *
+from .unet import *
+from .vae import *
 

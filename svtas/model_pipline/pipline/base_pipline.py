@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 16:18:56
+LastEditTime : 2023-10-14 16:10:26
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
@@ -72,7 +72,7 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
 
     def train(self):
         self._training = True
-        self.model.training = True
+        self.model.train()
 
     def eval(self):
         self.model.eval()
@@ -87,6 +87,9 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
         self.model.to(device)
         if self.criterion is not None:
             self.criterion.to(device)
+    
+    def set_random_seed(self, seed: int = None):
+        pass
 
     @abc.abstractmethod
     def forward(self, data_dict):

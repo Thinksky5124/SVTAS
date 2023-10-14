@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 17:09:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 22:45:15
+LastEditTime : 2023-10-12 21:18:30
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/dynamic_stream_base_dataset.py
 '''
@@ -57,18 +57,9 @@ class BaseDynamicStreamGenerator(metaclass=abc.ABCMeta):
     
     def update_cur_len(self, sample_rate, clip_seg_num) -> Dict:
         before_len = self.cur_len
-        if self.cur_len + sample_rate * clip_seg_num < self.max_len:
-            self.cur_len += sample_rate * clip_seg_num
-            self.update_precise_sliding_num(self.cur_len)
-            return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
-        else:
-            left_len = self.max_len - self.cur_len
-            clip_seg_num = math.ceil(left_len / sample_rate)
-            if clip_seg_num <= 1:
-                clip_seg_num += 1
-            self.cur_len += sample_rate * clip_seg_num
-            self.update_precise_sliding_num(self.cur_len)
-            return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
+        self.cur_len += sample_rate * clip_seg_num
+        self.update_precise_sliding_num(self.cur_len)
+        return dict(sample_rate=sample_rate, clip_seg_num=clip_seg_num, currenct_frame_idx=before_len)
     
     def __iter__(self) -> Iterator:
         return self

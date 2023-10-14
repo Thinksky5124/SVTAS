@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 17:05:38
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 17:39:43
+LastEditTime : 2023-10-14 20:57:50
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/feature_dynamic_stream_segmentation_dataset.py
 '''
@@ -138,6 +138,62 @@ class FeatureDynamicStreamSegmentationDataset(DynamicStreamDataset):
         # compose result
         data_dict = {}
         data_dict['feature'] = 0
+        data_dict['labels'] = 0
+        data_dict['masks'] = 0
+        data_dict['vid_list'] = []
+        data_dict['sliding_num'] = 0
+        data_dict['precise_sliding_num'] = 0
+        data_dict['step'] = self.step_num
+        data_dict['current_sliding_cnt'] = -1
+        return data_dict
+
+@AbstractBuildFactory.register('dataset')
+class DiffusionFeatureDynamicStreamSegmentationDataset(FeatureDynamicStreamSegmentationDataset):
+    def _get_one_videos_clip(self, idx, info):
+        feature_list = []
+        labels_list = []
+        masks_list = []
+        vid_list = []
+        labels_onehot_list = []
+        boundary_prob_list = []
+        precise_sliding_num_list = []
+
+        for single_info in info:
+            sample_segment = single_info.copy()
+            sample_segment = self.pipeline(sample_segment)
+            # imgs: tensor labels: ndarray mask: ndarray vid_list : str list
+            feature_list.append(copy.deepcopy(sample_segment['feature'].unsqueeze(0)))
+            labels_list.append(np.expand_dims(sample_segment['labels'], axis=0).copy())
+            labels_onehot_list.append(copy.deepcopy(sample_segment['labels_onehot'].unsqueeze(0)))
+            boundary_prob_list.append(copy.deepcopy(sample_segment['boundary_prob'].unsqueeze(0)))
+            masks_list.append(np.expand_dims(sample_segment['masks'], axis=0).copy())
+            vid_list.append(copy.deepcopy(sample_segment['video_name']))
+            precise_sliding_num_list.append(np.expand_dims(sample_segment['precise_sliding_num'], axis=0).copy())
+        
+        feature = copy.deepcopy(torch.concat(feature_list, dim=0))
+        labels_onehot = copy.deepcopy(torch.concat(labels_onehot_list, dim=0))
+        boundary_prob = copy.deepcopy(torch.concat(boundary_prob_list, dim=0))
+        labels = copy.deepcopy(np.concatenate(labels_list, axis=0).astype(np.int64))
+        masks = copy.deepcopy(np.concatenate(masks_list, axis=0).astype(np.float32))
+        precise_sliding_num = copy.deepcopy(np.concatenate(precise_sliding_num_list, axis=0).astype(np.float32))
+
+        # compose result
+        data_dict = {}
+        data_dict['feature'] = feature
+        data_dict['labels_onehot'] = labels_onehot
+        data_dict['boundary_prob'] = boundary_prob
+        data_dict['labels'] = labels
+        data_dict['masks'] = masks
+        data_dict['precise_sliding_num'] = precise_sliding_num
+        data_dict['vid_list'] = vid_list
+        return data_dict
+    
+    def _get_end_videos_clip(self):
+        # compose result
+        data_dict = {}
+        data_dict['feature'] = 0
+        data_dict['labels_onehot'] = 0
+        data_dict['boundary_prob'] = 0
         data_dict['labels'] = 0
         data_dict['masks'] = 0
         data_dict['vid_list'] = []

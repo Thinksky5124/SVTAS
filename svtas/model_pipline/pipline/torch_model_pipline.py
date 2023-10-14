@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 14:04:23
+LastEditTime : 2023-10-14 20:45:59
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_pipline.py
 '''
@@ -48,7 +48,7 @@ class TorchModelPipline(BaseModelPipline):
         if amp is not None:
             self.scaler = GradScaler(**amp)
             self.use_amp = True
-    
+
     def load_from_ckpt_file(self, ckpt_path: str = None):
         ckpt_path = self.load_from_ckpt_file_ckeck(ckpt_path)
         checkpoint = torch.load(ckpt_path)
@@ -101,9 +101,8 @@ class TorchModelPipline(BaseModelPipline):
         pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
         outputs = dict(predict=pred_cls_list,
                        output_np=pred_score_list)
-        vid = cur_vid
         output_dict = dict(
-            vid=vid,
+            vid=cur_vid,
             outputs=outputs,
             ground_truth=ground_truth_list
         )

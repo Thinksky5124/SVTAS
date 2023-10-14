@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 22:40:57
+LastEditTime : 2023-10-14 20:39:41
 Description  : Collect function
 FilePath     : /SVTAS/svtas/loader/pipline/collect_fn.py
 '''
@@ -81,6 +81,8 @@ class BatchCompose():
                 out_tensor = output_list[0]
             else:
                 out_tensor = torch.nn.utils.rnn.pad_sequence(output_list, batch_first=True, padding_value=0.0)
+                if out_tensor.shape[0] == 1:
+                    print("!")
         else:
             out_tensor = output_list[0].unsqueeze(0)
         if key in self.clip_compress_keys:

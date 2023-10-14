@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 20:32:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 12:54:48
+LastEditTime : 2023-10-14 16:10:51
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/base.py
 '''
@@ -19,6 +19,9 @@ class BaseModel(metaclass=abc.ABCMeta):
     
     @training.setter
     def training(self, val: bool):
+        self._training = val
+    
+    def train(self, val: bool = True):
         self._training = val
 
     def eval(self):

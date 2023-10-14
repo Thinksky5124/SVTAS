@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 20:01:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-02-23 19:19:31
+LastEditTime : 2023-10-14 17:24:21
 Description: MS-TCN loss model
 FilePath     : /SVTAS/svtas/model/losses/segmentation_loss.py
 '''
@@ -16,13 +16,27 @@ from .base_loss import BaseLoss
 
 @AbstractBuildFactory.register('loss')
 class SegmentationLoss(BaseLoss):
+    """
+    Args:
+        addtion_loss: Dict[str, Dict[str, Any]]
+    example:
+    ```
+        addition_loss = dict(
+            boundary_loss = dict(
+                name = "BoundaryRegressionLoss",
+                pos_weight = [1, 1]
+            )
+        )
+    ```
+    """
     def __init__(self,
                  num_classes,
                  loss_weight=1.0,
                  sample_rate=1,
                  smooth_weight=0.5,
                  ignore_index=-100,
-                 class_weight=None):
+                 class_weight=None,
+                 addtion_loss={}):
         super().__init__()
         self.smooth_weight = smooth_weight
         self.ignore_index = ignore_index
@@ -36,6 +50,9 @@ class SegmentationLoss(BaseLoss):
         else:
             self.ce = nn.CrossEntropyLoss(ignore_index=self.ignore_index, reduction='none')
         self.sm_loss = nn.MSELoss(reduction='none')
+        self.addition_loss_dict = {}
+        for key, cfg in addtion_loss.items():
+            self.addition_loss_dict[key] = AbstractBuildFactory.create_factory('loss').create(cfg=cfg['loss'])
     
     def _compute_smooth_loss(self, p, labels, masks, b, precise_sliding_num):
         return torch.mean(
@@ -57,9 +74,13 @@ class SegmentationLoss(BaseLoss):
             loss += torch.sum(torch.sum(torch.reshape(seg_cls_loss, shape=[b, t]), dim=-1) / (precise_sliding_num + self.elps)) / (torch.sum(labels != -100) + self.elps)
             if(self.smooth_weight> 0.0):
                 loss += self.smooth_weight * self._compute_smooth_loss(p, labels, masks, b, precise_sliding_num)
-        
+        loss = loss * self.loss_weight
+
+        for key, loss_instance in self.addition_loss_dict.items():
+            loss += loss_instance(model_output)
+
         loss_dict={}
-        loss_dict["loss"] = loss * self.loss_weight
+        loss_dict["loss"] = loss
         return loss_dict
 
 @AbstractBuildFactory.register('loss')
@@ -121,7 +142,7 @@ class LSTRSegmentationLoss(BaseLoss):
                 # [N, 1]
                 y = torch.zeros(raw_labels.shape, dtype=raw_labels.dtype, device=device)
                 refine_label = torch.where(raw_labels != self.ignore_index, raw_labels, y)
-                # [N C T]
+                # [N T C]
                 ce_y = F.one_hot(refine_label, num_classes=self.num_classes)
 
                 raw_labels_repeat = torch.tile(raw_labels.unsqueeze(2), dims=[1, 1, self.num_classes])

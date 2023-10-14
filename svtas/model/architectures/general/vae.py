@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-27 15:46:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-12 09:58:26
+LastEditTime : 2023-10-14 16:00:26
 Description  : Text Translation framework
 FilePath     : /SVTAS/svtas/model/architectures/general/vae.py
 '''
@@ -10,12 +10,12 @@ import abc
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Any
+from typing import List, Any, Dict
 from svtas.utils import AbstractBuildFactory
 from svtas.model_pipline import TorchBaseModel
 
 @AbstractBuildFactory.register('model')
-class VariationalAutoEncoders(TorchBaseModel):
+class VariationalAutoEncoder(TorchBaseModel):
     def __init__(self,
                  encoder,
                  decoder,
@@ -43,10 +43,10 @@ class VariationalAutoEncoders(TorchBaseModel):
         
         self.init_weights(weight_init_cfg)
     
-    def init_weights(self, init_cfg: dict = None):
+    def init_weights(self, init_cfg: dict = {}):
         for component_name in self.component_list:
             if component_name in init_cfg.keys():
-                getattr(self, component_name).init_weights(**init_cfg[component_name])
+                getattr(self, component_name).init_weights(init_cfg[component_name])
             else:
                 getattr(self, component_name).init_weights()
     
@@ -54,20 +54,22 @@ class VariationalAutoEncoders(TorchBaseModel):
         for component_name in self.component_list:
             getattr(self, component_name)._clear_memory_buffer()
     
-    @abc.abstractmethod
-    def encode(self, input: torch.Tensor) -> List[torch.Tensor]:
+    def encode(self, input_data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """
         Encodes the input by passing through the encoder network
         and returns the latent codes.
         """
-        raise NotImplementedError
+        return self.encoder(input_data)
 
-    def decode(self, input: torch.Tensor) -> Any:
+    def decode(self, input_data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """
         Maps the given latent codes
         onto the output space.
         """
-        raise NotImplementedError
+        if self.decoder is not None:
+            return self.decoder(input_data)
+        else:
+            return input_data
 
     def sample(self, batch_size:int, current_device: int, **kwargs) -> torch.Tensor:
         """
@@ -89,17 +91,14 @@ class VariationalAutoEncoders(TorchBaseModel):
         raise NotImplementedError
     
     def forward(self, input_data):
-        masks = input_data['masks']
-        x = input_data['x']
-        
         if self.encoder is not None:
-            x = self.encode(x, masks)
+            encode_output_dict = self.encode(input_data)
         else:
-            x = x
+            encode_output_dict = {"output": None}
 
         if self.decoder is not None:
-            x = self.decode(x, masks)
+            decode_output_dict = self.decode(encode_output_dict)
         else:
-            x = x
+            decode_output_dict = encode_output_dict
         
-        return {"output":x}
+        return decode_output_dict
