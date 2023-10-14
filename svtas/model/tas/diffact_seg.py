@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-13 21:02:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 21:16:11
+LastEditTime : 2023-10-14 21:21:47
 Description  : file content
 FilePath     : /SVTAS/svtas/model/tas/diffact_seg.py
 '''
@@ -51,8 +51,7 @@ class DiffsusionActionSegmentationEncoderModel(nn.Module):
     def _clear_memory_buffer(self):
        pass
             
-    def forward(self, data_dict):
-        x = torch.permute(data_dict['feature'], dims=[0, 2, 1]).contiguous()
+    def forward(self, x, mask):
         if self.output_feature:
             features = []
             if -1 in self.feature_layer_indices:

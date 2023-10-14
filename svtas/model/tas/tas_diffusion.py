@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:40:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 19:04:48
+LastEditTime : 2023-10-14 21:48:00
 Description  : file content
 FilePath     : /SVTAS/svtas/model/tas/tas_diffusion.py
 '''
@@ -60,6 +60,8 @@ class TemporalActionSegmentationDiffusionModel(DiffusionModel):
             output = noise_labels,
             backbone_score = latents_dict['output'].squeeze(0)
         )
+        if 'backbone_score' in latents_dict:
+            output_dict['vae_backbone_score'] = latents_dict['backbone_score']
         return output_dict
     
     def run_test(self, data_dict: Dict[str, torch.FloatTensor]):
@@ -102,6 +104,8 @@ class TemporalActionSegmentationDiffusionModel(DiffusionModel):
             output = pred_labels.unsqueeze(0),
             backbone_score = latents_dict['output'].squeeze(0)
         )
+        if 'backbone_score' in latents_dict:
+            decode_latents_dict['vae_backbone_score'] = latents_dict['backbone_score']
         # latent to output
         output_dict = self.vae.decode(decode_latents_dict)
         return output_dict

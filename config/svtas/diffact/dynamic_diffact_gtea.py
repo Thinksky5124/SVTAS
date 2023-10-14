@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 21:10:26
+LastEditTime : 2023-10-14 21:48:40
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/dynamic_diffact_gtea.py
 '''
@@ -24,7 +24,7 @@ sample_rate_list = [2]
 sample_rate = 2
 clip_seg_num = 64
 sliding_window = clip_seg_num * sample_rate
-model_name = "Dynamic_Stream_Diffact_feature_gtea_split" + str(split)
+model_name = "Dynamic_Stream_Diffact_gtea_split" + str(split)
 
 ENGINE = dict(
     name = "StandaloneEngine",
@@ -84,7 +84,7 @@ MODEL_PIPLINE = dict(
                 ),
                 head = dict(
                     name = "DiffsusionActionSegmentationEncoderModel",
-                    input_dim = 2048,
+                    input_dim = 1024,
                     num_classes = num_classes,
                     sample_rate = sample_rate * 2,
                     num_layers = 10,
@@ -103,7 +103,7 @@ MODEL_PIPLINE = dict(
             input_dim = 192,
             num_classes = num_classes,
             ignore_index = ignore_index,
-            sample_rate = sample_rate,
+            sample_rate = sample_rate * 2,
             num_layers = 8,
             num_f_maps = 24,
             time_emb_dim = 512,
@@ -125,7 +125,7 @@ MODEL_PIPLINE = dict(
         ignore_index = ignore_index
     ),
     criterion = dict(
-        name = "StreamSegmentationLoss",
+        name = "DiffusionStreamSegmentationLoss",
         backbone_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
@@ -139,6 +139,13 @@ MODEL_PIPLINE = dict(
             sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = ignore_index
+        ),
+        vae_backbone_loss_cfg = dict(
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate * 2,
+            smooth_weight = 0.0,
+            ignore_index = -100
         )
     ),
     optimizer = dict(
