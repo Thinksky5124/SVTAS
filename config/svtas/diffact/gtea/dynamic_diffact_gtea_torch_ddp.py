@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 16:43:24
+LastEditTime : 2023-10-15 17:50:44
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/stream_diffact_gtea_torch_ddp.py
+FilePath     : /SVTAS/config/svtas/diffact/gtea/dynamic_diffact_gtea_torch_ddp.py
 '''
 _base_ = [
-    '../../_base_/dataloader/collater/stream_compose.py',
-    '../../_base_/engine/standaline_engine.py',
-    '../../_base_/logger/python_logger.py',
+    '../../../_base_/dataloader/collater/stream_compose.py',
+    '../../../_base_/engine/standaline_engine.py',
+    '../../../_base_/logger/python_logger.py',
 ]
 
 split = 1
@@ -18,11 +18,13 @@ ignore_index = -100
 epochs = 800
 batch_size = 1
 in_channels = 2048
+clip_seg_num_list = [64, 128, 256]
+sample_rate_list = [2]
 sample_rate = 2
 clip_seg_num = 64
 sliding_window = clip_seg_num * sample_rate
 sigma = 1
-model_name = "Stream_Diffact_feature_gtea_split" + str(split)
+model_name = "Dynamic_Diffact_feature_gtea_split" + str(split)
 
 ENGINE = dict(
     name = "TorchDistributedDataParallelEngine",
@@ -148,7 +150,7 @@ COLLATE = dict(
 
 DATASET = dict(
     train = dict(
-        name = "DiffusionFeatureStreamSegmentationDataset",
+        name = "DiffusionFeatureDynamicStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         feature_path = "./data/gtea/raw_features",
@@ -156,7 +158,21 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = True,
-        sliding_window = sliding_window
+        dynamic_stream_generator=dict(
+            name = "MultiEpochStageDynamicStreamGenerator",
+            multi_epoch_list = [40, 70],
+            strategy_list = [
+                dict(name = "ListRandomChoiceDynamicStreamGenerator",
+                     clip_seg_num_list = [64],
+                     sample_rate_list = sample_rate_list),
+                dict(name = "ListRandomChoiceDynamicStreamGenerator",
+                     clip_seg_num_list = [64, 32],
+                     sample_rate_list = sample_rate_list),
+                dict(name = "ListRandomChoiceDynamicStreamGenerator",
+                     clip_seg_num_list = [16, 32, 64],
+                     sample_rate_list = sample_rate_list),
+            ]
+        )
     ),
     test = dict(
         name = "DiffusionFeatureStreamSegmentationDataset",
@@ -208,13 +224,12 @@ DATASETPIPLINE = dict(
                  )
         ),
         sample = dict(
-            name = "FeatureStreamSampler",
+            name = "FeatureDynamicStreamSampler",
             is_train = True,
-            sample_rate_dict={"feature":sample_rate,"labels":sample_rate},
-            clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
-            sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
-            sample_add_key_pair={"frames":"feature"},
+            sample_rate_name_dict={"feature":'sample_rate', "labels":'sample_rate'},
+            clip_seg_num_name_dict={"feature": 'clip_seg_num', "labels": 'clip_seg_num'},
             ignore_index=ignore_index,
+            sample_add_key_pair={"frames":"feature"},
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -264,7 +279,6 @@ DATASETPIPLINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            ignore_index=ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(

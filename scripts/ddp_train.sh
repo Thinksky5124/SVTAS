@@ -12,5 +12,5 @@ export CUDA_VISIBLE_DEVICES=0,1
 # asformer 19980125
 export DECORD_EOF_RETRY_MAX=20480
 ### gtea ###
-torchrun --standalone --nnodes=1 --nproc_per_node=2 tools/launch.py --mode train -c config/svtas/diffact/dynamic_diffact_gtea_torch_ddp.py --seed 0
+torchrun --standalone --nnodes=1 --nproc_per_node=2 tools/launch.py --mode train -c config/svtas/diffact/breakfast/stream_diffact_breakfast_torch_ddp.py --seed 19990924
 # torchrun --standalone --nnodes=1 --nproc_per_node=2 tools/launch.py --mode train -c config/svtas/diffact/diffact_gtea_deepspeed.py --seed 0

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:21:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 14:45:48
+LastEditTime : 2023-10-15 19:47:34
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
 '''
@@ -111,7 +111,11 @@ class BaseLogger:
     @abc.abstractmethod
     def log_step(self, metric_list, step_id, mode, ips, total_step=None):
         pass
-
+    
+    @abc.abstractmethod
+    def log_metric(self, metric_dict, epoch, mode):
+        pass
+    
     @abc.abstractmethod
     def close(self):
         pass

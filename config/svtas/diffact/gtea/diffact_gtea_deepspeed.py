@@ -2,91 +2,74 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 21:55:44
+LastEditTime : 2023-10-15 15:49:38
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/dynamic_diffact_gtea.py
+FilePath     : /SVTAS/config/svtas/diffact/diffact_gtea_deepspeed.py
 '''
 _base_ = [
-    '../../_base_/dataloader/collater/stream_compose.py',
-    '../../_base_/engine/standaline_engine.py',
-    '../../_base_/logger/python_logger.py',
+    '../../../_base_/dataloader/collater/batch_compose.py',
+    '../../../_base_/engine/standaline_engine.py',
+    '../../../_base_/logger/python_logger.py',
 ]
 
 split = 1
 num_classes = 11
 ignore_index = -100
-epochs = 80
+epochs = 800
 batch_size = 1
-sigma = 1
 in_channels = 2048
-clip_seg_num_list = [64, 128, 256]
-sample_rate_list = [2]
-sample_rate = 2
-clip_seg_num = 64
-sliding_window = clip_seg_num * sample_rate
-model_name = "Dynamic_Stream_Diffact_gtea_split" + str(split)
+sample_rate = 1
+sigma = 1
+model_name = "Diffact_feature_gtea_split" + str(split)
 
 ENGINE = dict(
-    name = "StandaloneEngine",
+    name = "DeepSpeedDistributedDataParallelEngine",
     record = dict(
-        name = "StreamValueRecord"
+        name = "ValueRecord"
     ),
     iter_method = dict(
-        name = "StreamEpochMethod",
+        name = "EpochMethod",
         epoch_num = epochs,
         batch_size = batch_size,
         test_interval = 1,
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
-        name = "TorchCheckpointor"
+        name = "DeepSpeedCheckpointor"
     )
 )
 
 MODEL_PIPLINE = dict(
-    name = "TorchModelPipline",
-    grad_accumulate = dict(
-        name = "GradAccumulate",
-        accumulate_type = "conf"
+    name = "DeepspeedModelPipline",
+    ds_config = dict(
+        train_micro_batch_size_per_gpu = batch_size,
+        # fp16 = dict(
+        #     enabled = True,
+        #     auto_cast = False,
+        #     loss_scale = 0,
+        #     initial_scale_power = 16,
+        #     loss_scale_window = 1000,
+        #     hysteresis = 2,
+        #     consecutive_hysteresis = False,
+        #     min_loss_scale = 1
+        # )
     ),
+    # grad_accumulate = dict(
+    #     name = "GradAccumulate",
+    #     accumulate_type = "conf"
+    # ),
     model = dict(
         name = "TemporalActionSegmentationDiffusionModel",
         vae = dict(
             name = "TemporalActionSegmentationVariationalAutoEncoder",
             encoder = dict(
-                name = "StreamVideoSegmentation",
-                architecture_type ='3d',
-                addition_loss_pos = 'with_backbone_loss',
-                backbone = dict(
-                    name = "SwinTransformer3D",
-                    pretrained = "./data/checkpoint/swin_base_patch244_window877_kinetics600_22k.pth",
-                    pretrained2d = False,
-                    patch_size = [2, 4, 4],
-                    embed_dim = 128,
-                    depths = [2, 2, 18, 2],
-                    num_heads = [4, 8, 16, 32],
-                    window_size = [8,7,7],
-                    mlp_ratio = 4.,
-                    qkv_bias = True,
-                    qk_scale = None,
-                    drop_rate = 0.,
-                    attn_drop_rate = 0.,
-                    drop_path_rate = 0.2,
-                    patch_norm = True,
-                    # graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
-                ),
-                neck = dict(
-                    name = "TaskFusionPoolNeck",
-                    num_classes=num_classes,
-                    in_channels = 1024,
-                    clip_seg_num = clip_seg_num // 2,
-                    need_pool = True
-                ),
+                name = "FeatureSegmentation",
+                architecture_type='1d',
                 head = dict(
                     name = "DiffsusionActionSegmentationEncoderModel",
-                    input_dim = 1024,
+                    input_dim = 2048,
                     num_classes = num_classes,
-                    sample_rate = sample_rate * 2,
+                    sample_rate = sample_rate,
                     num_layers = 10,
                     num_f_maps = 64,
                     kernel_size = 5,
@@ -103,7 +86,7 @@ MODEL_PIPLINE = dict(
             input_dim = 192,
             num_classes = num_classes,
             ignore_index = ignore_index,
-            sample_rate = sample_rate * 2,
+            sample_rate = sample_rate,
             num_layers = 8,
             num_f_maps = 24,
             time_emb_dim = 512,
@@ -121,11 +104,11 @@ MODEL_PIPLINE = dict(
         )
     ),
     post_processing = dict(
-        name = "StreamScorePostProcessing",
+        name = "ScorePostProcessing",
         ignore_index = ignore_index
     ),
     criterion = dict(
-        name = "DiffusionStreamSegmentationLoss",
+        name = "StreamSegmentationLoss",
         backbone_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
@@ -139,13 +122,6 @@ MODEL_PIPLINE = dict(
             sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = ignore_index
-        ),
-        vae_backbone_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate * 2,
-            smooth_weight = 0.0,
-            ignore_index = -100
         )
     ),
     optimizer = dict(
@@ -155,7 +131,7 @@ MODEL_PIPLINE = dict(
         betas = (0.9, 0.999),
         finetuning_scale_factor=0.02,
         no_decay_key = [],
-        finetuning_key = ["vae.encoder.backbone."],
+        finetuning_key = ["backbone."],
         freeze_key = [],
     ),
     lr_scheduler = dict(
@@ -166,60 +142,45 @@ MODEL_PIPLINE = dict(
 )
 
 DATALOADER = dict(
-    name = "TorchStreamDataLoader",
-    temporal_clip_batch_size = 3,
-    video_batch_size = batch_size,
+    name = "TorchDataLoader",
+    batch_size = batch_size,
     num_workers = 2
-)
-
-DATASET = dict(
-    train = dict(
-        name = "DiffusionRawFrameDynamicStreamSegmentationDataset",
-        data_prefix = "./",
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        videos_path = "./data/gtea/Videos",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
-        train_mode = True,
-        dynamic_stream_generator=dict(
-            name = "MultiEpochStageDynamicStreamGenerator",
-            multi_epoch_list = [40, 70],
-            strategy_list = [
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [64],
-                     sample_rate_list = sample_rate_list),
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [64, 32],
-                     sample_rate_list = sample_rate_list),
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [16, 32, 64],
-                     sample_rate_list = sample_rate_list),
-            ]
-        )
-    ),
-    test = dict(
-        name = "DiffusionRawFrameStreamSegmentationDataset",
-        data_prefix = "./",
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        videos_path = "./data/gtea/Videos",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
-        train_mode = False,
-        sliding_window = sliding_window
-    )
 )
 
 COLLATE = dict(
     train=dict(
-        name = "StreamBatchCompose",
-        to_tensor_keys = ["imgs", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
+        name = "BatchCompose",
+        to_tensor_keys = ["feature", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
     ),
     test=dict(
-        name = "StreamBatchCompose",
-        to_tensor_keys = ["imgs", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
+        name = "BatchCompose",
+        to_tensor_keys = ["feature", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
+    )
+)
+
+DATASET = dict(
+    train = dict(
+        name = "DiffusionFeatureSegmentationDataset",
+        data_prefix = "./",
+        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
+        feature_path = "./data/gtea/raw_features",
+        gt_path = "./data/gtea/groundTruth",
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        dataset_type = "gtea",
+        train_mode = True,
+        drop_last = True
     ),
+    test = dict(
+        name = "DiffusionFeatureSegmentationDataset",
+        data_prefix = "./",
+        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
+        feature_path = "./data/gtea/raw_features",
+        gt_path = "./data/gtea/groundTruth",
+        actions_map_file_path = "./data/gtea/mapping.txt",
+        dataset_type = "gtea",
+        train_mode = False,
+        drop_last = True
+    )
 )
 
 METRIC = dict(
@@ -250,32 +211,26 @@ DATASETPIPLINE = dict(
     train = dict(
         name = "BaseDatasetPipline",
         decode = dict(
-            name="VideoDecoder",
+            name='FeatureDecoder',
             backend=dict(
-                    name='DecordContainer')
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
-            name = "VideoDynamicStreamSampler",
+            name = "FeatureSampler",
             is_train = True,
-            sample_rate_name_dict={"imgs":'sample_rate', "labels":'sample_rate'},
-            clip_seg_num_name_dict={"imgs": 'clip_seg_num', "labels": 'clip_seg_num'},
-            ignore_index=ignore_index,
-            sample_add_key_pair={"frames":"imgs"},
+            sample_add_key_pair={"frames":"feature"},
+            feature_dim_dict={"feature":in_channels},
+            sample_rate_dict={"feature": sample_rate, "labels": sample_rate},
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "VideoTransform",
+            name = "FeatureStreamTransform",
             transform_dict = dict(
-                imgs = [
-                dict(ResizeImproved = dict(size = 256)),
-                dict(RandomCrop = dict(size = 224)),
-                dict(RandomHorizontalFlip = None),
-                dict(PILToTensor = None),
-                dict(ToFloat = None),
-                dict(Normalize = dict(
-                    mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                    std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
-                ))],
+                feature = [dict(XToTensor = None)],
                 labels = dict(
                     labels_onehot = dict(
                         name = 'direct_transform',
@@ -304,31 +259,26 @@ DATASETPIPLINE = dict(
     test = dict(
         name = "BaseDatasetPipline",
         decode = dict(
-            name="VideoDecoder",
+            name='FeatureDecoder',
             backend=dict(
-                    name='DecordContainer')
+                    name='NPYContainer',
+                    is_transpose=False,
+                    temporal_dim=-1,
+                    revesive_name=[(r'(mp4|avi)', 'npy')]
+                 )
         ),
         sample = dict(
-            name = "VideoStreamSampler",
+            name = "FeatureSampler",
             is_train = False,
-            sample_rate_dict={"imgs":sample_rate,"labels":sample_rate},
-            clip_seg_num_dict={"imgs":clip_seg_num ,"labels":clip_seg_num},
-            sliding_window_dict={"imgs":sliding_window,"labels":sliding_window},
-            sample_add_key_pair={"frames":"imgs"},
+            sample_rate_dict={"feature":sample_rate, "labels":sample_rate},
+            sample_add_key_pair={"frames":"feature"},
+            feature_dim_dict={"feature":in_channels},
             sample_mode = "uniform"
         ),
         transform = dict(
-            name = "VideoTransform",
+            name = "FeatureStreamTransform",
             transform_dict = dict(
-                imgs = [
-                    dict(ResizeImproved = dict(size = 256)),
-                    dict(CenterCrop = dict(size = 224)),
-                    dict(PILToTensor = None),
-                    dict(ToFloat = None),
-                    dict(Normalize = dict(
-                        mean = [140.39158961711036, 108.18022223151027, 45.72351736766547],
-                        std = [33.94421369129452, 35.93603536756186, 31.508484434367805]
-                    ))],
+                feature = [dict(XToTensor = None)],
                 labels = dict(
                     labels_onehot = dict(
                         name = 'direct_transform',

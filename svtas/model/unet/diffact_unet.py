@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:26:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 21:32:10
+LastEditTime : 2023-10-15 17:56:01
 Description  : ref:https://github.com/Finspire13/DiffAct/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/unet/diffact_unet.py
 '''
@@ -65,17 +65,16 @@ class DiffsusionActionSegmentationConditionUnet(ConditionUnet1D):
         
         elif cond_type == 'boundary05-':
             feature_mask = (boundary_prob < 0.5)
-            feature_mask = feature_mask.unsqueeze(1).float()[:, :, self.sample_rate]
+            feature_mask = feature_mask.unsqueeze(1).float()[:, :, ::self.sample_rate]
             
-
         elif cond_type == 'boundary03-':
             feature_mask = (boundary_prob < 0.3)
-            feature_mask = feature_mask.unsqueeze(1).float()[:, :, self.sample_rate]
+            feature_mask = feature_mask.unsqueeze(1).float()[:, :, ::self.sample_rate]
 
         elif cond_type == 'segment=1':
             random_event = self.get_random_label_index(labels=labels)
             feature_mask = (labels != random_event) * (labels != self.ignore_index)
-            feature_mask = feature_mask.unsqueeze(1).float()[:, :, self.sample_rate]
+            feature_mask = feature_mask.unsqueeze(1).float()[:, :, ::self.sample_rate]
 
         elif cond_type == 'segment=2':
             random_event_1 = self.get_random_label_index(labels=labels)
@@ -83,7 +82,7 @@ class DiffsusionActionSegmentationConditionUnet(ConditionUnet1D):
             while random_event_1 == random_event_2:
                 random_event_2 = self.get_random_label_index(labels=labels)
             feature_mask = (labels != random_event_1) * (labels != random_event_2) * (labels != self.ignore_index)
-            feature_mask = feature_mask.unsqueeze(1).float()[:, :, self.sample_rate]
+            feature_mask = feature_mask.unsqueeze(1).float()[:, :, ::self.sample_rate]
         else:
             raise Exception('Invalid Cond Type')
         return feature_mask

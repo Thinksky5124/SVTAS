@@ -2,10 +2,11 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 22:07:24
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 20:52:01
+LastEditTime : 2023-10-15 19:51:13
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/tensorboard_logger.py
 '''
+import os
 from .meter import AverageMeter
 from ..build import AbstractBuildFactory
 from .base_logger import BaseLogger, LoggerLevel
@@ -18,30 +19,44 @@ from torch.utils.tensorboard import SummaryWriter
 class TensboardLogger(BaseLogger):
     def __init__(self, name: str, root_path: str = None, level=LoggerLevel.INFO) -> None:
         super().__init__(name, root_path, level)
-        self.logger = SummaryWriter(self.root_path, comment=name)
+        self.logger = SummaryWriter(os.path.join(self.path, "tensorboard"), comment=name)
         self.step = 0
         self.batch = 0
         self.epoch = 0
     
     def log_epoch(self, metric_list, epoch=None, mode='train', ips=None):
-        if epoch is None:
+        if epoch is None or mode != 'train':
             epoch = self.epoch
+            self.epoch + 1
+        else:
+            self.epoch = epoch
 
-        for k, v in metric_list.items():
-            if not (k == 'batch_time' or k == 'reader_time'):
-                if isinstance(v, AverageMeter):
-                    self.logger.add_scalar(mode + "/" + k, v.mean, epoch)
-                elif isinstance(v, float):
-                    self.logger.add_scalar(mode + "/" + k, v, epoch)
-        if ips:
-            self.logger.add_scalar(mode + "/ips", ips, epoch)
-        self.epoch += 1
+        for m in metric_list:
+            if not (m == 'batch_time' or m == 'reader_time'):
+                self.logger.add_scalar(mode + "/" + m, metric_list[m].avg, epoch)
     
     def log_batch(self, metric_list, batch_id, mode, ips, epoch_id=None, total_epoch=None):
-        self.batch += 1
+        if batch_id is None:
+            batch_id = self.batch
+            self.batch + 1
+        else:
+            self.batch = batch_id
     
     def log_step(self, metric_list, step_id, mode, ips, total_step=None):
-        self.step += 1
+        if step_id is None:
+            step_id = self.step
+            self.step += 1
+        else:
+            self.step =  step_id
+    
+    def log_metric(self, metric_dict, epoch, mode):
+        if epoch is None or mode != 'train':
+            epoch = self.epoch
+        else:
+            self.epoch = epoch
+        for k, v in metric_dict.items():
+            if not (k == 'batch_time' or k == 'reader_time'):
+                self.logger.add_scalar(mode + "/" + k, v, epoch)
     
     def log_feature_image(self, feature: torch.Tensor, tag: str, step: int = None):
         if step is None:

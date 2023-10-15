@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 11:18:22
+LastEditTime : 2023-10-15 17:50:35
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/diffact_gtea_torch_ddp.py
+FilePath     : /SVTAS/config/svtas/diffact/gtea/diffact_gtea_torch_ddp.py
 '''
 _base_ = [
-    '../../_base_/dataloader/collater/batch_compose.py',
-    '../../_base_/engine/standaline_engine.py',
-    '../../_base_/logger/python_logger.py',
+    '../../../_base_/dataloader/collater/batch_compose.py',
+    '../../../_base_/engine/standaline_engine.py',
+    '../../../_base_/logger/python_logger.py',
 ]
 
 split = 1

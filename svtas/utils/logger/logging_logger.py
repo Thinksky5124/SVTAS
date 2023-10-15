@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 21:28:08
+LastEditTime : 2023-10-15 19:48:11
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
@@ -250,3 +250,6 @@ class PythonLoggingLogger(BaseLogger):
     
     def close(self):
         pass
+
+    def log_metric(self, metric_dict, epoch, mode):
+        return super().log_metric(metric_dict, epoch, mode)

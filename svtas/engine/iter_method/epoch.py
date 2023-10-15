@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 14:29:55
+LastEditTime : 2023-10-15 19:49:08
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -99,8 +99,11 @@ class EpochMethod(BaseIterMethod):
     def end_epoch(self, epoch):
         if self.mode in ['train']:
             # report metric
+            Metric_dict = dict()
             for k, v in self.metric.items():
-                v.accumulate()
+                temp_Metric_dict = v.accumulate()
+                Metric_dict.update(temp_Metric_dict)
+
             # exec test if need
             if self.test_interval > 0 and epoch % self.test_interval == 0:
                 test_score = self.test_hook(self.best_score)
@@ -134,7 +137,7 @@ class EpochMethod(BaseIterMethod):
 
         # logger
         if epoch % self.logger_epoch_interval == 0 and self.mode in ['train', 'test', 'validation']:
-            self.logger_epoch(epoch)
+            self.logger_epoch(epoch, Metric_dict)
 
     def init_iter(self, r_tic):
         self.record['reader_time'].update(time.time() - r_tic)
@@ -165,12 +168,13 @@ class EpochMethod(BaseIterMethod):
         for name, logger in self.logger_dict.items():
             logger.log_batch(self.record, step, self.mode, ips, epoch + 1, self.epoch_num)
 
-    def logger_epoch(self, epoch):
+    def logger_epoch(self, epoch, metric_dict):
         ips = "avg_ips: {:.5f} instance/sec.".format(
             self.batch_size * self.record["batch_time"].count /
             (self.record["batch_time"].sum + 1e-10))
         for name, logger in self.logger_dict.items():
             logger.log_epoch(self.record, epoch + 1, self.mode, ips)
+            logger.log_metric(metric_dict, epoch + 1, self.mode)
 
     def batch_end_step(self, input_data, outputs):
         # update param

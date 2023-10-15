@@ -2,33 +2,35 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 16:01:49
+LastEditTime : 2023-10-15 17:50:28
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/diffact_gtea.py
+FilePath     : /SVTAS/config/svtas/diffact/breakfast/stream_diffact_breakfast.py
 '''
 _base_ = [
-    '../../_base_/dataloader/collater/batch_compose.py',
-    '../../_base_/engine/standaline_engine.py',
-    '../../_base_/logger/python_logger.py',
+    '../../../_base_/dataloader/collater/stream_compose.py',
+    '../../../_base_/engine/standaline_engine.py',
+    '../../../_base_/logger/python_logger.py',
 ]
 
 split = 1
-num_classes = 11
+num_classes = 48
 ignore_index = -100
 epochs = 800
 batch_size = 1
 in_channels = 2048
-sample_rate = 1
+sample_rate = 8
+clip_seg_num = 128
+sliding_window = clip_seg_num * sample_rate
 sigma = 1
-model_name = "Diffact_feature_gtea_split" + str(split)
+model_name = "Stream_Diffact_feature_breakfast_split" + str(split)
 
 ENGINE = dict(
     name = "StandaloneEngine",
     record = dict(
-        name = "ValueRecord"
+        name = "StreamValueRecord"
     ),
     iter_method = dict(
-        name = "EpochMethod",
+        name = "StreamEpochMethod",
         epoch_num = epochs,
         batch_size = batch_size,
         test_interval = 1,
@@ -41,10 +43,10 @@ ENGINE = dict(
 
 MODEL_PIPLINE = dict(
     name = "TorchModelPipline",
-    # grad_accumulate = dict(
-    #     name = "GradAccumulate",
-    #     accumulate_type = "conf"
-    # ),
+    grad_accumulate = dict(
+        name = "GradAccumulate",
+        accumulate_type = "conf"
+    ),
     model = dict(
         name = "TemporalActionSegmentationDiffusionModel",
         vae = dict(
@@ -91,7 +93,7 @@ MODEL_PIPLINE = dict(
         )
     ),
     post_processing = dict(
-        name = "ScorePostProcessing",
+        name = "StreamScorePostProcessing",
         ignore_index = ignore_index
     ),
     criterion = dict(
@@ -99,7 +101,7 @@ MODEL_PIPLINE = dict(
         backbone_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
-            sample_rate = sample_rate,
+            sample_rate = 1,
             smooth_weight = 0.0,
             ignore_index = ignore_index
         ),
@@ -129,42 +131,43 @@ MODEL_PIPLINE = dict(
 )
 
 DATALOADER = dict(
-    name = "TorchDataLoader",
-    batch_size = batch_size,
+    name = "TorchStreamDataLoader",
+    temporal_clip_batch_size = 3,
+    video_batch_size = batch_size,
     num_workers = 2
 )
 
 COLLATE = dict(
     train=dict(
-        name = "BatchCompose",
         to_tensor_keys = ["feature", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
     ),
     test=dict(
-        name = "BatchCompose",
         to_tensor_keys = ["feature", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
     )
 )
 
 DATASET = dict(
     train = dict(
-        name = "DiffusionFeatureSegmentationDataset",
+        name = "DiffusionFeatureStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
-        train_mode = True
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        feature_path = "./data/breakfast/features",
+        gt_path = "./data/breakfast/groundTruth",
+        actions_map_file_path = "./data/breakfast/mapping.txt",
+        dataset_type = "breakfast",
+        train_mode = True,
+        sliding_window = sliding_window
     ),
     test = dict(
-        name = "DiffusionFeatureSegmentationDataset",
+        name = "DiffusionFeatureStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
-        train_mode = False
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        feature_path = "./data/breakfast/features",
+        gt_path = "./data/breakfast/groundTruth",
+        actions_map_file_path = "./data/breakfast/mapping.txt",
+        dataset_type = "breakfast",
+        train_mode = False,
+        sliding_window = sliding_window
     )
 )
 
@@ -172,22 +175,22 @@ METRIC = dict(
     TAS = dict(
         name = "TASegmentationMetric",
         overlap = [.1, .25, .5],
-        actions_map_file_path = "./data/gtea/mapping.txt",
+        actions_map_file_path = "./data/breakfast/mapping.txt",
         file_output = False,
         score_output = False),
     # TAP = dict(
     #     name = "TAProposalMetric",
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/breakfast/mapping.txt",
     #     max_proposal=100,),
     # TAL = dict(
     #     name = "TALocalizationMetric",
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/breakfast/mapping.txt",
     #     show_ovberlaps=[0.5, 0.75],),
     # SVTAS = dict(
     #     name = "SVTASegmentationMetric",
     #     overlap = [.1, .25, .5],
     #     segment_windows_size = 64,
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/breakfast/mapping.txt",
     #     file_output = False,
     #     score_output = False),
 )
@@ -205,11 +208,13 @@ DATASETPIPLINE = dict(
                  )
         ),
         sample = dict(
-            name = "FeatureSampler",
+            name = "FeatureStreamSampler",
             is_train = True,
+            sample_rate_dict={"feature":sample_rate,"labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":in_channels},
-            sample_rate_dict={"feature": sample_rate, "labels": sample_rate},
+            ignore_index=ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -253,11 +258,13 @@ DATASETPIPLINE = dict(
                  )
         ),
         sample = dict(
-            name = "FeatureSampler",
+            name = "FeatureStreamSampler",
             is_train = False,
-            sample_rate_dict={"feature":sample_rate, "labels":sample_rate},
+            sample_rate_dict={"feature":sample_rate,"labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
-            feature_dim_dict={"feature":in_channels},
+            ignore_index=ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(

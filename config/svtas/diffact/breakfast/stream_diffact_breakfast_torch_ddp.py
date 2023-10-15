@@ -2,29 +2,27 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 16:32:48
+LastEditTime : 2023-10-15 19:10:38
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/dynamic_diffact_gtea_torch_ddp.py
+FilePath     : /SVTAS/config/svtas/diffact/breakfast/stream_diffact_breakfast_torch_ddp.py
 '''
 _base_ = [
-    '../../_base_/dataloader/collater/stream_compose.py',
-    '../../_base_/engine/standaline_engine.py',
-    '../../_base_/logger/python_logger.py',
+    '../../../_base_/dataloader/collater/stream_compose.py',
+    '../../../_base_/engine/standaline_engine.py',
+    '../../../_base_/logger/python_logger.py',
 ]
 
 split = 1
-num_classes = 11
+num_classes = 48
 ignore_index = -100
 epochs = 800
-batch_size = 1
+batch_size = 10
 in_channels = 2048
-clip_seg_num_list = [64, 128, 256]
-sample_rate_list = [2]
-sample_rate = 2
-clip_seg_num = 64
+sample_rate = 8
+clip_seg_num = 128
 sliding_window = clip_seg_num * sample_rate
 sigma = 1
-model_name = "Dynamic_Diffact_feature_gtea_split" + str(split)
+model_name = "Stream_Diffact_feature_breakfast_split" + str(split)
 
 ENGINE = dict(
     name = "TorchDistributedDataParallelEngine",
@@ -36,6 +34,7 @@ ENGINE = dict(
         epoch_num = epochs,
         batch_size = batch_size,
         test_interval = 1,
+        logger_iter_interval = 5,
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
@@ -136,7 +135,7 @@ DATALOADER = dict(
     name = "TorchStreamDataLoader",
     temporal_clip_batch_size = 3,
     video_batch_size = batch_size,
-    num_workers = 2
+    num_workers = 4
 )
 
 COLLATE = dict(
@@ -150,41 +149,25 @@ COLLATE = dict(
 
 DATASET = dict(
     train = dict(
-        name = "DiffusionFeatureDynamicStreamSegmentationDataset",
+        name = "DiffusionFeatureStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
+        file_path = "./data/breakfast/splits/train.split" + str(split) + ".bundle",
+        feature_path = "./data/breakfast/features",
+        gt_path = "./data/breakfast/groundTruth",
+        actions_map_file_path = "./data/breakfast/mapping.txt",
+        dataset_type = "breakfast",
         train_mode = True,
-        drop_last = True,
-        dynamic_stream_generator=dict(
-            name = "MultiEpochStageDynamicStreamGenerator",
-            multi_epoch_list = [40, 70],
-            strategy_list = [
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [64],
-                     sample_rate_list = sample_rate_list),
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [64, 32],
-                     sample_rate_list = sample_rate_list),
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [16, 32, 64],
-                     sample_rate_list = sample_rate_list),
-            ]
-        )
+        sliding_window = sliding_window
     ),
     test = dict(
         name = "DiffusionFeatureStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
+        file_path = "./data/breakfast/splits/test.split" + str(split) + ".bundle",
+        feature_path = "./data/breakfast/features",
+        gt_path = "./data/breakfast/groundTruth",
+        actions_map_file_path = "./data/breakfast/mapping.txt",
+        dataset_type = "breakfast",
         train_mode = False,
-        drop_last = True,
         sliding_window = sliding_window
     )
 )
@@ -193,22 +176,22 @@ METRIC = dict(
     TAS = dict(
         name = "TASegmentationMetric",
         overlap = [.1, .25, .5],
-        actions_map_file_path = "./data/gtea/mapping.txt",
+        actions_map_file_path = "./data/breakfast/mapping.txt",
         file_output = False,
         score_output = False),
     # TAP = dict(
     #     name = "TAProposalMetric",
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/breakfast/mapping.txt",
     #     max_proposal=100,),
     # TAL = dict(
     #     name = "TALocalizationMetric",
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/breakfast/mapping.txt",
     #     show_ovberlaps=[0.5, 0.75],),
     # SVTAS = dict(
     #     name = "SVTASegmentationMetric",
     #     overlap = [.1, .25, .5],
     #     segment_windows_size = 64,
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/breakfast/mapping.txt",
     #     file_output = False,
     #     score_output = False),
 )
@@ -226,12 +209,13 @@ DATASETPIPLINE = dict(
                  )
         ),
         sample = dict(
-            name = "FeatureDynamicStreamSampler",
+            name = "FeatureStreamSampler",
             is_train = True,
-            sample_rate_name_dict={"feature":'sample_rate', "labels":'sample_rate'},
-            clip_seg_num_name_dict={"feature": 'clip_seg_num', "labels": 'clip_seg_num'},
-            ignore_index=ignore_index,
+            sample_rate_dict={"feature":sample_rate,"labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
+            ignore_index=ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -281,6 +265,7 @@ DATASETPIPLINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
+            ignore_index=ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(

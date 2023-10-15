@@ -2,14 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 15:49:38
+LastEditTime : 2023-10-15 19:12:04
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/diffact_gtea_deepspeed.py
+FilePath     : /SVTAS/config/svtas/diffact/gtea/diffact_gtea.py
 '''
 _base_ = [
-    '../../_base_/dataloader/collater/batch_compose.py',
-    '../../_base_/engine/standaline_engine.py',
-    '../../_base_/logger/python_logger.py',
+    '../../../_base_/dataloader/collater/batch_compose.py',
+    '../../../_base_/engine/standaline_engine.py',
+    # '../../../_base_/logger/python_logger.py',
+    '../../../_base_/logger/with_tensorboard_logger.py'
 ]
 
 split = 1
@@ -23,7 +24,7 @@ sigma = 1
 model_name = "Diffact_feature_gtea_split" + str(split)
 
 ENGINE = dict(
-    name = "DeepSpeedDistributedDataParallelEngine",
+    name = "StandaloneEngine",
     record = dict(
         name = "ValueRecord"
     ),
@@ -35,25 +36,12 @@ ENGINE = dict(
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
-        name = "DeepSpeedCheckpointor"
+        name = "TorchCheckpointor"
     )
 )
 
 MODEL_PIPLINE = dict(
-    name = "DeepspeedModelPipline",
-    ds_config = dict(
-        train_micro_batch_size_per_gpu = batch_size,
-        # fp16 = dict(
-        #     enabled = True,
-        #     auto_cast = False,
-        #     loss_scale = 0,
-        #     initial_scale_power = 16,
-        #     loss_scale_window = 1000,
-        #     hysteresis = 2,
-        #     consecutive_hysteresis = False,
-        #     min_loss_scale = 1
-        # )
-    ),
+    name = "TorchModelPipline",
     # grad_accumulate = dict(
     #     name = "GradAccumulate",
     #     accumulate_type = "conf"
@@ -167,8 +155,7 @@ DATASET = dict(
         gt_path = "./data/gtea/groundTruth",
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
-        train_mode = True,
-        drop_last = True
+        train_mode = True
     ),
     test = dict(
         name = "DiffusionFeatureSegmentationDataset",
@@ -178,8 +165,7 @@ DATASET = dict(
         gt_path = "./data/gtea/groundTruth",
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
-        train_mode = False,
-        drop_last = True
+        train_mode = False
     )
 )
 
