@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 16:19:01
+LastEditTime : 2023-10-15 16:32:48
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/dynamic_diffact_gtea.py
+FilePath     : /SVTAS/config/svtas/diffact/dynamic_diffact_gtea_torch_ddp.py
 '''
 _base_ = [
     '../../_base_/dataloader/collater/stream_compose.py',
@@ -27,7 +27,7 @@ sigma = 1
 model_name = "Dynamic_Diffact_feature_gtea_split" + str(split)
 
 ENGINE = dict(
-    name = "StandaloneEngine",
+    name = "TorchDistributedDataParallelEngine",
     record = dict(
         name = "StreamValueRecord"
     ),
@@ -44,7 +44,7 @@ ENGINE = dict(
 )
 
 MODEL_PIPLINE = dict(
-    name = "TorchModelPipline",
+    name = "TorchDistributedDataParallelModelPipline",
     grad_accumulate = dict(
         name = "GradAccumulate",
         accumulate_type = "conf"
@@ -158,6 +158,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = True,
+        drop_last = True,
         dynamic_stream_generator=dict(
             name = "MultiEpochStageDynamicStreamGenerator",
             multi_epoch_list = [40, 70],
@@ -183,6 +184,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = False,
+        drop_last = True,
         sliding_window = sliding_window
     )
 )

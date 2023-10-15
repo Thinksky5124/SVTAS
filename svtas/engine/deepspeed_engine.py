@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-08 20:53:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 14:41:53
+LastEditTime : 2023-10-15 15:50:30
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/deepspeed_engine.py
 '''
@@ -32,9 +32,8 @@ class DeepSpeedDistributedDataParallelEngine(StandaloneEngine):
     
     def run(self):
         for epoch in self.iter_method.run():
-            if self.model_pipline.local_rank <= 0:
-                if self.running_mode in ['train']:
-                    self.save(file_name = self.model_name + f"_epoch_{epoch + 1:05d}")
-                elif self.running_mode in ['validation']:
-                    self.save(file_name = self.model_name + "_best")
+            if self.running_mode in ['train']:
+                self.save(file_name = self.model_name + f"_epoch_{epoch + 1:05d}")
+            elif self.running_mode in ['validation']:
+                self.save(file_name = self.model_name + "_best")
     

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 23:10:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 20:35:24
+LastEditTime : 2023-10-15 15:47:04
 Description  : file content
 FilePath     : /SVTAS/svtas/model/scheduler/diffact_scheduler.py
 '''
@@ -141,8 +141,6 @@ class DiffsusionActionSegmentationScheduler(BaseDiffusionScheduler):
         output_dict = dict(
             denoise_labels = denoise_labels
         )
-        if torch.any(torch.isnan(denoise_labels)):
-            print("!")
         return output_dict
     
     def add_noise(self, original_samples: torch.FloatTensor, noise: torch.FloatTensor, timesteps: torch.IntTensor) -> torch.FloatTensor:

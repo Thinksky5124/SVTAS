@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 16:10:26
+LastEditTime : 2023-10-15 16:30:21
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 from svtas.utils import AbstractBuildFactory
 from ..wrapper import BaseModel
 from svtas.optimizer import BaseLRScheduler, TorchOptimizer
+from svtas.dist import get_world_size_from_os, get_rank_from_os
 
 class BaseModelPipline(metaclass=abc.ABCMeta):
     model: BaseModel
@@ -59,8 +60,8 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
             self.load_from_ckpt_file()
         
         # prepare for distribution train
-        self.local_rank = int(os.environ['LOCAL_RANK'])
-        self.world_size = int(os.environ['WORLD_SIZE'])
+        self.local_rank = get_rank_from_os()
+        self.world_size = get_world_size_from_os()
 
     @property
     def training(self):

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 21:24:44
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-01 09:56:58
+LastEditTime : 2023-10-15 10:15:46
 Description  : file content
-FilePath     : /SVTAS/svtas/model/necks/task_fuion_neck.py
+FilePath     : /SVTAS/svtas/model/tas/task_fuion_neck.py
 '''
 import torch
 import math
@@ -25,11 +25,14 @@ class TaskFusionPoolNeck(nn.Module):
     def __init__(self,
                  num_classes=11,
                  in_channels=1280,
-                 clip_seg_num=30,
+                 clip_seg_num=None,
                  drop_ratio=0.5,
                  need_pool=True,
                  pool_type='mean'):
         super().__init__()
+        self.dynamic_shape = False
+        if clip_seg_num is None:
+            self.dynamic_shape = True
         self.clip_seg_num = clip_seg_num
         self.in_channels = in_channels
         self.num_classes = num_classes
@@ -57,6 +60,8 @@ class TaskFusionPoolNeck(nn.Module):
         # x.shape = [N * num_segs, in_channels, 7, 7] or [N * num_segs, in_channels]
         # masks.shape = [N, C, T]
         feature = x
+        if self.dynamic_shape:
+            self.clip_seg_num = x.shape[-1]
 
         if len(list(feature.shape)) == 2:
             feature = feature.unsqueeze(-1).unsqueeze(-1)

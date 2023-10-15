@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 20:52:23
+LastEditTime : 2023-10-15 16:01:49
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/diffact_gtea.py
 '''
 _base_ = [
     '../../_base_/dataloader/collater/batch_compose.py',
-    '../../_base_/engine/train_engine.py',
+    '../../_base_/engine/standaline_engine.py',
     '../../_base_/logger/python_logger.py',
 ]
 

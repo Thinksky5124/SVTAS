@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 20:46:22
+LastEditTime : 2023-10-15 14:29:55
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -90,7 +90,7 @@ class EpochMethod(BaseIterMethod):
     
     def init_epoch(self, epoch):
         self.cur_epoch = epoch
-        self.dataloader.dataset.shuffle_dataset()
+        self.dataloader.shuffle_dataloader(epoch)
         self.model_pipline.resert_model_pipline()
         self.record.init_record()
         self.model_pipline.post_processing.init_flag = False
@@ -142,7 +142,7 @@ class EpochMethod(BaseIterMethod):
     def end_iter(self, b_tic, step, epoch):
         self.record['batch_time'].update(time.time() - b_tic)
         if self.mode == 'train':
-            self.record['lr'].update(self.model_pipline.optimizer.state_dict()['param_groups'][0]['lr'], self.batch_size)
+            self.record['lr'].update(self.model_pipline.lr_scheduler.get_last_lr()[0], self.batch_size)
         
         if step % self.logger_iter_interval == 0 and self.mode in ['train', 'test', 'validation']:
             self.logger_iter(step, epoch)

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-28 16:24:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-06 22:54:12
+LastEditTime : 2023-10-15 16:26:41
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/base_dataset.py
 '''
@@ -10,6 +10,7 @@ import abc
 import os.path as osp
 from typing import Dict
 
+from svtas.dist import get_world_size_from_os, get_rank_from_os
 class BaseDataset(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
         pass
@@ -36,7 +37,7 @@ class BaseTorchDataset(BaseDataset):
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
-                 drap_last=False,
+                 drop_last=False,
                  local_rank=-1,
                  nprocs=1,
                  data_path=None) -> None:
@@ -54,11 +55,9 @@ class BaseTorchDataset(BaseDataset):
         self.pipeline = pipeline
 
         # distribute
-        self.local_rank = local_rank
-        self.nprocs = nprocs
-        self.drap_last = drap_last
-        if self.nprocs > 1:
-            self.drap_last = True
+        self.local_rank = get_rank_from_os()
+        self.nprocs = get_world_size_from_os()
+        self.drop_last = drop_last
         self.video_batch_size = video_batch_size
         self.temporal_clip_batch_size = temporal_clip_batch_size
     

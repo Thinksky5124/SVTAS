@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:41:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 15:37:16
+LastEditTime : 2023-10-15 16:37:46
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/stream_epoch.py
 '''
@@ -104,7 +104,6 @@ class StreamEpochMethod(EpochMethod):
                 # exec hook
                 self.exec_hook('every_iter_end', post_processing_output, self.current_step_vid_list)
                 self.record.stream_update_dict(loss_dict)
-            
             if self.mode in ['infer', 'extract', 'visulaize'] and idx % self.logger_iter_interval == 0:
                 for name, logger in self.logger_dict.items():
                     logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))

@@ -2,17 +2,18 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 16:48:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 16:38:00
+LastEditTime : 2023-10-15 17:37:39
 Description  : Stream Base Dataset
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/stream_base_dataset.py
 '''
 from abc import abstractmethod
-
+import math
 import torch
 import os.path as osp
 import torch.utils.data as data
 from ..base_dataset import BaseTorchDataset
 
+from svtas.utils import get_logger
 
 class StreamDataset(BaseTorchDataset, data.IterableDataset):
     def __init__(self,
@@ -26,15 +27,14 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
-                 drap_last=False,
+                 drop_last=False,
                  local_rank=-1,
                  nprocs=1,
                  data_path=None) -> None:
         super().__init__(file_path, gt_path, pipeline, actions_map_file_path,
                          temporal_clip_batch_size, video_batch_size, train_mode,
-                         suffix, dataset_type, data_prefix, drap_last, local_rank,
+                         suffix, dataset_type, data_prefix, drop_last, local_rank,
                          nprocs, data_path)
-
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')
         actions = file_ptr.read().split('\n')[:-1]
@@ -46,9 +46,10 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
         # construct sampler
         self.video_sampler_dataloader = torch.utils.data.DataLoader(
                 VideoSamplerDataset(file_path=file_path),
-                                    batch_size=video_batch_size,
+                                    batch_size=video_batch_size * self.nprocs,
                                     num_workers=0,
                                     shuffle=self.train_mode)
+
         if self.train_mode == False:
             self._viodeo_sample_shuffle()
     
@@ -63,8 +64,18 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
         sample_videos_list = []
         self.step_num = len(video_sampler_dataloader)
         for step, sample_videos in enumerate(video_sampler_dataloader):
-            if self.drap_last is True and len(list(sample_videos)) < self.video_batch_size:
-                break
+            if len(list(sample_videos)) < self.video_batch_size * self.nprocs:
+                if self.drop_last:
+                    break
+                else:
+                    sample_videos_index_list = list(sample_videos)
+                    padding_size = self.video_batch_size * self.nprocs - len(sample_videos_index_list)
+                    if padding_size <= len(sample_videos_index_list):
+                        sample_videos_index_list += sample_videos_index_list[:padding_size]
+                    else:
+                        sample_videos_index_list += (sample_videos_index_list * math.ceil(padding_size / len(sample_videos_index_list)))[:padding_size]
+                    sample_videos_list.append([step, sample_videos_index_list])
+                    continue
             sample_videos_list.append([step, list(sample_videos)])
 
         info_list = self.load_file(sample_videos_list).copy()

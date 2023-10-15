@@ -8,7 +8,7 @@ FilePath     : /SVTAS/config/svtas/svtas-rl/svtas_rl_50salads.py
 '''
 _base_ = [
     '../../_base_/dataloader/collater/stream_compose.py',
-    '../../_base_/engine/train_engine.py',
+    '../../_base_/engine/standaline_engine.py',
     '../../_base_/logger/python_logger.py',
     '../../_base_/dataloader/dataset/50salads/50salads_stream_video.py'
 ]

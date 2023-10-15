@@ -10,6 +10,7 @@ import os
 import abc
 from enum import Enum, auto
 from svtas.utils.build import AbstractBuildFactory
+from svtas.dist import get_rank_from_os, get_world_size_from_os
 
 Color = {
     'RED': '\033[31m',
@@ -49,8 +50,8 @@ class BaseLogger:
         else:
             self.path = root_path
         self._level = level
-        self.local_rank = int(os.environ['LOCAL_RANK'])
-        self.world_size = int(os.environ['WORLD_SIZE'])
+        self.local_rank = get_rank_from_os()
+        self.world_size = get_world_size_from_os()
 
     def __new__(cls, name: str, root_path: str = None, level=LoggerLevel.INFO):
         if name in BaseLogger.LOGGER_DICT.keys():

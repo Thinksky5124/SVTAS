@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 16:16:39
+LastEditTime : 2023-10-14 22:50:51
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -125,7 +125,6 @@ def main():
             import torch.multiprocessing as mp
             mp.spawn(task_func_dict[args.mode], nprocs=nprocs, args=(nprocs, cfg, args))
         elif args.launcher == "torchrun":
-            # Todo: torchrun pass args
-            pass
+            task_func_dict[args.mode](local_rank=int(os.environ['LOCAL_RANK']), nprocs=int(os.environ['WORLD_SIZE']), cfg=cfg, args=args)
 if __name__ == '__main__':
     main()

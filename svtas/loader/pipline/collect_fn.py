@@ -81,8 +81,6 @@ class BatchCompose():
                 out_tensor = output_list[0]
             else:
                 out_tensor = torch.nn.utils.rnn.pad_sequence(output_list, batch_first=True, padding_value=0.0)
-                if out_tensor.shape[0] == 1:
-                    print("!")
         else:
             out_tensor = output_list[0].unsqueeze(0)
         if key in self.clip_compress_keys:

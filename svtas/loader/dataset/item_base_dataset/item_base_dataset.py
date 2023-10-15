@@ -28,13 +28,13 @@ class ItemDataset(data.Dataset, BaseTorchDataset):
                  suffix='',
                  dataset_type='gtea',
                  data_prefix=None,
-                 drap_last=False,
+                 drop_last=False,
                  local_rank=-1,
                  nprocs=1,
                  data_path=None) -> None:
         super().__init__(file_path, gt_path, pipeline, actions_map_file_path,
                          temporal_clip_batch_size, video_batch_size, train_mode,
-                         suffix, dataset_type, data_prefix, drap_last, local_rank,
+                         suffix, dataset_type, data_prefix, drop_last, local_rank,
                          nprocs, data_path)
 
         # actions dict generate

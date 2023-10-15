@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:27:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 15:11:18
+LastEditTime : 2023-10-15 15:44:34
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/deepspeed_model_pipline.py
 '''
@@ -10,6 +10,7 @@ from typing import Dict
 import torch
 from .torch_model_pipline import TorchModelPipline
 from svtas.utils import AbstractBuildFactory
+from deepspeed.accelerator import get_accelerator
 
 from svtas.utils import is_deepspeed_available
 if is_deepspeed_available():
@@ -33,12 +34,18 @@ class DeepspeedModelPipline(TorchModelPipline):
         self.ds_config['local_rank'] = self.local_rank
         deepspeed.init_distributed()
         self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
-        self.model, self.optimizer, _, self.lr_scheduler = deepspeed.initialize(args = ds_config,
-                             model = self.model,
-                             optimizer = self.optimizer,
-                             model_parameters = self.model.parameters(),
-                             lr_scheduler = self.lr_scheduler)
-    
+        self.deepspeed_init_flag = False
+
+    def to(self, device):
+        super().to(self.local_rank)
+        if not self.deepspeed_init_flag:
+            self.model, self.optimizer, _, self.lr_scheduler = deepspeed.initialize(config = self.ds_config,
+                            model = self.model,
+                            optimizer = self.optimizer,
+                            model_parameters = self.model.parameters(),
+                            lr_scheduler = self.lr_scheduler)
+            self.deepspeed_init_flag = True
+
     def memory_clear(self):
         self.model.module._clear_memory_buffer()
     
@@ -54,11 +61,12 @@ class DeepspeedModelPipline(TorchModelPipline):
             predict=pred_cls_list,
             output_np=pred_score_list,
             ground_truth=ground_truth_list,
-            vid=self.current_step_vid_list
+            vid=cur_vid
         )
-        gather_objects = [collect_dict for _ in range(self.nprocs)] # any picklable object
-        output_list = [None for _ in range(self.nprocs)]
-        dist.all_gather(output_list, gather_objects[dist.get_rank()])
+        gather_objects = [collect_dict for _ in range(self.world_size)] # any picklable object
+        output_list = [None for _ in gather_objects]
+        # dist.all_gather(output_list, gather_objects[dist.get_rank()])
+        torch.distributed.all_gather_object(output_list, gather_objects[dist.get_rank()])
         # collect
         pred_cls_list_i = []
         pred_score_list_i = []
@@ -82,9 +90,6 @@ class DeepspeedModelPipline(TorchModelPipline):
         )
         dist.barrier()
         return output_dict
-    
-    def to(self, device):
-        pass
 
     def backward(self, loss_dict):
         loss = loss_dict["loss"]
@@ -119,3 +124,24 @@ class DeepspeedModelPipline(TorchModelPipline):
         dist.barrier()
         dist.destroy_process_group()
         return super().end_model_pipline()
+    
+    def train_run(self, data_dict, is_end_step: bool = True):
+        amp = get_accelerator().amp()
+        with amp.autocast():
+            outputs, input_data = self.forward(data_dict)
+            loss_dict = self.caculate_loss(outputs=outputs, input_data=input_data)
+        
+        self.backward(loss_dict=loss_dict)
+        return outputs, loss_dict
+
+    @torch.no_grad()
+    def test_run(self, data_dict, is_end_step: bool = True):
+        amp = get_accelerator().amp()
+        with amp.autocast():
+            outputs, input_data = self.forward(data_dict)
+            if self.criterion is not None:
+                loss_dict = self.caculate_loss(outputs=outputs, input_data=input_data)
+            else:
+                loss_dict = {}
+
+        return outputs, loss_dict

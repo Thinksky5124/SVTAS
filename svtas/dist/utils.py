@@ -6,6 +6,7 @@ LastEditTime : 2023-10-11 09:38:30
 Description  : file content
 FilePath     : /SVTAS/svtas/dist/utils.py
 '''
+import os
 from typing import Callable, Optional, Tuple, Union
 from torch.distributed import ProcessGroup
 from torch import distributed as torch_dist
@@ -90,3 +91,9 @@ def get_dist_info(group: Optional[ProcessGroup] = None) -> Tuple[int, int]:
     world_size = get_world_size(group)
     rank = get_rank(group)
     return rank, world_size
+
+def get_rank_from_os():
+    return int(os.environ['LOCAL_RANK'])
+
+def get_world_size_from_os():
+    return int(os.environ['WORLD_SIZE'])

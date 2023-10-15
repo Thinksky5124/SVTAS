@@ -95,12 +95,7 @@ class PythonLoggingLogger(BaseLogger):
                      stacklevel: int = 1,
                      extra = None):
         final_message = "[Rank {}] {}".format(self.local_rank, msg)
-        logging_fn(final_message,
-                    *args,
-                    exc_info = exc_info,
-                    stack_info = stack_info,
-                    stacklevel = stacklevel,
-                    extra = extra)
+        logging_fn(final_message)
         
     def base_logging(self,
                      logging_fn,

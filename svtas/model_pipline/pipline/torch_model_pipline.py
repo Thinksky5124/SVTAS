@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 20:45:59
+LastEditTime : 2023-10-15 15:10:14
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_pipline.py
 '''
@@ -188,7 +188,6 @@ class TorchModelPipline(BaseModelPipline):
             loss_dict = self.caculate_loss(outputs=outputs, input_data=input_data)
 
         self.backward(loss_dict=loss_dict)
-        self.update_model_param()
         return outputs, loss_dict
 
     @torch.no_grad()
