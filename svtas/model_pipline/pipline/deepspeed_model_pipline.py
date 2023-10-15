@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:27:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 15:44:34
+LastEditTime : 2023-10-15 20:06:20
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/deepspeed_model_pipline.py
 '''
@@ -10,12 +10,12 @@ from typing import Dict
 import torch
 from .torch_model_pipline import TorchModelPipline
 from svtas.utils import AbstractBuildFactory
-from deepspeed.accelerator import get_accelerator
 
 from svtas.utils import is_deepspeed_available
 if is_deepspeed_available():
     import deepspeed
     from deepspeed import comm as dist
+    from deepspeed.accelerator import get_accelerator
 
 @AbstractBuildFactory.register('model_pipline')
 class DeepspeedModelPipline(TorchModelPipline):

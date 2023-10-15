@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 12:34:34
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 15:56:59
+LastEditTime : 2023-10-15 20:06:13
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/checkpoint/deepspeed_checkpoint.py
 '''
@@ -20,7 +20,7 @@ class DeepSpeedCheckpointor(BaseCheckpointor):
     def __init__(self, save_path: str = None, load_path: str = None) -> None:
         super().__init__(save_path, load_path)
     
-    def init_ckpt(self, ds_engine: DeepSpeedEngine):
+    def init_ckpt(self, ds_engine):
         self.ds_engine = ds_engine
     
     def save(self, save_dict: Dict, path: str = None, file_name: str = None) -> bool:
