@@ -316,7 +316,7 @@ class ASFormer(nn.Module):
         self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='sliding_att', alpha=1)
         self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='sliding_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
         
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         if self.pretrained is not None:
             def revise_keys_fn(state_dict, revise_keys=[(r'head.', r'')]):
                 # strip prefix of state_dict

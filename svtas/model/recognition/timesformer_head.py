@@ -41,7 +41,7 @@ class TimeSformerHead(nn.Module):
         self.clip_seg_num = clip_seg_num
         self.fc_cls = nn.Linear(self.in_channels, self.num_classes)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         """Initiate the parameters from scratch."""
         trunc_normal_init(self.fc_cls, std=self.init_std)
 

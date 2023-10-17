@@ -30,7 +30,7 @@ class MultiStageModel(nn.Module):
         self.stage1 = SingleStageModel(num_layers, num_f_maps, dim, num_classes, out_feature=out_feature)
         self.stages = nn.ModuleList([copy.deepcopy(SingleStageModel(num_layers, num_f_maps, num_classes, num_classes)) for s in range(num_stages-1)])
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         # for m in self.modules():
         #     if isinstance(m, nn.Conv1d):
         #         kaiming_init(m)

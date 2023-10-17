@@ -37,6 +37,9 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
         self._device = device
         self.pretrained = pretrained
 
+        # init model
+        self.init_model_weight()
+
         # construct optimizer
         if isinstance(optimizer, dict):
             optimizer['model'] = self.model
@@ -91,6 +94,12 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
     
     def set_random_seed(self, seed: int = None):
         pass
+
+    def init_model_weight(self, init_cfg: Dict = None) -> None:
+        if init_cfg is None:
+            self.model.init_weights()
+        else:
+            self.model.init_weights(init_cfg=init_cfg)
 
     @abc.abstractmethod
     def forward(self, data_dict):

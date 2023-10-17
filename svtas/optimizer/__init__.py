@@ -15,7 +15,7 @@ from .optim.adan_optimizer import AdanOptimizer
 from .optim.adamw_optimizer import AdamWOptimizer
 from .lr_scheduler.cosine_annealing_lr import CosineAnnealingLR
 from .lr_scheduler import WarmupMultiStepLR, WarmupCosineLR, CosineAnnealingWarmupRestarts
-from .grad_clip import GradClip
+from .grad_utils import GradClip
 from .lr_scheduler import BaseLRScheduler
 from .optim import TorchOptimizer
 

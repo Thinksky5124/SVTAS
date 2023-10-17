@@ -28,7 +28,7 @@ class TransegerMemoryTCNJointNet(nn.Module):
         self.conv_1x1 = nn.Conv1d(in_channels * 2, hidden_channels, 1)
         self.conv_out = nn.Conv1d(hidden_channels, num_classes, 1)
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

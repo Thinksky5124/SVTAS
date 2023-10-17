@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-17 16:58:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:04:17
+LastEditTime : 2023-10-16 09:40:39
 Description  : Extract video feature script
 FilePath     : /SVTAS/svtas/tasks/visualize.py
 '''
@@ -24,13 +24,11 @@ def visualize(local_rank,
     model_pipline = AbstractBuildFactory.create_factory('model_pipline').create(cfg.MODEL_PIPLINE)
 
     # construct dataloader
-    temporal_clip_batch_size = cfg.DATALOADER.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATALOADER.get('video_batch_size', 8)
+    batch_size = cfg.DATALOADER.get('batch_size', 8)
     test_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE)
     test_dataset_config = cfg.DATASET.config
     test_dataset_config['pipeline'] = test_pipeline
-    test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    test_dataset_config['video_batch_size'] = video_batch_size
+    test_dataset_config['batch_size'] = batch_size
     test_dataloader_config = cfg.DATALOADER
     test_dataloader_config['dataset'] = AbstractBuildFactory.create_factory('dataset').create(test_dataset_config)
     test_dataloader_config['collate_fn'] = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test)

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-03 21:24:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-09 21:10:36
+LastEditTime : 2023-10-16 20:46:37
 Description  : feature clip dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/feature_clip_segmentation_dataset.py
 '''
@@ -85,9 +85,7 @@ class FeatureClipSegmentationDataset(ItemDataset):
 
         data_dict = self.pipeline(data_dict)
 
-        output_data_dict['feature'] = copy.deepcopy(data_dict['feature'])
-        output_data_dict['labels'] = copy.deepcopy(data_dict['labels'])
-        output_data_dict['masks'] = copy.deepcopy(data_dict['masks'])
+        output_data_dict.update(data_dict)
         output_data_dict['vid_list'] = video_name
         output_data_dict['sliding_num'] = 1
         output_data_dict['precise_sliding_num'] = 1.0

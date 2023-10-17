@@ -7,7 +7,7 @@ Description  : file content
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_gtea.py
 '''
 _base_ = [
-    '../../_base_/dataloader/collater/stream_compose.py',
+    '../../_base_/dataloader/collater/batch_compose.py',
     '../../_base_/logger/python_logger.py',
 ]
 
@@ -82,8 +82,8 @@ MODEL_PIPLINE = dict(
 
 DATALOADER = dict(
     name = "TorchStreamDataLoader",
-    temporal_clip_batch_size = 3,
-    video_batch_size = batch_size,
+    
+    batch_size = batch_size,
     num_workers = 2
 )
 
@@ -118,7 +118,15 @@ DATASETPIPLINE = dict(
     ),
     transform = dict(
         name = "VideoTransform",
-        transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+        transform_key_dict = dict(
             imgs = [
             dict(ResizeImproved = dict(size = 256)),
             dict(CenterCrop = dict(size = 224)),

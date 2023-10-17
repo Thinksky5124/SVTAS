@@ -7,8 +7,8 @@ Description  : EGTEA dataset config
 FilePath     : /SVTAS/config/_base_/dataloader/dataset/egtea/egtea_stream_feature.py
 '''
 DATASET = dict(
-    temporal_clip_batch_size = 1,
-    video_batch_size = 1,
+    
+    batch_size = 1,
     num_workers = 2,
     train = dict(
         name = "FeatureSegmentationDataset",

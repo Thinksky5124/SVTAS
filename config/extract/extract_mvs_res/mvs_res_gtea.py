@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-11 09:31:23
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-12 15:12:31
+LastEditTime : 2023-10-16 20:08:08
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_mvs_res/mvs_res_gtea.py
 '''
@@ -16,8 +16,8 @@ sample_rate = 1
 need_residual = False
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
-    video_batch_size = 2,
+    
+    batch_size = 2,
     num_workers = 4,
     config = dict(
         name = "CompressedVideoStreamSegmentationDataset",
@@ -62,6 +62,14 @@ DATASETPIPLINE = dict(
     ),
     transform = dict(
         name = "CompressedVideoStreamTransform",
+        transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
         rgb = [
             dict(XToTensor = None),
             dict(ToFloat = None),

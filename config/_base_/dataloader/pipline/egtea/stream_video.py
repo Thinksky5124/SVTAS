@@ -29,7 +29,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
@@ -61,7 +69,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 imgs = [
                     dict(ResizeImproved = dict(size = 256)),
                     dict(CenterCrop = dict(size = 224)),

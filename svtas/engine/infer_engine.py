@@ -19,7 +19,7 @@ from svtas.utils import AbstractBuildFactory
 class InferONNXEngine(StandaloneEngine):
     def __init__(self,
                  logger,
-                 video_batch_size,
+                 batch_size,
                  Metric,
                  cfg,
                  model,
@@ -28,7 +28,7 @@ class InferONNXEngine(StandaloneEngine):
                  nprocs=1,
                  local_rank=-1,):
         super().__init__(logger,
-                         video_batch_size,
+                         batch_size,
                          Metric,
                          cfg,
                          model,
@@ -108,7 +108,7 @@ class InferONNXEngine(StandaloneEngine):
 
         if self.current_step % self.cfg.get("log_interval", 10) == 0:
             ips = "ips: {:.5f} instance/sec.".format(
-                self.video_batch_size / self.record_dict["batch_time"].val)
+                self.batch_size / self.record_dict["batch_time"].val)
             log_batch(self.record_dict, self.current_step, 1, 1, "infer", ips, self.logger)
 
         self.b_tic = time.time()

@@ -73,7 +73,7 @@ class ActionSegmentRefinementFramework(nn.Module):
         self.activation_asb = nn.Softmax(dim=1)
         self.activation_brb = nn.Sigmoid()
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-08 11:02:40
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 11:03:04
+LastEditTime : 2023-10-16 20:35:25
 Description  : file content
-FilePath     : /SVTAS/config/_base_/dataloader/pipline/gtea/feature.py
+FilePath     : /SVTAS/config/_base_/dataloader/pipline/thumos14/feature.py
 '''
 DATASETPIPELINE = dict(
     train = dict(
@@ -27,8 +27,21 @@ DATASETPIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_dict = dict(
-                feature = [dict(XToTensor = None)]
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
+                feature = [dict(XToTensor = None)],
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
+                )
             )
         )
     ),
@@ -52,8 +65,21 @@ DATASETPIPELINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_dict = dict(
-                feature = [dict(XToTensor = None)]
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
+                feature = [dict(XToTensor = None)],
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
+                )
             )
         )
     )

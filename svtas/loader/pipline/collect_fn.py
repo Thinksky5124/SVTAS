@@ -2,47 +2,38 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 20:39:41
+LastEditTime : 2023-10-16 19:59:36
 Description  : Collect function
 FilePath     : /SVTAS/svtas/loader/pipline/collect_fn.py
 '''
+import abc
 import copy
+from typing import Any, Dict, List
 
 import torch
 
 from svtas.utils import AbstractBuildFactory
 
 
-@AbstractBuildFactory.register('dataset_pipline')
-class StreamBatchCompose():
-    def __init__(self, to_tensor_keys=["imgs", "masks", "labels"]):
+class BaseCompose(metaclass=abc.ABCMeta):
+    def __init__(self,
+                 to_tensor_keys: List[str] = []) -> None:
         self.to_tensor_keys = to_tensor_keys
-
-    def __call__(self, batch):
-        result_batch = []
-        for index in range(len(batch)):
-            data = {}
-            for key, value in batch[index].items():
-                if key in self.to_tensor_keys:
-                    if not torch.is_tensor(value):
-                        data[key] = torch.tensor(value)
-                    else:
-                        data[key] = value
-                else:
-                    data[key] = value
-            result_batch.append(data)
-        return result_batch
+    
+    @abc.abstractmethod
+    def __call__(self, batch: Dict[str, Any]) -> Dict[str, Any]:
+        pass
 
 @AbstractBuildFactory.register('dataset_pipline')
-class BatchCompose():
+class BatchCompose(BaseCompose):
     def __init__(self,
                  ignore_index=-100,
                  max_keys=[""],
-                 compress_keys=[""],
+                 compress_keys=["current_sliding_cnt", "current_sliding_cnt", "step"],
                  dropout_keys=[""],
                  to_tensor_keys=["imgs", "masks", "labels"],
                  clip_compress_keys=[]):
-        self.to_tensor_keys = to_tensor_keys
+        super().__init__(to_tensor_keys)
         self.max_keys = max_keys
         self.compress_keys = compress_keys
         self.dropout_keys = dropout_keys
@@ -78,7 +69,7 @@ class BatchCompose():
             if key in ["labels"]:
                 out_tensor = torch.nn.utils.rnn.pad_sequence(output_list, batch_first=True, padding_value=self.ignore_index)
             elif key in ["precise_sliding_num"]:
-                out_tensor = output_list[0]
+                out_tensor = torch.tensor(output_list)
             else:
                 out_tensor = torch.nn.utils.rnn.pad_sequence(output_list, batch_first=True, padding_value=0.0)
         else:

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 17:09:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-12 21:18:30
+LastEditTime : 2023-10-16 19:25:27
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/dynamic_stream_base_dataset.py
 '''
@@ -241,32 +241,22 @@ class DynamicStreamDataset(StreamDataset):
     
     def _step_sliding_sampler(self, woker_id, num_workers, info_list):
         # dispatch function
-        current_sliding_cnt = woker_id * self.temporal_clip_batch_size
-        mini_sliding_cnt = 0
-        next_step_flag = False
+        global_world_cnt = 0
         for step, sliding_num, dynamic_sample_list, info in info_list:
-            while current_sliding_cnt < sliding_num and len(info) > 0:
-                while mini_sliding_cnt < self.temporal_clip_batch_size:
-                    if current_sliding_cnt < sliding_num:
-                        for single_info in info:
-                            single_info.update(dynamic_sample_list[current_sliding_cnt])
-                        data_dict = self._get_one_videos_clip(current_sliding_cnt, info)
+            for current_sliding_cnt in range(sliding_num):
+                if global_world_cnt == woker_id:
+                    for micro_batch in info:
+                        micro_batch.update(dynamic_sample_list[current_sliding_cnt])
+                        # actually sample
+                        data_dict = self._get_one_videos_clip(current_sliding_cnt, micro_batch)
                         data_dict['sliding_num'] = sliding_num
                         data_dict['step'] = step
                         data_dict['current_sliding_cnt'] = current_sliding_cnt
                         yield data_dict
-                        current_sliding_cnt = current_sliding_cnt + 1
-                        mini_sliding_cnt = mini_sliding_cnt + 1
-                    else:
-                        next_step_flag = True
-                        break
-                if current_sliding_cnt <= sliding_num and next_step_flag == False:
-                    current_sliding_cnt = current_sliding_cnt + (num_workers - 1) * self.temporal_clip_batch_size
-
-                if mini_sliding_cnt >= self.temporal_clip_batch_size:
-                    mini_sliding_cnt = 0
-
-            # modify num_worker
-            current_sliding_cnt = current_sliding_cnt - sliding_num
-            next_step_flag = False
+                
+                # rank control
+                global_world_cnt += 1
+                if global_world_cnt >= num_workers:
+                    global_world_cnt = 0
+                    
         yield self._get_end_videos_clip()

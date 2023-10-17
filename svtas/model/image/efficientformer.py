@@ -596,7 +596,8 @@ class EfficientFormer(BaseBackbone):
     def _clear_memory_buffer(self):
         pass
 
-    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
+    def init_weights(self, init_cfg: dict = {}):
+        child_model, revise_keys = init_cfg['child_model'], init_cfg['revise_keys']
         revise_keys.append((r'network.1.0.proj', r'network.1.0.conv'))
         revise_keys.append((r'network.1.0.norm', r'network.1.0.bn'))
         revise_keys.append((r'network.2.0.proj', r'network.2.0.conv'))

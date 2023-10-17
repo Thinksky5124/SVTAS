@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-26 09:57:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 21:00:15
+LastEditTime : 2023-10-17 10:23:27
 Description  : CLIP achitectures
-FilePath     : \ETESVS\svtas\model\architectures\recognition\action_clip.py
+FilePath     : /SVTAS/svtas/model/architectures/recognition/action_clip.py
 '''
 import math
 import torch
@@ -56,10 +56,8 @@ class ActionCLIP(TorchBaseModel):
         else:
             self.head = None
             self.sample_rate = weight_init_cfg['sample_rate']
-    
-        self.init_weights()
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         if isinstance(self.pretrained, str):
             def revise_keys_fn(state_dict, revise_keys=[(r'module.', r'')]):
                 # strip prefix of state_dict

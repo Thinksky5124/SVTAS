@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-22 10:37:07
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:49:02
+LastEditTime : 2023-10-16 23:47:42
 Description  : file content
 FilePath     : /SVTAS/svtas/model/post_processings/cam_post_processing.py
 '''
@@ -28,7 +28,7 @@ class CAMVideoPostProcessing(BasePostProcessing):
         self.frame_width = output_frame_size[0]
         self.need_label = need_label
     
-    def init_scores(self):
+    def init_scores(self, sliding_num, batch_size):
         self.imgs_list = []
         self.labels_list = []
         self.score_lsit = []

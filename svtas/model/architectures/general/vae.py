@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-27 15:46:21
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 16:00:26
+LastEditTime : 2023-10-17 10:36:40
 Description  : Text Translation framework
 FilePath     : /SVTAS/svtas/model/architectures/general/vae.py
 '''
@@ -40,10 +40,10 @@ class VariationalAutoEncoder(TorchBaseModel):
             self.component_list.append('decoder')
         else:
             self.decoder = None
-        
-        self.init_weights(weight_init_cfg)
     
     def init_weights(self, init_cfg: dict = {}):
+        if len(init_cfg) <= 0 or init_cfg is None:
+            init_cfg = self.weight_init_cfg
         for component_name in self.component_list:
             if component_name in init_cfg.keys():
                 getattr(self, component_name).init_weights(init_cfg[component_name])

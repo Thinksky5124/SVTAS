@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-03 19:59:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-09 21:09:29
+LastEditTime : 2023-10-16 20:47:04
 Description  : Raw Frame Clip Segmentation Dataset
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/raw_frame_clip_segmentation_dataset.py
 '''
@@ -110,9 +110,7 @@ class RawFrameClipSegmentationDataset(ItemDataset):
 
         data_dict = self.pipeline(data_dict)
 
-        output_data_dict['imgs'] = copy.deepcopy(data_dict['imgs'])
-        output_data_dict['labels'] = copy.deepcopy(data_dict['labels'].astype(np.int64))
-        output_data_dict['masks'] = copy.deepcopy(data_dict['masks'].astype(np.float32))
+        output_data_dict.update(data_dict)
         output_data_dict['vid_list'] = video_name
         output_data_dict['sliding_num'] = 1
         output_data_dict['precise_sliding_num'] = 1.0

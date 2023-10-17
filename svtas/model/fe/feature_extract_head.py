@@ -38,7 +38,7 @@ class FeatureExtractHead(nn.Module):
         else:
             self.avg_pool = None
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:41:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 16:37:46
+LastEditTime : 2023-10-16 22:54:17
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/stream_epoch.py
 '''
@@ -36,12 +36,6 @@ class StreamEpochMethod(EpochMethod):
         self.current_step = 0
     
     def batch_end_step(self, input_data, epoch):
-        # update param
-        if self.mode in ['train']:
-            if self.model_pipline.grad_accumulate is not None:
-                self.model_pipline.grad_accumulate.set_update_conf()
-            self.model_pipline.update_model_param()
-
         # post processing
         if self.mode in ['train', 'test', 'validation']:
             output_dict = self.model_pipline.output_post_processing(self.current_step_vid_list)
@@ -82,31 +76,37 @@ class StreamEpochMethod(EpochMethod):
 
     def run_one_iter(self, data, r_tic=None, epoch=None):
         # videos sliding stream train
-        for sliding_seg in data:
-            step = sliding_seg['step']
-            vid_list = sliding_seg['vid_list']
-            sliding_num = sliding_seg['sliding_num']
-            idx = sliding_seg['current_sliding_cnt']
-            # wheather next step
-            if self.current_step != step or (len(vid_list) <= 0 and step == 1):
-                self.batch_end_step(input_data=sliding_seg, epoch=epoch)
+        step = data['step']
+        vid_list = data['vid_list']
+        sliding_num = data['sliding_num']
+        idx = data['current_sliding_cnt']
+        # wheather next step
+        if self.current_step != step or (len(vid_list) <= 0 and step == 1):
+            self.batch_end_step(input_data=data, epoch=epoch)
 
-            if idx >= 0: 
-                outputs, loss_dict = self.run_one_forward(sliding_seg)
-                if not self.model_pipline.post_processing.init_flag:
-                    vid_list = sliding_seg['vid_list']
-                    self.current_step_vid_list = vid_list
-                    self.model_pipline.init_post_processing(input_data=sliding_seg)
-                    if self.mode in ['infer', 'extract', 'visulaize']:
-                        for name, logger in self.logger_dict.items():
-                            logger.info("Current process video: " + ",".join(self.current_step_vid_list))
-                post_processing_output = self.model_pipline.update_post_processing(model_outputs=outputs, input_data=sliding_seg)
-                # exec hook
-                self.exec_hook('every_iter_end', post_processing_output, self.current_step_vid_list)
-                self.record.stream_update_dict(loss_dict)
-            if self.mode in ['infer', 'extract', 'visulaize'] and idx % self.logger_iter_interval == 0:
-                for name, logger in self.logger_dict.items():
-                    logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
+        if idx >= 0: 
+            outputs, loss_dict = self.run_one_forward(data)
+
+            # update param
+            if self.mode in ['train']:
+                if idx + 1 == sliding_num and self.model_pipline.grad_accumulate is not None:
+                    self.model_pipline.grad_accumulate.set_update_conf()
+                self.model_pipline.update_model_param()
+
+            if not self.model_pipline.post_processing.init_flag:
+                vid_list = data['vid_list']
+                self.current_step_vid_list = vid_list
+                self.model_pipline.init_post_processing(input_data=data)
+                if self.mode in ['infer', 'extract', 'visulaize']:
+                    for name, logger in self.logger_dict.items():
+                        logger.info("Current process video: " + ",".join(self.current_step_vid_list))
+            post_processing_output = self.model_pipline.update_post_processing(model_outputs=outputs, input_data=data)
+            # exec hook
+            self.exec_hook('every_iter_end', post_processing_output, self.current_step_vid_list)
+            self.record.stream_update_dict(loss_dict)
+        if self.mode in ['infer', 'extract', 'visulaize'] and idx % self.logger_iter_interval == 0:
+            for name, logger in self.logger_dict.items():
+                logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
     
     def end_iter(self, b_tic, step, epoch):
         pass

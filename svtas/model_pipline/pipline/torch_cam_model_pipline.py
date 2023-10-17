@@ -2,16 +2,17 @@
 Author       : Thyssen Wen
 Date         : 2023-10-08 15:29:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 16:14:01
+LastEditTime : 2023-10-16 23:48:53
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_cam_model_pipline.py
 '''
 import math
 import torch
 from typing import Dict
+from torch.cuda.amp import autocast as autocast
 from .torch_model_pipline import TorchModelPipline
 from svtas.utils.cam import get_model_target_class
-from svtas.utils import is_pytorch_grad_cam_available
+from svtas.utils import is_pytorch_grad_cam_available, AbstractBuildFactory
 from svtas.utils.cam import ModelForwardWrapper, get_match_fn_class
 if is_pytorch_grad_cam_available():
     from pytorch_grad_cam.ablation_layer import AblationLayerVit
@@ -65,24 +66,24 @@ def reshape_transform(transform_form):
     else:
         print("Not support form!")
         raise NotImplementedError
-    
+
+@AbstractBuildFactory.register('model_pipline')
 class TorchCAMModelPipline(TorchModelPipline):
     def __init__(self,
                  model,
                  post_processing,
-                 cam_method,
-                 eigen_smooth,
-                 aug_smooth,
                  method,
                  batch_size,
                  sample_rate,
+                 eigen_smooth = False,
+                 aug_smooth = False,
                  ignore_index = -100,
                  layer_name = [],
                  data_key = "imgs",
                  return_targets_name = dict(
                      CategorySegmentationTarget = dict(category=None)
                  ),
-                 reshape_transform = "NPC",
+                 reshape_transform_name = "NPC",
                  label_path = "./data/gtea/mapping.txt",
                  match_fn = "rgb_stream_match_fn",
                  device=None,
@@ -110,10 +111,12 @@ class TorchCAMModelPipline(TorchModelPipline):
         if method not in list(self.methods.keys()):
             raise Exception(f"method should be one of {list(self.methods.keys())}")
         
-        self.cam_method = cam_method
+        self.use_cuda = False
+        if torch.cuda.is_available():
+            self.use_cuda = True
+        self.method = method
         self.eigen_smooth = eigen_smooth
         self.aug_smooth = aug_smooth
-        self.method = method
         self.label_path = label_path
         self.data_key = data_key
         self.return_targets_name = return_targets_name
@@ -122,22 +125,22 @@ class TorchCAMModelPipline(TorchModelPipline):
         self.ignore_index = ignore_index
         self.sample_rate = sample_rate
         self.batch_size = batch_size
-        self.reshape_transform = reshape_transform
+        self.reshape_transform = reshape_transform_name
 
         self.target_layers = []
         # batch videos sampler
-        for layer in self.model_pipline.model.named_modules():
+        for layer in self.model.named_modules():
             if layer[0] in set(self.layer_name):
                 self.target_layers.append(layer[1])
 
-        if self.cam_method == "ablationcam":
-            self.cam = self.methods[self.cam_method](model=self.model,
+        if self.method == "ablationcam":
+            self.cam = self.methods[self.method](model=self.model,
                                     target_layers=self.target_layers,
                                     use_cuda=self.use_cuda,
                                     reshape_transform=reshape_transform(self.reshape_transform),
                                     ablation_layer=AblationLayerVit())
         else:
-            self.cam = self.methods[self.cam_method](model=self.model,
+            self.cam = self.methods[self.method](model=self.model,
                                     target_layers=self.target_layers,
                                     use_cuda=self.use_cuda,
                                     reshape_transform=reshape_transform(self.reshape_transform))
@@ -151,9 +154,7 @@ class TorchCAMModelPipline(TorchModelPipline):
             for k, cfg in self.return_targets_name.items():
                 self.targets.append(get_model_target_class(target_name=k, cfg=cfg))
 
-    @torch.no_grad()
     def forward(self, data_dict):
-        input_tensor = input_data[self.data_key]
         # move data
         input_data = {}
         for key, value in data_dict.items():
@@ -165,7 +166,11 @@ class TorchCAMModelPipline(TorchModelPipline):
         if not self.grad_accumulate:
             input_data['precise_sliding_num'] = torch.ones_like(input_data['precise_sliding_num'])
 
-        outputs = self.model(input_tensor)
+        input_tensor = input_data[self.data_key]
+
+        with torch.no_grad():
+            outputs = self.model(input_tensor)
+
         grayscale_cam = self.cam(input_tensor=input_tensor,
                             targets=self.targets,
                             eigen_smooth=self.eigen_smooth,
@@ -173,5 +178,32 @@ class TorchCAMModelPipline(TorchModelPipline):
 
         # Here grayscale_cam has only one image in the batch
         cam_images = self.match_fn(data_dict, grayscale_cam)
-        outputs['cam_images'] = cam_images
-        return outputs, input_data
+        outputs_dict = dict(
+            output = outputs[0],
+            cam_images = cam_images
+        )
+        return outputs_dict, input_data
+    
+    def update_post_processing(self, model_outputs, input_data) -> None:
+        idx = input_data['current_sliding_cnt']
+        labels = input_data['labels']
+        with torch.no_grad():
+            output = self.post_processing.update(model_outputs, labels, idx)
+        return output
+    
+    def test_run(self, data_dict, is_end_step: bool = True):
+        if self.use_amp:
+            with autocast():
+                outputs, input_data = self.forward(data_dict)
+                if self.criterion is not None:
+                    loss_dict = self.caculate_loss(outputs=outputs, input_data=input_data)
+                else:
+                    loss_dict = {}
+        else:
+            outputs, input_data = self.forward(data_dict)
+            if self.criterion is not None:
+                loss_dict = self.caculate_loss(outputs=outputs, input_data=input_data)
+            else:
+                loss_dict = {}
+
+        return outputs, loss_dict

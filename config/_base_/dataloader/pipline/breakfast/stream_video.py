@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-08 11:02:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 11:07:37
+LastEditTime : 2023-10-16 20:36:08
 Description  : file content
 FilePath     : /SVTAS/config/_base_/dataloader/pipline/breakfast/stream_video.py
 '''
@@ -29,7 +29,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
@@ -39,7 +47,12 @@ DATASETPIPLINE = dict(
                 dict(Normalize = dict(
                     mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
                     std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
-                ))]
+                ))],
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
+                )
             )
         )
     ),
@@ -61,7 +74,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 imgs = [
                     dict(ResizeImproved = dict(size = 256)),
                     dict(CenterCrop = dict(size = 224)),
@@ -70,7 +91,12 @@ DATASETPIPLINE = dict(
                     dict(Normalize = dict(
                         mean = [0.4245283568405083 * 255, 0.3904851168609079 * 255, 0.33709139617292494 * 255],
                         std = [0.26207845745959846 * 255, 0.26008439810422 * 255, 0.24623600365905168 * 255]
-                    ))]
+                    ))],
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
+                )
             )
         )
     )

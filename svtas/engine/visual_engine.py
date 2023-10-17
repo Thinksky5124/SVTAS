@@ -22,17 +22,19 @@ class VisualEngine(ExtractModelEngine):
                  model_name: str,
                  model_pipline: Dict,
                  out_path: str,
+                 label_path: str,
                  logger_dict: Dict,
                  record: Dict,
                  iter_method: Dict,
                  checkpointor: Dict,
                  metric: Dict = {},) -> None:
         super().__init__(model_name, model_pipline, out_path, logger_dict, record,
-                         metric, iter_method, checkpointor, 'visulaize')
+                         iter_method, checkpointor, metric, 'visulaize')
+        self.label_path = label_path
     
     def init_engine(self, dataloader: BaseDataloader = None):
         # load mapping label
-        file_ptr = open(self.visualize_cfg.label_path, 'r')
+        file_ptr = open(self.label_path, 'r')
         actions = file_ptr.read().split('\n')[:-1]
         file_ptr.close()
         actions_dict = dict()

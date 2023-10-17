@@ -4,14 +4,15 @@ _base_ = [
 ]
 
 num_classes = 11
-sample_rate = 2
+clip_seg_num_list = [32, 40]
+sample_rate_list = [2]
 clip_seg_num = 32
+sample_rate = 2
 ignore_index = -100
-sliding_window = clip_seg_num * sample_rate
 split = 1
 batch_size = 2
 
-model_name = "SwinV2_FC_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea"
+model_name = "SwinV2_FC_dynamic_CAM_gtea"
 
 ENGINE = dict(
     name = "VisualEngine",
@@ -65,14 +66,12 @@ MODEL_PIPLINE = dict(
         neck = dict(
             name = "PoolNeck",
             in_channels = 768,
-            clip_seg_num = clip_seg_num,
             need_pool = True
         ),
         head = dict(
             name = "FCHead",
             num_classes = num_classes,
             sample_rate = sample_rate,
-            clip_seg_num = clip_seg_num,
             drop_ratio=0.5,
             in_channels=768
         ),
@@ -111,15 +110,26 @@ DATALOADER = dict(
 
 DATASET = dict(
     config = dict(
-        name = "RawFrameStreamSegmentationDataset",
+        name = "RawFrameDynamicStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         videos_path = "./data/gtea/Videos",
         gt_path = "./data/gtea/groundTruth",
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
-        train_mode = False,
-        sliding_window = sliding_window
+        train_mode = True,
+        dynamic_stream_generator=dict(
+            name = "MultiEpochStageDynamicStreamGenerator",
+            multi_epoch_list = [40],
+            strategy_list = [
+                dict(name = "ListRandomChoiceDynamicStreamGenerator",
+                     clip_seg_num_list = [32, 40],
+                     sample_rate_list = sample_rate_list),
+                dict(name = "ListRandomChoiceDynamicStreamGenerator",
+                     clip_seg_num_list = [16, 32],
+                     sample_rate_list = sample_rate_list)
+            ]
+        )
     ),
 )
 
@@ -131,11 +141,11 @@ DATASETPIPLINE = dict(
                 name='DecordContainer')
     ),
     sample = dict(
-        name = "VideoStreamSampler",
-        is_train = False,
-        sample_rate_dict={"imgs":sample_rate, "labels":sample_rate},
-        clip_seg_num_dict={"imgs":clip_seg_num, "labels":clip_seg_num},
-        sliding_window_dict={"imgs":sliding_window, "labels":sliding_window},
+        name = "VideoDynamicStreamSampler",
+        is_train = True,
+        sample_rate_name_dict={"imgs":'sample_rate', "labels":'sample_rate'},
+        clip_seg_num_name_dict={"imgs": 'clip_seg_num', "labels": 'clip_seg_num'},
+        ignore_index=ignore_index,
         sample_add_key_pair={"frames":"imgs"},
         sample_mode = "uniform"
     ),

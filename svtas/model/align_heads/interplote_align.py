@@ -17,7 +17,7 @@ class InterploteAlignHead(nn.Module):
     def __init__(self):
         super(InterploteAlignHead, self).__init__()
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

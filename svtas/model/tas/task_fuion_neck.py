@@ -50,7 +50,7 @@ class TaskFusionPoolNeck(nn.Module):
         self.backbone_dropout = nn.Dropout(p=self.drop_ratio)
         self.backbone_cls_fc = nn.Linear(self.in_channels, num_classes)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

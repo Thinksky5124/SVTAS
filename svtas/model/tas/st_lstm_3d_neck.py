@@ -51,7 +51,7 @@ class LSTMST3DNeck(nn.Module):
         self.backbone_cls_conv = nn.Conv1d(self.cls_hidden_channel, self.seg_hidden_channel, 1)
         self.backbone_cls_fc_2 = nn.Linear(self.seg_hidden_channel, num_classes)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         for m in self.modules():
             if isinstance(m, nn.Conv1d) or isinstance(m, nn.Conv2d):
                 kaiming_init(m)

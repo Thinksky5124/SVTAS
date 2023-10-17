@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:26:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 17:56:01
+LastEditTime : 2023-10-16 20:15:35
 Description  : ref:https://github.com/Finspire13/DiffAct/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/unet/diffact_unet.py
 '''
@@ -79,8 +79,6 @@ class DiffsusionActionSegmentationConditionUnet(ConditionUnet1D):
         elif cond_type == 'segment=2':
             random_event_1 = self.get_random_label_index(labels=labels)
             random_event_2 = self.get_random_label_index(labels=labels)
-            while random_event_1 == random_event_2:
-                random_event_2 = self.get_random_label_index(labels=labels)
             feature_mask = (labels != random_event_1) * (labels != random_event_2) * (labels != self.ignore_index)
             feature_mask = feature_mask.unsqueeze(1).float()[:, :, ::self.sample_rate]
         else:

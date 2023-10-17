@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 14:42:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-30 16:00:44
+LastEditTime : 2023-10-17 10:28:03
 Description  : ConFormer Head for Action Segmentation ref:https://github.com/sooftware/conformer/blob/main/conformer/model.py
-FilePath     : /SVTAS/svtas/model/heads/asr/conformer/conformer.py
+FilePath     : /SVTAS/svtas/model/asr/conformer/conformer.py
 '''
 import torch
 import torch.nn as nn
@@ -96,7 +96,7 @@ class Conformer(nn.Module):
         ) for _ in range(num_stages - 1)])
         self.cls = ConFormerLinear(encoder_dim, num_classes, bias=False)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

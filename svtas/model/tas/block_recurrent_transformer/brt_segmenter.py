@@ -306,7 +306,7 @@ class BRTSegmentationHead(nn.Module):
                                                              num_head=num_head, state_len=state_len, causal=causal, dropout=dropout))
                                                              for s in range(num_decoders)]) # num_decoders
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

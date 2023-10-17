@@ -198,7 +198,7 @@ class TransformerXL(nn.Module):
     def _clear_memory_buffer(self):
         self.mems = self.init_mems()
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         self.apply(init_weight)
     
     def _create_params(self):

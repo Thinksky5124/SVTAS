@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-30 19:21:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 16:51:12
+LastEditTime : 2023-10-17 10:24:08
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/action_clip_segmentation.py
 '''
@@ -61,10 +61,8 @@ class ActionCLIPSegmentation(TorchBaseModel):
             self.aligin_head = AbstractBuildFactory.create_factory('model').create(aligin_head)
         else:
             self.aligin_head = None
-    
-        self.init_weights()
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         if isinstance(self.pretrained, str):
             def revise_keys_fn(state_dict, revise_keys=[(r'module.', r'')]):
                 # strip prefix of state_dict

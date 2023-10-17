@@ -40,13 +40,11 @@ def test(local_rank,
     model_pipline = AbstractBuildFactory.create_factory('model_pipline').create(cfg.MODEL_PIPLINE)
 
     # 4. Construct Dataset
-    temporal_clip_batch_size = cfg.DATALOADER.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATALOADER.get('video_batch_size', 8)
+    batch_size = cfg.DATALOADER.get('batch_size', 8)
     test_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_pipeline
-    test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    test_dataset_config['video_batch_size'] = video_batch_size * nprocs
+    test_dataset_config['batch_size'] = batch_size * nprocs
     test_dataset_config['local_rank'] = local_rank
     test_dataset_config['nprocs'] = nprocs
     test_dataloader_config = cfg.DATALOADER

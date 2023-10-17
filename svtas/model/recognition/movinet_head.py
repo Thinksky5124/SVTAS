@@ -61,7 +61,7 @@ class MoViNetHead(nn.Module):
                     conv_type=conv_type,
                     bias=True)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         for m in self.modules():
             if isinstance(m, nn.Conv1d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Conv3d):
                 kaiming_init(m)

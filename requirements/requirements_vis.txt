@@ -22,6 +22,6 @@ packaging
 decord
 prettytable
 pandas
-pytorch_grad_cam
+grad-cam
 h5py
 matplotlib

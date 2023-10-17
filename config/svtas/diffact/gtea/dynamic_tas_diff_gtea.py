@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 17:50:54
+LastEditTime : 2023-10-17 10:05:22
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/gtea/dynamic_tas_diff_gtea.py
 '''
 _base_ = [
-    '../../../_base_/dataloader/collater/stream_compose.py',
+    '../../../_base_/dataloader/collater/batch_compose.py',
     '../../../_base_/engine/standaline_engine.py',
     '../../../_base_/logger/python_logger.py',
 ]
@@ -167,14 +167,13 @@ MODEL_PIPLINE = dict(
 
 DATALOADER = dict(
     name = "TorchStreamDataLoader",
-    temporal_clip_batch_size = 3,
-    video_batch_size = batch_size,
+    batch_size = batch_size,
     num_workers = 2
 )
 
 DATASET = dict(
     train = dict(
-        name = "DiffusionRawFrameDynamicStreamSegmentationDataset",
+        name = "RawFrameDynamicStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         videos_path = "./data/gtea/Videos",
@@ -199,7 +198,7 @@ DATASET = dict(
         )
     ),
     test = dict(
-        name = "DiffusionRawFrameStreamSegmentationDataset",
+        name = "RawFrameStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         videos_path = "./data/gtea/Videos",
@@ -213,11 +212,11 @@ DATASET = dict(
 
 COLLATE = dict(
     train=dict(
-        name = "StreamBatchCompose",
+        name = "BatchCompose",
         to_tensor_keys = ["imgs", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
     ),
     test=dict(
-        name = "StreamBatchCompose",
+        name = "BatchCompose",
         to_tensor_keys = ["imgs", "flows", "res", "labels", "masks", "precise_sliding_num", "labels_onehot", "boundary_prob"]
     ),
 )
@@ -265,7 +264,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 imgs = [
                 dict(ResizeImproved = dict(size = 256)),
                 dict(RandomCrop = dict(size = 224)),
@@ -297,6 +304,11 @@ DATASETPIPLINE = dict(
                             ))
                         ]
                     )
+                ),
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
                 )
             )
         )
@@ -319,7 +331,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "VideoTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 imgs = [
                     dict(ResizeImproved = dict(size = 256)),
                     dict(CenterCrop = dict(size = 224)),
@@ -350,6 +370,11 @@ DATASETPIPLINE = dict(
                             ))
                         ]
                     )
+                ),
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
                 )
             )
         )

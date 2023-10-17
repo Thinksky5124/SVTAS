@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 17:50:44
+LastEditTime : 2023-10-16 20:59:08
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/gtea/dynamic_diffact_gtea_torch_ddp.py
 '''
 _base_ = [
-    '../../../_base_/dataloader/collater/stream_compose.py',
+    '../../../_base_/dataloader/collater/batch_compose.py',
     '../../../_base_/engine/standaline_engine.py',
     '../../../_base_/logger/python_logger.py',
 ]
@@ -134,8 +134,8 @@ MODEL_PIPLINE = dict(
 
 DATALOADER = dict(
     name = "TorchStreamDataLoader",
-    temporal_clip_batch_size = 3,
-    video_batch_size = batch_size,
+    
+    batch_size = batch_size,
     num_workers = 2
 )
 
@@ -150,7 +150,7 @@ COLLATE = dict(
 
 DATASET = dict(
     train = dict(
-        name = "DiffusionFeatureDynamicStreamSegmentationDataset",
+        name = "FeatureDynamicStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         feature_path = "./data/gtea/raw_features",
@@ -175,7 +175,7 @@ DATASET = dict(
         )
     ),
     test = dict(
-        name = "DiffusionFeatureStreamSegmentationDataset",
+        name = "FeatureStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
         feature_path = "./data/gtea/raw_features",
@@ -234,7 +234,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 feature = [dict(XToTensor = None)],
                 labels = dict(
                     labels_onehot = dict(
@@ -257,6 +265,11 @@ DATASETPIPLINE = dict(
                             ))
                         ]
                     )
+                ),
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
                 )
             )
         )
@@ -283,7 +296,15 @@ DATASETPIPLINE = dict(
         ),
         transform = dict(
             name = "FeatureStreamTransform",
-            transform_dict = dict(
+            transform_results_list = [
+                dict(DropResultsByKeyName = dict(drop_keys_list=[
+                    "filename", "raw_labels", "sample_sliding_idx", "format", "frames", "frames_len", "feature_len", "video_len"
+                ])),
+                dict(RenameResultTransform = dict(rename_pair_dict=dict(
+                    video_name = "vid_list"
+                )))
+            ],
+            transform_key_dict = dict(
                 feature = [dict(XToTensor = None)],
                 labels = dict(
                     labels_onehot = dict(
@@ -306,6 +327,11 @@ DATASETPIPLINE = dict(
                             ))
                         ]
                     )
+                ),
+                masks = dict(
+                    masks = dict(name = 'direct_transform',
+                                 transforms_op_list = [
+                                     dict(NumpyDataTypeTransform = dict(dtype = "float32"))])
                 )
             )
         )

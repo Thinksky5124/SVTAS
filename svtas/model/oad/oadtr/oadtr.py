@@ -135,7 +135,7 @@ class OadTRHead(nn.Module):
         self.classifier = nn.Linear(decoder_embedding_dim, num_classes)
         self.after_dropout = nn.Dropout(p=self.dropout_rate)
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-23 19:32:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-23 21:43:55
+LastEditTime : 2023-10-16 09:47:35
 Description  : check video file
 FilePath     : /SVTAS/tools/dataset_transform/check_videos_file.py
 '''
@@ -15,8 +15,7 @@ import torch
 from svtas.utils.config import Config
 from svtas.utils.logger import get_logger, setup_logger
 from svtas.utils.logger import get_logger
-from svtas.loader.builder import build_dataset
-from svtas.loader.builder import build_pipline
+from svtas.utils import AbstractBuildFactory
 
 def parse_args():
     parser = argparse.ArgumentParser("SVTAS tools script")
@@ -36,37 +35,34 @@ def main():
     cfg = Config.fromfile(args.config)
     logger = get_logger("SVTAS")
 
-    temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATASET.get('video_batch_size', 8)
+    
+    batch_size = cfg.DATASET.get('batch_size', 8)
     num_workers = cfg.DATASET.get('num_workers', 0)
 
-    train_Pipeline = build_pipline(cfg.DATASETPIPLINE.train)
-    val_Pipeline = build_pipline(cfg.DATASETPIPLINE.test)
+    train_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.train)
+    val_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
 
     # Construct Dataset
     train_dataset_config = cfg.DATASET.train
-    train_dataset_config['pipeline'] = train_Pipeline
-    train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    train_dataset_config['video_batch_size'] = video_batch_size
+    train_dataset_config['pipeline'] = train_pipeline
+    train_dataset_config['batch_size'] = batch_size
     train_dataset_config['local_rank'] = -1
     train_dataset_config['nprocs'] = 1
-    train_dataloader = torch.utils.data.DataLoader(
-        build_dataset(train_dataset_config),
-        batch_size=temporal_clip_batch_size,
-        num_workers=num_workers,
-        collate_fn=build_pipline(cfg.COLLATE.train))
+    train_dataloader_config = cfg.DATALOADER
+    train_dataloader_config['dataset'] = AbstractBuildFactory.create_factory('dataset').create(train_dataset_config)
+    train_dataloader_config['collate_fn'] = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.train)
+    train_dataloader = AbstractBuildFactory.create_factory('dataloader').create(train_dataloader_config)
 
     val_dataset_config = cfg.DATASET.test
-    val_dataset_config['pipeline'] = val_Pipeline
-    val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    val_dataset_config['video_batch_size'] = video_batch_size
+    val_dataset_config['pipeline'] = val_pipeline
+    val_dataset_config['batch_size'] = batch_size
     val_dataset_config['local_rank'] = -1
     val_dataset_config['nprocs'] = 1
-    val_dataloader = torch.utils.data.DataLoader(
-        build_dataset(val_dataset_config),
-        batch_size=temporal_clip_batch_size,
-        num_workers=num_workers,
-        collate_fn=build_pipline(cfg.COLLATE.test))
+    val_dataloader_config = cfg.DATALOADER
+    val_dataloader_config['dataset'] = AbstractBuildFactory.create_factory('dataset').create(val_dataset_config)
+    val_dataloader_config['collate_fn'] = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test)
+    val_dataloader = AbstractBuildFactory.create_factory('dataloader').create(val_dataloader_config)
+    
     out_data = dict(vid_list=[])
 
     logger_interal = 100

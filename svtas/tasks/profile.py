@@ -39,13 +39,11 @@ def profile(local_rank,
 
     # 2. Construct dataset and dataloader.
     # default num worker: 0, which means no subprocess will be created
-    temporal_clip_batch_size = cfg.DATALOADER.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATALOADER.get('video_batch_size', 8)
+    batch_size = cfg.DATALOADER.get('batch_size', 8)
     test_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
     test_dataset_config = cfg.DATASET.test
     test_dataset_config['pipeline'] = test_pipeline
-    test_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    test_dataset_config['video_batch_size'] = video_batch_size * nprocs
+    test_dataset_config['batch_size'] = batch_size * nprocs
     test_dataset_config['local_rank'] = local_rank
     test_dataset_config['nprocs'] = nprocs
     test_dataloader_config = cfg.DATALOADER

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 15:56:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 14:44:57
+LastEditTime : 2023-10-17 10:16:22
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/general/diffusion.py
 '''
@@ -48,9 +48,10 @@ class DiffusionModel(TorchBaseModel):
             self.component_list.append('unet')
         else:
             self.unet = None
-        self.init_weights(weight_init_cfg)
     
     def init_weights(self, init_cfg: dict = {}):
+        if len(init_cfg) <= 0 or init_cfg is None:
+            init_cfg = self.weight_init_cfg
         for component_name in self.component_list:
             if component_name in init_cfg.keys():
                 getattr(self, component_name).init_weights(init_cfg[component_name])

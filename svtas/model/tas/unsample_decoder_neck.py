@@ -54,7 +54,7 @@ class UnsampleDecoderNeck(nn.Module):
         ])
         self.pool = Adaptive3DTo1DPooling()
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         for m in self.modules():
             if isinstance(m, nn.Conv1d) or isinstance(m, nn.Conv2d):
                 kaiming_init(m)

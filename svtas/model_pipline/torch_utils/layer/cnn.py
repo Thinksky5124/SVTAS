@@ -237,7 +237,7 @@ class ConvModule(nn.Module):
         else:
             return None
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         # 1. It is mainly for customized conv layers with their own
         #    initialization manners by calling their own ``init_weights()``,
         #    and we do not want ConvModule to override the initialization.

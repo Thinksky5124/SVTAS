@@ -34,12 +34,10 @@ def train(local_rank,
     train_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.train)
         
     # 4. Construct Dataset
-    temporal_clip_batch_size = cfg.DATALOADER.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATALOADER.get('video_batch_size', 8)
+    batch_size = cfg.DATALOADER.get('batch_size', 8)
     train_dataset_config = cfg.DATASET.train
     train_dataset_config['pipeline'] = train_pipeline
-    train_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    train_dataset_config['video_batch_size'] = video_batch_size * nprocs
+    train_dataset_config['batch_size'] = batch_size * nprocs
     train_dataset_config['local_rank'] = local_rank
     train_dataset_config['nprocs'] = nprocs
     train_dataloader_config = cfg.DATALOADER
@@ -68,8 +66,7 @@ def train(local_rank,
         val_Pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
         val_dataset_config = cfg.DATASET.test
         val_dataset_config['pipeline'] = val_Pipeline
-        val_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-        val_dataset_config['video_batch_size'] = video_batch_size * nprocs
+        val_dataset_config['batch_size'] = batch_size * nprocs
         val_dataset_config['local_rank'] = local_rank
         val_dataset_config['nprocs'] = nprocs
         val_dataloader_config = cfg.DATALOADER

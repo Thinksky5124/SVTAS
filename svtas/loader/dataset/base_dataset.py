@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-28 16:24:03
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 16:26:41
+LastEditTime : 2023-10-16 09:39:51
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataset/base_dataset.py
 '''
@@ -31,8 +31,7 @@ class BaseTorchDataset(BaseDataset):
                  gt_path,
                  pipeline,
                  actions_map_file_path,
-                 temporal_clip_batch_size,
-                 video_batch_size,
+                 batch_size,
                  train_mode=False,
                  suffix='',
                  dataset_type='gtea',
@@ -58,8 +57,7 @@ class BaseTorchDataset(BaseDataset):
         self.local_rank = get_rank_from_os()
         self.nprocs = get_world_size_from_os()
         self.drop_last = drop_last
-        self.video_batch_size = video_batch_size
-        self.temporal_clip_batch_size = temporal_clip_batch_size
+        self.batch_size = batch_size
     
     @abc.abstractmethod
     def shuffle_dataset(self):

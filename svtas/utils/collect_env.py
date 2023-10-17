@@ -12,7 +12,10 @@ import subprocess
 import numpy as np
 import os.path as osp
 from collections import OrderedDict, defaultdict
-from .package_utils import is_opencv_available, is_torchvision_available
+from .package_utils import is_opencv_available, is_torchvision_available, get_git_hash
+
+if is_opencv_available():
+    import cv2
 
 def is_rocm_pytorch() -> bool:
     """Check whether the PyTorch is compiled on ROCm."""

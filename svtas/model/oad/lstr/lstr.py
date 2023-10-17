@@ -202,7 +202,7 @@ class LSTR(nn.Module):
             nn.init.normal_(m.weight.data, mean=1, std=0.02)
             nn.init.constant_(m.bias.data, 0)
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         self.apply(self.weights_init)
 
     def _clear_memory_buffer(self):

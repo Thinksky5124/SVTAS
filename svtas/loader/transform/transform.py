@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:35:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 15:02:54
+LastEditTime : 2023-10-16 19:51:53
 Description  : Transform module
 FilePath     : /SVTAS/svtas/loader/transform/transform.py
 '''
 import torch
 import copy
 import numpy as np
-from typing import Dict
+from typing import Dict, List
 import torchvision.transforms as transforms
 from . import transform_fn as custom_transforms
 from svtas.utils import AbstractBuildFactory
@@ -18,35 +18,41 @@ class BaseTransform(object):
     """Transform config to transform function
 
     Args:
-        transform_dict: Dict[Literl|List] config of transform
+        transform_results_dict: List[Dict[str, str]] config to transform whole results
+        transform_key_dict: Dict[Literl|List] config of transform results key
     """
-    def __init__(self, transform_dict={}) -> None:
+    def __init__(self, transform_results_list = [], transform_key_dict = {}) -> None:
         self.transforms_pipeline_list = []
-        for key, cfg in transform_dict.items():
+        for key, cfg in transform_key_dict.items():
             self._get_transformers_pipline(cfg=cfg, key=key)
-    
+        self.results_transforms_pipeline_list = self._generate_op_list_from_cfg_list(transform_results_list)
+
     @property
     def default_transform_name(self):
         return 'direct_transform'
-
+    
+    def _generate_op_list_from_cfg_list(self, cfg: List[Dict[str, str]]) -> List:
+        transform_op_list = []
+        for transforms_op in cfg:
+            name = list(transforms_op.keys())[0]
+            if list(transforms_op.values())[0] is None:
+                op = getattr(transforms, name, False)
+                if op is False:
+                    op = getattr(custom_transforms, name)()
+                else:
+                    op = op()
+            else:
+                op = getattr(transforms, name, False)
+                if op is False:
+                    op = getattr(custom_transforms, name)(**list(transforms_op.values())[0])
+                else:
+                    op = op(**list(transforms_op.values())[0])
+            transform_op_list.append(op)
+        return transform_op_list
+        
     def _get_transformers_pipline(self, cfg, key):
         if isinstance(cfg, list):
-            transform_op_list = []
-            for transforms_op in cfg:
-                name = list(transforms_op.keys())[0]
-                if list(transforms_op.values())[0] is None:
-                    op = getattr(transforms, name, False)
-                    if op is False:
-                        op = getattr(custom_transforms, name)()
-                    else:
-                        op = op()
-                else:
-                    op = getattr(transforms, name, False)
-                    if op is False:
-                        op = getattr(custom_transforms, name)(**list(transforms_op.values())[0])
-                    else:
-                        op = op(**list(transforms_op.values())[0])
-                transform_op_list.append(op)
+            transform_op_list = self._generate_op_list_from_cfg_list(cfg)
             self.transforms_pipeline_list.append([key, dict(ops=transforms.Compose(transform_op_list), transform_name=self.default_transform_name,
                                                       convert_name = key)])
         else:
@@ -55,22 +61,7 @@ class BaseTransform(object):
                 transforms_op_list = convert_cfg['transforms_op_list']
                 transforms_pipeline_dict = {}
                 transforms_pipeline_dict['convert_name'] = convert_name
-                transform_op_list = []
-                for transforms_op in transforms_op_list:
-                    name = list(transforms_op.keys())[0]
-                    if list(transforms_op.values())[0] is None:
-                        op = getattr(transforms, name, False)
-                        if op is False:
-                            op = getattr(custom_transforms, name)()
-                        else:
-                            op = op()
-                    else:
-                        op = getattr(transforms, name, False)
-                        if op is False:
-                            op = getattr(custom_transforms, name)(**list(transforms_op.values())[0])
-                        else:
-                            op = op(**list(transforms_op.values())[0])
-                    transform_op_list.append(op)
+                transform_op_list = self._generate_op_list_from_cfg_list(transforms_op_list)
                 transforms_pipeline_dict['ops'] = transforms.Compose(transform_op_list)
                 transforms_pipeline_dict['transform_name'] = transform_name
                 self.transforms_pipeline_list.append([key, transforms_pipeline_dict])
@@ -97,6 +88,9 @@ class BaseTransform(object):
         return outputs
     
     def __call__(self, results: Dict):
+        for transform_op in self.results_transforms_pipeline_list:
+            results = transform_op(results)
+
         for (key, transforms_pipeline) in self.transforms_pipeline_list:
             transform_func = getattr(self, transforms_pipeline['transform_name'])
             output = transform_func(results[key], transforms_pipeline=transforms_pipeline['ops'])
@@ -120,6 +114,9 @@ class VideoTransform(BaseTransform):
 @AbstractBuildFactory.register('dataset_transform')
 class VideoRawStoreTransform(VideoTransform):
     def __call__(self, results):
+        for transform_op in self.results_transforms_pipeline_list:
+            results = transform_op(results)
+
         for (key, transforms_pipeline) in self.transforms_pipeline_list:
             results["raw_" + key] = copy.deepcopy(results[key])
             transform_func = getattr(self, transforms_pipeline['transform_name'])
@@ -130,6 +127,9 @@ class VideoRawStoreTransform(VideoTransform):
 @AbstractBuildFactory.register('dataset_transform')
 class FeatureRawStoreTransform(FeatureStreamTransform):
     def __call__(self, results):
+        for transform_op in self.results_transforms_pipeline_list:
+            results = transform_op(results)
+            
         for (key, transforms_pipeline) in self.transforms_pipeline_list:
             results["raw_" + key] = copy.deepcopy(results[key])
             transform_func = getattr(self, transforms_pipeline['transform_name'])
@@ -141,6 +141,9 @@ class FeatureRawStoreTransform(FeatureStreamTransform):
 class VideoClipTransform(VideoTransform):
     
     def __call__(self, results):
+        for transform_op in self.results_transforms_pipeline_list:
+            results = transform_op(results)
+            
         for (key, transforms_pipeline) in self.transforms_pipeline_list:
             outputs = []
             for input in results[key]:

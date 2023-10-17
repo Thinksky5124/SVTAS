@@ -2,13 +2,13 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 18:25:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-07 10:36:55
+LastEditTime : 2023-10-16 09:44:16
 Description  : 50salads Dataset
-FilePath     : /SVTAS/config/_base_/dataset/50salads/50salads_stream_feature.py
+FilePath     : /SVTAS/config/_base_/dataloader/dataset/50salads/50salads_stream_feature.py
 '''
 DATASET = dict(
-    temporal_clip_batch_size = 1,
-    video_batch_size = 1,
+    
+    batch_size = 1,
     num_workers = 2,
     train = dict(
         name = "FeatureStreamSegmentationDataset",

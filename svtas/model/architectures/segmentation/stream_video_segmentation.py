@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 14:34:10
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 19:24:33
+LastEditTime : 2023-10-17 09:47:57
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_video_segmentation.py
 '''

@@ -522,7 +522,8 @@ class ResNet(nn.Module):
                 f'These parameters in pretrained checkpoint are not loaded'
                 f': {remaining_names}')
 
-    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
+    def init_weights(self, init_cfg: dict = {}):
+        child_model, revise_keys = init_cfg['child_model'], init_cfg['revise_keys']
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
         if child_model is False:

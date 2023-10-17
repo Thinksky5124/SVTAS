@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 20:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 15:27:39
+LastEditTime : 2023-10-16 19:33:52
 Description  : Transform Class Function
 FilePath     : /SVTAS/svtas/loader/transform/transform_fn/transform_fn.py
 '''
@@ -12,7 +12,7 @@ import numpy as np
 import cv2
 import torch
 import torch.nn.functional as F
-from typing import Any, Iterable
+from typing import Any, Iterable, Dict
 from PIL import Image
 
 __all__ = [
@@ -31,7 +31,12 @@ __all__ = [
     "RandomShortSideScaleJitter",
     "DtypeToUInt8",
     "SegmentationLabelsToBoundaryProbability",
-    "LabelsToOneHot"
+    "LabelsToOneHot",
+    "NumpyExpandims",
+    "TensorExpandims",
+    "NumpyDataTypeTransform",
+    "DropResultsByKeyName",
+    "RenameResultTransform"
 ]
 
 class BaseTransformFunction(metaclass=abc.ABCMeta):
@@ -346,3 +351,57 @@ class SegmentationLabelsToBoundaryProbability(BaseTransformFunction):
                 boundary /= boundary.max()
 
         return boundary[0, 0, :]
+
+class NumpyExpandims(BaseTransformFunction):
+    def __init__(self, axis = 0) -> None:
+        super().__init__()
+        self.axis = axis
+
+    def __call__(self, x : np.array) -> np.array:
+        return np.expand_dims(x, axis=self.axis)
+    
+class TensorExpandims(BaseTransformFunction):
+    def __init__(self, dim = 0) -> None:
+        super().__init__()
+        self.dim = dim
+    
+    def __call__(self, x : torch.Tensor) -> torch.Tensor:
+        return x.unsqueeze(self.dim)
+
+class NumpyDataTypeTransform(BaseTransformFunction):
+    def __init__(self, dtype = "float32") -> None:
+        super().__init__()
+        assert dtype in ['float32', 'int64']
+
+        if dtype == "float32":
+            self.dtype = np.float32
+        elif dtype == "int64":
+            self.dtype = np.int64
+    
+    def __call__(self, x : np.array) -> np.array:
+        return x.astype(self.dtype)
+
+class DropResultsByKeyName(BaseTransformFunction):
+    def __init__(self,
+                 drop_keys_list = ["frames"]) -> None:
+        super().__init__()
+        self.drop_keys_list = drop_keys_list
+    
+    def __call__(self, results: Dict[str, Any]) -> Dict[str, Any]:
+        for key_name in self.drop_keys_list:
+            if key_name in results:
+                results.pop(key_name)
+        return results
+
+class RenameResultTransform(BaseTransformFunction):
+    def __init__(self,
+                 rename_pair_dict: Dict) -> None:
+        super().__init__()
+        self.rename_pair_dict = rename_pair_dict
+    
+    def __call__(self, results: Dict[str, Any]) -> Dict[str, Any]:
+        for key, name in self.rename_pair_dict.items():
+            if key in results:
+                results[name] = results[key]
+                results.pop(key)
+        return results

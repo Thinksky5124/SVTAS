@@ -8,8 +8,8 @@ FilePath     : /SVTAS/config/_base_/dataset/gtea/gtea_video_clip.py
 '''
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
-    video_batch_size = 1,
+    
+    batch_size = 1,
     num_workers = 2,
     train = dict(
         name = "RawFrameClipSegmentationDataset",

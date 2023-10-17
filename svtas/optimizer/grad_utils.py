@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-11-21 10:53:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-06 11:48:40
+LastEditTime : 2023-10-16 21:56:14
 Description  : file content
-FilePath     : /SVTAS/svtas/optimizer/grad_clip.py
+FilePath     : /SVTAS/svtas/optimizer/grad_utils.py
 '''
 from ..utils import AbstractBuildFactory
 import torch

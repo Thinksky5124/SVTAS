@@ -36,7 +36,7 @@ class TCN3DHead(nn.Module):
         self.stage1 = SingleStage3DModel(num_layers, num_f_maps, seg_in_channels, num_classes)
         self.stages = nn.ModuleList([copy.deepcopy(SingleStage3DModel(num_layers, num_f_maps, num_f_maps, num_classes)) for s in range(num_stages-1)])
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
         # for m in self.modules():
         #     if isinstance(m, nn.Conv3d):

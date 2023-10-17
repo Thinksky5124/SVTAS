@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-21 11:09:06
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 16:20:12
+LastEditTime : 2023-10-17 10:24:39
 Description  : Transeger framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/transeger.py
 '''
@@ -23,12 +23,10 @@ class Transeger(nn.Module):
         self.text_backbone = AbstractBuildFactory.create_factory('model').create(text_backbone)
         self.joint = AbstractBuildFactory.create_factory('model').create(joint)
 
-        self.init_weights()
-
         # memory last clip labels
         self.last_clip_labels = None
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         self.joint.init_weights()
     
     def _clear_memory_buffer(self):

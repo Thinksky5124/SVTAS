@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 13:48:29
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 16:19:56
+LastEditTime : 2023-10-17 09:50:03
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/recognition/recognition.py
 '''

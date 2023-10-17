@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 19:48:11
+LastEditTime : 2023-10-15 22:44:10
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''

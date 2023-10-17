@@ -153,7 +153,7 @@ class C2F_TCN(nn.Module):
         self.tpp = TPPblock(128)
         self.weights = torch.nn.Parameter(torch.ones(6))
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

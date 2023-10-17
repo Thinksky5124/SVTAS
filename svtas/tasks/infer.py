@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-23 20:51:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 16:15:59
+LastEditTime : 2023-10-16 09:44:53
 Description  : infer script api
 FilePath     : /SVTAS/svtas/tasks/infer.py
 '''
@@ -67,15 +67,15 @@ def infer(local_rank,
     # default num worker: 0, which means no subprocess will be created
     num_workers = cfg.DATASET.get('num_workers', 0)
     infer_num_workers = cfg.DATASET.get('infer_num_workers', num_workers)
-    temporal_clip_batch_size = cfg.DATASET.get('temporal_clip_batch_size', 3)
-    video_batch_size = cfg.DATASET.get('video_batch_size', 8)
-    assert video_batch_size == 1, "Only Support video_batch_size equal to 1!"
+    
+    batch_size = cfg.DATASET.get('batch_size', 8)
+    assert batch_size == 1, "Only Support batch_size equal to 1!"
     sliding_concate_fn = build_pipline(cfg.COLLATE.infer)
     infer_Pipeline = build_pipline(cfg.DATASETPIPLINE.infer)
     infer_dataset_config = cfg.DATASET.infer
     infer_dataset_config['pipeline'] = infer_Pipeline
     infer_dataset_config['temporal_clip_batch_size'] = temporal_clip_batch_size
-    infer_dataset_config['video_batch_size'] = video_batch_size * nprocs
+    infer_dataset_config['batch_size'] = batch_size * nprocs
     infer_dataset_config['local_rank'] = local_rank
     infer_dataset_config['nprocs'] = nprocs
     infer_dataloader = torch.utils.data.DataLoader(
@@ -103,7 +103,7 @@ def infer(local_rank,
         
     # model param flops caculate
     if cfg.MODELPIPLINE.model.name not in ["FeatureSegmentation"]:
-        for transform_op in list(cfg.DATASETPIPLINE.test.transform.transform_dict.values())[0]:
+        for transform_op in list(cfg.DATASETPIPLINE.test.transform.transform_key_dict.values())[0]:
             if list(transform_op.keys())[0] in ['CenterCrop']:
                 image_size = transform_op['CenterCrop']['size']
         x_shape = [cfg.DATASET.infer.clip_seg_num, 3, image_size, image_size]
@@ -172,7 +172,7 @@ def infer(local_rank,
         else:
             ort_session = onnxruntime.InferenceSession(export_path)
             runner = InferONNXRunner(logger=logger,
-                        video_batch_size=video_batch_size,
+                        batch_size=batch_size,
                         Metric=Metric,
                         record_dict=record_dict,
                         cfg=cfg,

@@ -39,7 +39,7 @@ class TransudcerJointNet(nn.Module):
         self.tanh = nn.Tanh()
         self.fc2 = nn.Linear(hidden_channels, num_classes)
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

@@ -17,21 +17,24 @@ from svtas.utils import AbstractBuildFactory
 class FCHead(nn.Module):
     def __init__(self,
                  num_classes,
-                 clip_seg_num=15,
+                 clip_seg_num=None,
                  sample_rate=4,
                  drop_ratio=0.5,
                  in_channels=2048):
         super().__init__()
+        self.dynamic_shape = False
+        if clip_seg_num is None:
+            self.dynamic_shape = True
+        self.clip_seg_num = clip_seg_num
         self.in_channels = in_channels
         self.num_classes = num_classes
         self.sample_rate = sample_rate
-        self.clip_seg_num = clip_seg_num
         self.drop_ratio = drop_ratio
 
         self.dropout = nn.Dropout(p=self.drop_ratio)
         self.fc = nn.Linear(self.in_channels, num_classes)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 kaiming_init(m)
@@ -42,6 +45,8 @@ class FCHead(nn.Module):
     def forward(self, feature, masks):
         # segmentation branch
         # feature [N, in_channels, clip_seg_num]
+        if self.dynamic_shape:
+            self.clip_seg_num = feature.shape[-1]
 
         if self.dropout is not None:
             feature = self.dropout(feature)  # [N, in_channel, num_seg]

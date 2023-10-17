@@ -34,7 +34,7 @@ class TSMHead(nn.Module):
         self.dropout = nn.Dropout(p=self.drop_ratio)
         self.fc = nn.Linear(self.in_channels, num_classes)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 kaiming_init(m)

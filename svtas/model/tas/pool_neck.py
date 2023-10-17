@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-12-22 21:25:36
+LastEditTime : 2023-10-17 11:28:03
 Description: avg pooling 3d to 2d neck
-FilePath     : /SVTAS/svtas/model/necks/pool_neck.py
+FilePath     : /SVTAS/svtas/model/tas/pool_neck.py
 '''
 import torch
 import math
@@ -25,11 +25,14 @@ class PoolNeck(nn.Module):
     """
     def __init__(self,
                  in_channels=1280,
-                 clip_seg_num=30,
+                 clip_seg_num=None,
                  drop_ratio=0.5,
                  need_pool=True,
                  pool_type='mean'):
         super().__init__()
+        self.dynamic_shape = False
+        if clip_seg_num is None:
+            self.dynamic_shape = True
         self.clip_seg_num = clip_seg_num
         self.in_channels = in_channels
         self.drop_ratio = drop_ratio
@@ -44,7 +47,7 @@ class PoolNeck(nn.Module):
             raise NotImplementedError
 
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):
@@ -54,6 +57,8 @@ class PoolNeck(nn.Module):
         # x.shape = [N * num_segs, in_channels, 7, 7] or [N * num_segs, in_channels]
         # masks.shape = [N, C, T]
         feature = x
+        if self.dynamic_shape:
+            self.clip_seg_num = x.shape[0] // 2
 
         if len(list(feature.shape)) == 2:
             feature = feature.unsqueeze(-1).unsqueeze(-1)

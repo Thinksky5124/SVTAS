@@ -35,7 +35,7 @@ class TextPredFCHead(nn.Module):
         self.dropout = nn.Dropout(p=self.drop_ratio)
         self.fc = nn.Linear(self.in_channels, num_classes)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         normal_init(self.fc, std=self.init_std)
 
     def _clear_memory_buffer(self):

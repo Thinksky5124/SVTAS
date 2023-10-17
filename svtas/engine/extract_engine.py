@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 09:27:55
+LastEditTime : 2023-10-16 23:33:30
 Description  : Extract Engine Class
 FilePath     : /SVTAS/svtas/engine/extract_engine.py
 '''
@@ -126,7 +126,7 @@ class LossLandSpaceEngine(ExtractModelEngine):
             record['addition_record'] += [dict(name='loss_sample', fmt='.5f')]
             record['accumulate_type']['loss_sample'] = 'avg'
         super().__init__(model_name, model_pipline, out_path, logger_dict,
-                         record, metric, iter_method, checkpointor, running_mode)
+                         record, iter_method, checkpointor, metric, running_mode)
         self.xmin, self.xmax, self.xnum = xmin, xmax, xnum
         self.ymin, self.ymin, self.ynum = ymin, ymax, ynum
         self.vmin, self.vmax, self.vlevel = vmin, vmax, vlevel

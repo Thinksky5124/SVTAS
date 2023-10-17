@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 16:50:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-06 22:54:18
+LastEditTime : 2023-10-16 09:40:01
 Description  : Item Base Dataset
 FilePath     : /SVTAS/svtas/loader/dataset/item_base_dataset/item_base_dataset.py
 '''
@@ -22,8 +22,7 @@ class ItemDataset(data.Dataset, BaseTorchDataset):
                  gt_path,
                  pipeline,
                  actions_map_file_path,
-                 temporal_clip_batch_size,
-                 video_batch_size,
+                 batch_size,
                  train_mode=False,
                  suffix='',
                  dataset_type='gtea',
@@ -33,9 +32,8 @@ class ItemDataset(data.Dataset, BaseTorchDataset):
                  nprocs=1,
                  data_path=None) -> None:
         super().__init__(file_path, gt_path, pipeline, actions_map_file_path,
-                         temporal_clip_batch_size, video_batch_size, train_mode,
-                         suffix, dataset_type, data_prefix, drop_last, local_rank,
-                         nprocs, data_path)
+                         batch_size, train_mode, suffix, dataset_type,
+                         data_prefix, drop_last, local_rank, nprocs, data_path)
 
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')

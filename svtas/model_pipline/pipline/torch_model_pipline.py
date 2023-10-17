@@ -11,7 +11,7 @@ from svtas.utils.logger import AverageMeter
 from .base_pipline import BaseModelPipline
 from svtas.utils import AbstractBuildFactory, get_logger
 from svtas.utils.misc import set_property
-from svtas.optimizer.grad_clip import GradAccumulate, GradClip
+from svtas.optimizer.grad_utils import GradAccumulate, GradClip
 
 import torch
 from torch.cuda.amp import autocast as autocast

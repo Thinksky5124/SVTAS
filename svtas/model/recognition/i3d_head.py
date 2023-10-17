@@ -53,7 +53,7 @@ class I3DHead(nn.Module):
 
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         """Initiate the parameters from scratch."""
         normal_init(self.fc_cls, std=self.init_std)
     

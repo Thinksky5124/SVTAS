@@ -102,7 +102,7 @@ class BridgePromptFusionEarlyhyp(nn.Module):
         self.transformer = BPromptFusing(clip_length=self.clip_seg_num, embed_dim=embedding_dim, n_layers=num_layers,
                                             heads=transformer_heads)
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         self.apply(self._init_weights)
 
     def _clear_memory_buffer(self):

@@ -55,7 +55,7 @@ class TransegerTransformerJointNet(nn.Module):
         self.after_dropout = nn.Dropout(p=dropout_rate)
         self.conv_cls = nn.Conv1d(in_channels, num_classes, 1)
     
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

@@ -103,7 +103,7 @@ class Conv2plus1d(nn.Module):
         x = self.conv_t(x)
         return x
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         """Initiate the parameters from scratch."""
         kaiming_init(self.conv_s)
         kaiming_init(self.conv_t)

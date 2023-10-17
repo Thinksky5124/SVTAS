@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-28 15:44:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-10-30 16:36:49
+LastEditTime : 2023-10-17 10:30:56
 Description  : MViT ref:https://github.com/facebookresearch/SlowFast/blob/main/slowfast/models/video_model_builder.py
-FilePath     : /SVTAS/svtas/model/backbones/video/mvit.py
+FilePath     : /SVTAS/svtas/model/video/mvit.py
 '''
 
 import torch
@@ -434,7 +434,8 @@ class MViT(nn.Module):
     def _clear_memory_buffer(self):
         pass
     
-    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
+    def init_weights(self, init_cfg: dict = {}):
+        child_model, revise_keys = init_cfg['child_model'], init_cfg['revise_keys']
         if child_model is False:
             if isinstance(self.pretrained, str):
                 def revise_keys_fn(state_dict, revise_keys=[(r'module.', r'')]):

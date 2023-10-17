@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-27 12:03:04
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 16:20:08
+LastEditTime : 2023-10-17 10:24:31
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/stream_action_clip_segmentation.py
 '''
@@ -56,10 +56,8 @@ class StreamSegmentationActionCLIPWithBackbone(TorchBaseModel):
         else:
             self.head = None
             self.sample_rate = weight_init_cfg['sample_rate']
-    
-        self.init_weights()
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         if isinstance(self.pretrained, str):
             def revise_keys_fn(state_dict, revise_keys=[(r'module.', r'')]):
                 # strip prefix of state_dict

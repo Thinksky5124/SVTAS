@@ -107,7 +107,7 @@ class TASegFormer(nn.Module):
         else:
             self.dropout = None
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         pass
 
     def _clear_memory_buffer(self):

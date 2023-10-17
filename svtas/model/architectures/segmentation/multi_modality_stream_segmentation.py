@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-03 16:24:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-09-25 15:15:23
+LastEditTime : 2023-10-17 10:24:23
 Description  : Multi Modality stream segmentation
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/multi_modality_stream_segmentation.py
 '''
@@ -37,8 +37,6 @@ class MultiModalityStreamSegmentation(TorchBaseModel):
             self.audio_backbone = AbstractBuildFactory.create_factory('model').create(audio_backbone)
         else:
             self.audio_backbone = None
-        
-        self.init_weights()
 
         self.sample_rate = head.sample_rate
         assert rgb_backbone_type in ['3d', '2d']
@@ -48,7 +46,7 @@ class MultiModalityStreamSegmentation(TorchBaseModel):
         self.flow_backbone_type = flow_backbone_type
         self.audio_backbone_type = audio_backbone_type
 
-    def init_weights(self):
+    def init_weights(self, init_cfg: dict = {}):
         self.rgb_backbone.init_weights(child_model=False, revise_keys=[(r'backbone.', r'')])
         self.neck.init_weights()
         self.head.init_weights()

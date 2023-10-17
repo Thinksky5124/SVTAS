@@ -68,7 +68,8 @@ class TransducerTextEncoder(nn.Module):
     def _clear_memory_buffer(self):
         pass
     
-    def init_weights(self, child_model=False, revise_keys=[(r'backbone.', r'')]):
+    def init_weights(self, init_cfg: dict = {}):
+        child_model, revise_keys = init_cfg['child_model'], init_cfg['revise_keys']
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger  = get_logger("SVTAS")

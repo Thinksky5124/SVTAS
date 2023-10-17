@@ -14,8 +14,8 @@ rgb_clip_seg_num = flow_clip_seg_num // gop_size
 rgb_sliding_window = flow_sliding_window
 
 DATASET = dict(
-    temporal_clip_batch_size = 3,
-    video_batch_size = 2,
+    
+    batch_size = 2,
     num_workers = 2 * 2,
     train = dict(
         name = "CompressedVideoStreamSegmentationDataset",

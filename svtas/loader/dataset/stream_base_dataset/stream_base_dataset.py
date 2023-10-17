@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 16:48:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 17:37:39
+LastEditTime : 2023-10-16 19:21:17
 Description  : Stream Base Dataset
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/stream_base_dataset.py
 '''
@@ -21,8 +21,7 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
                  gt_path,
                  pipeline,
                  actions_map_file_path,
-                 temporal_clip_batch_size,
-                 video_batch_size,
+                 batch_size,
                  train_mode = False,
                  suffix='',
                  dataset_type='gtea',
@@ -32,9 +31,8 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
                  nprocs=1,
                  data_path=None) -> None:
         super().__init__(file_path, gt_path, pipeline, actions_map_file_path,
-                         temporal_clip_batch_size, video_batch_size, train_mode,
-                         suffix, dataset_type, data_prefix, drop_last, local_rank,
-                         nprocs, data_path)
+                         batch_size, train_mode, suffix, dataset_type,
+                         data_prefix, drop_last, local_rank, nprocs, data_path)
         # actions dict generate
         file_ptr = open(self.actions_map_file_path, 'r')
         actions = file_ptr.read().split('\n')[:-1]
@@ -46,7 +44,7 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
         # construct sampler
         self.video_sampler_dataloader = torch.utils.data.DataLoader(
                 VideoSamplerDataset(file_path=file_path),
-                                    batch_size=video_batch_size * self.nprocs,
+                                    batch_size=batch_size * self.nprocs,
                                     num_workers=0,
                                     shuffle=self.train_mode)
 
@@ -64,12 +62,12 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
         sample_videos_list = []
         self.step_num = len(video_sampler_dataloader)
         for step, sample_videos in enumerate(video_sampler_dataloader):
-            if len(list(sample_videos)) < self.video_batch_size * self.nprocs:
+            if len(list(sample_videos)) < self.batch_size * self.nprocs:
                 if self.drop_last:
                     break
                 else:
                     sample_videos_index_list = list(sample_videos)
-                    padding_size = self.video_batch_size * self.nprocs - len(sample_videos_index_list)
+                    padding_size = self.batch_size * self.nprocs - len(sample_videos_index_list)
                     if padding_size <= len(sample_videos_index_list):
                         sample_videos_index_list += sample_videos_index_list[:padding_size]
                     else:
@@ -92,32 +90,22 @@ class StreamDataset(BaseTorchDataset, data.IterableDataset):
     
     def _step_sliding_sampler(self, woker_id, num_workers, info_list):
         # dispatch function
-        current_sliding_cnt = woker_id * self.temporal_clip_batch_size
-        mini_sliding_cnt = 0
-        next_step_flag = False
+        global_world_cnt = 0
         for step, sliding_num, info in info_list:
-            while current_sliding_cnt < sliding_num and len(info) > 0:
-                while mini_sliding_cnt < self.temporal_clip_batch_size:
-                    if current_sliding_cnt < sliding_num:
-                        data_dict = self._get_one_videos_clip(current_sliding_cnt, info)
+            for current_sliding_cnt in range(sliding_num):
+                if global_world_cnt == woker_id:
+                    for micro_batch in info:
+                        # actually sample
+                        data_dict = self._get_one_videos_clip(current_sliding_cnt, micro_batch)
                         data_dict['sliding_num'] = sliding_num
                         data_dict['step'] = step
                         data_dict['current_sliding_cnt'] = current_sliding_cnt
                         yield data_dict
-                        current_sliding_cnt = current_sliding_cnt + 1
-                        mini_sliding_cnt = mini_sliding_cnt + 1
-                    else:
-                        next_step_flag = True
-                        break
-                if current_sliding_cnt <= sliding_num and next_step_flag == False:
-                    current_sliding_cnt = current_sliding_cnt + (num_workers - 1) * self.temporal_clip_batch_size
-
-                if mini_sliding_cnt >= self.temporal_clip_batch_size:
-                    mini_sliding_cnt = 0
-
-            # modify num_worker
-            current_sliding_cnt = current_sliding_cnt - sliding_num
-            next_step_flag = False
+                # rank control
+                global_world_cnt += 1
+                if global_world_cnt >= num_workers:
+                    global_world_cnt = 0
+                    
         yield self._get_end_videos_clip()
 
     def __len__(self):
