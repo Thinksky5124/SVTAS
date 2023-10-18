@@ -6,28 +6,146 @@
 - If you want to reproduce paper list, please checkout branch to **svtas-paper**!
 
 # Paper List
-- Streaming Video Temporal Action Segmentation In Real Time, [![](https://img.shields.io/badge/arViv-@doi:2209.13808-orange.svg)](https://arxiv.org/pdf/2209.13808.pdf), **statu**: under review 
+- Streaming Video Temporal Action Segmentation In Real Time, [![](https://img.shields.io/badge/arViv-@doi:2209.13808-orange.svg)](https://arxiv.org/pdf/2209.13808), **statu**: accepted by ISKE2023
+- End-to-End Streaming Video Temporal Action Segmentation with Reinforce Learning, [![](https://img.shields.io/badge/arViv-@doi:2209.13808-orange.svg)](https://arxiv.org/abs/2309.15683), **statu**: under review
 
-## Abstract
-
-Temporal action segmentation (TAS) is a critical step toward long-term video understanding. Recent studies follow a pattern that builds models based on features instead of raw video picture information. However, we claim those models are trained complicatedly and limit application scenarios. It is hard for them to segment human actions of video in real time because they must work after the full video features are extracted. As the real-time action segmentation task is different from TAS task, we define it as streaming video real-time temporal action segmentation (SVTAS) task.
-
+## Streaming Video Temporal Action Segmentation
 <div align="center">
   <img src="docs/image/demo.gif" width=440/></div>
 
+Our framework integrates **training**, **inference** and **deployment services** to meet the demand of streaming video temporal action segmentation, with the goal of creating an **AI Infra** framework for streaming video temporal action segmentation.
+
+# Installation
+See the SVTAS installation guide to install from pip, or build from source.
+
+To install the current release:
+
+```bash
+python setup.py install .
+```
+To update SVTAS to the latest version, add --upgrade flag to the above commands.
+
 # Framework Feature
-- [x] Distribution train
-- [x] Tensorboard visualization
-- [x] Caculate model Params and Flops
-- [x] Apex accelerate
-- [x] Apex ditributedd accelerate
-- [x] Pillow-SMID accelerate sample
-- [x] Onnxruntime Infer Suppport
-- [x] Support CAM Visualization
-- [x] Assemble the `pytest` testing framework
-- [x] Pytorch Profiler Suppport
-- [ ] Pulg-in DeepSpeed
-- [ ] Pulg-in Tritron
+<img src="docs/image/framework.png" width="100%"/>
+
+<table>
+<tbody>
+<tr align="center" valign="bottom">
+<td></td>
+<td>
+<b>Training</b>
+</td>
+<td>
+<b>Inference</b>
+</td>
+<td>
+<b>Serving</b>
+</td>
+</tr>
+<tr valign="top">
+<td align="center" valign="middle">
+<b>Supports</b>
+</td>
+<td>
+<ul>
+<li><b>Autotunning</b></li>
+<ul>
+<li>Hyper-parameter search</a></li>
+<li>Multi-trial</a></li>
+</ul>
+<li><b>Architecture search</b></li>
+<ul>
+<li>NAS</a></li>
+</ul>
+<li><b>Evaluation</b></li>
+<ul>
+<li>FLOPs</a></li>
+<li>Param</a></li>
+<li>Performance</a></li>
+</ul>
+</ul>
+</td>
+<td>
+<ul>
+<li><b>Quantization</b></li>
+<ul>
+<li>Todo</a></li>
+</ul>
+<li><b>Pruning</b></li>
+<ul>
+<li>Todo</a></li>
+</ul>
+<li><b>Evaluation</b></li>
+<ul>
+<li>FLOPs Comapre</a></li>
+<li>Param</a></li>
+<li>Precision comparison</a></li>
+</ul>
+</ul>
+</td>
+<td>
+<ul>
+<li><b>Server</b></li>
+<ul>
+<li>Todo</a></li>
+</ul>
+<li><b>Client</b></li>
+<ul>
+<li>Todo</a></li>
+</ul>
+<li><b>Evaluation</b></li>
+<ul>
+<li>Throughput</a></li>
+<li>Latency</a></li>
+<li>Resource</a></li>
+</ul>
+</ul>
+</td>
+<tr align="center" valign="bottom">
+<td></td>
+<td>
+<b>Model Zoom</b>
+</td>
+<td>
+<b>Tutorials</b>
+</td>
+<td>
+<b>Services Component</b>
+</td>
+</tr>
+<tr valign="top">
+<td align="center" valign="middle">
+<b>Algorithms</b>
+</td>
+<td>
+<ul>
+<li><a href="https://arxiv.org/abs/1903.01945">MS-TCN</a></li>
+<li><a href="https://arxiv.org/abs/2110.08568">ASFormer</a></li>
+<li><a href="https://arxiv.org/abs/2007.06866">ASRF</a></li>
+<li><a href="https://arxiv.org/abs/2112.01402">C2F-TCN</a></li>
+<li><a href="https://arxiv.org/pdf/2209.13808">Transeger</a></li>
+<li><a href="https://arxiv.org/abs/2303.17959">Diffact</a></li>
+<li>More...</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>CAM Visualization</li>
+<li>DeepSpeed</li>
+<li>Tritron (Todo)</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>Local Machine</li>
+<li>Distribution Machine</li>
+<li>Assemble Pytest Framweork</li>
+<li>Tensorboard</li>
+</ul>
+</ul>
+</td>
+</tbody>
+</table>
 
 # Envirnment Prepare
 
@@ -72,9 +190,19 @@ Title = {Streaming Video Temporal Action Segmentation In Real Time},
 Year = {2022},
 Eprint = {arXiv:2209.13808},
 }
+
+@article{wen2023end,
+  title={End-to-End Streaming Video Temporal Action Segmentation with Reinforce Learning},
+  author={Wen, Wujun and Zhang, Jinrong and Liu, Shenglan and Li, Yunheng and Li, Qifeng and Feng, Lin},
+  journal={arXiv preprint arXiv:2309.15683},
+  year={2023}
+}
 ```
 # Acknowledgement
 This repo borrowed code from many great open source libraries, thanks again for their selfless dedication.
 - [mmaction2](https://github.com/open-mmlab/mmaction2)
 - [paddlevideo](https://github.com/PaddlePaddle/PaddleVideo)
 - [SlowFast](https://github.com/facebookresearch/SlowFast)
+
+# License
+The entire codebase is under [Apache2.0 license](LICENSE).
