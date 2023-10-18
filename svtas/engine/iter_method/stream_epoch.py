@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:41:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 22:54:17
+LastEditTime : 2023-10-18 21:02:10
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/stream_epoch.py
 '''
@@ -93,7 +93,7 @@ class StreamEpochMethod(EpochMethod):
                     self.model_pipline.grad_accumulate.set_update_conf()
                 self.model_pipline.update_model_param()
 
-            if not self.model_pipline.post_processing.init_flag:
+            if not self.model_pipline.post_processing_is_init():
                 vid_list = data['vid_list']
                 self.current_step_vid_list = vid_list
                 self.model_pipline.init_post_processing(input_data=data)
@@ -173,7 +173,7 @@ class StreamEpochMethod(EpochMethod):
             self.exec_hook("iter_end")
             self.end_epoch(epoch=epoch)
 
-            if epoch % self.save_interval == 0 and self.mode in ['train']:
+            if epoch % self.save_interval == 0 and self.mode in ['train', 'profile']:
                 yield epoch
 
             if self.mode in ['validation'] and self.best_score > self.memory_score:

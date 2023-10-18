@@ -55,41 +55,44 @@ class DeepspeedModelPipline(TorchModelPipline):
     
     @torch.no_grad()
     def output_post_processing(self, cur_vid, model_outputs=None, input_data=None):
-        # get pred result
-        pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
-        collect_dict = dict(
-            predict=pred_cls_list,
-            output_np=pred_score_list,
-            ground_truth=ground_truth_list,
-            vid=cur_vid
-        )
-        gather_objects = [collect_dict for _ in range(self.world_size)] # any picklable object
-        output_list = [None for _ in gather_objects]
-        # dist.all_gather(output_list, gather_objects[dist.get_rank()])
-        torch.distributed.all_gather_object(output_list, gather_objects[dist.get_rank()])
-        # collect
-        pred_cls_list_i = []
-        pred_score_list_i = []
-        ground_truth_list_i = []
-        vid_i = []
-        for output_dict in output_list:
-            pred_cls_list_i = pred_cls_list_i + output_dict["predict"]
-            pred_score_list_i = pred_score_list_i + output_dict["output_np"]
-            ground_truth_list_i = ground_truth_list_i + output_dict["ground_truth"]
-            vid_i = vid_i + output_dict["vid"]
-        outputs = dict(predict=pred_cls_list_i,
-                        output_np=pred_score_list_i,
-                        groundtruth=ground_truth_list)
-        ground_truth_list = ground_truth_list_i
-        vid = vid_i
+        if self.post_processing is not None:
+            # get pred result
+            pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
+            collect_dict = dict(
+                predict=pred_cls_list,
+                output_np=pred_score_list,
+                ground_truth=ground_truth_list,
+                vid=cur_vid
+            )
+            gather_objects = [collect_dict for _ in range(self.world_size)] # any picklable object
+            output_list = [None for _ in gather_objects]
+            # dist.all_gather(output_list, gather_objects[dist.get_rank()])
+            torch.distributed.all_gather_object(output_list, gather_objects[dist.get_rank()])
+            # collect
+            pred_cls_list_i = []
+            pred_score_list_i = []
+            ground_truth_list_i = []
+            vid_i = []
+            for output_dict in output_list:
+                pred_cls_list_i = pred_cls_list_i + output_dict["predict"]
+                pred_score_list_i = pred_score_list_i + output_dict["output_np"]
+                ground_truth_list_i = ground_truth_list_i + output_dict["ground_truth"]
+                vid_i = vid_i + output_dict["vid"]
+            outputs = dict(predict=pred_cls_list_i,
+                            output_np=pred_score_list_i,
+                            groundtruth=ground_truth_list)
+            ground_truth_list = ground_truth_list_i
+            vid = vid_i
 
-        output_dict = dict(
-            vid=vid,
-            outputs=outputs,
-            ground_truth=ground_truth_list
-        )
-        dist.barrier()
-        return output_dict
+            output_dict = dict(
+                vid=vid,
+                outputs=outputs,
+                ground_truth=ground_truth_list
+            )
+            dist.barrier()
+            return output_dict
+        else:
+            return {}
 
     def backward(self, loss_dict):
         loss = loss_dict["loss"]

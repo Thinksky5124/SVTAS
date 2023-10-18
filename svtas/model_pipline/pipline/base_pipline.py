@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 16:30:21
+LastEditTime : 2023-10-18 20:50:02
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
@@ -100,6 +100,16 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
             self.model.init_weights()
         else:
             self.model.init_weights(init_cfg=init_cfg)
+    
+    def post_processing_is_init(self):
+        if self.post_processing is not None:
+            return self.post_processing.init_flag
+        else:
+            return False
+    
+    def set_post_processing_init_flag(self, val: bool):
+        if self.post_processing is not None:
+            self.post_processing.init_flag = val
 
     @abc.abstractmethod
     def forward(self, data_dict):

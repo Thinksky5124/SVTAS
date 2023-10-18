@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 19:49:08
+LastEditTime : 2023-10-18 21:02:04
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -93,7 +93,7 @@ class EpochMethod(BaseIterMethod):
         self.dataloader.shuffle_dataloader(epoch)
         self.model_pipline.resert_model_pipline()
         self.record.init_record()
-        self.model_pipline.post_processing.init_flag = False
+        self.model_pipline.set_post_processing_init_flag(False)
         self.current_step_vid_list = None
     
     def end_epoch(self, epoch):
@@ -184,7 +184,7 @@ class EpochMethod(BaseIterMethod):
             self.model_pipline.update_model_param()
             
         # update post processing
-        if not self.model_pipline.post_processing.init_flag:
+        if not self.model_pipline.post_processing_is_init():
             vid_list = input_data['vid_list']
             self.current_step_vid_list = vid_list
             self.model_pipline.init_post_processing(input_data=input_data)
@@ -279,10 +279,11 @@ class EpochMethod(BaseIterMethod):
                 self.init_iter(r_tic=r_tic)
                 self.run_one_batch(data=data)
                 self.end_iter(b_tic=r_tic, step=i, epoch=epoch)
+                r_tic = time.time()
             self.exec_hook("iter_end")
             self.end_epoch(epoch=epoch)
 
-            if epoch % self.save_interval == 0 and self.mode in ['train']:
+            if epoch % self.save_interval == 0 and self.mode in ['train', 'profile']:
                 yield epoch
 
             if self.mode in ['validation'] and self.best_score > self.memory_score:

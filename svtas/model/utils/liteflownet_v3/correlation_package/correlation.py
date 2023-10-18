@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-10-17 13:15:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2022-11-28 12:18:13
+LastEditTime : 2023-10-18 17:10:42
 Description  : file content
-FilePath     : /SVTAS/svtas/model/backbones/utils/liteflownet_v3/correlation_package/correlation.py
+FilePath     : /SVTAS/svtas/model/utils/liteflownet_v3/correlation_package/correlation.py
 '''
 import torch
 from torch.nn.modules.module import Module
@@ -13,7 +13,7 @@ import warnings
 try:
     import correlation_cuda
 except:
-    warnings.warn("Can't not use LiteFlowNetV3")
+    pass
 
 class CorrelationFunction(Function):
 

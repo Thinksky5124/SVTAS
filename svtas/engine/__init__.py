@@ -12,7 +12,7 @@ from .extract_engine import (ExtractFeatureEngine, ExtractMVResEngine,
 from .standalone_engine import StandaloneEngine
 from .deepspeed_engine import DeepSpeedDistributedDataParallelEngine
 from .torch_ddp_engine import TorchDistributedDataParallelEngine
-from .profile_engine import TorchStandaloneProfileEngine
+from .profile_engine import TorchStandaloneProfilerEngine
 from .visual_engine import VisualEngine
 
 __all__ = [
@@ -20,5 +20,5 @@ __all__ = [
     'ExtractFeatureEngine', 'ExtractMVResEngine', 'ExtractOpticalFlowEngine',
     'ExtractModelEngine', 'LossLandSpaceEngine',
     'DeepSpeedDistributedDataParallelEngine', 'TorchDistributedDataParallelEngine',
-    'TorchStandaloneProfileEngine', 'VisualEngine'
+    'TorchStandaloneProfilerEngine', 'VisualEngine'
 ]

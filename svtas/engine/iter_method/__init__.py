@@ -9,7 +9,8 @@ FilePath     : /SVTAS/svtas/engine/iter_method/__init__.py
 from .base_iter_method import BaseIterMethod
 from .epoch import EpochMethod
 from .stream_epoch import StreamEpochMethod
+from .iter import IterMethod
 
 __all__ = [
-    'BaseIterMethod', 'EpochMethod', 'StreamEpochMethod'
+    'BaseIterMethod', 'EpochMethod', 'StreamEpochMethod', 'IterMethod'
 ]

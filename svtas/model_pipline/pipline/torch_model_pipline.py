@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 15:10:14
+LastEditTime : 2023-10-18 20:59:01
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_pipline.py
 '''
@@ -26,7 +26,7 @@ class TorchModelPipline(BaseModelPipline):
 
     def __init__(self,
                  model,
-                 post_processing,
+                 post_processing=None,
                  device=None,
                  criterion=None,
                  optimizer=None,
@@ -81,32 +81,39 @@ class TorchModelPipline(BaseModelPipline):
     
     @torch.no_grad()
     def init_post_processing(self, input_data) -> None:
-        vid_list = input_data['vid_list']
-        sliding_num = input_data['sliding_num']
-        if len(vid_list) > 0:
-            self.post_processing.init_scores(sliding_num, len(vid_list))
+        if self.post_processing is not None:
+            vid_list = input_data['vid_list']
+            sliding_num = input_data['sliding_num']
+            if len(vid_list) > 0:
+                self.post_processing.init_scores(sliding_num, len(vid_list))
 
     @torch.no_grad()
     def update_post_processing(self, model_outputs, input_data) -> None:
-        idx = input_data['current_sliding_cnt']
-        labels = input_data['labels']
-        score = model_outputs['output']
-        with torch.no_grad():
-            output = self.post_processing.update(score, labels, idx)
+        if self.post_processing is not None:
+            idx = input_data['current_sliding_cnt']
+            labels = input_data['labels']
+            score = model_outputs['output']
+            with torch.no_grad():
+                output = self.post_processing.update(score, labels, idx)
+        else:
+            output = None
         return output
 
     @torch.no_grad()
     def output_post_processing(self, cur_vid, model_outputs = None, input_data = None):
-        # get pred result
-        pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
-        outputs = dict(predict=pred_cls_list,
-                       output_np=pred_score_list)
-        output_dict = dict(
-            vid=cur_vid,
-            outputs=outputs,
-            ground_truth=ground_truth_list
-        )
-        return output_dict
+        if self.post_processing is not None:
+            # get pred result
+            pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
+            outputs = dict(predict=pred_cls_list,
+                        output_np=pred_score_list)
+            output_dict = dict(
+                vid=cur_vid,
+                outputs=outputs,
+                ground_truth=ground_truth_list
+            )
+            return output_dict
+        else:
+            return {}
     
     @torch.no_grad()
     def direct_output_post_processing(self, cur_vid, model_outputs = None, input_data = None):

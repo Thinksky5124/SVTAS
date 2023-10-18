@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 14:58:38
+LastEditTime : 2023-10-18 20:47:37
 Description: test script api
 FilePath     : /SVTAS/svtas/tasks/profile.py
 '''
@@ -38,18 +38,7 @@ def profile(local_rank,
     device = model_pipline.device
 
     # 2. Construct dataset and dataloader.
-    # default num worker: 0, which means no subprocess will be created
-    batch_size = cfg.DATALOADER.get('batch_size', 8)
-    test_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
-    test_dataset_config = cfg.DATASET.test
-    test_dataset_config['pipeline'] = test_pipeline
-    test_dataset_config['batch_size'] = batch_size * nprocs
-    test_dataset_config['local_rank'] = local_rank
-    test_dataset_config['nprocs'] = nprocs
-    test_dataloader_config = cfg.DATALOADER
-    test_dataloader_config['dataset'] = AbstractBuildFactory.create_factory('dataset').create(test_dataset_config)
-    test_dataloader_config['collate_fn'] = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test)
-    test_dataloader = AbstractBuildFactory.create_factory('dataloader').create(test_dataloader_config)
+    test_dataloader = AbstractBuildFactory.create_factory('dataloader').create(cfg.DATALOADER)
     
      # 3. build engine
     engine_config = cfg.ENGINE
@@ -58,7 +47,7 @@ def profile(local_rank,
     engine_config['model_name'] = model_name
     profile_engine: BaseEngine = AbstractBuildFactory.create_factory('engine').create(engine_config)
     profile_engine.set_dataloader(test_dataloader)
-    profile_engine.running_mode = 'test'
+    profile_engine.running_mode = 'profile'
     
     # 6. resume engine
     if cfg.ENGINE.checkpointor.get('load_path', None) is not None:
