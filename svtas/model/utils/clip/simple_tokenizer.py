@@ -20,7 +20,7 @@ import regex as re
 
 @lru_cache()
 def default_bpe():
-    return os.path.join(os.getcwd(), "svtas", "model", "backbones", "utils", "clip", "bpe_simple_vocab_16e6.txt.gz")
+    return os.path.join(os.getcwd(), "svtas", "model", "utils", "clip", "bpe_simple_vocab_16e6.txt.gz")
 
 
 @lru_cache()
