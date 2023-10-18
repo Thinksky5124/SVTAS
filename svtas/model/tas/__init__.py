@@ -28,7 +28,7 @@ from .ipb_fusion_neck import IPBFusionNeck
 from .unsample_decoder_neck import UnsampleDecoderNeck
 from .task_fuion_neck import TaskFusionPoolNeck
 from .diffact_seg import DiffsusionActionSegmentationEncoderModel
-from .tas_diffusion import TemporalActionSegmentationDiffusionModel
+from .tas_diffusion import TemporalActionSegmentationDDIMModel
 
 __all__ = [
     'MultiStageModel', 'ASFormer', 'SingleStageModel',
@@ -39,5 +39,5 @@ __all__ = [
     'ETESVSNeck', 'ConvLSTMResidualLayer', 'LSTMST3DNeck', 'PoolNeck',
     'ActionCLIPFusionNeck', 'BridgePromptFusionEarlyhyp',
     'MultiModalityFusionNeck', 'IPBFusionNeck', 'UnsampleDecoderNeck',
-    'TaskFusionPoolNeck', 'TemporalActionSegmentationDiffusionModel'
+    'TaskFusionPoolNeck', 'TemporalActionSegmentationDDIMModel'
 ]

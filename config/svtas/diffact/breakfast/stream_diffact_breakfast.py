@@ -48,7 +48,7 @@ MODEL_PIPLINE = dict(
         accumulate_type = "conf"
     ),
     model = dict(
-        name = "TemporalActionSegmentationDiffusionModel",
+        name = "TemporalActionSegmentationDDIMModel",
         vae = dict(
             name = "TemporalActionSegmentationVariationalAutoEncoder",
             encoder = dict(

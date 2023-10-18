@@ -7,6 +7,6 @@
  # @FilePath     : /SVTAS/scripts/test.sh
 ### 
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 
-python tools/launch.py  --mode test -c config/svtas/svtas-rl/svtas_rl_gtea.py
+python tools/launch.py  --mode test -c config/svtas/diffact/gtea/stream_diffact_gtea.py

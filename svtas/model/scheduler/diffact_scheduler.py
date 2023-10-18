@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 23:10:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 15:47:04
+LastEditTime : 2023-10-17 13:01:41
 Description  : file content
 FilePath     : /SVTAS/svtas/model/scheduler/diffact_scheduler.py
 '''
@@ -18,7 +18,8 @@ from .base_scheduler import BaseDiffusionScheduler
 @AbstractBuildFactory.register('diffusion_scheduler')
 class DiffsusionActionSegmentationScheduler(BaseDiffusionScheduler):
     """
-    Diffusion Action Segmentation ref:https://arxiv.org/pdf/2303.17959.pdf
+    Diffusion Action Segmentation ref:https://arxiv.org/pdf/2303.17959.pdf,
+    it is modify from DDIM scheduler
     """
     num_inference_steps: int
     def __init__(self,
@@ -131,7 +132,7 @@ class DiffsusionActionSegmentationScheduler(BaseDiffusionScheduler):
         alpha_next = self.alphas_cumprod[next_timestep]
 
         sigma = self.ddim_sampling_eta * ((1 - alpha / alpha_next) * (1 - alpha_next) / (1 - alpha)).sqrt()
-        c = (1 - alpha_next - sigma ** 2).sqrt()
+        c = (1 - alpha_next - sigma ** 2).sqrt() if (1 - alpha_next - sigma ** 2) >= 0 else 0
 
         noise = torch.randn_like(sample)
 

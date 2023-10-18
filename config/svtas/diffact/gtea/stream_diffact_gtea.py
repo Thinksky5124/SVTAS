@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 20:59:27
+LastEditTime : 2023-10-17 16:02:46
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/gtea/stream_diffact_gtea.py
 '''
@@ -16,7 +16,7 @@ split = 1
 num_classes = 11
 ignore_index = -100
 epochs = 800
-batch_size = 1
+batch_size = 4
 in_channels = 2048
 sample_rate = 2
 clip_seg_num = 64
@@ -48,7 +48,7 @@ MODEL_PIPLINE = dict(
         accumulate_type = "conf"
     ),
     model = dict(
-        name = "TemporalActionSegmentationDiffusionModel",
+        name = "TemporalActionSegmentationDDIMModel",
         vae = dict(
             name = "TemporalActionSegmentationVariationalAutoEncoder",
             encoder = dict(
@@ -133,7 +133,7 @@ MODEL_PIPLINE = dict(
 DATALOADER = dict(
     name = "TorchStreamDataLoader",
     batch_size = batch_size,
-    num_workers = 2
+    num_workers = 4
 )
 
 COLLATE = dict(

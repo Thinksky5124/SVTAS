@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-07 19:11:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-17 10:52:32
+LastEditTime : 2023-10-17 14:17:35
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/gtea/stream_tas_diff_gtea.py
 '''
@@ -21,7 +21,7 @@ sliding_window = clip_seg_num * sample_rate
 split = 1
 sigma = 1
 batch_size = 1
-epochs = 80
+epochs = 100
 
 model_name = "Stream_Diffact_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
@@ -49,7 +49,7 @@ MODEL_PIPLINE = dict(
     #     accumulate_type = "conf"
     # ),
     model = dict(
-        name = "TemporalActionSegmentationDiffusionModel",
+        name = "TemporalActionSegmentationDDIMModel",
         vae = dict(
             name = "TemporalActionSegmentationVariationalAutoEncoder",
             encoder = dict(
@@ -150,7 +150,7 @@ MODEL_PIPLINE = dict(
     ),
     optimizer = dict(
         name = "AdamWOptimizer",
-        learning_rate = 0.0005,
+        learning_rate = 0.00005,
         weight_decay = 1e-4,
         betas = (0.9, 0.999),
         finetuning_scale_factor=0.02,
@@ -159,9 +159,9 @@ MODEL_PIPLINE = dict(
         freeze_key = [],
     ),
     lr_scheduler = dict(
-        name = "CosineAnnealingLR",
-        T_max = epochs,
-        eta_min = 0.00001,
+        name = "MultiStepLR",
+        step_size = [epochs],
+        gamma = 0.1
     )
 )
 

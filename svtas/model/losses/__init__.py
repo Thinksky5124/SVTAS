@@ -18,6 +18,7 @@ from .lovasz_softmax_loss import LovaszSegmentationLoss
 from .dice_loss import DiceSegmentationLoss
 from .asrf_loss import ASRFLoss
 from .rl_dpg_loss import RLPGSegmentationLoss
+from .mse_loss import DiffusionSegmentationMSELoss
 
 __all__ = [
     'ETESVSLoss', 'SegmentationLoss', 'RecognitionSegmentationLoss',
@@ -25,5 +26,6 @@ __all__ = [
     'SgementationCLIPLoss', 'CLIPLoss', 'BridgePromptCLIPLoss',
     'BridgePromptCLIPSegmentationLoss', 'ActionCLIPSegmentationLoss',
     'LSTRSegmentationLoss', 'LovaszSegmentationLoss', 'DiceSegmentationLoss',
-    'ASRFLoss', 'RLPGSegmentationLoss', 'DiffusionStreamSegmentationLoss'
+    'ASRFLoss', 'RLPGSegmentationLoss', 'DiffusionStreamSegmentationLoss',
+    'DiffusionSegmentationMSELoss'
 ]

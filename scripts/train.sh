@@ -12,4 +12,4 @@ export CUDA_VISIBLE_DEVICES=0
 # asformer 19980125
 export DECORD_EOF_RETRY_MAX=20480
 ### gtea ###
-python tools/launch.py --mode train -c config/svtas/diffact/gtea/stream_tas_diff_gtea.py --seed 0
+python tools/launch.py --mode train -c config/svtas/diffact/gtea/stream_diffact_gtea.py --seed 0

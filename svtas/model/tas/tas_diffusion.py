@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:40:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 21:48:00
+LastEditTime : 2023-10-17 15:25:03
 Description  : file content
 FilePath     : /SVTAS/svtas/model/tas/tas_diffusion.py
 '''
@@ -14,7 +14,7 @@ from ..architectures import DiffusionModel
 from svtas.utils import AbstractBuildFactory
 
 @AbstractBuildFactory.register('model')
-class TemporalActionSegmentationDiffusionModel(DiffusionModel):
+class TemporalActionSegmentationDDIMModel(DiffusionModel):
     def __init__(self,
                  vae: Dict,
                  scheduler: Dict,
