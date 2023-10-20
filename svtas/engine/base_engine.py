@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:28:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 20:55:53
+LastEditTime : 2023-10-19 18:28:16
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/base_engine.py
 '''
@@ -69,10 +69,11 @@ class BaseEngine(metaclass=abc.ABCMeta):
     
     @running_mode.setter
     def running_mode(self, val: str):
-        assert val in ['train', 'test', 'validation', 'infer', 'profile', 'visulaize', 'extract']
+        assert val in ['train', 'test', 'validation', 'infer', 'profile', 'visulaize', 'extract', 'export']
         # set running mode
         self._running_mode = val
-        self.iter_method.mode = self.running_mode
+        if self.iter_method is not None:
+            self.iter_method.mode = self.running_mode
         if self.running_mode == 'train':
             self.model_pipline.train()
         else:

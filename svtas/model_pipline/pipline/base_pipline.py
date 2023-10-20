@@ -2,65 +2,26 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:14:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-18 20:50:02
+LastEditTime : 2023-10-20 22:59:59
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/base_pipline.py
 '''
-import os
 import abc
-from typing import Any, Dict, List
-from svtas.utils import AbstractBuildFactory
+from typing import Any, Dict
 from ..wrapper import BaseModel
-from svtas.optimizer import BaseLRScheduler, TorchOptimizer
 from svtas.dist import get_world_size_from_os, get_rank_from_os
+from svtas.utils import AbstractBuildFactory
 
 class BaseModelPipline(metaclass=abc.ABCMeta):
     model: BaseModel
-    criterion: BaseModel
-    optimizer: TorchOptimizer
-    lr_scheduler: BaseLRScheduler
-    post_processing: None
     local_rank: int
     world_size: int
 
     def __init__(self,
                  model,
-                 post_processing,
-                 device,
-                 criterion=None,
-                 optimizer=None,
-                 lr_scheduler=None,
-                 pretrained: str = None) -> None:
-        self.model = AbstractBuildFactory.create_factory('model').create(model)
-        self.criterion = AbstractBuildFactory.create_factory('loss').create(criterion)
-        self.post_processing = AbstractBuildFactory.create_factory('post_processing').create(post_processing)
+                 device) -> None:
         self._device = device
-        self.pretrained = pretrained
-
-        # init model
-        self.init_model_weight()
-
-        # construct optimizer
-        if isinstance(optimizer, dict):
-            optimizer['model'] = self.model
-            self.optimizer = AbstractBuildFactory.create_factory('optimizer').create(optimizer)
-        else:
-            self.optimizer = optimizer
-
-        # construct lr_scheduler
-        if isinstance(lr_scheduler, dict):
-            lr_scheduler['optimizer'] = self.optimizer
-            self.lr_scheduler = AbstractBuildFactory.create_factory('lr_scheduler').create(lr_scheduler)
-        else:
-            self.lr_scheduler = lr_scheduler
-        
-        if self.lr_scheduler is not None and self.optimizer is not None and self.criterion is not None:
-            self.train()
-        else:
-            self.eval()
-        
-        if self.pretrained is not None:
-            self.load_from_ckpt_file()
+        self.model = model
         
         # prepare for distribution train
         self.local_rank = get_rank_from_os()
@@ -76,10 +37,8 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
 
     def train(self):
         self._training = True
-        self.model.train()
 
     def eval(self):
-        self.model.eval()
         self._training = False
     
     @property
@@ -88,67 +47,16 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
     
     def to(self, device):
         self._device = device
-        self.model.to(device)
-        if self.criterion is not None:
-            self.criterion.to(device)
     
     def set_random_seed(self, seed: int = None):
         pass
 
-    def init_model_weight(self, init_cfg: Dict = None) -> None:
-        if init_cfg is None:
-            self.model.init_weights()
-        else:
-            self.model.init_weights(init_cfg=init_cfg)
-    
-    def post_processing_is_init(self):
-        if self.post_processing is not None:
-            return self.post_processing.init_flag
-        else:
-            return False
-    
-    def set_post_processing_init_flag(self, val: bool):
-        if self.post_processing is not None:
-            self.post_processing.init_flag = val
-
     @abc.abstractmethod
     def forward(self, data_dict):
         raise NotImplementedError("You must implement forward function!")
-    
-    @abc.abstractmethod
-    def caculate_loss(self, loss_dict) -> Dict:
-        raise NotImplementedError("You must implement caculate_loss function!")
-    
-    @abc.abstractmethod
-    def init_post_processing(self, input_data: Dict) -> None:
-        pass
-
-    @abc.abstractmethod
-    def update_post_processing(self, model_outputs: Dict, input_data: Dict) -> None:
-        pass
-
-    @abc.abstractmethod
-    def output_post_processing(self, model_outputs: Dict = None, input_data: Dict = None) -> List:
-        pass
-
-    @abc.abstractmethod
-    def backward(self, loss_dict):
-        raise NotImplementedError("You must implement backward function!")
-    
-    @abc.abstractmethod
-    def update_model_param(self):
-        raise NotImplementedError("You must implement update_model_param function!")
-    
-    @abc.abstractmethod
-    def init_model_param(self, *args, **kwargs):
-        pass
 
     @abc.abstractmethod
     def resert_model_pipline(self, *args, **kwargs):
-        pass
-
-    @abc.abstractmethod
-    def update_optim_policy(self):
         pass
 
     @abc.abstractmethod
@@ -192,57 +100,91 @@ class BaseModelPipline(metaclass=abc.ABCMeta):
         else:
             return self.test_run(data_dict=data_dict)
 
-class FakeModelPipline(BaseModelPipline):
-    def __init__(self, post_processing) -> None:
-        super().__init__(None, post_processing, None)
+class BaseInferModelPipline(BaseModelPipline):
+    def __init__(self,
+            model: Dict,
+            post_processing: Dict,
+            device = None) -> None:
+        super().__init__(model, device)
+        if isinstance(model, dict):
+            self.model = AbstractBuildFactory.create_factory('model').create(model)
+        else:
+            self.model = model
+        self.post_processing = AbstractBuildFactory.create_factory('post_processing').create(post_processing)
+
+    def to(self, device):
+        pass
     
     def forward(self, data_dict):
-        pass
+        # move data
+        outputs = self.model(data_dict)
+        return outputs, data_dict
     
-    def caculate_loss(self, loss_dict) -> Dict:
-        pass
-    
-    def init_post_processing(self, input_data: Dict) -> None:
-        pass
+    def post_processing_is_init(self):
+        if self.post_processing is not None:
+            return self.post_processing.init_flag
+        else:
+            return False
+        
+    def init_post_processing(self, input_data) -> None:
+        if self.post_processing is not None:
+            vid_list = input_data['vid_list']
+            sliding_num = input_data['sliding_num']
+            if len(vid_list) > 0:
+                self.post_processing.init_scores(sliding_num, len(vid_list))
 
-    def update_post_processing(self, model_outputs: Dict, input_data: Dict) -> None:
-        pass
+    def update_post_processing(self, model_outputs, input_data) -> None:
+        if self.post_processing is not None:
+            idx = input_data['current_sliding_cnt']
+            labels = input_data['labels']
+            score = model_outputs['output']
+            output = self.post_processing.update(score, labels, idx)
+        else:
+            output = None
+        return output
 
-    def output_post_processing(self, model_outputs: Dict = None, input_data: Dict = None) -> List:
-        pass
-
-    def backward(self, loss_dict):
-        pass
+    def output_post_processing(self, cur_vid, model_outputs = None, input_data = None):
+        if self.post_processing is not None:
+            # get pred result
+            pred_score_list, pred_cls_list, ground_truth_list = self.post_processing.output()
+            outputs = dict(predict=pred_cls_list,
+                        output_np=pred_score_list)
+            output_dict = dict(
+                vid=cur_vid,
+                outputs=outputs,
+                ground_truth=ground_truth_list
+            )
+            return output_dict
+        else:
+            return {}
     
-    def update_model_param(self):
-        pass
+    def direct_output_post_processing(self, cur_vid, model_outputs = None, input_data = None):
+        # get pred result
+        output_dict = self.post_processing.output()
+        return output_dict
     
-    def init_model_param(self, *args, **kwargs):
-        pass
+    def set_post_processing_init_flag(self, val: bool):
+        if self.post_processing is not None:
+            self.post_processing.init_flag = val
+    
+    def memory_clear(self):
+        self.model._clear_memory_buffer()
 
     def resert_model_pipline(self, *args, **kwargs):
-        pass
-
-    def update_optim_policy(self):
-        pass
-
+        return super().resert_model_pipline(*args, **kwargs)
+    
     def end_model_pipline(self):
-        pass
+        return super().end_model_pipline()
     
     def save(self) -> Dict:
-        """
-        Return model param dict readly to save
-        """
-        pass
+        save_dict = {}
+        return save_dict
 
     def load(self, param_dict: Dict) -> None:
         pass
-
+    
     def train_run(self, data_dict) -> Dict:
-        pass
+        return self.forward(data_dict)
     
     def test_run(self, data_dict) -> Dict:
-        pass
-    
-    def __call__(self, data_dict) -> Any:
-        return data_dict
+        return self.forward(data_dict)

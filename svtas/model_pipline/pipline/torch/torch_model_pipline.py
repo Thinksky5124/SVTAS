@@ -2,13 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-18 20:59:01
+LastEditTime : 2023-10-19 20:41:18
 Description  : file content
-FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_pipline.py
+FilePath     : /SVTAS/svtas/model_pipline/pipline/torch/torch_model_pipline.py
 '''
 from typing import Any, Dict
-from svtas.utils.logger import AverageMeter
-from .base_pipline import BaseModelPipline
+from .base import BaseTorchModelPipline
 from svtas.utils import AbstractBuildFactory, get_logger
 from svtas.utils.misc import set_property
 from svtas.optimizer.grad_utils import GradAccumulate, GradClip
@@ -19,7 +18,7 @@ from torch.cuda.amp.grad_scaler import GradScaler
 from svtas.model_pipline.torch_utils import load_state_dict
 
 @AbstractBuildFactory.register('model_pipline')
-class TorchModelPipline(BaseModelPipline):
+class TorchModelPipline(BaseTorchModelPipline):
     scaler: GradScaler
     grad_accumulate: GradAccumulate
     grad_clip: GradClip

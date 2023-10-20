@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-18 21:02:04
+LastEditTime : 2023-10-20 23:11:24
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -116,15 +116,16 @@ class EpochMethod(BaseIterMethod):
             # update lr
             self.model_pipline.update_optim_policy()
 
-        elif self.mode in ['validation', 'test']:
-            # metric output
-            Metric_dict = dict()
-            for k, v in self.metric.items():
-                temp_Metric_dict = v.accumulate()
-                Metric_dict.update(temp_Metric_dict)
-            
-            if Metric_dict[self.criterion_metric_name] > self.best_score:
-                self.best_score = Metric_dict[self.criterion_metric_name]
+        elif self.mode in ['validation', 'test', 'infer']:
+            if self.metric is not None:
+                # metric output
+                Metric_dict = dict()
+                for k, v in self.metric.items():
+                    temp_Metric_dict = v.accumulate()
+                    Metric_dict.update(temp_Metric_dict)
+                
+                if Metric_dict[self.criterion_metric_name] > self.best_score:
+                    self.best_score = Metric_dict[self.criterion_metric_name]
 
         # Computer ETA
         epoch_duration_time = time.time() - self.epoch_start_time
@@ -153,7 +154,7 @@ class EpochMethod(BaseIterMethod):
         if self.mode in ['infer', 'extract', 'visulaize']:
             self.record.accumulate_record()
             for name, logger in self.logger_dict.items():
-                logger.info("Step: " + str(step) + ", finish ectracting video: "+ ",".join(self.current_step_vid_list))
+                logger.info("Step: " + str(step) + f", finish {self.mode}ing video: "+ ",".join(self.current_step_vid_list))
     
     def end_run(self):
         super().end_run()
@@ -194,7 +195,7 @@ class EpochMethod(BaseIterMethod):
         self.model_pipline.update_post_processing(model_outputs=outputs, input_data=input_data)
         
         # output post processing
-        if self.mode in ['train', 'test', 'validation']:
+        if self.mode in ['train', 'test', 'validation', 'infer']:
             output_dict = self.model_pipline.output_post_processing(input_data['vid_list'])
         elif self.mode in ['extract', 'visulaize']:
             output_dict = self.model_pipline.direct_output_post_processing(input_data['vid_list'])

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:21:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 19:47:34
+LastEditTime : 2023-10-19 18:25:04
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_logger.py
 '''
@@ -38,6 +38,9 @@ class LoggerLevel(Enum):
     ERROR = auto()
     CRITICAL = auto()
 
+def get_log_root_path() -> str:
+    return os.environ['SVTAS_LOG_DIR']
+
 class BaseLogger:
     LOGGER_DICT = dict()
     def __init__(self,
@@ -46,7 +49,7 @@ class BaseLogger:
                  level=LoggerLevel.INFO) -> None:
         self.name = name
         if root_path is None:
-            self.path = os.environ['SVTAS_LOG_DIR']
+            self.path = get_log_root_path()
         else:
             self.path = root_path
         self._level = level

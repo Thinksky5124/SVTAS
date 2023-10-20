@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-18 19:25:14
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 22:50:51
+LastEditTime : 2023-10-19 15:52:33
 Description: main script
 FilePath     : /SVTAS/tools/launch.py
 '''
@@ -16,13 +16,8 @@ import random
 import numpy as np
 import torch
 
-from svtas.tasks.visualize_loss import visulize_loss
-from svtas.tasks.visualize import visualize
-from svtas.tasks.extract import extract
-from svtas.tasks.infer import infer
-from svtas.tasks.test import test
-from svtas.tasks.train import train
-from svtas.tasks.profile import profile
+from svtas.api import (visualize, visualize_loss, export, extract, infer,
+                       test, train, profile)
 from svtas.utils.config import get_config
 from svtas.utils.logger import get_logger
 
@@ -36,7 +31,8 @@ def parse_args():
                         help='config file path')
     parser.add_argument('--mode',
                         '-m',
-                        choices=["train", "test", "infer", "profile", 'visualize', 'extract', 'visualize_loss'],
+                        choices=["train", "test", "infer", "profile", 'visualize', 'extract', 'visualize_loss',
+                                 "export"],
                         help='run mode')
     parser.add_argument('-o',
                         '--override',
@@ -113,7 +109,8 @@ def main():
         "profile": profile,
         "extract": extract,
         "visualize": visualize,
-        "visulize_loss": visulize_loss
+        "visualize_loss": visualize_loss,
+        "export": export
     }
     
     if nprocs <= 1:
@@ -126,5 +123,6 @@ def main():
             mp.spawn(task_func_dict[args.mode], nprocs=nprocs, args=(nprocs, cfg, args))
         elif args.launcher == "torchrun":
             task_func_dict[args.mode](local_rank=int(os.environ['LOCAL_RANK']), nprocs=int(os.environ['WORLD_SIZE']), cfg=cfg, args=args)
+
 if __name__ == '__main__':
     main()

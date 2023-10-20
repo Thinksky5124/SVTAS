@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-09-24 16:46:51
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 21:12:34
+LastEditTime : 2023-10-20 14:10:37
 Description  : Debugger Class for Infer debugging
 FilePath     : /SVTAS/svtas/model/debugger.py
 '''

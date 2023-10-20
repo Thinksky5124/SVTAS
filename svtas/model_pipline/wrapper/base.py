@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 20:32:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 16:10:51
+LastEditTime : 2023-10-19 21:39:49
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/base.py
 '''
@@ -25,7 +25,6 @@ class BaseModel(metaclass=abc.ABCMeta):
         self._training = val
 
     def eval(self):
-        self.model
         self._training = False
 
     @abc.abstractmethod
@@ -35,14 +34,6 @@ class BaseModel(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def init_weights(self, init_cfg: Dict = {}):
         pass
-    
-    @abc.abstractmethod
-    def run_train(*args: Any, **kwds: Any):
-        raise NotImplementedError("You must implement train function!")
-    
-    @abc.abstractmethod
-    def run_test(*args: Any, **kwds: Any):
-        raise NotImplementedError("You must implement infer function!")
     
     @abc.abstractmethod
     def forward(self, *args: Any, **kwds: Any) -> Any:

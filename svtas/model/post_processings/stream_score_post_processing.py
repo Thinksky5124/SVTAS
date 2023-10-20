@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 19:37:37
+LastEditTime : 2023-10-20 23:05:28
 Description: model postprecessing
 FilePath     : /SVTAS/svtas/model/post_processings/stream_score_post_processing.py
 '''
@@ -46,13 +46,13 @@ class StreamScorePostProcessing(BasePostProcessing):
                 if self.sliding_window:
                     self.pred_scores.append(seg_scores[-1, :, :, 0:self.sliding_window].copy())
                     self.video_gt.append(gt[:, 0:self.sliding_window].copy())
-                    pred = np.argmax(seg_scores[-1, :, :, 0:self.sliding_window].detach().cpu().numpy(), axis=-2)
-                    acc = np.mean((np.sum(pred == gt[:, 0:self.sliding_window].detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+                    pred = np.argmax(seg_scores[-1, :, :, 0:self.sliding_window], axis=-2)
+                    acc = np.mean((np.sum(pred == gt[:, 0:self.sliding_window], axis=1) / (np.sum(gt != self.ignore_index, axis=1) + self.epls)))
                 else:
                     self.pred_scores.append(seg_scores[-1, :, :, :].copy())
                     self.video_gt.append(gt[:, :].copy())
-                    pred = np.argmax(seg_scores[-1, :, :, :].detach().cpu().numpy(), axis=-2)
-                    acc = np.mean((np.sum(pred == gt[:, :].detach().cpu().numpy(), axis=1) / (np.sum(gt.detach().cpu().numpy() != self.ignore_index, axis=1) + self.epls)))
+                    pred = np.argmax(seg_scores[-1, :, :, :], axis=-2)
+                    acc = np.mean((np.sum(pred == gt[:, :], axis=1) / (np.sum(gt != self.ignore_index, axis=1) + self.epls)))
         return acc
 
     def output(self):

@@ -37,6 +37,7 @@ FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
 - infer need:
     onnx
     onnxruntime
+    tensorrt
 - dev need:
     pytest
 """
@@ -210,6 +211,15 @@ try:
     _seaborn_version = importlib_metadata.version("seaborn")
 except importlib_metadata.PackageNotFoundError:
     _seaborn_available = False
+
+_tensorrt_available = importlib.util.find_spec("tensorrt") is not None
+try:
+    _tensorrt_version = importlib_metadata.version("tensorrt")
+except importlib_metadata.PackageNotFoundError:
+    _tensorrt_available = False
+
+def is_tensorrt_available():
+    return _tensorrt_available
 
 def is_seaborn_available():
     return _seaborn_available

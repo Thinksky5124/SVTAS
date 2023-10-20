@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:49:19
+LastEditTime : 2023-10-20 23:06:12
 Description: model postprecessing
 FilePath     : /SVTAS/svtas/model/post_processings/stream_feature_post_processing.py
 '''
@@ -47,9 +47,9 @@ class StreamFeaturePostProcessing(BasePostProcessing):
                     if len(self.pred_feature) < (bs + 1):
                         self.pred_feature.append(NPYStreamWriter())
                     if self.sliding_window:
-                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, 0:self.sliding_window].detach().cpu().numpy().copy())
+                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, 0:self.sliding_window].copy())
                     else:
-                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, :].detach().cpu().numpy().copy())
+                        self.pred_feature[bs].stream_write(seg_scores[-1, bs, :, :].copy())
                 if self.sliding_window:
                     self.video_gt.append(gt[:, 0:self.sliding_window].copy())
                 else:

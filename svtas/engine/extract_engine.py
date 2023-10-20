@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:01:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 23:33:30
+LastEditTime : 2023-10-20 16:58:19
 Description  : Extract Engine Class
 FilePath     : /SVTAS/svtas/engine/extract_engine.py
 '''
@@ -15,7 +15,7 @@ import torch
 from svtas.loader.dataloader import BaseDataloader
 from .standalone_engine import StandaloneEngine
 from svtas.utils.logger import AverageMeter
-from svtas.model_pipline import FakeModelPipline
+from svtas.model_pipline import FakeTorchModelPipline
 from svtas.utils import AbstractBuildFactory
 from svtas.utils.loss_landspace import (create_random_directions, plot_landspace_1D_loss_err,
                             calulate_loss_landscape, plot_landspace_2D_loss_err, caculate_trajectory,
@@ -32,7 +32,7 @@ class BaseExtractEngine(StandaloneEngine):
                  iter_method: Dict,
                  checkpointor: Dict,
                  metric: Dict = {}) -> None:
-        super().__init__(model_name, FakeModelPipline(post_processing), logger_dict, record,
+        super().__init__(model_name, FakeTorchModelPipline(post_processing), logger_dict, record,
                          metric, iter_method, checkpointor, "extract")
         self.out_path = out_path
         isExists = os.path.exists(self.out_path)

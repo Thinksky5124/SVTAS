@@ -7,10 +7,10 @@ Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataloader/__init__.py
 '''
 from .base_dataloader import BaseDataloader
-from .torch_dataloader import (TorchDataLoader, TorchStreamDataLoader,
-                               RandomTensorTorchDataloader)
+from .torch_dataloader import (TorchDataLoader, TorchStreamDataLoader)
+from .random_dataloader import (RandomTensorTorchDataloader, RandomTensorNumpyDataloader)
 
 __all__ = [
     "BaseDataloader", "TorchDataLoader", "TorchStreamDataLoader",
-    "RandomTensorTorchDataloader"
+    "RandomTensorTorchDataloader", "RandomTensorNumpyDataloader"
 ]

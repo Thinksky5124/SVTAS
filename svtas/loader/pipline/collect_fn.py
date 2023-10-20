@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:41:27
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 19:59:36
+LastEditTime : 2023-10-20 23:02:23
 Description  : Collect function
 FilePath     : /SVTAS/svtas/loader/pipline/collect_fn.py
 '''
@@ -11,7 +11,7 @@ import copy
 from typing import Any, Dict, List
 
 import torch
-
+import numpy as np
 from svtas.utils import AbstractBuildFactory
 
 
@@ -95,3 +95,8 @@ class BatchCompose(BaseCompose):
             else:
                 data[key] = copy.deepcopy(self._compose_list(batch, key))
         return data
+
+@AbstractBuildFactory.register('dataset_pipline')
+class BatchNumpyCompose(BatchCompose):
+    def _compose_tensor(self, batch, key):
+        return super()._compose_tensor(batch, key).numpy()

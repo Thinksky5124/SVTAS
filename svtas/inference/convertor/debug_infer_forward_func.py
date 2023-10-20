@@ -7,7 +7,7 @@ Description  : New Forward Function for infer debugging
 FilePath     : /SVTAS/svtas/tasks/debug_infer_forward_func.py
 '''
 import torch
-from ..model.debugger import Debugger
+from ...model.debugger import Debugger
 
 debugger = Debugger()
 

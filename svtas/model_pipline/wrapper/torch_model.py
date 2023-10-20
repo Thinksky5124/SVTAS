@@ -6,12 +6,12 @@ LastEditTime : 2023-10-13 11:16:16
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/torch_model.py
 '''
-from typing import Any, Dict
-from .base import BaseModel
-import torch
-from svtas.model_pipline.torch_utils import load_state_dict
 import copy
-from typing import Iterable, List, Optional, Union
+import torch
+from typing import Any, Dict, Iterable, List, Optional, Union
+
+from .base import BaseModel
+from svtas.model_pipline.torch_utils import load_state_dict
 
 import torch.nn as nn
     
@@ -44,7 +44,7 @@ class TorchBaseModel(torch.nn.Module, BaseModel):
 
     def run_train(self, *args: Any, **kwds: Any):
         raise NotImplementedError("You must implement train function!")
-    
+
     def run_test(self, *args: Any, **kwds: Any):
         raise NotImplementedError("You must implement infer function!")
     

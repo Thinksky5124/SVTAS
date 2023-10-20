@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 17:06:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 21:03:09
+LastEditTime : 2023-10-19 17:03:39
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/checkpoint/base_checkpoint.py
 '''
 import os
 import abc
 from typing import Any, Dict
-from svtas.utils import mkdir
+from svtas.utils import mkdir, get_log_root_path
 
 class BaseCheckpointor(metaclass=abc.ABCMeta):
     save_path: str
@@ -18,7 +18,7 @@ class BaseCheckpointor(metaclass=abc.ABCMeta):
                  save_path: str = None,
                  load_path: str = None) -> None:
         if save_path is None:
-            save_path = os.path.join(os.environ['SVTAS_LOG_DIR'], "ckpt")
+            save_path = os.path.join(get_log_root_path(), "ckpt")
         self.save_path = save_path
         mkdir(save_path)
         self.load_path = load_path

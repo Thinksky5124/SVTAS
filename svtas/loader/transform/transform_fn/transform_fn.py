@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 20:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 19:33:52
+LastEditTime : 2023-10-20 16:53:43
 Description  : Transform Class Function
 FilePath     : /SVTAS/svtas/loader/transform/transform_fn/transform_fn.py
 '''
@@ -36,7 +36,8 @@ __all__ = [
     "TensorExpandims",
     "NumpyDataTypeTransform",
     "DropResultsByKeyName",
-    "RenameResultTransform"
+    "RenameResultTransform",
+    "TensorToNumpy"
 ]
 
 class BaseTransformFunction(metaclass=abc.ABCMeta):
@@ -405,3 +406,8 @@ class RenameResultTransform(BaseTransformFunction):
                 results[name] = results[key]
                 results.pop(key)
         return results
+
+class TensorToNumpy(BaseTransformFunction):
+
+    def __call__(self, x: torch.Tensor):
+        return x.numpy()

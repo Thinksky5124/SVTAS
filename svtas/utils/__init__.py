@@ -2,12 +2,12 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:21:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 21:01:01
+LastEditTime : 2023-10-20 10:34:28
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/__init__.py
 '''
 from .build import AbstractBuildFactory
-from .logger import get_logger
+from .logger import get_logger, get_log_root_path
 from .package_utils import (
     is_pytorch_grad_cam_available,
     is_h5py_available,
@@ -30,7 +30,8 @@ from .package_utils import (
     is_fvcore_available,
     is_matplotlib_available,
     is_av_available,
-    is_seaborn_available
+    is_seaborn_available,
+    is_tensorrt_available
 )
 from .path import mkdir
 from .fileio import load, dump

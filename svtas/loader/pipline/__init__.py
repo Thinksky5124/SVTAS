@@ -6,9 +6,9 @@ LastEditTime : 2023-10-16 19:33:37
 Description  : Pipline function
 FilePath     : /SVTAS/svtas/loader/pipline/__init__.py
 '''
-from .collect_fn import BatchCompose
+from .collect_fn import BatchCompose, BatchNumpyCompose
 from .base_pipline import BaseDatasetPipline
 
 __all__ = [
-    'BatchCompose', 'BaseDatasetPipline'
+    'BatchCompose', 'BaseDatasetPipline', 'BatchNumpyCompose'
 ]

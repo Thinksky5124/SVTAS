@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-05-02 22:15:00
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-17 11:28:03
+LastEditTime : 2023-10-19 18:43:21
 Description: avg pooling 3d to 2d neck
 FilePath     : /SVTAS/svtas/model/tas/pool_neck.py
 '''
@@ -66,7 +66,7 @@ class PoolNeck(nn.Module):
             # [N C T H W] -> [N * T, C, H, W]
             feature = feature.transpose(1, 2)
             feature = torch.reshape(feature, [-1] + list(feature.shape[-3:]))
-        elif len(list(feature.shape)) == 3 and feature.shape[-1] != self.clip_seg_num:
+        elif len(list(feature.shape)) == 3:
             # [N C L]
             feature = torch.reshape(feature, [feature.shape[0], feature.shape[1], int(math.sqrt(feature.shape[-1])), int(math.sqrt(feature.shape[-1]))])
 
