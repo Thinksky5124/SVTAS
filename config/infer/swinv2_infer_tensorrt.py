@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-18 20:27:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 23:11:54
+LastEditTime : 2023-10-22 16:42:31
 Description  : file content
-FilePath     : /SVTAS/config/infer/swinv2_infer.py
+FilePath     : /SVTAS/config/infer/swinv2_infer_tensorrt.py
 '''
 _base_ = [
     '../_base_/logger/python_logger.py',
@@ -24,7 +24,9 @@ model_name = "SVTAS-RL_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + 
 ENGINE = dict(
     name = "StandaloneInferEngine",
     record = dict(
-        name = "StreamValueRecord"
+        name = "StreamValueRecord",
+        addition_record = [],
+        accumulate_type = {}
     ),
     iter_method = dict(
         name = "StreamEpochMethod",
@@ -39,11 +41,11 @@ ENGINE = dict(
 )
 
 MODEL_PIPLINE = dict(
-    name = "ONNXRuntimeModelPipline",
+    name = "TensorRTModelPipline",
     model = dict(
-        name = "ONNXRuntimeModel",
+        name = "TensorRTModel",
+        model_path = "output/SVTAS-RL_64x2_gtea_split1/2023-10-22-15-13-07/trt/SVTAS-RL_64x2_gtea_split1.plan",
         input_names = ['imgs', 'masks'],
-        path_or_bytes ='output/SVTAS-RL_64x2_gtea_split1/2023-10-20-21-41-42/onnx/SVTAS-RL_64x2_gtea_split1.onnx'
     ),
     post_processing = dict(
         name = "StreamScorePostProcessing",

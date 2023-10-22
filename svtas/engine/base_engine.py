@@ -78,7 +78,8 @@ class BaseEngine(metaclass=abc.ABCMeta):
             self.model_pipline.train()
         else:
             self.model_pipline.eval()
-            self.record.remove_one_record('lr')
+            if 'lr' in self.record:
+                self.record.remove_one_record('lr')
     
     @abc.abstractmethod
     def init_engine(self, dataloader: BaseDataloader = None):

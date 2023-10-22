@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-19 16:43:49
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-19 18:50:16
+LastEditTime : 2023-10-22 15:11:08
 Description  : file content
 FilePath     : /SVTAS/svtas/inference/convertor/onnx_convertor.py
 '''
@@ -19,11 +19,13 @@ class ONNXModelConvertor(BaseModelConvertor):
                  input_names=['input_data'],
                  output_names=['output'],
                  dynamic_axes=None,
-                 export_path: str = None) -> None:
+                 export_path: str = None,
+                 opset_version: int = None) -> None:
         super().__init__(export_path)
         self.input_names = input_names
         self.output_names = output_names
         self.dynamic_axes = dynamic_axes
+        self.opset_version = opset_version
         try:
             import onnx
         except:
@@ -42,7 +44,7 @@ class ONNXModelConvertor(BaseModelConvertor):
         if export_path is None:
             export_path = os.path.join(self.export_path, "onnx")
         mkdir(export_path)
-        export_full_path = os.path.join(export_path, file_name)
+        export_full_path = os.path.join(export_path, file_name + '.onnx')
 
         input_data = dict(input_data = data)
         torch.onnx.export(model,
@@ -50,5 +52,6 @@ class ONNXModelConvertor(BaseModelConvertor):
                           export_full_path,
                           input_names=self.input_names,
                           output_names=self.output_names,
-                          dynamic_axes=self.dynamic_axes)
+                          dynamic_axes=self.dynamic_axes,
+                          opset_version=self.opset_version)
         logger.info("Finish exporting ONNX model to " + export_path + " !")

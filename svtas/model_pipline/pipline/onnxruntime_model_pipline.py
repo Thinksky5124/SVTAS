@@ -2,17 +2,15 @@
 Author       : Thyssen Wen
 Date         : 2023-10-19 18:58:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 21:53:24
+LastEditTime : 2023-10-22 16:35:46
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/onnx_runtime/onnxruntime_model_pipline.py
 '''
-import torch
-import numpy as np
 from typing import Any, Dict
-from ..base_pipline import BaseModelPipline, BaseInferModelPipline
+from .base_pipline import BaseInferModelPipline
 from svtas.utils import AbstractBuildFactory, get_logger
 from svtas.utils import is_onnx_available
-from ...wrapper import ONNXRuntimeModel
+from ..wrapper import ONNXRuntimeModel
 
 if is_onnx_available():
     import onnx

@@ -32,7 +32,7 @@ class TensboardLogger(BaseLogger):
             self.epoch = epoch
 
         for m in metric_list:
-            if not (m == 'batch_time' or m == 'reader_time'):
+            if not (m == 'batch_time' or m == 'reader_time' or m == 'iter_time'):
                 self.logger.add_scalar(mode + "/" + m, metric_list[m].avg, epoch)
     
     def log_batch(self, metric_list, batch_id, mode, ips, epoch_id=None, total_epoch=None):
@@ -55,7 +55,7 @@ class TensboardLogger(BaseLogger):
         else:
             self.epoch = epoch
         for k, v in metric_dict.items():
-            if not (k == 'batch_time' or k == 'reader_time'):
+            if not (k == 'batch_time' or k == 'reader_time' or m == 'iter_time'):
                 self.logger.add_scalar(mode + "/" + k, v, epoch)
     
     def log_feature_image(self, feature: torch.Tensor, tag: str, step: int = None):

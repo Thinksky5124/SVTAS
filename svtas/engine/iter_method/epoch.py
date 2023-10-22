@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:40:18
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 23:11:24
+LastEditTime : 2023-10-21 17:03:44
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/epoch.py
 '''
@@ -145,10 +145,11 @@ class EpochMethod(BaseIterMethod):
 
     def end_iter(self, b_tic, step, epoch):
         self.record['batch_time'].update(time.time() - b_tic)
+        self.record['iter_time'].update(time.time() - b_tic)
         if self.mode == 'train':
             self.record['lr'].update(self.model_pipline.lr_scheduler.get_last_lr()[0], self.batch_size)
         
-        if step % self.logger_iter_interval == 0 and self.mode in ['train', 'test', 'validation']:
+        if step % self.logger_iter_interval == 0 and self.mode in ['train', 'test', 'validation', 'infer']:
             self.logger_iter(step, epoch)
 
         if self.mode in ['infer', 'extract', 'visulaize']:
@@ -191,7 +192,7 @@ class EpochMethod(BaseIterMethod):
             self.model_pipline.init_post_processing(input_data=input_data)
             if self.mode in ['infer', 'extract', 'visulaize']:
                 for name, logger in self.logger_dict.items():
-                    logger.info("Current process video: " + ",".join(self.current_step_vid_list))
+                    logger.info("Current process video: " + ",".join(self.current_step_vid_list) + " | " + self.record['iter_time'].str_avg)
         self.model_pipline.update_post_processing(model_outputs=outputs, input_data=input_data)
         
         # output post processing

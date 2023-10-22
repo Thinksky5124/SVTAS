@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 18:57:19
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 21:24:24
+LastEditTime : 2023-10-21 16:53:47
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/loss_record.py
 '''
@@ -14,21 +14,21 @@ from svtas.utils import AbstractBuildFactory
 @AbstractBuildFactory.register('record')
 class ValueRecord(BaseRecord):
     def __init__(self,
-                 addition_record: List[Dict] = [],
-                 accumulate_type: Dict[str, str] = {}) -> None:
+                 addition_record: List[Dict] = [
+                    dict(name='loss', fmt='.7f'),
+                    dict(name='Acc', fmt='.5f'),
+                    dict(name='lr', fmt='.5f')],
+                 accumulate_type: Dict[str, str] = {'loss': 'avg', 'Acc': 'avg'}) -> None:
         assert isinstance(addition_record, list), "You must input list!"
         assert isinstance(accumulate_type, dict), "You must input dict!"
         addition_record += [
+            dict(name='iter_time', fmt='.5f'),
             dict(name='batch_time', fmt='.5f'),
-            dict(name='reader_time', fmt='.5f'),
-            dict(name='loss', fmt='.7f'),
-            dict(name='Acc', fmt='.5f'),
-            dict(name='lr', fmt='.5f')]
+            dict(name='reader_time', fmt='.5f')]
 
+        accumulate_type['iter_time'] = 'avg'
         accumulate_type['batch_time'] = 'avg'
         accumulate_type['reader_time'] = 'avg'
-        accumulate_type['loss'] = 'avg'
-        accumulate_type['Acc'] = 'avg'
 
         super().__init__(addition_record)
         for a in self.addition_record:
@@ -70,7 +70,12 @@ class ValueRecord(BaseRecord):
 
 @AbstractBuildFactory.register('record')
 class StreamValueRecord(ValueRecord):
-    def __init__(self, addition_record: List[Dict] = [], accumulate_type: Dict[str, str] = {}) -> None:
+    def __init__(self,
+                 addition_record: List[Dict] = [
+                    dict(name='loss', fmt='.7f'),
+                    dict(name='Acc', fmt='.5f'),
+                    dict(name='lr', fmt='.5f')],
+                 accumulate_type: Dict[str, str] = {'loss': 'avg', 'Acc': 'avg'}) -> None:
         super().__init__(addition_record, accumulate_type)
         self.loss_dict: Dict[str, AverageMeter] = {}
     
@@ -105,9 +110,11 @@ class ExtractRecord(BaseRecord):
         assert isinstance(addition_record, list), "You must input list!"
         assert isinstance(accumulate_type, dict), "You must input dict!"
         addition_record += [
+            dict(name='iter_time', fmt='.5f'),
             dict(name='batch_time', fmt='.5f'),
             dict(name='reader_time', fmt='.5f')]
 
+        accumulate_type['iter_time'] = 'avg'
         accumulate_type['batch_time'] = 'avg'
         accumulate_type['reader_time'] = 'avg'
         super().__init__(addition_record)

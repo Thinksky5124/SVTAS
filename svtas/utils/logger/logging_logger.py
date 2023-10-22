@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-24 20:37:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 22:44:10
+LastEditTime : 2023-10-21 16:36:35
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/logging_logger.py
 '''
@@ -197,27 +197,29 @@ class PythonLoggingLogger(BaseLogger):
             self.base_dist_logging(self.logger.critical, msg, *args, exc_info, stack_info, stacklevel, extra)
     
     def log_epoch(self, metric_list, epoch, mode, ips):
-        batch_cost = 'avg_' + str(metric_list['batch_time'].str_value) + ' sec,'
-        reader_cost = 'avg_' + str(metric_list['reader_time'].str_value) + ' sec,'
+        iter_cost = str(metric_list['iter_time'].str_avg) + ' sec,'
+        batch_cost = str(metric_list['batch_time'].str_avg) + ' sec,'
+        reader_cost = str(metric_list['reader_time'].str_avg) + ' sec,'
         batch_sum = str(metric_list['batch_time'].total) + ' sec,'
 
         metric_values = []
         for m in metric_list:
-            if not (m == 'batch_time' or m == 'reader_time'):
+            if not (m == 'batch_time' or m == 'reader_time' or m == 'iter_time'):
                 metric_values.append(metric_list[m].str_avg)
         metric_str = ' '.join([str(v) for v in metric_values])
 
         end_epoch_str = "END epoch:{:<3d}".format(epoch)
-        self.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
-            end_epoch_str, mode, metric_str, batch_cost, reader_cost, batch_sum, ips))
+        self.info("{:s} {:s} {:s} {:s} {:s} {:s} {:s} {}".format(
+            end_epoch_str, mode, metric_str, batch_cost, reader_cost, iter_cost, batch_sum, ips))
 
     def log_batch(self, metric_list, batch_id, mode, ips, epoch_id=None, total_epoch=None):
+        iter_cost = str(metric_list['iter_time'].str_value) + ' sec,'
         batch_cost = str(metric_list['batch_time'].str_value) + ' sec,'
         reader_cost = str(metric_list['reader_time'].str_value) + ' sec,'
 
         metric_values = []
         for m in metric_list:
-            if not (m == 'batch_time' or m == 'reader_time'):
+            if not (m == 'batch_time' or m == 'reader_time' or m == 'iter_time'):
                 metric_values.append(metric_list[m].str_value)
         metric_str = ' '.join([str(v) for v in metric_values])
         if epoch_id and total_epoch:
@@ -225,19 +227,20 @@ class PythonLoggingLogger(BaseLogger):
         step_str = "{:s} step:{:<4d}".format(mode, batch_id)
 
         if epoch_id and total_epoch:
-            self.info("{:s} {:s} {:s} {:s} {:s} {}".format(
-                epoch_str, step_str, metric_str, batch_cost, reader_cost, ips))
+            self.info("{:s} {:s} {:s} {:s} {:s} {:s} {}".format(
+                epoch_str, step_str, metric_str, batch_cost, reader_cost, iter_cost, ips))
         else:
-            self.info("{:s} {:s} {:s} {:s} {}".format(
-                step_str, metric_str, batch_cost, reader_cost, ips))
+            self.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+                step_str, metric_str, batch_cost, reader_cost, iter_cost, ips))
     
     def log_step(self, metric_list, step_id, mode, ips, total_step=None):
+        iter_cost = str(metric_list['iter_time'].str_value) + ' sec,'
         batch_cost = str(metric_list['batch_time'].str_value) + ' sec,'
         reader_cost = str(metric_list['reader_time'].str_value) + ' sec,'
 
         metric_values = []
         for m in metric_list:
-            if not (m == 'batch_time' or m == 'reader_time'):
+            if not (m == 'batch_time' or m == 'reader_time' or m == 'iter_time'):
                 metric_values.append(metric_list[m].str_value)
         metric_str = ' '.join([str(v) for v in metric_values])
         if total_step:
@@ -245,8 +248,8 @@ class PythonLoggingLogger(BaseLogger):
         else:
             step_str = "{:s} step:{:<4d}".format(mode, step_id)
 
-        self.info("{:s} {:s} {:s} {:s} {}".format(
-                step_str, metric_str, batch_cost, reader_cost, ips))
+        self.info("{:s} {:s} {:s} {:s} {:s} {}".format(
+                step_str, metric_str, batch_cost, reader_cost, iter_cost, ips))
     
     def close(self):
         pass

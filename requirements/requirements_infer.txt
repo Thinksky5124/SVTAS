@@ -24,3 +24,5 @@ prettytable
 pandas
 onnx
 onnxruntime
+cuda-python
+tensorrt

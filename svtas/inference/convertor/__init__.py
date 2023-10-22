@@ -8,7 +8,8 @@ FilePath     : /SVTAS/svtas/inference/convertor/__init__.py
 '''
 from .base_convertor import BaseModelConvertor
 from .onnx_convertor import ONNXModelConvertor
+from .tensorrt_convertor import TensorRTModelConvertor
 
 __all__ = [
-    'BaseModelConvertor', 'ONNXModelConvertor'
+    'BaseModelConvertor', 'ONNXModelConvertor', 'TensorRTModelConvertor'
 ]

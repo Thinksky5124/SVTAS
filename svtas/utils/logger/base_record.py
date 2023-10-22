@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-25 19:51:53
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 13:09:55
+LastEditTime : 2023-10-21 17:01:52
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/logger/base_record.py
 '''
@@ -23,6 +23,9 @@ class BaseRecord(metaclass=abc.ABCMeta):
     
     def __iter__(self):
         return iter(self._record)
+    
+    def __contains__(self, item):
+        return item in self._record
 
     @property
     def record_dict(self) -> Dict[str, Any]:

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-22 16:41:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 10:16:08
+LastEditTime : 2023-10-21 17:03:28
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/iter_method/stream_epoch.py
 '''
@@ -59,7 +59,7 @@ class StreamEpochMethod(EpochMethod):
         self.record['batch_time'].update(time.time() - self.b_tic)
         if self.mode == 'train':
             self.record['lr'].update(self.model_pipline.optimizer.state_dict()['param_groups'][0]['lr'], self.batch_size)
-        if step % self.logger_iter_interval == 0 and self.mode in ['train', 'test', 'validation']:
+        if step % self.logger_iter_interval == 0 and self.mode in ['train', 'test', 'validation', 'infer']:
             self.logger_iter(step, epoch)
         elif self.mode in ['infer', 'extract', 'visulaize']:
             for key, logger in self.logger_dict.items():
@@ -99,17 +99,17 @@ class StreamEpochMethod(EpochMethod):
                 self.model_pipline.init_post_processing(input_data=data)
                 if self.mode in ['infer', 'extract', 'visulaize']:
                     for name, logger in self.logger_dict.items():
-                        logger.info("Current process video: " + ",".join(self.current_step_vid_list))
+                        logger.info("Current process video: " + ",".join(self.current_step_vid_list) + " | " + self.record['iter_time'].str_avg)
             post_processing_output = self.model_pipline.update_post_processing(model_outputs=outputs, input_data=data)
             # exec hook
             self.exec_hook('every_iter_end', post_processing_output, self.current_step_vid_list)
             self.record.stream_update_dict(loss_dict)
         if self.mode in ['infer', 'extract', 'visulaize'] and idx % self.logger_iter_interval == 0:
             for name, logger in self.logger_dict.items():
-                logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num))
+                logger.info("Current process idx: " + str(idx) + " | total: " + str(sliding_num) + " | " + self.record['iter_time'].str_avg)
     
     def end_iter(self, b_tic, step, epoch):
-        pass
+        self.record['iter_time'].update(time.time() - b_tic)
     
     def run(self, *args: Any, **kwds: Any) -> Any:
         """
@@ -170,6 +170,7 @@ class StreamEpochMethod(EpochMethod):
                 self.init_iter(r_tic=r_tic)
                 self.run_one_iter(data=data, epoch=epoch)
                 self.end_iter(b_tic=r_tic, step=i, epoch=epoch)
+                r_tic = time.time()
             self.exec_hook("iter_end")
             self.end_epoch(epoch=epoch)
 

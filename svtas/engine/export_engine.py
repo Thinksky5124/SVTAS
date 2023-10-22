@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-19 15:54:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-19 17:08:25
+LastEditTime : 2023-10-22 15:10:58
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/export_engine.py
 '''
@@ -70,7 +70,7 @@ class ExportModelEngine(BaseEngine):
     def run(self):
         iter_dataloader = iter(self.dataloader)
         data = next(iter_dataloader)
-        self.convertor.export(self.model_pipline.model, data=data, file_name=self.model_name + '.onnx')
+        self.convertor.export(self.model_pipline.model, data=data, file_name=self.model_name)
         
     def shutdown(self):
         self.model_pipline.end_model_pipline()
