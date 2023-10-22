@@ -141,6 +141,8 @@ To update SVTAS to the latest version, add --upgrade flag to the above commands.
 <li>Distribution Machine</li>
 <li>Assemble Pytest Framweork</li>
 <li>Tensorboard</li>
+<li>ONNXRuntime</li>
+<li>TensorRT</li>
 </ul>
 </ul>
 </td>

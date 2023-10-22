@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-22 15:15:23
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-22 16:52:41
+LastEditTime : 2023-10-22 18:41:13
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/trt_model.py
 '''
@@ -14,6 +14,7 @@ from svtas.utils import AbstractBuildFactory, is_tensorrt_available
 if is_tensorrt_available():
     import tensorrt as trt
     from cuda import cudart
+    from svtas.utils.logger import TensorRTLogger
 
 @AbstractBuildFactory.register('model')
 class TensorRTModel(BaseModel):
@@ -25,7 +26,7 @@ class TensorRTModel(BaseModel):
         self._training = False
         self.input_names = input_names
         self.output_names = output_names
-        trt_logger = trt.Logger(trt.Logger.VERBOSE)
+        trt_logger = TensorRTLogger()
 
         with open(model_path, 'rb') as f:
                 serialized_engine = f.read()
