@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-24 09:17:30
+LastEditTime : 2023-10-24 18:46:13
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/gtea/stream_diffact_gtea.py
 '''
@@ -38,38 +38,34 @@ ENGINE = dict(
     ),
     checkpointor = dict(
         name = "TorchCheckpointor",
-        load_path = "output/Stream_Diffact_feature_gtea_split1/2023-10-24-09-15-51/ckpt/Stream_Diffact_feature_gtea_split1_best.pt"
+        # load_path = "output/Stream_Diffact_feature_gtea_split1/2023-10-24-09-15-51/ckpt/Stream_Diffact_feature_gtea_split1_best.pt"
     )
 )
 
 MODEL_PIPLINE = dict(
     name = "TorchModelPipline",
-    grad_accumulate = dict(
-        name = "GradAccumulate",
-        accumulate_type = "conf"
-    ),
+    # grad_accumulate = dict(
+    #     name = "GradAccumulate",
+    #     accumulate_type = "conf"
+    # ),
     model = dict(
         name = "TemporalActionSegmentationDDIMModel",
-        vae = dict(
-            name = "TemporalActionSegmentationVariationalAutoEncoder",
-            encoder = dict(
-                name = "FeatureSegmentation",
-                architecture_type='1d',
-                head = dict(
-                    name = "DiffsusionActionSegmentationEncoderModel",
-                    input_dim = 2048,
-                    num_classes = num_classes,
-                    sample_rate = sample_rate,
-                    num_layers = 10,
-                    num_f_maps = 64,
-                    kernel_size = 5,
-                    attn_dropout_rate = 0.5,
-                    channel_dropout_rate = 0.5,
-                    temporal_dropout_rate = 0.5,
-                    feature_layer_indices = [5, 7, 9]
-                )
-            ),
-            decoder = None
+        prompt_net = dict(
+            name = "FeatureSegmentation",
+            architecture_type='1d',
+            head = dict(
+                name = "DiffsusionActionSegmentationEncoderModel",
+                input_dim = 2048,
+                num_classes = num_classes,
+                sample_rate = sample_rate,
+                num_layers = 10,
+                num_f_maps = 64,
+                kernel_size = 5,
+                attn_dropout_rate = 0.5,
+                channel_dropout_rate = 0.5,
+                temporal_dropout_rate = 0.5,
+                feature_layer_indices = [5, 7, 9]
+            )
         ),
         unet = dict(
             name = "DiffsusionActionSegmentationConditionUnet",
@@ -82,7 +78,7 @@ MODEL_PIPLINE = dict(
             time_emb_dim = 512,
             kernel_size = 5,
             attn_dropout_rate = 0.1,
-            condition_types = ['full']
+            condition_types = ['full', 'zero', 'boundary03-', 'segment=1', 'segment=1']
         ),
         scheduler = dict(
             name = "DiffsusionActionSegmentationScheduler",
@@ -99,15 +95,15 @@ MODEL_PIPLINE = dict(
         ignore_index = ignore_index
     ),
     criterion = dict(
-        name = "StreamSegmentationLoss",
-        backbone_loss_cfg = dict(
+        name = "TASDiffusionStreamSegmentationLoss",
+        unet_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
-            sample_rate = 1,
+            sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = ignore_index
         ),
-        head_loss_cfg = dict(
+        prompt_net_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,

@@ -2,14 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 20:33:20
+LastEditTime : 2023-10-24 20:20:13
 Description  : file content
-FilePath     : /SVTAS/config/svtas/diffact/gtea/dynamic_diffact_gtea.py
+FilePath     : /SVTAS/config/svtas/tas_diffusion/stream_feature_tas_diffusion_gtea.py
 '''
 _base_ = [
-    '../../../_base_/dataloader/collater/batch_compose.py',
-    '../../../_base_/engine/standaline_engine.py',
-    '../../../_base_/logger/python_logger.py',
+    '../../_base_/dataloader/collater/batch_compose.py',
+    '../../_base_/engine/standaline_engine.py',
+    '../../_base_/logger/python_logger.py',
 ]
 
 split = 1
@@ -18,13 +18,11 @@ ignore_index = -100
 epochs = 800
 batch_size = 1
 in_channels = 2048
-clip_seg_num_list = [64, 128, 256]
-sample_rate_list = [2]
 sample_rate = 2
 clip_seg_num = 64
 sliding_window = clip_seg_num * sample_rate
 sigma = 1
-model_name = "Dynamic_Diffact_feature_gtea_split" + str(split)
+model_name = "Stream_Feature_TAS_Diffusion_" + str(clip_seg_num) + "x"+str(sample_rate) + "_gtea_split" + str(split)
 
 ENGINE = dict(
     name = "StandaloneEngine",
@@ -39,16 +37,17 @@ ENGINE = dict(
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
-        name = "TorchCheckpointor"
+        name = "TorchCheckpointor",
+        # load_path = "output/Stream_Diffact_feature_gtea_split1/2023-10-24-09-15-51/ckpt/Stream_Diffact_feature_gtea_split1_best.pt"
     )
 )
 
 MODEL_PIPLINE = dict(
     name = "TorchModelPipline",
-    grad_accumulate = dict(
-        name = "GradAccumulate",
-        accumulate_type = "conf"
-    ),
+    # grad_accumulate = dict(
+    #     name = "GradAccumulate",
+    #     accumulate_type = "conf"
+    # ),
     model = dict(
         name = "TemporalActionSegmentationDDIMModel",
         prompt_net = dict(
@@ -59,26 +58,25 @@ MODEL_PIPLINE = dict(
                 input_dim = 2048,
                 num_classes = num_classes,
                 sample_rate = sample_rate,
-                num_layers = 10,
+                num_layers = 8,
                 num_f_maps = 64,
-                kernel_size = 5,
+                kernel_size = 3,
                 attn_dropout_rate = 0.5,
                 channel_dropout_rate = 0.5,
                 temporal_dropout_rate = 0.5,
-                feature_layer_indices = [5, 7, 9]
+                feature_layer_indices = [3, 5, 7]
             )
         ),
         unet = dict(
-            name = "DiffsusionActionSegmentationConditionUnet",
-            input_dim = 192,
-            num_classes = num_classes,
-            ignore_index = ignore_index,
-            sample_rate = sample_rate,
+            name = "TASDiffusionConditionUnet",
             num_layers = 8,
-            num_f_maps = 24,
-            time_emb_dim = 512,
-            kernel_size = 5,
-            attn_dropout_rate = 0.1
+            num_f_maps = 64,
+            dim = 11,
+            num_classes = num_classes,
+            condition_dim = 192,
+            time_embedding_dim = 512,
+            condtion_res_layer_idx = [2, 3, 4, 5],
+            sample_rate = sample_rate
         ),
         scheduler = dict(
             name = "DiffsusionActionSegmentationScheduler",
@@ -101,14 +99,14 @@ MODEL_PIPLINE = dict(
             num_classes = num_classes,
             sample_rate = sample_rate,
             smooth_weight = 0.0,
-            ignore_index = ignore_index
+            ignore_index = -100
         ),
         prompt_net_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,
             smooth_weight = 0.0,
-            ignore_index = ignore_index
+            ignore_index = -100
         )
     ),
     optimizer = dict(
@@ -130,9 +128,8 @@ MODEL_PIPLINE = dict(
 
 DATALOADER = dict(
     name = "TorchStreamDataLoader",
-    
     batch_size = batch_size,
-    num_workers = 2
+    num_workers = 4
 )
 
 COLLATE = dict(
@@ -146,7 +143,7 @@ COLLATE = dict(
 
 DATASET = dict(
     train = dict(
-        name = "FeatureDynamicStreamSegmentationDataset",
+        name = "FeatureStreamSegmentationDataset",
         data_prefix = "./",
         file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
         feature_path = "./data/gtea/raw_features",
@@ -154,21 +151,7 @@ DATASET = dict(
         actions_map_file_path = "./data/gtea/mapping.txt",
         dataset_type = "gtea",
         train_mode = True,
-        dynamic_stream_generator=dict(
-            name = "MultiEpochStageDynamicStreamGenerator",
-            multi_epoch_list = [40, 70],
-            strategy_list = [
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [64],
-                     sample_rate_list = sample_rate_list),
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [64, 32],
-                     sample_rate_list = sample_rate_list),
-                dict(name = "ListRandomChoiceDynamicStreamGenerator",
-                     clip_seg_num_list = [16, 32, 64],
-                     sample_rate_list = sample_rate_list),
-            ]
-        )
+        sliding_window = sliding_window
     ),
     test = dict(
         name = "FeatureStreamSegmentationDataset",
@@ -220,12 +203,13 @@ DATASETPIPLINE = dict(
                  )
         ),
         sample = dict(
-            name = "FeatureDynamicStreamSampler",
+            name = "FeatureStreamSampler",
             is_train = True,
-            sample_rate_name_dict={"feature":'sample_rate', "labels":'sample_rate'},
-            clip_seg_num_name_dict={"feature": 'clip_seg_num', "labels": 'clip_seg_num'},
-            ignore_index=ignore_index,
+            sample_rate_dict={"feature":sample_rate,"labels":sample_rate},
+            clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
+            sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
+            ignore_index=ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -247,17 +231,8 @@ DATASETPIPLINE = dict(
                             dict(XToTensor = None),
                             dict(LabelsToOneHot = dict(
                                 num_classes = num_classes,
+                                sample_rate = sample_rate,
                                 ignore_index = ignore_index
-                            ))
-                        ]
-                    ),
-                    boundary_prob = dict(
-                        name = 'direct_transform',
-                        transforms_op_list = [
-                            dict(XToTensor = None),
-                            dict(SegmentationLabelsToBoundaryProbability = dict(
-                                sigma = sigma,
-                                need_norm = True
                             ))
                         ]
                     )
@@ -288,6 +263,7 @@ DATASETPIPLINE = dict(
             clip_seg_num_dict={"feature":clip_seg_num ,"labels":clip_seg_num},
             sliding_window_dict={"feature":sliding_window,"labels":sliding_window},
             sample_add_key_pair={"frames":"feature"},
+            ignore_index=ignore_index,
             sample_mode = "uniform"
         ),
         transform = dict(
@@ -309,17 +285,8 @@ DATASETPIPLINE = dict(
                             dict(XToTensor = None),
                             dict(LabelsToOneHot = dict(
                                 num_classes = num_classes,
+                                sample_rate = sample_rate,
                                 ignore_index = ignore_index
-                            ))
-                        ]
-                    ),
-                    boundary_prob = dict(
-                        name = 'direct_transform',
-                        transforms_op_list = [
-                            dict(XToTensor = None),
-                            dict(SegmentationLabelsToBoundaryProbability = dict(
-                                sigma = sigma,
-                                need_norm = True
                             ))
                         ]
                     )

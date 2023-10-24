@@ -2,12 +2,14 @@
 Author       : Thyssen Wen
 Date         : 2023-10-14 15:29:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 21:29:00
+LastEditTime : 2023-10-24 17:13:16
 Description  : file content
 FilePath     : /SVTAS/svtas/model/vae/tas_vae.py
 '''
 from typing import Dict
 import torch
+import torch.nn as nn
+from torch import Tensor
 from ..architectures.general import VariationalAutoEncoder
 from svtas.utils import AbstractBuildFactory
 
@@ -31,3 +33,4 @@ class TemporalActionSegmentationVariationalAutoEncoder(VariationalAutoEncoder):
         if isinstance(output_dict['output'], dict):
             output_dict.update(output_dict['output'])
         return output_dict
+

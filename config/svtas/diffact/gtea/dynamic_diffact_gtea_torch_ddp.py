@@ -51,26 +51,22 @@ MODEL_PIPLINE = dict(
     ),
     model = dict(
         name = "TemporalActionSegmentationDDIMModel",
-        vae = dict(
-            name = "TemporalActionSegmentationVariationalAutoEncoder",
-            encoder = dict(
-                name = "FeatureSegmentation",
-                architecture_type='1d',
-                head = dict(
-                    name = "DiffsusionActionSegmentationEncoderModel",
-                    input_dim = 2048,
-                    num_classes = num_classes,
-                    sample_rate = sample_rate,
-                    num_layers = 10,
-                    num_f_maps = 64,
-                    kernel_size = 5,
-                    attn_dropout_rate = 0.5,
-                    channel_dropout_rate = 0.5,
-                    temporal_dropout_rate = 0.5,
-                    feature_layer_indices = [5, 7, 9]
-                )
-            ),
-            decoder = None
+        prompt_net = dict(
+            name = "FeatureSegmentation",
+            architecture_type='1d',
+            head = dict(
+                name = "DiffsusionActionSegmentationEncoderModel",
+                input_dim = 2048,
+                num_classes = num_classes,
+                sample_rate = sample_rate,
+                num_layers = 10,
+                num_f_maps = 64,
+                kernel_size = 5,
+                attn_dropout_rate = 0.5,
+                channel_dropout_rate = 0.5,
+                temporal_dropout_rate = 0.5,
+                feature_layer_indices = [5, 7, 9]
+            )
         ),
         unet = dict(
             name = "DiffsusionActionSegmentationConditionUnet",
@@ -99,15 +95,15 @@ MODEL_PIPLINE = dict(
         ignore_index = ignore_index
     ),
     criterion = dict(
-        name = "StreamSegmentationLoss",
-        backbone_loss_cfg = dict(
+        name = "TASDiffusionStreamSegmentationLoss",
+        unet_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
-            sample_rate = 1,
+            sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = ignore_index
         ),
-        head_loss_cfg = dict(
+        prompt_net_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,

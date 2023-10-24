@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-07 19:11:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-17 14:17:35
+LastEditTime : 2023-10-24 18:45:06
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/gtea/stream_tas_diff_gtea.py
 '''
@@ -49,7 +49,7 @@ MODEL_PIPLINE = dict(
     #     accumulate_type = "conf"
     # ),
     model = dict(
-        name = "TemporalActionSegmentationDDIMModel",
+        name = "TemporalActionSegmentationDiffActModel",
         vae = dict(
             name = "TemporalActionSegmentationVariationalAutoEncoder",
             encoder = dict(
@@ -125,27 +125,20 @@ MODEL_PIPLINE = dict(
         ignore_index = ignore_index
     ),
     criterion = dict(
-        name = "DiffusionStreamSegmentationLoss",
-        backbone_loss_cfg = dict(
+        name = "TASDiffusionStreamSegmentationLoss",
+        unet_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = ignore_index
         ),
-        head_loss_cfg = dict(
+        prompt_net_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = ignore_index
-        ),
-        vae_backbone_loss_cfg = dict(
-            name = "SegmentationLoss",
-            num_classes = num_classes,
-            sample_rate = sample_rate * 2,
-            smooth_weight = 0.0,
-            ignore_index = -100
         )
     ),
     optimizer = dict(

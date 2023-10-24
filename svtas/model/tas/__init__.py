@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-06 20:19:16
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 14:41:08
+LastEditTime : 2023-10-24 15:26:54
 Description  : Segmentation Head Modules
 FilePath     : /SVTAS/svtas/model/tas/__init__.py
 '''
@@ -39,5 +39,5 @@ __all__ = [
     'ETESVSNeck', 'ConvLSTMResidualLayer', 'LSTMST3DNeck', 'PoolNeck',
     'ActionCLIPFusionNeck', 'BridgePromptFusionEarlyhyp',
     'MultiModalityFusionNeck', 'IPBFusionNeck', 'UnsampleDecoderNeck',
-    'TaskFusionPoolNeck', 'TemporalActionSegmentationDDIMModel'
+    'TaskFusionPoolNeck', 'TemporalActionSegmentationDDIMModel',
 ]

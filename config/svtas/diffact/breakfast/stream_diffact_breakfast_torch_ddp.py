@@ -50,7 +50,7 @@ MODEL_PIPLINE = dict(
         accumulate_type = "conf"
     ),
     model = dict(
-        name = "TemporalActionSegmentationDDIMModel",
+        name = "TemporalActionSegmentationDiffActModel",
         vae = dict(
             name = "TemporalActionSegmentationVariationalAutoEncoder",
             encoder = dict(
@@ -100,15 +100,15 @@ MODEL_PIPLINE = dict(
         ignore_index = ignore_index
     ),
     criterion = dict(
-        name = "StreamSegmentationLoss",
-        backbone_loss_cfg = dict(
+        name = "TASDiffusionStreamSegmentationLoss",
+        unet_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
-            sample_rate = 1,
+            sample_rate = sample_rate,
             smooth_weight = 0.0,
             ignore_index = ignore_index
         ),
-        head_loss_cfg = dict(
+        prompt_net_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
             sample_rate = sample_rate,

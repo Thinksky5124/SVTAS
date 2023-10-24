@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 20:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 16:53:43
+LastEditTime : 2023-10-24 19:47:53
 Description  : Transform Class Function
 FilePath     : /SVTAS/svtas/loader/transform/transform_fn/transform_fn.py
 '''
@@ -254,13 +254,16 @@ class RandomShortSideScaleJitter(BaseTransformFunction):
 class LabelsToOneHot(BaseTransformFunction):
     def __init__(self,
                  num_classes: int,
+                 sample_rate = 1,
                  ignore_index: int = -100) -> None:
         self.num_classes = num_classes
         self.ignore_index = ignore_index
+        self.sample_rate = sample_rate
     
     def __call__(self, labels: torch.LongTensor) -> Any:
         # labels [T]
         # deal label over num_classes
+        labels = labels[::self.sample_rate]
         # [T]
         y = torch.zeros(labels.shape, dtype=labels.dtype)
         refine_label = torch.where(labels != self.ignore_index, labels, y)
@@ -275,11 +278,13 @@ class SegmentationLabelsToBoundaryProbability(BaseTransformFunction):
     def __init__(self,
                  smooth_method = 'guassion',
                  sigma = 1,
+                 sample_rate = 1,
                  need_norm = False) -> None:
         super().__init__()
         assert smooth_method in ['guassion', 'none']
         self.smooth_method = smooth_method
         self.sigma = sigma
+        self.sample_rate = sample_rate
         self.need_norm = need_norm
         self.kernel_size = int(2 * 4 * sigma + 1)
         if smooth_method == 'guassion':
@@ -334,6 +339,7 @@ class SegmentationLabelsToBoundaryProbability(BaseTransformFunction):
     
     def __call__(self, label) -> Any:
         # labels [T]
+        label = label[::self.sample_rate]
         # define the frame where new action starts as boundary frame
         boundary = torch.zeros_like(label, dtype=torch.float)
         last = label[0]

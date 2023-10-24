@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:26:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 20:15:35
+LastEditTime : 2023-10-24 15:04:03
 Description  : ref:https://github.com/Finspire13/DiffAct/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/unet/diffact_unet.py
 '''
@@ -30,6 +30,8 @@ class DiffsusionActionSegmentationConditionUnet(ConditionUnet1D):
                  num_layers = 8,
                  num_f_maps = 24,
                  kernel_size = 5,
+                 temproal_dropout_rate=0.5,
+                 channel_dropout_rate=0.5,
                  attn_dropout_rate = 0.1,
                  time_emb_dim = 512,
                  ignore_index = -100,
@@ -45,6 +47,8 @@ class DiffsusionActionSegmentationConditionUnet(ConditionUnet1D):
         self.condition_types = condition_types
         self.ignore_index = ignore_index
         self.sample_rate = sample_rate
+        self.temproal_dropout_rate = temproal_dropout_rate
+        self.channel_dropout_rate = channel_dropout_rate
     
     def get_random_label_index(self, labels):
         y = torch.zeros_like(labels)
@@ -62,7 +66,15 @@ class DiffsusionActionSegmentationConditionUnet(ConditionUnet1D):
         
         elif cond_type == 'zero':
             feature_mask = torch.zeros_like(condition_latens)
-        
+
+        elif cond_type == 'temproal_dropout':
+            feature_mask = torch.ones_like(condition_latens)
+            feature_mask = F.dropout2d(feature_mask.unsqueeze(3), p=self.temproal_dropout_rate).squeeze(3) / (1 / self.temproal_dropout_rate)
+
+        elif cond_type == 'channel_dropout':    
+            feature_mask = torch.ones_like(condition_latens)
+            feature_mask = F.dropout2d(feature_mask.unsqueeze(3).transpose(1, 2), p=self.channel_dropout_rate).squeeze(3).transpose(1, 2) / (1 / self.channel_dropout_rate)
+
         elif cond_type == 'boundary05-':
             feature_mask = (boundary_prob < 0.5)
             feature_mask = feature_mask.unsqueeze(1).float()[:, :, ::self.sample_rate]
@@ -188,7 +200,7 @@ class MixedConvAttModuleV2(nn.Module): # for decoder
             self.time_proj = nn.Linear(time_emb_dim, num_f_maps)
         self.swish = nn.SiLU()
         self.layers = nn.ModuleList([copy.deepcopy(
-            MixedConvAttentionLayerV2(num_f_maps, input_dim_cross, kernel_size, 2 ** i, dropout_rate)
+            MixedConvAttentionLayerV2(num_f_maps, input_dim_cross, kernel_size, 2 ** i, 2 ** i, dropout_rate)
         ) for i in range(num_layers)])  #2 ** i
     
     def forward(self, x, x_cross, time_emb=None):
@@ -204,7 +216,7 @@ class MixedConvAttModuleV2(nn.Module): # for decoder
 
 class MixedConvAttentionLayerV2(nn.Module):
     
-    def __init__(self, d_model, d_cross, kernel_size, dilation, dropout_rate):
+    def __init__(self, d_model, d_cross, kernel_size, dilation, attn_dilation, dropout_rate):
         super(MixedConvAttentionLayerV2, self).__init__()
         
         self.d_model = d_model
@@ -213,6 +225,7 @@ class MixedConvAttentionLayerV2(nn.Module):
         self.dilation = dilation
         self.dropout_rate = dropout_rate
         self.padding = (self.kernel_size // 2) * self.dilation 
+        self.attn_dilation = attn_dilation
         
         assert(self.kernel_size % 2 == 1)
 
@@ -243,7 +256,7 @@ class MixedConvAttentionLayerV2(nn.Module):
         for q in range(l):
             s = q - self.padding
             e = q + self.padding + 1
-            step = max(self.dilation // 1, 1)  
+            step = max(self.attn_dilation // 1, 1)  
             # 1  2  4   8  16  32  64  128  256  512  # self.dilation
             # 1  1  1   2  4   8   16   32   64  128  # max(self.dilation // 4, 1)  
             # 3  3  3 ...                             (k=3, //1)          
