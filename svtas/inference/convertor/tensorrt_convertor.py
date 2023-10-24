@@ -15,6 +15,7 @@ from svtas.utils.logger import get_root_logger_instance
 
 if is_tensorrt_available():
     import tensorrt as trt
+    from svtas.utils.logger import TensorRTLogger
 
 @AbstractBuildFactory.register('model_convertor')
 class TensorRTModelConvertor(ONNXModelConvertor):
@@ -50,7 +51,7 @@ class TensorRTModelConvertor(ONNXModelConvertor):
 
         logger.info("Start export ONNX file to TensorRT...")
 
-        logger_rt = trt.Logger(trt.Logger.VERBOSE)
+        logger_rt = TensorRTLogger()
         builder = trt.Builder(logger_rt)
         network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
         profile = builder.create_optimization_profile()

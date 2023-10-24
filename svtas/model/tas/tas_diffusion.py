@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:40:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-17 15:25:03
+LastEditTime : 2023-10-24 09:15:20
 Description  : file content
 FilePath     : /SVTAS/svtas/model/tas/tas_diffusion.py
 '''
@@ -76,9 +76,10 @@ class TemporalActionSegmentationDDIMModel(DiffusionModel):
         condition_latents = latents_dict['output_feature']
         gt_labels = data_dict['labels_onehot']
         # Sample noise to add to the images
-        pred_labels = torch.permute(torch.randn_like(gt_labels), dims=[0, 2, 1]).contiguous()
+        generator = torch.Generator(condition_latents.device).manual_seed(self.scheduler.get_random_seed_from_generator())
+        pred_labels = torch.permute(torch.randn(list(gt_labels.shape), device=gt_labels.device, dtype=gt_labels.dtype, generator=generator), dims=[0, 2, 1]).contiguous()
         self.scheduler.set_timesteps(device=pred_labels.device)
-        generator = torch.Generator(pred_labels.device).manual_seed(self.scheduler.infer_region_seed)
+        
         # denoise process
         for i, t in enumerate(self.scheduler.timesteps):
             t_now = torch.full((1,), t[0], device=t[0].device, dtype=torch.long)

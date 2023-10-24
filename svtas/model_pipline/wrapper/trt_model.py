@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-22 15:15:23
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-22 18:41:13
+LastEditTime : 2023-10-22 19:34:24
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/wrapper/trt_model.py
 '''
@@ -85,7 +85,7 @@ class TensorRTModel(BaseModel):
                               output_dict[key].ctypes.data,
                               output_dict[key].nbytes,
                               cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
-            
+
         # exec infer graph
         for key, value in data_device_dict.items():
             context.set_tensor_address(key, int(value))
@@ -101,9 +101,12 @@ class TensorRTModel(BaseModel):
                               output_dict[key].nbytes,
                               cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
 
+        # output memory free
         for key, value in output_device_dict.items():
             cudart.cudaFree(value)
-
+        # input memory free
+        for key, value in data_device_dict.items():
+            cudart.cudaFree(value)
         return output_dict
 
     def __call__(self, input_data: Dict) -> Dict:

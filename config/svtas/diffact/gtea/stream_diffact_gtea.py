@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-17 16:02:46
+LastEditTime : 2023-10-24 09:17:30
 Description  : file content
 FilePath     : /SVTAS/config/svtas/diffact/gtea/stream_diffact_gtea.py
 '''
@@ -16,7 +16,7 @@ split = 1
 num_classes = 11
 ignore_index = -100
 epochs = 800
-batch_size = 4
+batch_size = 1
 in_channels = 2048
 sample_rate = 2
 clip_seg_num = 64
@@ -37,7 +37,8 @@ ENGINE = dict(
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
-        name = "TorchCheckpointor"
+        name = "TorchCheckpointor",
+        load_path = "output/Stream_Diffact_feature_gtea_split1/2023-10-24-09-15-51/ckpt/Stream_Diffact_feature_gtea_split1_best.pt"
     )
 )
 
@@ -80,7 +81,8 @@ MODEL_PIPLINE = dict(
             num_f_maps = 24,
             time_emb_dim = 512,
             kernel_size = 5,
-            attn_dropout_rate = 0.1
+            attn_dropout_rate = 0.1,
+            condition_types = ['full']
         ),
         scheduler = dict(
             name = "DiffsusionActionSegmentationScheduler",

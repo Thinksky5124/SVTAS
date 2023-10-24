@@ -38,3 +38,6 @@ class BaseModel(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def forward(self, *args: Any, **kwds: Any) -> Any:
         pass
+
+    def reset_state(self):
+        pass

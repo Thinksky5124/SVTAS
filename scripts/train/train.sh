@@ -4,9 +4,9 @@
  # @LastEditors: Thinksky5124 Thinksky5124@outlook.com
  # @LastEditTime: 2023-05-04 10:48:07
  # @Description  : train script
- # @FilePath     : /SVTAS/scripts/train.sh
+ # @FilePath     : /SVTAS/scripts/train/train.sh
 ### 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 # mstcn 1538574472
 # asformer 19980125

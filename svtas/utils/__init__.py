@@ -31,7 +31,8 @@ from .package_utils import (
     is_matplotlib_available,
     is_av_available,
     is_seaborn_available,
-    is_tensorrt_available
+    is_tensorrt_available,
+    is_tvm_available
 )
 from .path import mkdir
 from .fileio import load, dump

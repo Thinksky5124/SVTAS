@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 15:56:43
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-17 10:16:22
+LastEditTime : 2023-10-23 23:36:26
 Description  : file content
 FilePath     : /SVTAS/svtas/model/architectures/general/diffusion.py
 '''
@@ -81,3 +81,8 @@ class DiffusionModel(TorchBaseModel):
         if accepts_generator:
             extra_step_kwargs["generator"] = generator
         return extra_step_kwargs
+
+        
+    def reset_state(self):
+        self.scheduler.reset_state()
+        return super().reset_state()

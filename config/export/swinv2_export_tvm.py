@@ -1,10 +1,10 @@
 '''
 Author       : Thyssen Wen
-Date         : 2023-10-18 20:27:05
+Date         : 2023-10-23 20:21:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-22 19:54:15
+LastEditTime : 2023-10-23 20:21:35
 Description  : file content
-FilePath     : /SVTAS/config/export/swinv2_export_tensorRT.py
+FilePath     : /SVTAS/config/export/swinv2_export_tvm.py
 '''
 _base_ = [
     '../_base_/dataloader/collater/batch_compose.py',
@@ -31,7 +31,7 @@ ENGINE = dict(
         name = "TorchCheckpointor"
     ),
     convertor = dict(
-        name = "TensorRTModelConvertor",
+        name = "TVMModelConvertor",
         input_names = ['imgs', 'masks'],
     )
 )

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-18 20:27:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 21:41:30
+LastEditTime : 2023-10-22 19:54:20
 Description  : file content
-FilePath     : /SVTAS/config/export/swinv2_export.py
+FilePath     : /SVTAS/config/export/swinv2_export_onnx.py
 '''
 _base_ = [
     '../_base_/dataloader/collater/batch_compose.py',
@@ -20,7 +20,7 @@ split = 1
 batch_size = 1
 epochs = 80
 
-model_name = "SVTAS-RL_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
+model_name = "SwinV2_"+str(clip_seg_num)+"x"+str(sample_rate)+"_gtea_split" + str(split)
 
 ENGINE = dict(
     name = "ExportModelEngine",

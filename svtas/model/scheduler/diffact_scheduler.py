@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 23:10:32
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-17 13:01:41
+LastEditTime : 2023-10-23 23:18:49
 Description  : file content
 FilePath     : /SVTAS/svtas/model/scheduler/diffact_scheduler.py
 '''
@@ -134,7 +134,7 @@ class DiffsusionActionSegmentationScheduler(BaseDiffusionScheduler):
         sigma = self.ddim_sampling_eta * ((1 - alpha / alpha_next) * (1 - alpha_next) / (1 - alpha)).sqrt()
         c = (1 - alpha_next - sigma ** 2).sqrt() if (1 - alpha_next - sigma ** 2) >= 0 else 0
 
-        noise = torch.randn_like(sample)
+        noise = torch.randn(list(sample.shape), device=sample.device, dtype=sample.dtype, generator=generator)
 
         denoise_labels = model_output * alpha_next.sqrt() + \
                 c * pred_noise + \

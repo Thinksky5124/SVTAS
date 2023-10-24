@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 23:24:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 21:00:21
+LastEditTime : 2023-10-23 19:56:24
 Description  : ref: https://github.com/huggingface/diffusers/blob/main/src/diffusers/utils/import_utils.py
 FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
 '''
@@ -38,6 +38,7 @@ FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
     onnx
     onnxruntime
     tensorrt
+    tvm
 - dev need:
     pytest
 """
@@ -217,6 +218,15 @@ try:
     _tensorrt_version = importlib_metadata.version("tensorrt")
 except importlib_metadata.PackageNotFoundError:
     _tensorrt_available = False
+
+_tvm_available = importlib.util.find_spec("tvm") is not None
+try:
+    _tvm_version = importlib_metadata.version("tvm")
+except importlib_metadata.PackageNotFoundError:
+    _tvm_available = False
+
+def is_tvm_available():
+    return _tvm_available
 
 def is_tensorrt_available():
     return _tensorrt_available

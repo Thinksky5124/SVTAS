@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-18 20:27:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-22 16:42:31
+LastEditTime : 2023-10-22 19:25:24
 Description  : file content
 FilePath     : /SVTAS/config/infer/swinv2_infer_tensorrt.py
 '''
@@ -44,7 +44,7 @@ MODEL_PIPLINE = dict(
     name = "TensorRTModelPipline",
     model = dict(
         name = "TensorRTModel",
-        model_path = "output/SVTAS-RL_64x2_gtea_split1/2023-10-22-15-13-07/trt/SVTAS-RL_64x2_gtea_split1.plan",
+        model_path = "output/SVTAS-RL_64x2_gtea_split1/2023-10-22-19-24-20/trt/SVTAS-RL_64x2_gtea_split1.plan",
         input_names = ['imgs', 'masks'],
     ),
     post_processing = dict(

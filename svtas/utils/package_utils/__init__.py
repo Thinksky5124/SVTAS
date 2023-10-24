@@ -1,3 +1,11 @@
+'''
+Author       : Thyssen Wen
+Date         : 2023-10-10 23:21:54
+LastEditors  : Thyssen Wen
+LastEditTime : 2023-10-23 19:59:05
+Description  : file content
+FilePath     : /SVTAS/svtas/utils/package_utils/__init__.py
+'''
 from .import_utils import (
     is_pytorch_grad_cam_available,
     is_h5py_available,
@@ -21,7 +29,8 @@ from .import_utils import (
     is_matplotlib_available,
     is_av_available,
     is_seaborn_available,
-    is_tensorrt_available
+    is_tensorrt_available,
+    is_tvm_available
 )
 from .package_env import is_installed, get_installed_path
 from .version import digit_version, get_git_hash

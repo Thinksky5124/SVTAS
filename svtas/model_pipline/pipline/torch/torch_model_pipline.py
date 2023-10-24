@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:24:52
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-19 20:41:18
+LastEditTime : 2023-10-23 23:36:53
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch/torch_model_pipline.py
 '''

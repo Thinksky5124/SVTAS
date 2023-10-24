@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 23:08:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-14 11:44:41
+LastEditTime : 2023-10-23 23:50:32
 Description  : file content
 FilePath     : /SVTAS/svtas/model/scheduler/base_scheduler.py
 '''
@@ -15,6 +15,7 @@ class BaseDiffusionScheduler(torch.nn.Module, metaclass=abc.ABCMeta):
     """
     Base Class for Scheduler of DiffusionModel Model
     """
+    SEED_RANGE = [-9999999999, 99999999999]
     def __init__(self,
                  num_train_timesteps: int,
                  num_inference_steps: int,
@@ -23,6 +24,14 @@ class BaseDiffusionScheduler(torch.nn.Module, metaclass=abc.ABCMeta):
         self.num_train_timesteps = num_train_timesteps
         self.num_inference_steps = num_inference_steps
         self.infer_region_seed = infer_region_seed
+        self.seed_generator = torch.Generator().manual_seed(self.infer_region_seed)
+    
+    def reset_state(self):
+        if not self.training:
+            self.seed_generator = torch.Generator().manual_seed(self.infer_region_seed)
+    
+    def get_random_seed_from_generator(self) -> int:
+        return int(torch.randint(low=self.SEED_RANGE[0], high=self.SEED_RANGE[1], size=[1], generator=self.seed_generator).item())
 
     def scale_model_input(self, sample: Dict[str, torch.FloatTensor], timestep: Optional[int] = None) -> Dict[str, torch.FloatTensor]:
         """

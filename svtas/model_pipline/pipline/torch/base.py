@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-19 20:28:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 21:52:14
+LastEditTime : 2023-10-23 23:38:22
 Description  : file content
 FilePath     : /SVTAS/svtas/model_pipline/pipline/torch/base.py
 '''
@@ -86,6 +86,10 @@ class BaseTorchModelPipline(BaseModelPipline):
     def set_post_processing_init_flag(self, val: bool):
         if self.post_processing is not None:
             self.post_processing.init_flag = val
+    
+    def resert_model_pipline(self, *args, **kwargs):
+        self.model.reset_state()
+        return super().resert_model_pipline(*args, **kwargs)
     
     @abc.abstractmethod
     def caculate_loss(self, loss_dict) -> Dict:
