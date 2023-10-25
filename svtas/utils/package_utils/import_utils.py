@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 23:24:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-23 19:56:24
+LastEditTime : 2023-10-25 19:42:52
 Description  : ref: https://github.com/huggingface/diffusers/blob/main/src/diffusers/utils/import_utils.py
 FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
 '''
@@ -39,6 +39,7 @@ FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
     onnxruntime
     tensorrt
     tvm
+    tritonclient
 - dev need:
     pytest
 """
@@ -224,6 +225,15 @@ try:
     _tvm_version = importlib_metadata.version("tvm")
 except importlib_metadata.PackageNotFoundError:
     _tvm_available = False
+
+_tritonclient_available = importlib.util.find_spec("tritonclient") is not None
+try:
+    _tritonclient_version = importlib_metadata.version("tvm")
+except importlib_metadata.PackageNotFoundError:
+    _tritonclient_available = False
+
+def is_tritonclient_available():
+    return _tritonclient_available
 
 def is_tvm_available():
     return _tvm_available

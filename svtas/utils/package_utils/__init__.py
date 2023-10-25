@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-10 23:21:54
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-23 19:59:05
+LastEditTime : 2023-10-25 19:44:03
 Description  : file content
 FilePath     : /SVTAS/svtas/utils/package_utils/__init__.py
 '''
@@ -30,7 +30,8 @@ from .import_utils import (
     is_av_available,
     is_seaborn_available,
     is_tensorrt_available,
-    is_tvm_available
+    is_tvm_available,
+    is_tritonclient_available
 )
 from .package_env import is_installed, get_installed_path
 from .version import digit_version, get_git_hash

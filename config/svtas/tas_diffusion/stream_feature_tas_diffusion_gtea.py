@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-25 11:20:14
+LastEditTime : 2023-10-25 11:32:27
 Description  : file content
 FilePath     : /SVTAS/config/svtas/tas_diffusion/stream_feature_tas_diffusion_gtea.py
 '''
@@ -33,7 +33,7 @@ ENGINE = dict(
         name = "StreamEpochMethod",
         epoch_num = epochs,
         batch_size = batch_size,
-        test_interval = 20,
+        test_interval = 1,
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
@@ -50,7 +50,7 @@ MODEL_PIPLINE = dict(
     # ),
     model = dict(
         name = "TemporalActionSegmentationDDIMModel",
-        direct_pred = False,
+        direct_pred = True,
         prompt_net = dict(
             name = "FeatureSegmentation",
             architecture_type='1d',
@@ -80,10 +80,12 @@ MODEL_PIPLINE = dict(
             sample_rate = sample_rate
         ),
         scheduler = dict(
-            name = "DDPMScheduler",
+            name = "DiffsusionActionSegmentationScheduler",
             num_train_timesteps = 1000,
-            num_inference_steps = 100,
-            sampling_eta = 1.0,
+            num_inference_steps = 25,
+            ddim_sampling_eta = 1.0,
+            snr_scale = 0.5,
+            timestep_spacing = 'linspace',
             infer_region_seed = 8
         )
     ),
@@ -93,16 +95,16 @@ MODEL_PIPLINE = dict(
     ),
     criterion = dict(
         name = "TASDiffusionStreamSegmentationLoss",
-        # unet_loss_cfg = dict(
-        #     name = "SegmentationLoss",
-        #     num_classes = num_classes,
-        #     sample_rate = sample_rate,
-        #     smooth_weight = 0.0,
-        #     ignore_index = -100
-        # ),
         unet_loss_cfg = dict(
-            name = "DiffusionSegmentationMSELoss",
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate,
+            smooth_weight = 0.0,
+            ignore_index = -100
         ),
+        # unet_loss_cfg = dict(
+        #     name = "DiffusionSegmentationMSELoss",
+        # ),
         prompt_net_loss_cfg = dict(
             name = "SegmentationLoss",
             num_classes = num_classes,
