@@ -8,7 +8,10 @@ FilePath     : /SVTAS/svtas/model/scheduler/__init__.py
 '''
 from .base_scheduler import BaseDiffusionScheduler
 from .diffact_scheduler import DiffsusionActionSegmentationScheduler
+from .ddim_scheduler import DDIMScheduler
+from .ddpm_scheduler import DDPMScheduler
 
 __all__ = [
-    'DiffsusionActionSegmentationScheduler', 'BaseDiffusionScheduler'
+    'DiffsusionActionSegmentationScheduler', 'BaseDiffusionScheduler',
+    'DDIMScheduler', 'DDPMScheduler'
 ]

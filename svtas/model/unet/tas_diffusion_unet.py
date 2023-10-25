@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-24 19:04:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-24 20:14:41
+LastEditTime : 2023-10-25 11:06:21
 Description  : file content
 FilePath     : /SVTAS/svtas/model/unet/tas_diffusion_unet.py
 '''
@@ -121,7 +121,7 @@ class ConditionDilatedResidualLayer(nn.Module):
         self.norm = nn.Dropout()
 
     def forward(self, x, condition_latents, time_embedding, mask):
-        x = x + self.condition_embedding(condition_latents) + self.time_embedding(self.swish(time_embedding))
+        x = x + self.time_embedding(self.swish(time_embedding)) + self.norm(self.condition_embedding(condition_latents))
         out = F.relu(self.conv_dilated(x))
         out = self.conv_1x1(out)
         out = self.norm(out)

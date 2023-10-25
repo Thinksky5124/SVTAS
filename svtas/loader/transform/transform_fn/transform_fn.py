@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-24 20:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-24 19:47:53
+LastEditTime : 2023-10-25 11:11:29
 Description  : Transform Class Function
 FilePath     : /SVTAS/svtas/loader/transform/transform_fn/transform_fn.py
 '''
@@ -12,7 +12,7 @@ import numpy as np
 import cv2
 import torch
 import torch.nn.functional as F
-from typing import Any, Iterable, Dict
+from typing import Any, Iterable, Dict, List
 from PIL import Image
 
 __all__ = [

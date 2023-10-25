@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:26:13
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-24 15:04:03
+LastEditTime : 2023-10-25 09:42:34
 Description  : ref:https://github.com/Finspire13/DiffAct/blob/main/model.py
 FilePath     : /SVTAS/svtas/model/unet/diffact_unet.py
 '''

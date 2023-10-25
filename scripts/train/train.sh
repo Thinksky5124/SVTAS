@@ -6,10 +6,11 @@
  # @Description  : train script
  # @FilePath     : /SVTAS/scripts/train/train.sh
 ### 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 # mstcn 1538574472
 # asformer 19980125
 export DECORD_EOF_RETRY_MAX=20480
 ### gtea ###
 python tools/launch.py --mode train -c config/svtas/tas_diffusion/stream_feature_tas_diffusion_gtea.py --seed 0
+# python tools/launch.py --mode train -c config/svtas/tas_diffusion/stream_feature_tas_diffusion_50salads.py --seed 0

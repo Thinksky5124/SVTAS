@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-17 14:52:25
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-24 17:18:47
+LastEditTime : 2023-10-25 11:06:04
 Description  : file content
 FilePath     : /SVTAS/svtas/model/losses/mse_loss.py
 '''
@@ -29,7 +29,7 @@ class DiffusionSegmentationMSELoss(BaseLoss):
         # masks shape [N T]
         pred_noises, noises = model_output["output"], model_output['noise']
         masks, labels, precise_sliding_num = input_data["masks"], input_data["labels"], input_data['precise_sliding_num']
-        
+
         loss = torch.mean(self.mse_loss(pred_noises * masks.unsqueeze(1), noises * masks.unsqueeze(1)).sum([1, 2])
                             / (((labels != -100).sum([1]) + self.elps) * precise_sliding_num + self.elps))
         loss = loss * self.loss_weight

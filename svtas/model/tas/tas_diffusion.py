@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-12 16:40:41
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-24 20:00:59
+LastEditTime : 2023-10-25 11:13:39
 Description  : file content
 FilePath     : /SVTAS/svtas/model/tas/tas_diffusion.py
 '''
@@ -86,9 +86,14 @@ class TemporalActionSegmentationDDIMModel(DiffusionModel):
                 backbone_score = condition_latents_dict['prompt_info']['output']['output'].squeeze(0)
             )
         else:
+            noise = F.interpolate(
+                input=noise.unsqueeze(0),
+                scale_factor=[1, noise_labels.shape[-1] // noise.shape[-1]],
+                mode="nearest")
+            
             output_dict = dict(
                 output = noise_labels,
-                noise = noise.unsqueeze(0),
+                noise = noise,
                 backbone_score = condition_latents_dict['prompt_info']['output']['output'].squeeze(0)
             )
         if 'backbone_score' in condition_latents_dict['prompt_info']['output']:

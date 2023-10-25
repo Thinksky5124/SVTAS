@@ -21,7 +21,6 @@ class DiffsusionActionSegmentationScheduler(BaseDiffusionScheduler):
     Diffusion Action Segmentation ref:https://arxiv.org/pdf/2303.17959.pdf,
     it is modify from DDIM scheduler
     """
-    num_inference_steps: int
     def __init__(self,
                  num_train_timesteps: int = 1000,
                  num_inference_steps: int = 25,

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 18:38:59
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-25 11:20:14
+LastEditTime : 2023-10-24 20:32:22
 Description  : file content
-FilePath     : /SVTAS/config/svtas/tas_diffusion/stream_feature_tas_diffusion_gtea.py
+FilePath     : /SVTAS/config/svtas/tas_diffusion/stream_feature_tas_diffusion_50salads.py
 '''
 _base_ = [
     '../../_base_/dataloader/collater/batch_compose.py',
@@ -13,16 +13,16 @@ _base_ = [
 ]
 
 split = 1
-num_classes = 11
+num_classes = 19
 ignore_index = -100
 epochs = 100
 batch_size = 1
 in_channels = 2048
-sample_rate = 2
-clip_seg_num = 64
+sample_rate = 8
+clip_seg_num = 128
 sliding_window = clip_seg_num * sample_rate
 sigma = 1
-model_name = "Stream_Feature_TAS_Diffusion_" + str(clip_seg_num) + "x"+str(sample_rate) + "_gtea_split" + str(split)
+model_name = "Stream_Feature_TAS_Diffusion_" + str(clip_seg_num) + "x"+str(sample_rate) + "_50salads_split" + str(split)
 
 ENGINE = dict(
     name = "StandaloneEngine",
@@ -33,12 +33,12 @@ ENGINE = dict(
         name = "StreamEpochMethod",
         epoch_num = epochs,
         batch_size = batch_size,
-        test_interval = 20,
+        test_interval = 1,
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
         name = "TorchCheckpointor",
-        # load_path = "output/Stream_Diffact_feature_gtea_split1/2023-10-24-09-15-51/ckpt/Stream_Diffact_feature_gtea_split1_best.pt"
+        # load_path = "output/Stream_Diffact_feature_50salads_split1/2023-10-24-09-15-51/ckpt/Stream_Diffact_feature_50salads_split1_best.pt"
     )
 )
 
@@ -50,7 +50,6 @@ MODEL_PIPLINE = dict(
     # ),
     model = dict(
         name = "TemporalActionSegmentationDDIMModel",
-        direct_pred = False,
         prompt_net = dict(
             name = "FeatureSegmentation",
             architecture_type='1d',
@@ -65,25 +64,27 @@ MODEL_PIPLINE = dict(
                 attn_dropout_rate = 0.5,
                 channel_dropout_rate = 0.5,
                 temporal_dropout_rate = 0.5,
-                feature_layer_indices = [2, 4, 6]
+                feature_layer_indices = [3, 5, 7]
             )
         ),
         unet = dict(
             name = "TASDiffusionConditionUnet",
             num_layers = 8,
             num_f_maps = 64,
-            dim = 11,
+            dim = num_classes,
             num_classes = num_classes,
             condition_dim = 192,
             time_embedding_dim = 512,
-            condtion_res_layer_idx = [2, 4, 6],
+            condtion_res_layer_idx = [2, 3, 4, 5],
             sample_rate = sample_rate
         ),
         scheduler = dict(
-            name = "DDPMScheduler",
+            name = "DiffsusionActionSegmentationScheduler",
             num_train_timesteps = 1000,
-            num_inference_steps = 100,
-            sampling_eta = 1.0,
+            num_inference_steps = 25,
+            ddim_sampling_eta = 1.0,
+            snr_scale = 0.5,
+            timestep_spacing = 'linspace',
             infer_region_seed = 8
         )
     ),
@@ -93,15 +94,12 @@ MODEL_PIPLINE = dict(
     ),
     criterion = dict(
         name = "TASDiffusionStreamSegmentationLoss",
-        # unet_loss_cfg = dict(
-        #     name = "SegmentationLoss",
-        #     num_classes = num_classes,
-        #     sample_rate = sample_rate,
-        #     smooth_weight = 0.0,
-        #     ignore_index = -100
-        # ),
         unet_loss_cfg = dict(
-            name = "DiffusionSegmentationMSELoss",
+            name = "SegmentationLoss",
+            num_classes = num_classes,
+            sample_rate = sample_rate,
+            smooth_weight = 0.0,
+            ignore_index = -100
         ),
         prompt_net_loss_cfg = dict(
             name = "SegmentationLoss",
@@ -147,22 +145,22 @@ DATASET = dict(
     train = dict(
         name = "FeatureStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/train.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
+        file_path = "./data/50salads/splits/train.split" + str(split) + ".bundle",
+        feature_path = "./data/50salads/features",
+        gt_path = "./data/50salads/groundTruth",
+        actions_map_file_path = "./data/50salads/mapping.txt",
+        dataset_type = "50salads",
         train_mode = True,
         sliding_window = sliding_window
     ),
     test = dict(
         name = "FeatureStreamSegmentationDataset",
         data_prefix = "./",
-        file_path = "./data/gtea/splits/test.split" + str(split) + ".bundle",
-        feature_path = "./data/gtea/raw_features",
-        gt_path = "./data/gtea/groundTruth",
-        actions_map_file_path = "./data/gtea/mapping.txt",
-        dataset_type = "gtea",
+        file_path = "./data/50salads/splits/test.split" + str(split) + ".bundle",
+        feature_path = "./data/50salads/features",
+        gt_path = "./data/50salads/groundTruth",
+        actions_map_file_path = "./data/50salads/mapping.txt",
+        dataset_type = "50salads",
         train_mode = False,
         sliding_window = sliding_window
     )
@@ -172,22 +170,22 @@ METRIC = dict(
     TAS = dict(
         name = "TASegmentationMetric",
         overlap = [.1, .25, .5],
-        actions_map_file_path = "./data/gtea/mapping.txt",
+        actions_map_file_path = "./data/50salads/mapping.txt",
         file_output = False,
         score_output = False),
     # TAP = dict(
     #     name = "TAProposalMetric",
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/50salads/mapping.txt",
     #     max_proposal=100,),
     # TAL = dict(
     #     name = "TALocalizationMetric",
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/50salads/mapping.txt",
     #     show_ovberlaps=[0.5, 0.75],),
     # SVTAS = dict(
     #     name = "SVTASegmentationMetric",
     #     overlap = [.1, .25, .5],
     #     segment_windows_size = 64,
-    #     actions_map_file_path = "./data/gtea/mapping.txt",
+    #     actions_map_file_path = "./data/50salads/mapping.txt",
     #     file_output = False,
     #     score_output = False),
 )

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 23:08:48
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-23 23:50:32
+LastEditTime : 2023-10-25 09:45:10
 Description  : file content
 FilePath     : /SVTAS/svtas/model/scheduler/base_scheduler.py
 '''
@@ -11,10 +11,11 @@ import torch
 from typing import Optional, Dict
 
 class BaseDiffusionScheduler(torch.nn.Module, metaclass=abc.ABCMeta):
-    timesteps: torch.LongTensor
     """
     Base Class for Scheduler of DiffusionModel Model
     """
+    timesteps: torch.LongTensor
+    num_inference_steps: int
     SEED_RANGE = [-9999999999, 99999999999]
     def __init__(self,
                  num_train_timesteps: int,
