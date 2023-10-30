@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-09 23:24:55
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-25 19:42:52
+LastEditTime : 2023-10-30 15:57:34
 Description  : ref: https://github.com/huggingface/diffusers/blob/main/src/diffusers/utils/import_utils.py
 FilePath     : /SVTAS/svtas/utils/package_utils/import_utils.py
 '''
@@ -228,7 +228,7 @@ except importlib_metadata.PackageNotFoundError:
 
 _tritonclient_available = importlib.util.find_spec("tritonclient") is not None
 try:
-    _tritonclient_version = importlib_metadata.version("tvm")
+    _tritonclient_version = importlib_metadata.version("tritonclient")
 except importlib_metadata.PackageNotFoundError:
     _tritonclient_available = False
 

@@ -10,4 +10,6 @@
 # export model tensorRT
 # python tools/launch.py --mode export -c config/export/swinv2_export_tensorRT.py
 # export model TVM
-python tools/launch.py --mode export -c config/export/swinv2_export_tvm.py
+# python tools/launch.py --mode export -c config/export/swinv2_export_tvm.py
+# export model onnx
+python tools/launch.py --mode export -c config/export/swinv2_export_onnx.py

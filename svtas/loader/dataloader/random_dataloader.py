@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-20 16:44:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-20 16:44:18
+LastEditTime : 2023-10-30 16:13:34
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataloader/random_dataloader.py
 '''
@@ -52,6 +52,7 @@ class RandomTensorTorchDataloader(BaseDataloader):
         self.is_train = is_train
         self.tensor_dict = tensor_dict
         self.random_generate = torch.Generator()
+        self.iter_cnt = 0
         if seed is not None:
             self.random_generate.manual_seed(seed)
     
@@ -59,7 +60,7 @@ class RandomTensorTorchDataloader(BaseDataloader):
         return torch.rand(size=shape, generator=self.random_generate, dtype=self.DATATYPE_MAP[dtype], requires_grad=requires_grad)
     
     def __next__(self) -> Dict[str, Any]:
-        for i in range(self.iter_num):
+        if self.iter_cnt < self.iter_num:
             data_dict = {}
             for key, value in self.tensor_dict.items():
                 if isinstance(value, dict):
@@ -71,8 +72,11 @@ class RandomTensorTorchDataloader(BaseDataloader):
                 data_dict['vid_list'] = ["test_sample"]
                 data_dict['sliding_num'] = 1
                 data_dict['current_sliding_cnt'] = 0
+            self.iter_cnt += 1
             return data_dict
-
+        else:
+            raise StopIteration
+        
     def __iter__(self):
         return self
     
@@ -121,15 +125,16 @@ class RandomTensorNumpyDataloader(BaseDataloader):
         self.iter_num = iter_num
         self.is_train = is_train
         self.tensor_dict = tensor_dict
-        self.random_generate = np.random.Generator()
+        self.random_generate = np.random.default_rng(seed=seed)
+        self.iter_cnt = 0
         if seed is not None:
             np.random.default_rng(seed=seed)
     
     def generate_random_tensor(self, shape: List, dtype: str = "float32", requires_grad: bool = False):
-        return np.random.rand(shape).astype(self.DATATYPE_MAP[dtype])
+        return self.random_generate.random(shape).astype(self.DATATYPE_MAP[dtype])
     
     def __next__(self) -> Dict[str, Any]:
-        for i in range(self.iter_num):
+        if self.iter_cnt < self.iter_num:
             data_dict = {}
             for key, value in self.tensor_dict.items():
                 if isinstance(value, dict):
@@ -141,8 +146,11 @@ class RandomTensorNumpyDataloader(BaseDataloader):
                 data_dict['vid_list'] = ["test_sample"]
                 data_dict['sliding_num'] = 1
                 data_dict['current_sliding_cnt'] = 0
+            self.iter_cnt += 1
             return data_dict
-
+        else:
+            raise StopIteration
+        
     def __iter__(self):
         return self
     

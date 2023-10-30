@@ -6,10 +6,10 @@ LastEditTime : 2023-10-17 10:40:34
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/standalone_engine.py
 '''
+from typing import Dict, List
 from .base_engine import BaseEngine
 from svtas.loader.dataloader import BaseDataloader
 from svtas.utils import AbstractBuildFactory
-from typing import Dict, List
 
 @AbstractBuildFactory.register('engine')
 class StandaloneEngine(BaseEngine):

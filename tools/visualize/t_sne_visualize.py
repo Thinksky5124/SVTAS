@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-11-15 16:10:58
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 15:16:22
+LastEditTime : 2023-10-27 15:22:25
 Description  : file content
 FilePath     : /SVTAS/tools/visualize/t_sne_visualize.py
 '''
@@ -36,7 +36,7 @@ def tsne(args):
     with open(args.label,"r") as label_file:
         labels = label_file.read().split('\n')[:-1]
 
-    # 选择维度
+    # choose dim
     tsne = TSNE(n_components=2)
     tsne_obj= tsne.fit_transform(feature.T)
 

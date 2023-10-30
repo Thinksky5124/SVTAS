@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-14 15:49:22
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-05 19:39:53
+LastEditTime : 2023-10-30 16:33:06
 Description: file content
 FilePath     : /SVTAS/svtas/model/post_processings/__init__.py
 '''
@@ -14,6 +14,7 @@ from .optical_flow_post_processing import OpticalFlowPostProcessing
 from .mvs_res_post_processing import MVsResPostProcessing
 from .cam_post_processing import CAMVideoPostProcessing, CAMImagePostProcessing
 from .base_post_processing import BasePostProcessing
+from .inference_post_processing import InferencePostProcessing
 
 __all__ = [
     'BasePostProcessing',
@@ -21,5 +22,6 @@ __all__ = [
     'ScorePostProcessing', 'StreamScorePostProcessingWithLBS',
     'OpticalFlowPostProcessing', 'MVsResPostProcessing',
     'CAMVideoPostProcessing', 'CAMImagePostProcessing',
-    'ScorePostProcessingWithRefine', 'StreamScorePostProcessingWithRefine'
+    'ScorePostProcessingWithRefine', 'StreamScorePostProcessingWithRefine',
+    'InferencePostProcessing'
 ]

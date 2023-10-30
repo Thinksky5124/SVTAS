@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-23 20:09:31
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-23 21:02:15
+LastEditTime : 2023-10-26 17:21:14
 Description  : file content
 FilePath     : /SVTAS/svtas/inference/convertor/tvm_convertor.py
 '''
@@ -13,9 +13,9 @@ from .onnx_convertor import ONNXModelConvertor
 from svtas.utils import AbstractBuildFactory, mkdir, is_tvm_available
 from svtas.utils.logger import get_root_logger_instance
 
-# if is_tvm_available():
-from tvm.driver import tvmc
-from tvm import relay
+if is_tvm_available():
+    from tvm.driver import tvmc
+    from tvm import relay
 
 @AbstractBuildFactory.register('model_convertor')
 class TVMModelConvertor(ONNXModelConvertor):
