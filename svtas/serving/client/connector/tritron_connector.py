@@ -213,8 +213,10 @@ class TritronConnector(BaseClientConnector):
         """
         def shape_check(tensor_shape, critrion_shape):
             for dim, c_dim in zip(tensor_shape, critrion_shape):
-                if dim != c_dim:
+                if dim != c_dim and c_dim != -1:
                     return False
+                elif c_dim == -1:
+                    continue
             return True
         
         assert isinstance(tensor, np.ndarray), "Input data must be np.array!"
@@ -226,8 +228,9 @@ class TritronConnector(BaseClientConnector):
         # Preprocess the images into input data according to model
         # requirements
         for name, value in data_dict.items():
-            self.input_check(tensor=value, shape=self.input_dict[name]['shape'],
-                             dtype=self.input_dict[name]['datatype'])
+            if name in self.input_dict:
+                self.input_check(tensor=value, shape=self.input_dict[name]['shape'],
+                                dtype=self.input_dict[name]['datatype'])
 
         # Send request
         try:
@@ -239,10 +242,11 @@ class TritronConnector(BaseClientConnector):
             inputs = []
             outputs = []
             for name, value in data_dict.items():
-                # Set the input data
-                input_class = client.InferInput(name, self.input_dict[name]['shape'], self.input_dict[name]['datatype'])
-                input_class.set_data_from_numpy(value)
-                inputs.append(input_class)
+                if name in self.input_dict:
+                    # Set the input data
+                    input_class = client.InferInput(name, self.input_dict[name]['shape'], self.input_dict[name]['datatype'])
+                    input_class.set_data_from_numpy(value)
+                    inputs.append(input_class)
 
             for name, value in self.output_dict.items():
                 outputs.append(client.InferRequestedOutput(name))

@@ -7,7 +7,8 @@ Description  : file content
 FilePath     : /SVTAS/svtas/serving/client/visualizer/__init__.py
 '''
 from .base import BaseClientViusalizer
+from .opencv_visualizer import OpencvViusalizer
 
 __all__ = [
-    "BaseClientViusalizer"
+    "BaseClientViusalizer", "OpencvViusalizer"
 ]

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-27 16:16:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-30 16:33:26
+LastEditTime : 2023-10-30 19:42:48
 Description  : file content
-FilePath     : /SVTAS/svtas/serving/client/base.py
+FilePath     : \ETESVS\svtas\serving\client\base.py
 '''
 import abc
 from typing import Dict, Any
@@ -89,11 +89,6 @@ class BaseClient(metaclass=abc.ABCMeta):
             return output_dict
         else:
             return {}
-    
-    def direct_output_post_processing(self, cur_vid, model_outputs = None, input_data = None):
-        # get pred result
-        output_dict = self.post_processing.output()
-        return output_dict
 
     def init_infer(self) -> None:
         self.set_post_processing_init_flag(False)
@@ -106,10 +101,12 @@ class BaseClient(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def init_client(self, server_url: str = None):
         self.connector.connect(server_url)
+        self.visualizer.init()
 
     @abc.abstractmethod
     def shutdown(self):
         self.connector.disconnect()
+        self.visualizer.shutdown()
 
     @abc.abstractmethod
     def run(self):

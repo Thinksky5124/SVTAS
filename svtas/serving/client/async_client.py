@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-25 19:59:56
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-30 16:17:47
+LastEditTime : 2023-10-30 19:46:50
 Description  : file content
-FilePath     : /SVTAS/svtas/serving/client/async_client.py
+FilePath     : \ETESVS\svtas\serving\client\async_client.py
 '''
 from typing import Dict
 from svtas.loader import BaseDataloader
@@ -61,5 +61,5 @@ class AsynchronousClient(BaseClient):
         if not self.post_processing_is_init():
             self.init_post_processing(data)
         self.update_post_processing(model_outputs=results, input_data=data)
-        output_dict = self.direct_output_post_processing(f"inferring_{iter_cnt}")
+        output_dict = self.output_post_processing(f"inferring_{iter_cnt}")
         self.end_infer()

@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-30 16:30:30
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-30 16:32:14
+LastEditTime : 2023-10-30 19:47:57
 Description  : file content
-FilePath     : /SVTAS/svtas/model/post_processings/inference_post_processing.py
+FilePath     : \ETESVS\svtas\model\post_processings\inference_post_processing.py
 '''
 import numpy as np
 import torch
@@ -38,4 +38,4 @@ class InferencePostProcessing(BasePostProcessing):
             pred_cls_list.append(predicted.copy())
             pred_score_list.append(self.pred_scores[bs].copy())
 
-        return pred_score_list, pred_cls_list, []
+        return pred_score_list, pred_cls_list

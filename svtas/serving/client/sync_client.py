@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-30 15:17:17
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-30 16:17:43
+LastEditTime : 2023-10-30 19:46:39
 Description  : file content
-FilePath     : /SVTAS/svtas/serving/client/sync_client.py
+FilePath     : \ETESVS\svtas\serving\client\sync_client.py
 '''
 from typing import Dict
 from svtas.loader import BaseDataloader
@@ -55,11 +55,17 @@ class SynchronousClient(BaseClient):
         +-----------------------+
         """
         self.init_infer()
+        self.visualizer.show()
         for iter_cnt, data in enumerate(self.dataloader):
             self.connector.send_infer_request(data_dict=data)
             results = self.connector.get_infer_results()
             if not self.post_processing_is_init():
                 self.init_post_processing(data)
             self.update_post_processing(model_outputs=results, input_data=data)
-            output_dict = self.direct_output_post_processing(f"inferring_{iter_cnt}")
+            output_dict = self.output_post_processing(f"inferring_{iter_cnt}")
+            if self.visualizer:
+                show_data_dict = {}
+                show_data_dict.update(output_dict)
+                show_data_dict.update(data)
+                self.visualizer.update_show_data(show_data_dict)
         self.end_infer()

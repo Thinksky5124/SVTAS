@@ -16,6 +16,14 @@ class BaseClientViusalizer(metaclass=abc.ABCMeta):
         self.logger = get_root_logger_instance()
     
     @abc.abstractmethod
+    def init(self):
+        pass
+    
+    @abc.abstractmethod
+    def update_show_data(self, show_data_dict: Dict):
+        pass
+
+    @abc.abstractmethod
     def show(self):
         pass
 

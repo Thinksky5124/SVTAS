@@ -9,8 +9,10 @@ FilePath     : /SVTAS/svtas/loader/dataloader/__init__.py
 from .base_dataloader import BaseDataloader
 from .torch_dataloader import (TorchDataLoader, TorchStreamDataLoader)
 from .random_dataloader import (RandomTensorTorchDataloader, RandomTensorNumpyDataloader)
+from .opencv_dataloader import OpencvDataloader
 
 __all__ = [
     "BaseDataloader", "TorchDataLoader", "TorchStreamDataLoader",
-    "RandomTensorTorchDataloader", "RandomTensorNumpyDataloader"
+    "RandomTensorTorchDataloader", "RandomTensorNumpyDataloader",
+    "OpencvDataloader"
 ]
