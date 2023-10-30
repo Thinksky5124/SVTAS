@@ -9,10 +9,10 @@ FilePath     : /SVTAS/svtas/model_pipline/pipline/trt_model_pipline.py
 from typing import Any, Dict
 from .base_pipline import BaseInferModelPipline
 from svtas.utils import AbstractBuildFactory, get_logger
-from svtas.utils import is_tensorboard_available
+from svtas.utils import is_tensorrt_available
 from ..wrapper import TensorRTModel
 
-if is_tensorboard_available():
+if is_tensorrt_available():
     import tensorrt as trt
     from svtas.utils.logger import TensorRTLogger
 
