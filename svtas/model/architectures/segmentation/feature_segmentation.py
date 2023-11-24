@@ -2,7 +2,7 @@
 Author: Thyssen Wen
 Date: 2022-04-27 17:01:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 16:20:04
+LastEditTime : 2023-11-02 20:57:45
 Description: feaeture segmentation model framework
 FilePath     : /SVTAS/svtas/model/architectures/segmentation/feature_segmentation.py
 '''

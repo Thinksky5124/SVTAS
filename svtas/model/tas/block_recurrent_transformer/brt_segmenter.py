@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-02-28 08:47:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-25 11:00:41
+LastEditTime : 2023-11-24 16:01:56
 Description  : file content
-FilePath     : /SVTAS/svtas/model/heads/tas/block_recurrent_transformer/brt_segmenter.py
+FilePath     : /SVTAS/svtas/model/tas/block_recurrent_transformer/brt_segmenter.py
 '''
 import torch
 import copy
@@ -317,7 +317,6 @@ class BRTSegmentationHead(nn.Module):
     def forward(self, x, mask):
         # x.shape [N C T]
         # mask.shape [N C T]
-        
         out, feature = self.encoder(x, mask[:, 0:1, ::self.sample_rate])
         outputs = out.unsqueeze(0)
         

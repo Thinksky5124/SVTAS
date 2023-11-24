@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-06-13 16:56:01
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-07 16:33:19
+LastEditTime : 2023-11-01 16:12:49
 Description  : Local Burr Suppression ref:https://github.com/lyhisme/ETSN
 FilePath     : /SVTAS/svtas/model/post_processings/lbs.py
 '''
@@ -71,7 +71,7 @@ class StreamScorePostProcessingWithLBS(BasePostProcessing):
             ignore_start = min(list(index[0]) + [video_gt.shape[-1]])
             predicted = np.argmax(pred_scores[bs, :, :ignore_start], axis=0)
             predicted = predicted.squeeze()
-            predicted = self.lbs(pred=predicted, pred_score=self.pred_scores[bs, :, :ignore_start])
+            predicted = self.lbs(pred=predicted, pred_score=pred_scores[bs, :, :ignore_start])
             pred_cls_list.append(predicted.copy())
             pred_score_list.append(pred_scores[bs, :, :ignore_start].copy())
             ground_truth_list.append(video_gt[bs, :ignore_start].copy())

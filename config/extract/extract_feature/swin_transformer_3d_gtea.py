@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-12-22 16:37:36
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-11 16:19:05
+LastEditTime : 2023-11-03 10:44:49
 Description  : file content
 FilePath     : /SVTAS/config/extract/extract_feature/swin_transformer_3d_gtea.py
 '''
@@ -82,7 +82,6 @@ MODEL_PIPLINE = dict(
 
 DATALOADER = dict(
     name = "TorchStreamDataLoader",
-    
     batch_size = batch_size,
     num_workers = 2
 )

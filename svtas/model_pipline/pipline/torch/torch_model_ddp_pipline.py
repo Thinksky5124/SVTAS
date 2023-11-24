@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-10-06 15:16:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-18 20:37:08
+LastEditTime : 2023-11-24 15:58:51
 Description  : file content
-FilePath     : /SVTAS/svtas/model_pipline/pipline/torch_model_ddp_pipline.py
+FilePath     : /SVTAS/svtas/model_pipline/pipline/torch/torch_model_ddp_pipline.py
 '''
 import os
 from typing import Any, Dict
@@ -59,7 +59,7 @@ class TorchDistributedDataParallelModelPipline(TorchModelPipline):
     
     def resert_model_pipline(self, *args, **kwargs):
         torch.distributed.barrier()
-        return super().resert_model_pipline(*args, **kwargs)
+        self.model.module.reset_state()
     
     @torch.no_grad()
     def output_post_processing(self, cur_vid, model_outputs=None, input_data=None):

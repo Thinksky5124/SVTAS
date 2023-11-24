@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-07 19:11:47
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 20:25:27
+LastEditTime : 2023-11-24 15:59:37
 Description  : file content
 FilePath     : /SVTAS/config/svtas/svtas-rl/svtas_rl_50salads.py
 '''
@@ -34,8 +34,8 @@ ENGINE = dict(
         name = "StreamEpochMethod",
         epoch_num = epochs,
         batch_size = 1,
-        logger_iter_interval = 10,
-        test_interval = 1,
+        logger_iter_interval = log_interval,
+        test_interval = -1,
         criterion_metric_name = "F1@0.50"
     ),
     checkpointor = dict(
@@ -54,7 +54,7 @@ MODEL_PIPLINE = dict(
         architecture_type ='3d',
         addition_loss_pos = 'with_backbone_loss',
         backbone = dict(
-            name = "SwinTransformer3D",
+            name = "SwinTransformer3DWithSBP",
             pretrained = "./data/checkpoint/swin_base_patch244_window877_kinetics600_22k.pth",
             pretrained2d = False,
             patch_size = [2, 4, 4],
@@ -69,7 +69,7 @@ MODEL_PIPLINE = dict(
             attn_drop_rate = 0.,
             drop_path_rate = 0.2,
             patch_norm = True,
-            # graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
+            graddrop_config={"gd_downsample": 1, "with_gd": [[1, 1], [1, 1], [1] * 14 + [0] * 4, [0, 0]]}
         ),
         neck = dict(
             name = "TaskFusionPoolNeck",
@@ -106,7 +106,7 @@ MODEL_PIPLINE = dict(
             num_classes = num_classes,
             sample_rate = sample_rate * 2,
             smooth_weight = 0.0,
-            ignore_index = -100
+            ignore_index = ignore_index
         ),
         head_loss_cfg = dict(
             name = "RLPGSegmentationLoss",
@@ -135,7 +135,6 @@ MODEL_PIPLINE = dict(
 
 DATALOADER = dict(
     name = "TorchStreamDataLoader",
-    
     batch_size = batch_size,
     num_workers = 2
 )

@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-18 20:27:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-22 19:54:15
+LastEditTime : 2023-10-30 21:30:09
 Description  : file content
 FilePath     : /SVTAS/config/export/swinv2_export_tensorRT.py
 '''
@@ -13,7 +13,7 @@ _base_ = [
 
 num_classes = 11
 sample_rate = 2
-clip_seg_num = 64
+clip_seg_num = 8
 ignore_index = -100
 sliding_window = clip_seg_num * sample_rate
 split = 1

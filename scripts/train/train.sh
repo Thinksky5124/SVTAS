@@ -12,5 +12,5 @@ export CUDA_VISIBLE_DEVICES=1
 # asformer 19980125
 export DECORD_EOF_RETRY_MAX=20480
 ### gtea ###
-python tools/launch.py --mode train -c config/svtas/tas_diffusion/stream_feature_tas_diffusion_gtea.py --seed 0
+python tools/launch.py --mode train -c config/svtas/svtas-rl/svtas_rl_50salads.py --seed 0
 # python tools/launch.py --mode train -c config/svtas/tas_diffusion/stream_feature_tas_diffusion_50salads.py --seed 0

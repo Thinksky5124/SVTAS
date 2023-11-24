@@ -52,7 +52,7 @@ class TorchModelPipline(BaseTorchModelPipline):
         ckpt_path = self.load_from_ckpt_file_ckeck(ckpt_path)
         checkpoint = torch.load(ckpt_path)
         state_dicts = checkpoint["model_state_dict"]
-        logger = get_logger("SVTAS").logger
+        logger = get_logger("SVTAS")
         load_state_dict(self.model, state_dicts, logger=logger)
 
     def to(self, device):

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-04-16 13:54:11
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-04-13 14:16:58
+LastEditTime : 2023-11-03 10:36:44
 Description: asformer model ref:https://github.com/ChinaYi/ASFormer/blob/main/model.py
-FilePath     : /SVTAS/svtas/model/heads/tas/asformer.py
+FilePath     : /SVTAS/svtas/model/tas/asformer.py
 '''
 import torch
 import torch.nn as nn
@@ -259,7 +259,7 @@ class Encoder(nn.Module):
         :param mask:
         :return:
         '''
-
+        
         if self.channel_masking_rate > 0:
             x = x.unsqueeze(2)
             x = self.dropout(x)
@@ -269,7 +269,7 @@ class Encoder(nn.Module):
         # feature = self.position_en(feature)
         for layer in self.layers:
             feature = layer(feature, None, mask)
-        
+
         out = self.conv_out(feature) * mask[:, 0:1, :]
 
         return out, feature
