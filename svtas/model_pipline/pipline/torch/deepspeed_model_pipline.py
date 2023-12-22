@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2023-09-21 19:27:09
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-15 20:06:20
+LastEditTime : 2023-12-14 10:05:17
 Description  : file content
-FilePath     : /SVTAS/svtas/model_pipline/pipline/deepspeed_model_pipline.py
+FilePath     : /SVTAS/svtas/model_pipline/pipline/torch/deepspeed_model_pipline.py
 '''
 from typing import Dict
 import torch
@@ -16,6 +16,7 @@ if is_deepspeed_available():
     import deepspeed
     from deepspeed import comm as dist
     from deepspeed.accelerator import get_accelerator
+    from deepspeed.compression import init_compression, redundancy_clean
 
 @AbstractBuildFactory.register('model_pipline')
 class DeepspeedModelPipline(TorchModelPipline):
@@ -27,18 +28,24 @@ class DeepspeedModelPipline(TorchModelPipline):
                  optimizer=None,
                  lr_scheduler=None,
                  pretrained: str = None,
-                 ds_config={}) -> None:
+                 compression: bool = False,
+                 ds_config={},
+                 grad_accumulate: Dict = None) -> None:
         super().__init__(model, post_processing, device, criterion, optimizer,
-                         lr_scheduler, pretrained)
+                         lr_scheduler, pretrained, grad_accumulate=grad_accumulate)
         self.ds_config = ds_config
+        self.compression = compression
         self.ds_config['local_rank'] = self.local_rank
         deepspeed.init_distributed()
         self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
         self.deepspeed_init_flag = False
 
     def to(self, device):
-        super().to(self.local_rank)
+        super().to(self.local_rank if self.local_rank != -1 else 0)
         if not self.deepspeed_init_flag:
+            if self.compression:
+                assert self.pretrained is not None, "You must set pretrained path for model!"
+                self.model = init_compression(self.model, self.ds_config)
             self.model, self.optimizer, _, self.lr_scheduler = deepspeed.initialize(config = self.ds_config,
                             model = self.model,
                             optimizer = self.optimizer,
@@ -46,6 +53,11 @@ class DeepspeedModelPipline(TorchModelPipline):
                             lr_scheduler = self.lr_scheduler)
             self.deepspeed_init_flag = True
 
+    def load_from_ckpt_file(self, ckpt_path: str = None):
+        ckpt_path = self.load_from_ckpt_file_ckeck(ckpt_path)
+        checkpoint = torch.load(ckpt_path)
+        self.model.load_state_dict(checkpoint['module'])
+        
     def memory_clear(self):
         self.model.module._clear_memory_buffer()
     
@@ -100,8 +112,14 @@ class DeepspeedModelPipline(TorchModelPipline):
     
     def clear_param_grad(self):
         pass
-
+    
+    def update_optim_policy(self):
+        self.model.tput_timer.update_epoch_count()
+        return super().update_optim_policy()
+    
     def save(self) -> Dict:
+        if self.compression:
+            self.model = redundancy_clean(self.model, self.ds_config)
         return {}
 
     def load(self, param_dict: Dict) -> None:
@@ -124,8 +142,9 @@ class DeepspeedModelPipline(TorchModelPipline):
             actually_update()
     
     def end_model_pipline(self):
-        dist.barrier()
-        dist.destroy_process_group()
+        if self.local_rank > 0:
+            dist.barrier()
+            dist.destroy_process_group()
         return super().end_model_pipline()
     
     def train_run(self, data_dict, is_end_step: bool = True):

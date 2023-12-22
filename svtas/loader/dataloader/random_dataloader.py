@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-20 16:44:05
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-30 16:13:34
+LastEditTime : 2023-12-12 15:58:26
 Description  : file content
 FilePath     : /SVTAS/svtas/loader/dataloader/random_dataloader.py
 '''
@@ -57,7 +57,10 @@ class RandomTensorTorchDataloader(BaseDataloader):
             self.random_generate.manual_seed(seed)
     
     def generate_random_tensor(self, shape: List, dtype: str = "float32", requires_grad: bool = False):
-        return torch.rand(size=shape, generator=self.random_generate, dtype=self.DATATYPE_MAP[dtype], requires_grad=requires_grad)
+        if dtype.startswith("int"):
+            return torch.ones(size=shape, dtype=self.DATATYPE_MAP[dtype], requires_grad=requires_grad)
+        else:
+            return torch.rand(size=shape, generator=self.random_generate, dtype=self.DATATYPE_MAP[dtype], requires_grad=requires_grad)
     
     def __next__(self) -> Dict[str, Any]:
         if self.iter_cnt < self.iter_num:

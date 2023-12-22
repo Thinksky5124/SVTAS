@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2023-10-11 14:36:20
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-18 21:14:28
+LastEditTime : 2023-12-12 16:14:23
 Description  : file content
 FilePath     : /SVTAS/svtas/engine/profile_engine.py
 '''
@@ -29,7 +29,7 @@ class TorchStandaloneProfilerEngine(StandaloneEngine):
                  checkpointor: Dict,
                  metric: Dict = {},
                  torch_profile_cfg: Dict = None,
-                 extra_profiler: Dict[str, Dict] = None,
+                 extra_profiler: Dict[str, Dict] = {},
                  running_mode='profile') -> None:
         super().__init__(model_name, model_pipline, logger_dict, record,
                          metric, iter_method, checkpointor, running_mode)
@@ -54,16 +54,17 @@ class TorchStandaloneProfilerEngine(StandaloneEngine):
 
         if self.torch_profile: 
             self.model_pipline.train()
-            with torch.profiler.profile(
-                schedule=torch.profiler.schedule(wait=self.full_torch_profile_cf['wait'], warmup=self.full_torch_profile_cf['warmup'],
-                                                 active=self.full_torch_profile_cf['active'], repeat=self.full_torch_profile_cf['repeat']),
-                on_trace_ready=torch.profiler.tensorboard_trace_handler(os.path.join(self.checkpointor.save_path, self.model_name)),
-                record_shapes=self.full_torch_profile_cf['record_shapes'],
-                profile_memory=self.full_torch_profile_cf['profile_memory'],
-                with_stack=self.full_torch_profile_cf['with_stack']
-                ) as prof:
-                    for iter_cnt in self.iter_method.run():
-                        prof.step()
+            with torch.set_grad_enabled(True):
+                with torch.profiler.profile(
+                    schedule=torch.profiler.schedule(wait=self.full_torch_profile_cfg['wait'], warmup=self.full_torch_profile_cfg['warmup'],
+                                                    active=self.full_torch_profile_cfg['active'], repeat=self.full_torch_profile_cfg['repeat']),
+                    on_trace_ready=torch.profiler.tensorboard_trace_handler(os.path.join(self.checkpointor.save_path, self.model_name)),
+                    record_shapes=self.full_torch_profile_cfg['record_shapes'],
+                    profile_memory=self.full_torch_profile_cfg['profile_memory'],
+                    with_stack=self.full_torch_profile_cfg['with_stack']
+                    ) as prof:
+                        for iter_cnt in self.iter_method.run():
+                            prof.step()
             self.model_pipline.eval()
         
         if len(self.extra_profiler) > 0:

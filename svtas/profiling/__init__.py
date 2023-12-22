@@ -9,4 +9,5 @@ FilePath     : /SVTAS/svtas/profiling/__init__.py
 from .flops_param_profiler import *
 from .precision_profiler import PrecisionCompareProfiler
 from .serving_profiler import ServingPerformanceProfiler
+from .numerical_range_profiler import NumericalRangeProfiler
 from .base_profiler import BaseProfiler

@@ -2,9 +2,9 @@
 Author: Thyssen Wen
 Date: 2022-03-17 12:12:57
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-18 20:47:37
+LastEditTime : 2023-12-19 20:48:35
 Description: test script api
-FilePath     : /SVTAS/svtas/tasks/profile.py
+FilePath     : /SVTAS/svtas/api/profile.py
 '''
 import torch
 import torch.profiler
@@ -38,7 +38,20 @@ def profile(local_rank,
     device = model_pipline.device
 
     # 2. Construct dataset and dataloader.
-    test_dataloader = AbstractBuildFactory.create_factory('dataloader').create(cfg.DATALOADER)
+    if hasattr(cfg, 'DATASETPIPLINE'):
+        batch_size = cfg.DATALOADER.get('batch_size', 8)
+        test_pipeline = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.DATASETPIPLINE.test)
+        test_dataset_config = cfg.DATASET.test
+        test_dataset_config['pipeline'] = test_pipeline
+        test_dataset_config['batch_size'] = batch_size * nprocs
+        test_dataset_config['local_rank'] = local_rank
+        test_dataset_config['nprocs'] = nprocs
+        test_dataloader_config = cfg.DATALOADER
+        test_dataloader_config['dataset'] = AbstractBuildFactory.create_factory('dataset').create(test_dataset_config)
+        test_dataloader_config['collate_fn'] = AbstractBuildFactory.create_factory('dataset_pipline').create(cfg.COLLATE.test)
+        test_dataloader = AbstractBuildFactory.create_factory('dataloader').create(test_dataloader_config)
+    else:
+        test_dataloader = AbstractBuildFactory.create_factory('dataloader').create(cfg.DATALOADER)
     
      # 3. build engine
     engine_config = cfg.ENGINE
