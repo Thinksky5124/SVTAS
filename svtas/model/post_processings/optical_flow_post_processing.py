@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-10-27 19:28:35
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-10 23:49:12
+LastEditTime : 2024-01-09 14:50:23
 Description  : Optical Flow Post Processing
 FilePath     : /SVTAS/svtas/model/post_processings/optical_flow_post_processing.py
 '''
@@ -27,7 +27,7 @@ class OpticalFlowPostProcessing(BasePostProcessing):
         self.sliding_window = sliding_window
         self.fps = fps
         self.need_visualize = need_visualize
-        self.post_transforms = VideoTransform(post_transforms)
+        self.post_transforms = VideoTransform(transform_results_list=[], transform_key_dict=post_transforms)
         self.colorwheel = make_colorwheel()  # shape [55x3]
         self.ignore_index = ignore_index
     

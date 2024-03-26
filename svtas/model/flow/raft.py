@@ -2,9 +2,9 @@
 Author       : Thyssen Wen
 Date         : 2022-05-06 13:44:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-08 14:33:21
+LastEditTime : 2024-01-09 14:52:59
 Description  : RAFT ref:https://github.com/princeton-vl/RAFT
-FilePath     : /SVTAS/svtas/model/backbones/flow/raft.py
+FilePath     : /SVTAS/svtas/model/flow/raft.py
 '''
 '''
     Reference: https://github.com/princeton-vl/RAFT/tree/25eb2ac723c36865c636c9d1f497af8023981868
@@ -141,7 +141,12 @@ class RAFT(nn.Module):
         return up_flow.reshape(N, 2, 8*H, 8*W)
 
     def init_weights(self, init_cfg: dict = {}):
-        child_model, revise_keys = init_cfg['child_model'], init_cfg['revise_keys']
+        child_model = init_cfg['child_model']
+        if 'revise_keys' not in init_cfg:
+            revise_keys = [(r'^module\.', '')]
+        else:
+            revise_keys = init_cfg['revise_keys']
+            
         if child_model is False:
             if isinstance(self.pretrained, str):
                 logger = get_logger("SVTAS")

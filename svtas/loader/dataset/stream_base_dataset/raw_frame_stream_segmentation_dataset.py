@@ -2,16 +2,15 @@
 Author: Thyssen Wen
 Date: 2022-03-21 11:12:50
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-16 20:44:11
+LastEditTime : 2024-01-20 15:07:39
 Description: dataset class
 FilePath     : /SVTAS/svtas/loader/dataset/stream_base_dataset/raw_frame_stream_segmentation_dataset.py
 '''
-import copy
+import re
 import os
 import os.path as osp
 
 import numpy as np
-import torch
 
 from svtas.utils import AbstractBuildFactory
 from .stream_base_dataset import StreamDataset
@@ -83,6 +82,16 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
                     file_name = file_name + '_ch0'
                 refine_info.append([info_name, file_name])
             info = refine_info
+        elif self.dataset_type in ['UBnormal']:
+            file_ptr = open(input_path, 'r')
+            info = file_ptr.read().split('\n')[:-1]
+            file_ptr.close()
+            refine_info = []
+            for info_name in info:
+                type, scene_id, clip_id = re.findall('(abnormal|normal)_scene_(\d+)_scenario(.*).*', info_name.split('.')[0])[0]
+                file_name = os.path.join(f"Scene{scene_id}", info_name.split('.')[0])
+                refine_info.append([info_name, file_name])
+            info = refine_info
         return info
 
     def load_file(self, sample_videos_list):
@@ -116,7 +125,7 @@ class RawFrameStreamSegmentationDataset(StreamDataset):
                             video_path = os.path.join(self.videos_path, video_name + '.npy')
                             if not osp.isfile(video_path):
                                 raise NotImplementedError
-                elif self.dataset_type in ['breakfast']:
+                elif self.dataset_type in ['breakfast', 'UBnormal']:
                     video_segment_name, video_segment_path = video_segment
                     video_name = video_segment_name.split('.')[0]
                     label_path = os.path.join(self.gt_path, video_name + '.txt')

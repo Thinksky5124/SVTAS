@@ -2,7 +2,7 @@
 Author       : Thyssen Wen
 Date         : 2022-05-18 15:32:33
 LastEditors  : Thyssen Wen
-LastEditTime : 2023-10-09 17:00:48
+LastEditTime : 2024-01-09 23:27:36
 Description  : Raw frame sampler
 FilePath     : /SVTAS/svtas/loader/sampler/frame_sampler.py
 '''
@@ -73,7 +73,8 @@ class VideoStreamSampler():
                  channel_mode_dict={"imgs":"RGB", "res":"RGB", "flows":"XY"},
                  channel_num_dict={"imgs":3, "res":3, "flows":2},
                  sample_mode='random',
-                 frame_idx_key='sample_sliding_idx'
+                 frame_idx_key='sample_sliding_idx',
+                 zeros_padding_shape_list = [224, 224]
                  ):
         # assert len(sample_rate_dict)==len(clip_seg_num_dict)==len(sliding_window_dict)==(len(sample_add_key_pair)+1)
 
@@ -87,6 +88,7 @@ class VideoStreamSampler():
         self.sample_add_key_pair = sample_add_key_pair
         self.channel_num_dict = channel_num_dict
         self.sample = FrameIndexSample(mode = sample_mode)
+        self.zeros_padding_shape_list = zeros_padding_shape_list
     
     def _sample_label(self, results, sample_rate, sample_num, sliding_windows, add_key='labels', sample_key='raw_labels'):
         container = results[sample_key]
@@ -137,7 +139,7 @@ class VideoStreamSampler():
                 imgs.append(Image.fromarray(imgbuf, mode=channel_mode))
             np_frames = np.zeros_like(np_frames[0])
         else:
-            np_frames = np.zeros((224, 224, channel_num))
+            np_frames = np.zeros((self.zeros_padding_shape_list[0], self.zeros_padding_shape_list[1], channel_num))
         pad_len = sample_num - len(imgs)
         if pad_len > 0:
             for i in range(max(0, pad_len)):
@@ -153,7 +155,7 @@ class VideoStreamSampler():
                 imgs.append(imgbuf)
             np_frames = np.zeros_like(np_frames[0])
         else:
-            np_frames = np.zeros((224, 224, channel_num))
+            np_frames = np.zeros((self.zeros_padding_shape_list[0], self.zeros_padding_shape_list[1], channel_num))
         pad_len = sample_num - len(imgs)
         if pad_len > 0:
             for i in range(max(0, pad_len)):
@@ -162,14 +164,14 @@ class VideoStreamSampler():
     
     def _sample_2_numpy_frame_for_none(self, channel_mode, channel_num, sample_num):
         imgs = []
-        np_frames = np.zeros((224, 224, channel_num))
+        np_frames = np.zeros((self.zeros_padding_shape_list[0], self.zeros_padding_shape_list[1], channel_num))
         for i in range(sample_num):
             imgs.append(np_frames)
         return imgs
     
     def _sample_2_PIL_frame_for_none(self, channel_mode, channel_num, sample_num):
         imgs = []
-        np_frames = np.zeros((224, 224, channel_num))
+        np_frames = np.zeros((self.zeros_padding_shape_list[0], self.zeros_padding_shape_list[1], channel_num))
         for i in range(sample_num):
             imgs.append(Image.fromarray(np_frames, mode=channel_mode))
         return imgs
@@ -367,9 +369,10 @@ class VideoDynamicStreamSampler(VideoStreamSampler):
                  channel_mode_dict={ "imgs": "RGB","res": "RGB","flows": "XY" },
                  channel_num_dict={ "imgs": 3,"res": 3,"flows": 2 },
                  sample_mode='uniform',
-                 frame_idx_key='currenct_frame_idx'):
+                 frame_idx_key='currenct_frame_idx',
+                 zeros_padding_shape_list=[224, 224]):
         super().__init__(is_train, sample_rate_name_dict, clip_seg_num_name_dict, None, ignore_index, sample_add_key_pair,
-                         channel_mode_dict, channel_num_dict, sample_mode, frame_idx_key)
+                         channel_mode_dict, channel_num_dict, sample_mode, frame_idx_key, zeros_padding_shape_list)
 
     def _get_start_end_frame_idx(self, results, sample_rate, sample_num, sliding_windows):
         frames_len = int(results['frames_len'])
