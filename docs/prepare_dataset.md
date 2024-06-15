@@ -229,3 +229,84 @@ P24-R03-BaconAndEggs.mp4
 P25-R06-GreekSalad.mp4
 P26-R05-Cheeseburger.mp4
 ```
+
+## Customized Dataset
+The easiest way to create a customized dataset is to reuse an existing dataset class, just align the format of the dataset, and then modify the file path to use it.
+
+For example:
+
+- Dataset tree example
+```txt
+─── your_dataset
+    ├── Videos
+    │   ├── S1_Cheese_C1.mp4
+    │   ├── S1_Coffee_C1.mp4
+    │   ├── S1_CofHoney_C1.mp4
+    │   └── ...
+    ├── groundTruth
+    │   ├── S1_Cheese_C1.txt
+    │   ├── S1_Coffee_C1.txt
+    │   ├── S1_CofHoney_C1.txt
+    │   └── ...
+    ├── splits
+    │   ├── test.split1.bundle
+    │   ├── test.split2.bundle
+    │   ├── test.split3.bundle
+    │   └── ...
+    ├── file_list.txt
+    └── mapping.txt
+```
+- Config
+```python
+dict(
+    name = "FeatureStreamSegmentationDataset",
+    data_prefix = "./",
+    file_path = "./path/to/your_dataset/file_list.txt",
+    feature_path = "./path/to/your_dataset/feature_files.txt",
+    gt_path = "./path/to/your_dataset/ground_truth.txt",
+    actions_map_file_path = "./path/to/your_dataset/mapping.txt",
+    dataset_type = "50salads",
+    train_mode = True,
+    sliding_window = sliding_window
+)
+```
+
+Of course you can build a new dataset class to completely customize the data processing you need.
+
+Follow these steps:
+
+- Step 1: The newly constructed dataset needs to inherit the `BaseDataset` class
+- Step 2: Modify the `DATASETPIPLINE` of the model configuration file to meet the required data processing flow
+- Step 3: After inherit the `BaseDataset` class, you should register your dataset class 
+- Step 4: Modify the config file to use
+
+### Detail in Setp 3
+
+- Step 3.1
+```python
+
+from svtas.utils import AbstractBuildFactory
+
+@AbstractBuildFactory.register('dataset')
+class CustomizedDataset(BaseDataset):
+    ...
+
+# or
+@AbstractBuildFactory.register('dataset')
+class CustomizedDataset(ItemDataset):
+    ...
+
+# or
+@AbstractBuildFactory.register('dataset')
+class CustomizedDataset(StreamDataset):
+    ...
+```
+- Step 3.2
+add code in file: `svtas\loader\dataset\__init__.py`
+```python
+from .your_customized_dataset import CustomizedDataset
+
+__all__ = [
+    "CustomizedDataset"
+]
+```
