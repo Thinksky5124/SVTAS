@@ -76,6 +76,32 @@ def build_recod(architecture_type, mode):
                    'Acc': AverageMeter("Acc", '.5f'),
                    'Seg_Acc': AverageMeter("Seg_Acc", '.5f')
                   }
+    elif architecture_type in ['StreamSegmentation2DMultiLabel']:
+        if mode == "train":
+            return {'batch_time': AverageMeter('batch_cost', '.5f'),
+                    'reader_time': AverageMeter('reader_time', '.5f'),
+                    'action_loss': AverageMeter('action_loss', '7.5f'),
+                    'branch_loss': AverageMeter('branch_loss', '7.5f'),
+                    'lr': AverageMeter('lr', 'f', need_avg=False),
+                    'F1Action@0.5': AverageMeter("F1Action@0.5", '.5f'),
+                    'F1Branch@0.5': AverageMeter("F1Branch@0.5", '.5f'),
+                    'ActionAcc': AverageMeter("Acc", '.5f'),
+                    'ActionSeg_Acc': AverageMeter("ActionSeg_Acc", '.5f'),
+                    'BranchAcc': AverageMeter("Acc", '.5f'),
+                    'BranchSeg_Acc': AverageMeter("BranchSeg_Acc", '.5f')
+                    }
+        elif mode == "validation":
+            return {'batch_time': AverageMeter('batch_cost', '.5f'),
+                    'reader_time': AverageMeter('reader_time', '.5f'),
+                    'action_loss': AverageMeter('action_loss', '7.5f'),
+                    'branch_loss': AverageMeter('branch_loss', '7.5f'),
+                    'F1Action@0.5': AverageMeter("F1Action@0.5", '.5f'),
+                    'F1Branch@0.5': AverageMeter("F1Branch@0.5", '.5f'),
+                    'ActionAcc': AverageMeter("Acc", '.5f'),
+                    'ActionSeg_Acc': AverageMeter("ActionSeg_Acc", '.5f'),
+                    'BranchAcc': AverageMeter("Acc", '.5f'),
+                    'BranchSeg_Acc': AverageMeter("BranchSeg_Acc", '.5f')
+                    }
     elif architecture_type in ["SegmentationCLIP"]:
         if mode == "train":
             return {'batch_time': AverageMeter('batch_cost', '.5f'),

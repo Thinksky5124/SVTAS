@@ -18,11 +18,13 @@ FilePath     : /ETESVS/model/backbones/image/resnet.py
 
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
+import torch 
 from mmcv.cnn import ConvModule, constant_init, kaiming_init
 from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import _BatchNorm
 from torch.utils import checkpoint as cp
 from utils.logger import get_logger
+import torchvision 
 
 from ...builder import BACKBONES
 
@@ -348,7 +350,7 @@ class ResNet(nn.Module):
     }
 
     def __init__(self,
-                 depth,
+                 depth=50,
                  pretrained=None,
                  torchvision_pretrain=False,
                  in_channels=3,
@@ -367,6 +369,7 @@ class ResNet(nn.Module):
         super().__init__()
         if depth not in self.arch_settings:
             raise KeyError(f'invalid depth {depth} for resnet')
+
         self.depth = depth
         self.in_channels = in_channels
         self.pretrained = pretrained

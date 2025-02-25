@@ -61,7 +61,6 @@ class BaseTASegmentationMetric(BaseMetric):
         self.actions_dict = dict()
         for a in actions:
             self.actions_dict[a.split()[1]] = int(a.split()[0])
-
         # cls score
         self.overlap = overlap
         self.overlap_len = len(overlap)
@@ -178,31 +177,39 @@ class BaseTASegmentationMetric(BaseMetric):
         f.writelines(recog_content)
         f.close()
 
-    def _transform_model_result(self, vid, outputs_np, gt_np, outputs_arr):
+    def _transform_model_result(self, vid, outputs_np, gt_np, outputs_arr, action_dict=None):
         recognition = []
+
+        if action_dict is not None: 
+            act_dict = action_dict
+        else:
+            act_dict = self.actions_dict
+
         for i in range(outputs_np.shape[0]):
             recognition = np.concatenate((recognition, [
-                list(self.actions_dict.keys())[list(
-                    self.actions_dict.values()).index(outputs_np[i])]
+                list(act_dict.keys())[list(
+                    act_dict.values()).index(outputs_np[i])]
             ]))
         recog_content = list(recognition)
        
         gt_content = []
         for i in range(gt_np.shape[0]):
             gt_content = np.concatenate((gt_content, [
-                list(self.actions_dict.keys())[list(
-                    self.actions_dict.values()).index(gt_np[i])]
+                list(act_dict.keys())[list(
+                    act_dict.values()).index(gt_np[i])]
             ]))
         gt_content = list(gt_content)
 
         if self.file_output is True and self.train_mode is False:
-            self._write_seg_file(gt_content, vid + '-gt', self.output_dir)
-            self._write_seg_file(recog_content, vid + '-pred', self.output_dir)
-
-        pred_detection = get_labels_scores_start_end_time(
-            outputs_arr, recog_content, self.actions_dict)
-        gt_detection = get_labels_scores_start_end_time(
-            np.ones(outputs_arr.shape), gt_content, self.actions_dict)
+            self._write_seg_file(gt_content, vid + f'-{list(act_dict.keys())[0]}-gt', self.output_dir)
+            self._write_seg_file(recog_content, vid + f'-{list(act_dict.keys())[0]}-pred', self.output_dir)
+        try:
+            pred_detection = get_labels_scores_start_end_time(
+                outputs_arr, recog_content, act_dict)
+            gt_detection = get_labels_scores_start_end_time(
+                np.ones(outputs_arr.shape), gt_content, act_dict)
+        except:
+            import pdb; pdb.set_trace()
         return [recog_content, gt_content, pred_detection, gt_detection]
 
     def update(self, outputs):

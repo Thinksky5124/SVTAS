@@ -77,8 +77,15 @@ class TSMAdamOptimizer(torch.optim.Adam):
                 for param in list(m.parameters()):
                     if param.requires_grad:
                         bn.append(param)
+            elif isinstance(m, torch.nn.LSTM):
+                for param in list(m.parameters()):
+                    if param.requires_grad:
+                        bn.append(param)
+                        
             elif len(m._modules) == 0:
                 if len(list(m.parameters())) > 0:
+                    import pdb; pdb.set_trace()
+
                     raise ValueError("New atomic module type: {}. Need to give it a learning policy".format(type(m)))
 
         # pop the cls_head fc layer params

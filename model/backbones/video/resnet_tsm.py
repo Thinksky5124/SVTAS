@@ -157,7 +157,7 @@ class ResNetTSM(ResNet):
     """
 
     def __init__(self,
-                 depth,
+                 depth=50,
                  modality="RGB",
                  clip_seg_num=8,
                  is_shift=True,
@@ -317,8 +317,7 @@ class ResNetTSM(ResNet):
                     self._load_torchvision_checkpoint(logger)
                 else:
                     # ours
-                    load_checkpoint(
-                        self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
+                    load_checkpoint(self, self.pretrained, strict=False, logger=logger, revise_keys=revise_keys)
             elif self.pretrained is None:
                 for m in self.modules():
                     if isinstance(m, nn.Conv2d):
