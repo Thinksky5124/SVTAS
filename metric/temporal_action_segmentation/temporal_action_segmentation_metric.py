@@ -33,9 +33,16 @@ class TASegmentationMetric(BaseTASegmentationMetric):
                          max_proposal, tiou_thresholds,
                          file_output, score_output, output_dir, score_output_dir)
     
-    def update(self, vid, ground_truth_batch, outputs):
+    def update(self, vid, ground_truth_batch, outputs, action_dict_path=None):
         """update metrics during each iter
         """
+        if action_dict_path:
+            action_dict = open(action_dict_path, 'r')
+            acts = action_dict.readlines()
+            action_dict = {act.strip().split(' ')[1]: int(act.strip().split(' ')[0]) for act in acts}
+        else:
+            action_dict = None 
+
         # list [N, T]
         predicted_batch = outputs['predict']
         # list [N, C, T]
@@ -61,7 +68,7 @@ class TASegmentationMetric(BaseTASegmentationMetric):
                 score_output_path = os.path.join(self.score_output_dir, vid[bs] + ".npy")
                 np.save(score_output_path, output_np)
 
-            result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr)
+            result = self._transform_model_result(vid[bs], outputs_np, gt_np, outputs_arr, action_dict)
             recog_content, gt_content, pred_detection, gt_detection = result
             single_f1, acc = self._update_score([vid[bs]], recog_content, gt_content, pred_detection,
                             gt_detection)

@@ -36,13 +36,13 @@ class LSTMSegmentationHead(nn.Module):
         self.sample_rate = sample_rate
 
         self.num_directions = 2 if self.bidirectional else 1
-
         self.lstm = nn.LSTM(input_size=in_channels,
                             hidden_size=hidden_channels,
                             num_layers=num_layers,
                             batch_first=self.batch_first,
                             dropout=self.dropout,
                             bidirectional=self.bidirectional)
+        
         self.fc_cls = nn.Linear(self.hidden_channels, self.num_classes)
 
         self.memory_hidden_list = None
