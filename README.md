@@ -7,7 +7,7 @@
 
 # Paper List
 - Streaming Video Temporal Action Segmentation In Real Time, [![](https://img.shields.io/badge/arViv-@doi:2209.13808-orange.svg)](https://arxiv.org/pdf/2209.13808), **statu**: accepted by ISKE2023
-- End-to-End Streaming Video Temporal Action Segmentation with Reinforce Learning, [![](https://img.shields.io/badge/arViv-@doi:2209.13808-orange.svg)](https://arxiv.org/abs/2309.15683), **statu**: under review
+- End-to-End Streaming Video Temporal Action Segmentation with Reinforce Learning, [![](https://img.shields.io/badge/arViv-@doi:2209.13808-orange.svg)](https://arxiv.org/abs/2309.15683), **statu**: accepted by TNNLS
 
 ## Streaming Video Temporal Action Segmentation
 <div align="center">
